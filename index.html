@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Clone - Haiku 4.5</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui">
+        <div id="crosshair"></div>
+        <div id="hotbar">
+            <div class="hotbar-slot selected" data-block="1"></div>
+            <div class="hotbar-slot" data-block="2"></div>
+            <div class="hotbar-slot" data-block="3"></div>
+            <div class="hotbar-slot" data-block="4"></div>
+            <div class="hotbar-slot" data-block="5"></div>
+            <div class="hotbar-slot" data-block="6"></div>
+            <div class="hotbar-slot" data-block="7"></div>
+            <div class="hotbar-slot" data-block="8"></div>
+            <div class="hotbar-slot" data-block="9"></div>
+        </div>
+        <div id="info">
+            <div id="fps">FPS: 0</div>
+            <div id="position">X: 0 Y: 0 Z: 0</div>
+            <div id="blockInfo">Block: GRASS</div>
+            <div id="chunks">Chunks: 0</div>
+        </div>
+        <div id="help">
+            <div class="help-text">WASD: Move | Mouse: Look | Space: Jump | Shift: Sprint/Crouch | L-Click: Destroy | R-Click: Place | 1-9: Block Select</div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
