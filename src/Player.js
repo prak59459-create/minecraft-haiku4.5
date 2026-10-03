@@ -71,18 +71,10 @@ export class Player {
 
         const moveDir = new THREE.Vector3(0, 0, 0);
 
-        if (this.keys['w']) {
-            moveDir.z -= 1;
-        }
-        if (this.keys['s']) {
-            moveDir.z += 1;
-        }
-        if (this.keys['a']) {
-            moveDir.x -= 1;
-        }
-        if (this.keys['d']) {
-            moveDir.x += 1;
-        }
+        if (this.keys['w']) moveDir.z -= 1;
+        if (this.keys['s']) moveDir.z += 1;
+        if (this.keys['a']) moveDir.x -= 1;
+        if (this.keys['d']) moveDir.x += 1;
 
         if (moveDir.length() > 0) {
             moveDir.normalize();
@@ -95,15 +87,16 @@ export class Player {
             forward.normalize();
             right.normalize();
 
-            const speed = this.moveSpeed *
-                (this.isSprinting ? this.sprintMultiplier : 1) *
-                (this.isCrouching ? this.crouchMultiplier : 1);
+            const speedMult = this.isSprinting ? this.sprintMultiplier : 1;
+            const crouchMult = this.isCrouching ? this.crouchMultiplier : 1;
+            const speed = this.moveSpeed * speedMult * crouchMult;
 
-            this.velocity.add(forward.multiplyScalar(moveDir.z * speed * deltaTime));
-            this.velocity.add(right.multiplyScalar(moveDir.x * speed * deltaTime));
+            this.velocity.addScaledVector(forward, moveDir.z * speed * deltaTime);
+            this.velocity.addScaledVector(right, moveDir.x * speed * deltaTime);
         }
 
         this.velocity.y -= this.gravity * deltaTime;
+        this.position.addScaledVector(this.velocity, deltaTime);
 
         const groundLevel = this.getGroundLevel(this.position.x, this.position.z);
         const eyeHeight = 1.7;
@@ -126,15 +119,10 @@ export class Player {
             this.velocity.z *= this.airResistance;
         }
 
-        this.position.add(this.velocity.clone().multiplyScalar(deltaTime));
         this.camera.position.copy(this.position);
     }
 
     getGroundLevel(x, z) {
-        const chunkSize = 16;
-        const chunkX = Math.floor(x / chunkSize);
-        const chunkZ = Math.floor(z / chunkSize);
-
         let maxY = 0;
         for (let y = 0; y < 128; y++) {
             if (this.world.getBlock(Math.floor(x), y, Math.floor(z)) !== 0) {
@@ -154,8 +142,6 @@ export class Player {
     destroyBlock() {
         const origin = this.camera.position;
         const direction = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
-
-        this.raycaster.set(origin, direction);
 
         const maxDistance = 10;
         const step = 0.1;
@@ -177,8 +163,6 @@ export class Player {
     placeBlock(blockId) {
         const origin = this.camera.position;
         const direction = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
-
-        this.raycaster.set(origin, direction);
 
         const maxDistance = 10;
         const step = 0.1;

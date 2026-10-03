@@ -12,11 +12,16 @@ export class Game {
         this.player = null;
         this.world = null;
         this.blockSystem = null;
-        this.selectedBlock = 1; // Start with dirt
+        this.selectedBlock = 1;
 
         this.frameCount = 0;
         this.lastTime = performance.now();
         this.fps = 0;
+
+        this.dayNightCycle = 0;
+        this.ambientLight = null;
+        this.directionalLight = null;
+        this.time = 0;
 
         this.setupScene();
     }
@@ -28,22 +33,20 @@ export class Game {
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
         document.body.appendChild(this.renderer.domElement);
 
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        this.scene.add(ambientLight);
+        this.ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        this.scene.add(this.ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(100, 150, 100);
-        directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
-        directionalLight.shadow.camera.left = -200;
-        directionalLight.shadow.camera.right = 200;
-        directionalLight.shadow.camera.top = 200;
-        directionalLight.shadow.camera.bottom = -200;
-        this.scene.add(directionalLight);
+        this.directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        this.directionalLight.position.set(100, 150, 100);
+        this.directionalLight.castShadow = true;
+        this.directionalLight.shadow.mapSize.width = 2048;
+        this.directionalLight.shadow.mapSize.height = 2048;
+        this.directionalLight.shadow.camera.left = -200;
+        this.directionalLight.shadow.camera.right = 200;
+        this.directionalLight.shadow.camera.top = 200;
+        this.directionalLight.shadow.camera.bottom = -200;
+        this.scene.add(this.directionalLight);
 
-        // Sky
         this.scene.fog = new THREE.Fog(0x87ceeb, 500, 1000);
     }
 
@@ -55,7 +58,6 @@ export class Game {
         this.setupUI();
         this.setupEventListeners();
 
-        // Generate initial world
         this.world.updateChunks(this.player.position);
     }
 
@@ -121,6 +123,48 @@ export class Game {
         });
     }
 
+    updateDayNightCycle(deltaTime) {
+        this.time += deltaTime;
+        const cycleTime = 30; // 30 second day/night cycle
+        const cycleFraction = (this.time % cycleTime) / cycleTime;
+
+        const sunAngle = cycleFraction * Math.PI * 2;
+        const sunHeight = Math.sin(sunAngle);
+        const sunIntensity = Math.max(0.2, Math.cos(sunAngle * 0.5) * 0.5 + 0.5);
+
+        this.directionalLight.position.set(
+            Math.cos(sunAngle) * 150,
+            sunHeight * 150 + 50,
+            Math.sin(sunAngle) * 150
+        );
+
+        this.directionalLight.intensity = sunIntensity * 0.8;
+        this.ambientLight.intensity = Math.max(0.2, sunIntensity * 0.6);
+
+        const skyColor = this.interpolateColor(
+            0x87ceeb,
+            0x1a1a2e,
+            Math.max(0, -sunHeight) * 0.5
+        );
+        this.renderer.setClearColor(skyColor);
+    }
+
+    interpolateColor(c1, c2, t) {
+        const r1 = (c1 >> 16) & 255;
+        const g1 = (c1 >> 8) & 255;
+        const b1 = c1 & 255;
+
+        const r2 = (c2 >> 16) & 255;
+        const g2 = (c2 >> 8) & 255;
+        const b2 = c2 & 255;
+
+        const r = Math.round(r1 + (r2 - r1) * t);
+        const g = Math.round(g1 + (g2 - g1) * t);
+        const b = Math.round(b1 + (b2 - b1) * t);
+
+        return (r << 16) | (g << 8) | b;
+    }
+
     animate() {
         requestAnimationFrame(() => this.animate());
 
@@ -136,6 +180,7 @@ export class Game {
 
         this.player.update(deltaTime);
         this.world.updateChunks(this.player.position);
+        this.updateDayNightCycle(deltaTime);
         this.updateUI();
 
         this.renderer.render(this.scene, this.camera);

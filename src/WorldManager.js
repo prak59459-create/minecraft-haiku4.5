@@ -76,31 +76,31 @@ export class WorldManager {
                 const worldX = cx * this.chunkSize + x;
                 const worldZ = cz * this.chunkSize + z;
 
-                // Perlin noise for height
                 const height = this.getTerrainHeight(worldX, worldZ);
 
                 for (let y = 0; y < this.chunkHeight; y++) {
                     let blockId = 0;
 
                     if (y === 0) {
-                        blockId = 3; // Stone bedrock layer
-                    } else if (y < height - 1) {
-                        blockId = 3; // Stone
+                        blockId = 3;
+                    } else if (y < height - 3) {
+                        blockId = 3;
                     } else if (y < height) {
-                        blockId = 2; // Grass
-                    } else if (y < height && y > height - 4) {
-                        blockId = 1; // Dirt
-                    } else if (y > 60 && y < height + 5) {
-                        // Random trees
-                        if (Math.random() < 0.02) {
-                            if (y === height) blockId = 4; // Wood trunk
-                            else if (y > height && y < height + 5) blockId = 5; // Leaves
-                        }
+                        blockId = 2;
+                    } else if (y === height) {
+                        blockId = 0;
                     }
 
-                    // Add some water
-                    if (y === 40 && height < 41) {
-                        blockId = 6; // Water
+                    if (y > height && y < height + 5 && Math.random() < 0.08) {
+                        blockId = 5;
+                    }
+
+                    if (y > height && y === height + 1 && Math.random() < 0.015) {
+                        blockId = 4;
+                    }
+
+                    if (y === 40 && height <= 40) {
+                        blockId = 6;
                     }
 
                     const index = x + z * this.chunkSize + y * this.chunkSize * this.chunkSize;
@@ -129,9 +129,9 @@ export class WorldManager {
             this.blockData.set(key, this.generateChunkData(cx, cz));
         }
 
-        const geometry = new THREE.BufferGeometry();
         const positions = [];
         const colors = [];
+        const indices = [];
 
         for (let x = 0; x < this.chunkSize; x++) {
             for (let z = 0; z < this.chunkSize; z++) {
@@ -139,28 +139,28 @@ export class WorldManager {
                     const blockId = this.getBlock(cx * this.chunkSize + x, y, cz * this.chunkSize + z);
 
                     if (blockId === 0) continue;
-
                     if (!this.blockSystem.isBlockSolid(blockId)) continue;
 
-                    this.addBlockFaces(
+                    this.addBlockGeometry(
                         x, y, z,
                         blockId,
                         cx, cz,
-                        positions, colors
+                        positions, colors, indices
                     );
                 }
             }
         }
 
         if (positions.length > 0) {
+            const geometry = new THREE.BufferGeometry();
             geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
-            geometry.computeVertexNormals();
+            geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
 
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 side: THREE.FrontSide,
-                wireframe: false
+                flatShading: true
             });
 
             const mesh = new THREE.Mesh(geometry, material);
@@ -174,7 +174,7 @@ export class WorldManager {
         return null;
     }
 
-    addBlockFaces(x, y, z, blockId, cx, cz, positions, colors) {
+    addBlockGeometry(x, y, z, blockId, cx, cz, positions, colors, indices) {
         const worldX = cx * this.chunkSize + x;
         const worldZ = cz * this.chunkSize + z;
 
@@ -183,60 +183,42 @@ export class WorldManager {
         const g = (color >> 8) & 255;
         const b = color & 255;
 
-        // Check each face
         const faces = [
-            { dir: [1, 0, 0], normal: [1, 0, 0] },  // Right
-            { dir: [-1, 0, 0], normal: [-1, 0, 0] }, // Left
-            { dir: [0, 1, 0], normal: [0, 1, 0] },   // Top
-            { dir: [0, -1, 0], normal: [0, -1, 0] }, // Bottom
-            { dir: [0, 0, 1], normal: [0, 0, 1] },   // Front
-            { dir: [0, 0, -1], normal: [0, 0, -1] }  // Back
+            { check: [1, 0, 0], verts: [[x+1,y,z], [x+1,y+1,z], [x+1,y+1,z+1], [x+1,y,z+1]] },
+            { check: [-1, 0, 0], verts: [[x,y,z+1], [x,y+1,z+1], [x,y+1,z], [x,y,z]] },
+            { check: [0, 1, 0], verts: [[x,y+1,z], [x,y+1,z+1], [x+1,y+1,z+1], [x+1,y+1,z]] },
+            { check: [0, -1, 0], verts: [[x,y,z+1], [x+1,y,z+1], [x+1,y,z], [x,y,z]] },
+            { check: [0, 0, 1], verts: [[x,y,z+1], [x,y+1,z+1], [x+1,y+1,z+1], [x+1,y,z+1]] },
+            { check: [0, 0, -1], verts: [[x+1,y,z], [x+1,y+1,z], [x,y+1,z], [x,y,z]] }
         ];
 
         for (const face of faces) {
-            const nx = worldX + face.dir[0];
-            const ny = y + face.dir[1];
-            const nz = worldZ + face.dir[2];
+            const nx = worldX + face.check[0];
+            const ny = y + face.check[1];
+            const nz = worldZ + face.check[2];
 
             const neighborId = this.getBlock(nx, ny, nz);
             if (neighborId === 0 || !this.blockSystem.isBlockSolid(neighborId)) {
-                this.addFace(x, y, z, face.normal, positions, colors, r, g, b);
+                this.addQuad(face.verts, positions, colors, indices, r, g, b);
             }
         }
     }
 
-    addFace(x, y, z, normal, positions, colors, r, g, b) {
-        const vertices = [];
+    addQuad(verts, positions, colors, indices, r, g, b) {
+        const baseIdx = positions.length / 3;
 
-        if (normal[0] === 1) { // Right
-            vertices.push([x+1, y, z], [x+1, y+1, z], [x+1, y+1, z+1], [x+1, y, z+1]);
-        } else if (normal[0] === -1) { // Left
-            vertices.push([x, y, z+1], [x, y+1, z+1], [x, y+1, z], [x, y, z]);
-        } else if (normal[1] === 1) { // Top
-            vertices.push([x, y+1, z], [x, y+1, z+1], [x+1, y+1, z+1], [x+1, y+1, z]);
-        } else if (normal[1] === -1) { // Bottom
-            vertices.push([x, y, z+1], [x+1, y, z+1], [x+1, y, z], [x, y, z]);
-        } else if (normal[2] === 1) { // Front
-            vertices.push([x, y, z+1], [x, y+1, z+1], [x+1, y+1, z+1], [x+1, y, z+1]);
-        } else if (normal[2] === -1) { // Back
-            vertices.push([x+1, y, z], [x+1, y+1, z], [x, y+1, z], [x, y, z]);
-        }
-
-        // Add two triangles per face
         for (let i = 0; i < 4; i++) {
-            positions.push(...vertices[i]);
+            positions.push(...verts[i]);
             colors.push(r, g, b);
         }
 
-        // First triangle
-        const baseIdx = positions.length / 3 - 4;
-        // Second triangle
+        indices.push(baseIdx, baseIdx + 1, baseIdx + 2);
+        indices.push(baseIdx, baseIdx + 2, baseIdx + 3);
     }
 
     rebuildChunkMesh(cx, cz) {
         const key = this.getChunkKey(cx, cz);
 
-        // Remove old mesh
         if (this.meshes.has(key)) {
             const { mesh, geometry } = this.meshes.get(key);
             this.scene.remove(mesh);
@@ -244,7 +226,6 @@ export class WorldManager {
             this.meshes.delete(key);
         }
 
-        // Build new mesh
         const result = this.buildChunkMesh(cx, cz);
         if (result) {
             this.meshes.set(key, result);
@@ -256,7 +237,6 @@ export class WorldManager {
         const pcx = Math.floor(playerPos.x / this.chunkSize);
         const pcz = Math.floor(playerPos.z / this.chunkSize);
 
-        const chunksToLoad = [];
         const chunksToKeep = new Set();
 
         for (let x = -this.renderDistance; x <= this.renderDistance; x++) {
@@ -266,18 +246,12 @@ export class WorldManager {
                 const key = this.getChunkKey(cx, cz);
                 chunksToKeep.add(key);
 
-                if (!this.meshes.has(key) && this.chunks.size < this.maxChunks) {
-                    chunksToLoad.push({ cx, cz });
+                if (!this.meshes.has(key)) {
+                    this.rebuildChunkMesh(cx, cz);
                 }
             }
         }
 
-        // Load new chunks
-        for (const { cx, cz } of chunksToLoad) {
-            this.rebuildChunkMesh(cx, cz);
-        }
-
-        // Unload far chunks
         for (const key of this.meshes.keys()) {
             if (!chunksToKeep.has(key)) {
                 const { mesh, geometry } = this.meshes.get(key);
