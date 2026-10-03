@@ -124,6 +124,31 @@
             margin: 2px 0;
         }
 
+        #status {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: #fff;
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            text-align: right;
+        }
+
+        .status-item {
+            margin: 2px 0;
+        }
+
+        .status-active {
+            color: #0f0;
+        }
+
+        .status-inactive {
+            color: #666;
+        }
+
         #block-name {
             position: absolute;
             bottom: 80px;
@@ -159,6 +184,10 @@
         </div>
         <div id="hud">
             <div class="hotbar" id="hotbar"></div>
+        </div>
+        <div id="status">
+            <div class="status-item"><span id="sprint-status" class="status-inactive">Sprint: OFF</span></div>
+            <div class="status-item"><span id="crouch-status" class="status-inactive">Crouch: OFF</span></div>
         </div>
     </div>
 

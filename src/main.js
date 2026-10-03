@@ -71,6 +71,24 @@ class Game {
         const fpsEl = document.getElementById('fps');
         fpsEl.textContent = `FPS: ${this.fps}`;
 
+        const sprintEl = document.getElementById('sprint-status');
+        if (this.player.isSprinting) {
+            sprintEl.textContent = 'Sprint: ON';
+            sprintEl.className = 'status-active';
+        } else {
+            sprintEl.textContent = 'Sprint: OFF';
+            sprintEl.className = 'status-inactive';
+        }
+
+        const crouchEl = document.getElementById('crouch-status');
+        if (this.player.isCrouching) {
+            crouchEl.textContent = 'Crouch: ON';
+            crouchEl.className = 'status-active';
+        } else {
+            crouchEl.textContent = 'Crouch: OFF';
+            crouchEl.className = 'status-inactive';
+        }
+
         if (this.inputManager.locked) {
             const raycast = this.physics.raycast(
                 this.player.getEyePosition(),
