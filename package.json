@@ -1,0 +1,17 @@
+{
+  "name": "minecraft-haiku4.5",
+  "version": "1.0.0",
+  "description": "3D Minecraft clone built with Three.js",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server -p 8080 -c-1",
+    "dev": "http-server -p 8080 -c-1"
+  },
+  "dependencies": {
+    "three": "^r128",
+    "simplex-noise": "^2.4.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
