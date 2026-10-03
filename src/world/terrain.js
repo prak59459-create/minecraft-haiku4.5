@@ -4,6 +4,8 @@ export class TerrainGenerator {
         this.baseHeight = 64;
         this.seed = Math.random() * 10000;
         this.heightCache = new Map();
+        this.humidityCache = new Map();
+        this.temperatureCache = new Map();
     }
 
     getHeightAt(x, z) {
@@ -65,5 +67,41 @@ export class TerrainGenerator {
 
     lerp(a, b, t) {
         return a + (b - a) * t;
+    }
+
+    getHumidityAt(x, z) {
+        const cacheKey = `${x},${z}`;
+        if (this.humidityCache.has(cacheKey)) {
+            return this.humidityCache.get(cacheKey);
+        }
+
+        const humidity = this.perlinNoise(x * 0.01 + 1000, z * 0.01 + 1000);
+        const normalized = (humidity + 1) / 2;
+        this.humidityCache.set(cacheKey, normalized);
+
+        if (this.humidityCache.size > 5000) {
+            const firstKey = this.humidityCache.keys().next().value;
+            this.humidityCache.delete(firstKey);
+        }
+
+        return normalized;
+    }
+
+    getTemperatureAt(x, z) {
+        const cacheKey = `${x},${z}`;
+        if (this.temperatureCache.has(cacheKey)) {
+            return this.temperatureCache.get(cacheKey);
+        }
+
+        const temp = this.perlinNoise(x * 0.01 + 2000, z * 0.01 + 2000);
+        const normalized = (temp + 1) / 2;
+        this.temperatureCache.set(cacheKey, normalized);
+
+        if (this.temperatureCache.size > 5000) {
+            const firstKey = this.temperatureCache.keys().next().value;
+            this.temperatureCache.delete(firstKey);
+        }
+
+        return normalized;
     }
 }

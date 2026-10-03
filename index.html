@@ -77,9 +77,25 @@
             padding: 10px;
             border-radius: 5px;
             font-family: monospace;
+            max-width: 250px;
         }
         .block-name {
             font-weight: bold;
+        }
+        #controls {
+            position: absolute;
+            bottom: 100px;
+            left: 10px;
+            color: white;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px;
+            border-radius: 5px;
+            font-family: monospace;
+            max-width: 250px;
+        }
+        .control-item {
+            margin: 2px 0;
         }
     </style>
 </head>
@@ -92,6 +108,18 @@
             <div>Position: <span id="pos">0, 0, 0</span></div>
             <div>Block: <span class="block-name" id="block">None</span></div>
             <div>Time: <span id="time">Day</span></div>
+            <div>Chunks: <span id="chunks">0</span></div>
+        </div>
+        <div id="controls">
+            <div class="control-item"><strong>Controls:</strong></div>
+            <div class="control-item">WASD - Move</div>
+            <div class="control-item">Mouse - Look</div>
+            <div class="control-item">Space - Jump</div>
+            <div class="control-item">Shift - Sprint</div>
+            <div class="control-item">Ctrl - Crouch</div>
+            <div class="control-item">L-Click - Destroy</div>
+            <div class="control-item">R-Click - Place</div>
+            <div class="control-item">1-9 - Select</div>
         </div>
     </div>
     <script type="importmap">

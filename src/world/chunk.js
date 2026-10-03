@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { Biome } from './biome.js';
 
 export class Chunk {
     static textureCache = null;
@@ -47,6 +48,7 @@ export class Chunk {
                 const worldZ = startZ + z;
 
                 const height = this.terrainGenerator.getHeightAt(worldX, worldZ);
+                const biome = Biome.getBiomeAt(worldX, worldZ, this.terrainGenerator);
 
                 for (let y = 0; y < this.worldHeight; y++) {
                     let blockType = 'air';
@@ -58,7 +60,7 @@ export class Chunk {
                     } else if (y < height - 1) {
                         blockType = 'dirt';
                     } else if (y < height) {
-                        blockType = 'grass';
+                        blockType = Biome.getBlockType(biome, height, height);
                     } else if (y <= waterLevel) {
                         blockType = 'water';
                     } else {
@@ -82,9 +84,10 @@ export class Chunk {
                 const worldX = startX + x;
                 const worldZ = startZ + z;
 
-                const hash = Math.abs(Math.sin(worldX * 73.1 + worldZ * 97.3) * 10000) % 1000;
-                if (hash < 30) {
-                    const height = this.terrainGenerator.getHeightAt(worldX, worldZ);
+                const height = this.terrainGenerator.getHeightAt(worldX, worldZ);
+                const biome = Biome.getBiomeAt(worldX, worldZ, this.terrainGenerator);
+
+                if (Biome.shouldPlaceTreeAt(worldX, worldZ, biome)) {
                     if (height > 65 && height < 130) {
                         this.createTree(x, height, z);
                     }
