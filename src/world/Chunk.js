@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { BlockType } from './BlockType.js';
+import { TreeGenerator } from './TreeGenerator.js';
 
 export class Chunk {
     constructor(x, z, size, height, terrainGenerator) {
@@ -41,6 +42,16 @@ export class Chunk {
                     }
 
                     this.setBlock(lx, y, lz, blockType);
+                }
+
+                // Generate trees
+                if (this.x % 2 === 0 && this.z % 2 === 0) {
+                    if (TreeGenerator.shouldGenerateTree(wx, wz)) {
+                        TreeGenerator.generateTree(this.terrainGenerator.chunkManager || {
+                            getBlock: (x, y, z) => this.getBlock(x - this.x * this.size, y, z - this.z * this.size),
+                            setBlock: (x, y, z, type) => this.setBlock(x - this.x * this.size, y, z - this.z * this.size, type)
+                        }, wx, terrainHeight, wz);
+                    }
                 }
             }
         }
