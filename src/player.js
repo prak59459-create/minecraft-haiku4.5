@@ -110,7 +110,7 @@ export class Player {
     right.y = 0;
     right.normalize();
 
-    this.isSprinting = this.keys['shift'];
+    this.isSprinting = this.keys['shift'] && this.isGrounded;
     this.isCrouching = this.keys['control'];
 
     let moveDir = new THREE.Vector3();
@@ -122,12 +122,15 @@ export class Player {
     if (this.keys['d']) moveDir.add(right);
 
     if (moveDir.length() > 0) {
-      moveDir.normalize().multiplyScalar(speed);
-      this.velocity.x = moveDir.x;
-      this.velocity.z = moveDir.z;
+      moveDir.normalize();
+      const targetVelX = moveDir.x * speed;
+      const targetVelZ = moveDir.z * speed;
+
+      this.velocity.x += (targetVelX - this.velocity.x) * 0.2;
+      this.velocity.z += (targetVelZ - this.velocity.z) * 0.2;
     } else {
-      this.velocity.x *= 0.9;
-      this.velocity.z *= 0.9;
+      this.velocity.x *= 0.85;
+      this.velocity.z *= 0.85;
     }
   }
 
