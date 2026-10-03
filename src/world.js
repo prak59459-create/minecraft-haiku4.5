@@ -41,10 +41,15 @@ export class World {
   }
 
   getTerrainHeight(x, z) {
-    const scale = 0.05;
-    const baseHeight = this.noise.noise2D(x * scale, z * scale) * 30 + 60;
-    const detailHeight = this.noise.noise2D(x * scale * 2, z * scale * 2) * 10;
-    return Math.floor(baseHeight + detailHeight);
+    const scale1 = 0.04;
+    const scale2 = 0.12;
+    const scale3 = 0.25;
+
+    const baseHeight = this.noise.noise2D(x * scale1, z * scale1) * 40;
+    const detailHeight = this.noise.noise2D(x * scale2, z * scale2) * 15;
+    const fineHeight = this.noise.noise2D(x * scale3, z * scale3) * 5;
+
+    return Math.floor(baseHeight + detailHeight + fineHeight + 64);
   }
 
   getBlockAt(x, y, z) {
@@ -123,9 +128,12 @@ export class World {
           }
         }
 
-        // Trees
-        if (Math.random() < 0.02 && terrainHeight < 120) {
-          const trunkHeight = 5 + Math.floor(Math.random() * 3);
+        // Trees - use noise for natural distribution
+        const treeNoise = this.noise.noise2D(worldX * 0.08, worldZ * 0.08);
+        if (treeNoise > 0.4 && terrainHeight > 50 && terrainHeight < 130) {
+          const trunkHeight = 4 + Math.floor(treeNoise * 4);
+          const foliageSize = 2 + Math.floor(Math.abs(treeNoise) * 2);
+
           for (let ty = 0; ty < trunkHeight; ty++) {
             const blockY = terrainHeight + 1 + ty;
             if (blockY < CHUNK_HEIGHT) {
@@ -133,17 +141,20 @@ export class World {
             }
           }
 
-          // Foliage
-          for (let fx = -2; fx <= 2; fx++) {
-            for (let fz = -2; fz <= 2; fz++) {
-              for (let fy = 0; fy < 3; fy++) {
-                const foliageY = terrainHeight + trunkHeight + fy;
-                if (foliageY < CHUNK_HEIGHT && (fx * fx + fz * fz <= 4)) {
-                  const gx = x + fx;
-                  const gz = z + fz;
-                  if (gx >= 0 && gx < CHUNK_SIZE && gz >= 0 && gz < CHUNK_SIZE) {
-                    if (chunk.getBlock(gx, foliageY, gz) === BLOCKS.AIR) {
-                      chunk.setBlock(gx, foliageY, gz, BLOCKS.LEAVES);
+          // Foliage with variable size
+          for (let fx = -foliageSize; fx <= foliageSize; fx++) {
+            for (let fz = -foliageSize; fz <= foliageSize; fz++) {
+              const distSq = fx * fx + fz * fz;
+              if (distSq <= foliageSize * foliageSize + 1) {
+                for (let fy = 0; fy < 3; fy++) {
+                  const foliageY = terrainHeight + trunkHeight - 1 + fy;
+                  if (foliageY < CHUNK_HEIGHT && foliageY > terrainHeight) {
+                    const gx = x + fx;
+                    const gz = z + fz;
+                    if (gx >= 0 && gx < CHUNK_SIZE && gz >= 0 && gz < CHUNK_SIZE) {
+                      if (chunk.getBlock(gx, foliageY, gz) === BLOCKS.AIR) {
+                        chunk.setBlock(gx, foliageY, gz, BLOCKS.LEAVES);
+                      }
                     }
                   }
                 }

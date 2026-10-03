@@ -11,9 +11,10 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+renderer.pixelRatio = Math.min(window.devicePixelRatio, 2);
 document.body.appendChild(renderer.domElement);
 
-const world = new World(new SimplexNoise(Math.random));
+const world = new World(new SimplexNoise());
 const player = new Player(camera);
 const physics = new Physics(world);
 const ui = new UI(player);
