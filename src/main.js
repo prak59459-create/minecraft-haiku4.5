@@ -1,111 +1,168 @@
-class Game {
-    constructor() {
-        this.world = new World();
-        this.renderer = new GameRenderer();
-        this.player = new Player(new THREE.Vector3(0, 100, 0));
-        this.physics = new Physics(this.world);
-        this.inputManager = new InputManager(this.player, this.world, this.physics);
+import * as THREE from 'three';
+import { CHUNK_SIZE, RENDER_DISTANCE, SKY_COLOR, WORLD_SEED, PLAYER } from './config.js';
+import { BLOCK, BLOCK_INFO, HOTBAR } from './block-types.js';
+import { World } from './world.js';
+import { Player } from './player.js';
+import { Input } from './input.js';
+import { raycast } from './physics.js';
 
-        this.lastTime = performance.now();
-        this.frameCount = 0;
-        this.fpsTimer = 0;
-        this.fps = 0;
+const ACTION_REPEAT = 0.25;
 
-        this.maxDeltaTime = 0.016;
-        this.gameTime = 0;
+const renderer = new THREE.WebGLRenderer({ antialias: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-        this.inputManager.updateHotbar();
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(SKY_COLOR);
+scene.fog = new THREE.Fog(SKY_COLOR, (RENDER_DISTANCE - 2) * CHUNK_SIZE, RENDER_DISTANCE * CHUNK_SIZE);
 
-        this.start();
-    }
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.05, 1000);
 
-    start() {
-        this.gameLoop();
-    }
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
 
-    gameLoop = () => {
-        requestAnimationFrame(this.gameLoop);
+const world = new World(scene, WORLD_SEED, RENDER_DISTANCE);
+world.loadImmediate(0, 0, 2);
 
-        const now = performance.now();
-        let deltaTime = (now - this.lastTime) / 1000;
-        deltaTime = Math.min(deltaTime, this.maxDeltaTime);
-        this.lastTime = now;
+const player = new Player(camera, world);
+player.spawnAt(0.5, 0.5);
 
-        this.update(deltaTime);
-        this.render();
+const input = new Input(renderer.domElement);
 
-        this.frameCount++;
-        this.fpsTimer += deltaTime;
+const highlight = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(1.002, 1.002, 1.002)),
+    new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.6 })
+);
+highlight.visible = false;
+scene.add(highlight);
 
-        if (this.fpsTimer >= 0.5) {
-            this.fps = Math.round(this.frameCount / this.fpsTimer);
-            this.frameCount = 0;
-            this.fpsTimer = 0;
-        }
-    };
+// HUD
+const hotbarEl = document.getElementById('hotbar');
+const blockNameEl = document.getElementById('block-name');
+const debugEl = document.getElementById('debug');
+const overlayEl = document.getElementById('overlay');
+let selected = 0;
+let blockNameTimer = 0;
 
-    update(deltaTime) {
-        this.gameTime += deltaTime;
+HOTBAR.forEach((id, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    slot.innerHTML = `<div class="swatch"></div><span>${i + 1}</span>`;
+    slot.querySelector('.swatch').style.background = '#' + BLOCK_INFO[id].hex.toString(16).padStart(6, '0');
+    hotbarEl.appendChild(slot);
+});
 
-        this.inputManager.update(deltaTime);
+function selectSlot(index) {
+    selected = ((index % HOTBAR.length) + HOTBAR.length) % HOTBAR.length;
+    hotbarEl.querySelectorAll('.slot').forEach((el, i) => el.classList.toggle('active', i === selected));
+    blockNameEl.textContent = BLOCK_INFO[HOTBAR[selected]].name;
+    blockNameEl.style.opacity = 1;
+    blockNameTimer = 1.5;
+}
+selectSlot(0);
 
-        this.physics.update(this.player, deltaTime);
+input.onLockChange = (locked) => {
+    overlayEl.style.display = locked ? 'none' : 'flex';
+};
 
-        this.world.unloadFarChunks(this.player.position.x, this.player.position.z, CONFIG.RENDER_DISTANCE);
+// Interaction
+let actionCooldown = 0;
+let target = null;
+const eye = new THREE.Vector3();
+const dir = new THREE.Vector3();
 
-        this.renderer.updateChunks(this.world, this.player.position.x, this.player.position.z);
-
-        this.renderer.updateSkyLight(this.gameTime);
-
-        this.updateUI();
-    }
-
-    updateUI() {
-        const posEl = document.getElementById('pos');
-        posEl.textContent = `Position: ${this.player.position.x.toFixed(1)}, ${this.player.position.y.toFixed(1)}, ${this.player.position.z.toFixed(1)}`;
-
-        const chunkCoords = Utils.getChunkCoords(this.player.position.x, this.player.position.z);
-        const chunkEl = document.getElementById('chunk');
-        chunkEl.textContent = `Chunk: ${chunkCoords.x}, ${chunkCoords.z}`;
-
-        const fpsEl = document.getElementById('fps');
-        fpsEl.textContent = `FPS: ${this.fps}`;
-
-        const sprintEl = document.getElementById('sprint-status');
-        if (this.player.isSprinting) {
-            sprintEl.textContent = 'Sprint: ON';
-            sprintEl.className = 'status-active';
-        } else {
-            sprintEl.textContent = 'Sprint: OFF';
-            sprintEl.className = 'status-inactive';
-        }
-
-        const crouchEl = document.getElementById('crouch-status');
-        if (this.player.isCrouching) {
-            crouchEl.textContent = 'Crouch: ON';
-            crouchEl.className = 'status-active';
-        } else {
-            crouchEl.textContent = 'Crouch: OFF';
-            crouchEl.className = 'status-inactive';
-        }
-
-        if (this.inputManager.locked) {
-            const raycast = this.physics.raycast(
-                this.player.getEyePosition(),
-                this.player.getLookDirection(),
-                10
-            );
-
-            if (raycast) {
-                const blockName = BLOCK_PROPERTIES[raycast.block]?.name || 'Unknown';
-                document.getElementById('block-name').textContent = blockName;
-            }
-        }
-    }
-
-    render() {
-        this.renderer.render(this.player);
-    }
+function breakBlock() {
+    if (!target || !BLOCK_INFO[target.id].breakable) return;
+    world.setBlock(target.x, target.y, target.z, BLOCK.AIR);
 }
 
-const game = new Game();
+function placeBlock() {
+    if (!target) return;
+    const x = target.x + target.normal[0];
+    const y = target.y + target.normal[1];
+    const z = target.z + target.normal[2];
+    const current = world.getBlock(x, y, z);
+    if (current !== BLOCK.AIR && current !== BLOCK.WATER) return;
+    const id = HOTBAR[selected];
+    if (BLOCK_INFO[id].solid && player.intersectsBlock(x, y, z)) return;
+    world.setBlock(x, y, z, id);
+}
+
+function handleInteraction(dt) {
+    player.getEyePosition(eye);
+    player.getLookDirection(dir);
+    target = raycast(world, eye, dir, PLAYER.reach);
+
+    if (target) {
+        highlight.position.set(target.x + 0.5, target.y + 0.5, target.z + 0.5);
+        highlight.visible = true;
+    } else {
+        highlight.visible = false;
+    }
+
+    actionCooldown -= dt;
+    const left = input.buttons.has(0);
+    const right = input.buttons.has(2);
+    if (!left && !right) {
+        actionCooldown = 0;
+        return;
+    }
+    if (actionCooldown > 0) return;
+    if (left) breakBlock();
+    else if (right) placeBlock();
+    actionCooldown = ACTION_REPEAT;
+}
+
+// Loop
+const clock = new THREE.Clock();
+let fpsFrames = 0;
+let fpsTime = 0;
+let fps = 0;
+
+function frame() {
+    requestAnimationFrame(frame);
+    const dt = Math.min(clock.getDelta(), 0.05);
+
+    const f = input.consumeFrame();
+    if (input.locked) {
+        player.look(f.dx, f.dy);
+        if (f.wheel) selectSlot(selected + f.wheel);
+        for (const code of f.pressed) {
+            const m = /^Digit([1-9])$/.exec(code);
+            if (m) selectSlot(Number(m[1]) - 1);
+        }
+    }
+
+    world.update(player.position.x, player.position.z);
+    player.update(dt, input);
+    handleInteraction(dt);
+
+    if (blockNameTimer > 0) {
+        blockNameTimer -= dt;
+        if (blockNameTimer <= 0) blockNameEl.style.opacity = 0;
+    }
+
+    fpsFrames++;
+    fpsTime += dt;
+    if (fpsTime >= 0.5) {
+        fps = Math.round(fpsFrames / fpsTime);
+        fpsFrames = 0;
+        fpsTime = 0;
+        const p = player.position;
+        debugEl.textContent =
+            `FPS ${fps}\n` +
+            `XYZ ${p.x.toFixed(1)} ${p.y.toFixed(1)} ${p.z.toFixed(1)}\n` +
+            `Chunk ${Math.floor(p.x / CHUNK_SIZE)} ${Math.floor(p.z / CHUNK_SIZE)}  loaded ${world.chunkCount}\n` +
+            `Draw calls ${renderer.info.render.calls}`;
+    }
+
+    renderer.render(scene, camera);
+}
+
+frame();
+
+window.game = { world, player, scene, camera, renderer };

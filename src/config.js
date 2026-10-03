@@ -1,34 +1,22 @@
-const CONFIG = {
-    // World settings
-    CHUNK_SIZE: 16,
-    CHUNK_HEIGHT: 128,
-    RENDER_DISTANCE: 8,
-    WORLD_SEED: 42,
+export const CHUNK_SIZE = 16;
+export const CHUNK_HEIGHT = 96;
+export const SEA_LEVEL = 32;
+export const RENDER_DISTANCE = 6;
+export const WORLD_SEED = 1337;
 
-    // Block settings
-    BLOCK_SIZE: 1,
+export const SKY_COLOR = 0x87ceeb;
 
-    // Player settings
-    PLAYER_HEIGHT: 1.7,
-    PLAYER_WIDTH: 0.6,
-    PLAYER_SPEED: 4.3,
-    PLAYER_SPRINT_SPEED: 5.6,
-    PLAYER_JUMP_FORCE: 10,
-    GRAVITY: 20,
-
-    // Camera settings
-    MOUSE_SENSITIVITY: 0.003,
-    FOV: 75,
-
-    // Rendering
-    RENDER_CHUNKS: true,
-    SHADOW_MAP_SIZE: 1024,
-    FOG_COLOR: 0x87ceeb,
-    FOG_NEAR: 20,
-    FOG_FAR: 300,
-
-    // Day/night cycle
-    DAY_DURATION: 20 * 60 * 1000,
-    NIGHT_START: 12.5,
-    NIGHT_END: 23.5
+export const PLAYER = {
+    width: 0.6,
+    height: 1.8,
+    eyeHeight: 1.62,
+    crouchEyeHeight: 1.32,
+    walkSpeed: 4.3,
+    sprintSpeed: 5.8,
+    crouchSpeed: 1.6,
+    jumpSpeed: 8.6,
+    gravity: 28,
+    maxFallSpeed: 50,
+    reach: 6,
+    mouseSensitivity: 0.0022
 };

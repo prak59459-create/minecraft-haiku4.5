@@ -1,68 +1,44 @@
-# Minecraft Haiku 4.5
+# minecraft-haiku4.5
 
-A 3D Minecraft clone built with Three.js featuring procedural terrain generation, block interactions, physics, and a dynamic day/night cycle.
+Three.js 製のシンプルな Minecraft 風ボクセルゲームの土台。
 
-## Features
+## 起動
 
-### Controls
-- **WASD**: Move forward, left, backward, right
-- **Mouse**: Look around (click to lock)
-- **Space**: Jump
-- **Shift**: Sprint/crouch
-- **1-9/Scroll Wheel**: Select block from hotbar
-- **Left Click**: Destroy block
-- **Right Click**: Place block
-
-### Gameplay
-- **Procedural Terrain**: Perlin noise-based terrain generation with multiple noise octaves
-- **Chunk System**: Dynamic chunk loading/unloading for large worlds
-- **Multiple Block Types**: Stone, dirt, grass, wood, leaves, sand, gravel, ores (coal, iron, gold), water, glass
-- **Physics**: Gravity, jumping, collision detection with world
-- **Raycasting**: Block highlight when looking at blocks, accurate block placement/destruction
-- **Rendering**: Efficient mesh generation with face culling
-
-### Environment
-- **Day/Night Cycle**: Dynamic lighting that changes throughout the day
-- **Sky**: Atmospheric sky that changes color based on time
-- **Ambient Lighting**: Realistic ambient light with directional shadows
-- **Trees**: Procedurally generated trees with logs and leaves
-
-### UI
-- **Hotbar**: Visual block selection hotbar
-- **Crosshair**: Center screen crosshair for block targeting
-- **Debug Info**: Position, chunk, FPS counter
-
-## Running
+ES Modules を使うのでローカルサーバー経由で開く（`file://` では動かない）。
 
 ```bash
-npm start
-# or
-python3 -m http.server 8000
+npm start   # = python3 -m http.server 8000
 ```
 
-Open http://localhost:8000 in a web browser.
+http://localhost:8000 を開き、画面をクリックして開始。
 
-## Architecture
+## 操作
 
-- **config.js**: Game configuration constants
-- **utils.js**: Utility functions for coordinate transformations
-- **block-types.js**: Block definitions and properties
-- **physics.js**: Collision detection and raycast system
-- **world.js**: Chunk generation and terrain
-- **player.js**: Player state, movement, and camera
-- **renderer.js**: Three.js scene setup and chunk mesh generation
-- **input.js**: Keyboard and mouse input handling
-- **main.js**: Main game loop and coordinator
+| キー | 動作 |
+| --- | --- |
+| WASD | 移動 |
+| マウス | 視点 |
+| Space | ジャンプ / 水中で上昇 |
+| Shift | ダッシュ |
+| C | しゃがむ（端から落ちない） |
+| 左クリック / 右クリック | 破壊 / 設置 |
+| 1-9 / ホイール | ブロック選択 |
+| Esc | 一時停止 |
 
-## Performance
+## 構成
 
-The game uses:
-- Instanced chunk mesh generation with face culling
-- Dynamic chunk loading/unloading
-- Efficient collision detection
-- WebGL rendering with Three.js
+| ファイル | 役割 |
+| --- | --- |
+| `src/config.js` | 定数（チャンクサイズ、描画距離、プレイヤー物理） |
+| `src/utils.js` | シード付き乱数・ハッシュ・Simplex ノイズ |
+| `src/block-types.js` | ブロック定義とホットバー |
+| `src/world.js` | チャンク管理、地形・木の生成、編集の保持、ロード/アンロード |
+| `src/renderer.js` | チャンクのメッシュ化（隣接チャンクを考慮した面カリング、不透明/半透明の2メッシュ） |
+| `src/physics.js` | ボクセル DDA レイキャスト、軸ごとの AABB 衝突 |
+| `src/player.js` | 移動・重力・ジャンプ・水泳・しゃがみ |
+| `src/input.js` | キーボード/マウス/ポインタロック |
+| `src/main.js` | シーン初期化、HUD、ブロック操作、メインループ |
 
-## Dependencies
+## 今後の拡張候補
 
-- Three.js (from CDN)
-- SimplexNoise (from CDN)
+昼夜サイクル、ライティング/AO、破壊パーティクル、効果音、テクスチャアトラス、Web Worker でのチャンク生成。
