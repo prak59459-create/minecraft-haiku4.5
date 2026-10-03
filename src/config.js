@@ -22,7 +22,10 @@ const CONFIG = {
 
     // Rendering
     RENDER_CHUNKS: true,
-    SHADOW_MAP_SIZE: 2048,
+    SHADOW_MAP_SIZE: 1024,
+    FOG_COLOR: 0x87ceeb,
+    FOG_NEAR: 20,
+    FOG_FAR: 300,
 
     // Day/night cycle
     DAY_DURATION: 20 * 60 * 1000,

@@ -4,10 +4,13 @@ class GameRenderer {
         this.camera = new THREE.PerspectiveCamera(CONFIG.FOV, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setClearColor(0x87ceeb);
+        this.renderer.setClearColor(CONFIG.FOG_COLOR);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowMap;
         this.renderer.setPixelRatio(window.devicePixelRatio || 1);
+
+        this.scene.fog = new THREE.Fog(CONFIG.FOG_COLOR, CONFIG.FOG_FAR, CONFIG.FOG_NEAR);
+
         document.body.appendChild(this.renderer.domElement);
 
         this.light = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -49,18 +52,21 @@ class GameRenderer {
         if (!chunk.isDirty && chunk.mesh) return chunk.mesh;
 
         if (chunk.mesh) {
-            this.scene.remove(chunk.mesh);
-            chunk.mesh.geometry.dispose();
-            chunk.mesh.material.dispose();
+            if (Array.isArray(chunk.mesh)) {
+                chunk.mesh.forEach(m => this.scene.remove(m));
+                chunk.mesh.forEach(m => {
+                    m.geometry.dispose();
+                    m.material.dispose();
+                });
+            } else {
+                this.scene.remove(chunk.mesh);
+                chunk.mesh.geometry.dispose();
+                chunk.mesh.material.dispose();
+            }
         }
 
-        const geometry = new THREE.BufferGeometry();
-        const vertices = [];
-        const normals = [];
-        const colors = [];
-        const indices = [];
-
-        let vertexIndex = 0;
+        const opaqueData = { vertices: [], normals: [], colors: [], indices: [] };
+        const transparentData = { vertices: [], normals: [], colors: [], indices: [] };
 
         for (let x = 0; x < CONFIG.CHUNK_SIZE; x++) {
             for (let y = 0; y < CONFIG.CHUNK_HEIGHT; y++) {
@@ -72,37 +78,64 @@ class GameRenderer {
                     const [r, g, b] = props.color;
                     const color = [r / 255, g / 255, b / 255];
 
-                    this.addBlockFaces(chunk, x, y, z, block, vertices, normals, colors, indices, vertexIndex, color);
-                    vertexIndex = indices.length / 3;
+                    const data = props.transparent ? transparentData : opaqueData;
+                    const vertexIndex = data.indices.length / 3;
+
+                    this.addBlockFaces(chunk, x, y, z, block, data.vertices, data.normals, data.colors, data.indices, vertexIndex, color);
                 }
             }
         }
 
-        if (vertices.length === 0) {
-            chunk.mesh = null;
-            chunk.isDirty = false;
-            return null;
+        const meshes = [];
+
+        if (opaqueData.vertices.length > 0) {
+            const mesh = this.createMesh(opaqueData, false);
+            mesh.position.set(chunk.x * CONFIG.CHUNK_SIZE, 0, chunk.z * CONFIG.CHUNK_SIZE);
+            this.scene.add(mesh);
+            meshes.push(mesh);
         }
 
-        geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
-        geometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(normals), 3));
-        geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
-        geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
+        if (transparentData.vertices.length > 0) {
+            const mesh = this.createMesh(transparentData, true);
+            mesh.position.set(chunk.x * CONFIG.CHUNK_SIZE, 0, chunk.z * CONFIG.CHUNK_SIZE);
+            this.scene.add(mesh);
+            meshes.push(mesh);
+        }
+
+        chunk.mesh = meshes.length === 0 ? null : (meshes.length === 1 ? meshes[0] : meshes);
+        chunk.isDirty = false;
+
+        return chunk.mesh;
+    }
+
+    shouldRenderFace(chunk, x, y, z, isSelfTransparent) {
+        const adjacentBlock = chunk.getBlock(x, y, z);
+        if (adjacentBlock === BLOCK_TYPES.AIR) return true;
+
+        const adjacentProps = BLOCK_PROPERTIES[adjacentBlock];
+        if (adjacentProps.transparent === isSelfTransparent) return false;
+
+        return true;
+    }
+
+    createMesh(data, isTransparent) {
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(data.vertices), 3));
+        geometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(data.normals), 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(data.colors), 3));
+        geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(data.indices), 1));
 
         const material = new THREE.MeshPhongMaterial({
             vertexColors: true,
             side: THREE.FrontSide,
-            flatShading: false
+            flatShading: false,
+            transparent: isTransparent,
+            opacity: isTransparent ? 0.8 : 1.0
         });
 
         const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(chunk.x * CONFIG.CHUNK_SIZE, 0, chunk.z * CONFIG.CHUNK_SIZE);
-        mesh.castShadow = true;
+        mesh.castShadow = !isTransparent;
         mesh.receiveShadow = true;
-
-        this.scene.add(mesh);
-        chunk.mesh = mesh;
-        chunk.isDirty = false;
 
         return mesh;
     }
@@ -123,13 +156,15 @@ class GameRenderer {
         const checkY = [y+faces[2].dir[1], y+faces[3].dir[1]];
         const checkZ = [z+faces[4].dir[2], z+faces[5].dir[2]];
 
+        const isSelfTransparent = BLOCK_PROPERTIES[block].transparent;
+
         const facesToRender = [
-            chunk.getBlock(checkX[0], y, z) === BLOCK_TYPES.AIR,
-            chunk.getBlock(checkX[1], y, z) === BLOCK_TYPES.AIR,
-            chunk.getBlock(x, checkY[0], z) === BLOCK_TYPES.AIR,
-            chunk.getBlock(x, checkY[1], z) === BLOCK_TYPES.AIR,
-            chunk.getBlock(x, y, checkZ[0]) === BLOCK_TYPES.AIR,
-            chunk.getBlock(x, y, checkZ[1]) === BLOCK_TYPES.AIR
+            this.shouldRenderFace(chunk, checkX[0], y, z, isSelfTransparent),
+            this.shouldRenderFace(chunk, checkX[1], y, z, isSelfTransparent),
+            this.shouldRenderFace(chunk, x, checkY[0], z, isSelfTransparent),
+            this.shouldRenderFace(chunk, x, checkY[1], z, isSelfTransparent),
+            this.shouldRenderFace(chunk, x, y, checkZ[0], isSelfTransparent),
+            this.shouldRenderFace(chunk, x, y, checkZ[1], isSelfTransparent)
         ];
 
         for (let i = 0; i < faces.length; i++) {
