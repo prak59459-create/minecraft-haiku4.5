@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minecraft Clone</title>
+  <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <div id="hud">
+    <div id="inventory-bar">
+      <div class="inventory-slot selected" data-index="0">
+        <span class="block-icon" style="background: #8B7355;">⬜</span>
+        <span class="block-label">Wood</span>
+      </div>
+      <div class="inventory-slot" data-index="1">
+        <span class="block-icon" style="background: #90EE90;">⬜</span>
+        <span class="block-label">Grass</span>
+      </div>
+      <div class="inventory-slot" data-index="2">
+        <span class="block-icon" style="background: #8B7355;">⬜</span>
+        <span class="block-label">Dirt</span>
+      </div>
+      <div class="inventory-slot" data-index="3">
+        <span class="block-icon" style="background: #808080;">⬜</span>
+        <span class="block-label">Stone</span>
+      </div>
+      <div class="inventory-slot" data-index="4">
+        <span class="block-icon" style="background: #228B22;">⬜</span>
+        <span class="block-label">Leaves</span>
+      </div>
+      <div class="inventory-slot" data-index="5">
+        <span class="block-icon" style="background: #4169E1;">⬜</span>
+        <span class="block-label">Water</span>
+      </div>
+      <div class="inventory-slot" data-index="6">
+        <span class="block-icon" style="background: #FFD700;">⬜</span>
+        <span class="block-label">Sand</span>
+      </div>
+      <div class="inventory-slot" data-index="7">
+        <span class="block-icon" style="background: #A9A9A9;">⬜</span>
+        <span class="block-label">Gravel</span>
+      </div>
+      <div class="inventory-slot" data-index="8">
+        <span class="block-icon" style="background: #DC143C;">⬜</span>
+        <span class="block-label">Lava</span>
+      </div>
+    </div>
+
+    <div id="crosshair"></div>
+
+    <div id="info-panel">
+      <div id="fps">FPS: 60</div>
+      <div id="coords">X: 0 Y: 0 Z: 0</div>
+      <div id="chunks">Chunks: 0</div>
+      <div id="day-night">🌤️ Day</div>
+    </div>
+  </div>
+
+  <div id="help-overlay" class="hidden">
+    <div id="help-content">
+      <h2>Controls</h2>
+      <p><strong>W/A/S/D</strong> - Move</p>
+      <p><strong>Mouse</strong> - Look Around</p>
+      <p><strong>Space</strong> - Jump / Fly Up</p>
+      <p><strong>Shift</strong> - Sprint / Fly Down</p>
+      <p><strong>Left Click</strong> - Destroy Block</p>
+      <p><strong>Right Click</strong> - Place Block</p>
+      <p><strong>1-9 / Scroll Wheel</strong> - Select Block</p>
+      <p><strong>H</strong> - Toggle Help</p>
+      <p><strong>F</strong> - Toggle Flight</p>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

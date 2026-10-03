@@ -1,0 +1,19 @@
+{
+  "name": "minecraft-haiku4.5",
+  "version": "1.0.0",
+  "description": "A 3D Minecraft clone using Three.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^r128",
+    "simplex-noise": "^3.0.2"
+  },
+  "devDependencies": {
+    "vite": "^4.0.0",
+    "@vitejs/plugin-basic-ssl": "^1.0.0"
+  }
+}
