@@ -18,11 +18,11 @@ const BLOCKS = {
 const BLOCK_COLORS = {
   1: 0x808080, // stone
   2: 0x8B4513, // dirt
-  3: 0x228B22, // grass
-  4: 0xA0522D, // wood
-  5: 0x228B22, // leaves
-  6: 0x1E90FF, // water
-  7: 0xF4A460  // sand
+  3: 0x228B22, // grass (darker green)
+  4: 0x8B6914, // wood (darker brown)
+  5: 0x3CB371, // leaves (lighter green)
+  6: 0x4682B4, // water (steel blue)
+  7: 0xEDD5B1  // sand (light tan)
 };
 
 export class World {
