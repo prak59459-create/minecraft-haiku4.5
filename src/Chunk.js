@@ -28,20 +28,42 @@ export default class Chunk {
     const worldZ = this.chunkZ * this.size + z
 
     const baseHeight = this.getTerrainHeight(worldX, worldZ)
+    const treeDensity = this.noise.noise2D(worldX * 0.05, worldZ * 0.05) * 0.5 + 0.5
 
     for (let y = 0; y < this.height; y++) {
       if (y === 0) {
         this.setBlock(x, y, z, BlockTypes.BEDROCK)
-      } else if (y < baseHeight - 3) {
+      } else if (y < baseHeight - 4) {
         this.setBlock(x, y, z, BlockTypes.STONE)
       } else if (y < baseHeight) {
         this.setBlock(x, y, z, BlockTypes.DIRT)
       } else if (y === baseHeight) {
-        this.setBlock(x, y, z, BlockTypes.GRASS)
-      } else if (y < baseHeight + 1 && Math.random() < 0.3) {
-        this.setBlock(x, y, z, BlockTypes.GRASS)
-      } else if (y === baseHeight + 1 && Math.random() < 0.1) {
-        this.setBlock(x, y, z, BlockTypes.LEAVES)
+        if (baseHeight > 50 && baseHeight < 120) {
+          this.setBlock(x, y, z, BlockTypes.GRASS)
+        } else if (baseHeight <= 50) {
+          this.setBlock(x, y, z, BlockTypes.SAND)
+        } else {
+          this.setBlock(x, y, z, BlockTypes.DIRT)
+        }
+      }
+    }
+
+    if (baseHeight > 60 && baseHeight < 100 && treeDensity > 0.6) {
+      const treeHeight = 6 + Math.floor(this.noise.noise2D(worldX * 0.2, worldZ * 0.2) * 2)
+      for (let h = 0; h < treeHeight; h++) {
+        this.setBlock(x, baseHeight + 1 + h, z, BlockTypes.WOOD)
+      }
+
+      const foliageStart = baseHeight + treeHeight - 2
+      for (let fy = foliageStart; fy < baseHeight + treeHeight + 2; fy++) {
+        for (let fx = -2; fx <= 2; fx++) {
+          for (let fz = -2; fz <= 2; fz++) {
+            if (fx === 0 && fz === 0) continue
+            if (Math.abs(fx) + Math.abs(fz) <= 3) {
+              this.setBlock(x + fx, fy, z + fz, BlockTypes.LEAVES)
+            }
+          }
+        }
       }
     }
   }

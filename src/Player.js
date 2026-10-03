@@ -203,20 +203,48 @@ export default class Player {
     return new THREE.Group()
   }
 
-  canMoveTo(x, y, z) {
+  canMoveTo(pos, world) {
+    if (!world) return true
+
     const hw = this.width / 2
     const hd = this.depth / 2
 
-    for (let checkX = -hw; checkX <= hw; checkX += 0.2) {
-      for (let checkY = 0; checkY <= this.height; checkY += 0.2) {
-        for (let checkZ = -hd; checkZ <= hd; checkZ += 0.2) {
-          const px = Math.floor(x + checkX)
-          const py = Math.floor(y + checkY)
-          const pz = Math.floor(z + checkZ)
-        }
+    const checkPoints = [
+      [0, 0, 0], [hw, 0, hd], [-hw, 0, -hd], [hw, 0, -hd], [-hw, 0, hd],
+      [0, this.height * 0.5, 0], [0, this.height - 0.1, 0]
+    ]
+
+    for (const offset of checkPoints) {
+      const px = Math.floor(pos.x + offset[0])
+      const py = Math.floor(pos.y + offset[1])
+      const pz = Math.floor(pos.z + offset[2])
+
+      const block = world.getBlock(px, py, pz)
+      if (block !== 0 && BlockTypes.isSolid(block)) {
+        return false
       }
     }
 
     return true
+  }
+
+  checkGround(world) {
+    if (!world) return false
+
+    const offset = 0.01
+    for (let x = -this.width / 2; x <= this.width / 2; x += 0.3) {
+      for (let z = -this.depth / 2; z <= this.depth / 2; z += 0.3) {
+        const block = world.getBlock(
+          Math.floor(this.position.x + x),
+          Math.floor(this.position.y - offset),
+          Math.floor(this.position.z + z)
+        )
+        if (block !== 0 && BlockTypes.isSolid(block)) {
+          return true
+        }
+      }
+    }
+
+    return false
   }
 }

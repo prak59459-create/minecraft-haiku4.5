@@ -58,8 +58,8 @@ export default class Game {
     const deltaTime = this.clock.getDelta()
     const elapsedTime = this.clock.getElapsedTime()
 
-    this.player.update(deltaTime)
     this.world.update(this.camera.position)
+    this.player.update(deltaTime, this.world)
     this.interaction.update()
     this.updateLighting(elapsedTime)
 
