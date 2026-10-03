@@ -6,6 +6,8 @@ import { Physics } from './game/physics.js';
 import { UI } from './game/ui.js';
 import { ParticleSystem } from './game/particles.js';
 import { AudioSystem } from './game/audio.js';
+import { GameSettings } from './game/settings.js';
+import { PerformanceMonitor } from './game/performance.js';
 
 class MinecraftGame {
     constructor() {
@@ -16,12 +18,18 @@ class MinecraftGame {
         this.setupRenderer();
         this.setupLighting();
 
+        this.settings = new GameSettings();
+        this.performanceMonitor = new PerformanceMonitor();
+
         this.world = new World(this.scene, new SimplexNoise());
+        this.world.renderDistance = this.settings.get('renderDistance');
+
         this.player = new Player(this.camera, this.renderer.domElement);
         this.physics = new Physics(this.world, this.player);
         this.ui = new UI(this.player, this.world, this.camera);
         this.particles = new ParticleSystem(this.scene);
         this.audio = new AudioSystem();
+        this.audio.setVolume(this.settings.get('masterVolume'));
 
         this.time = 0;
         this.dayDuration = 20; // seconds for a full day/night cycle
@@ -37,8 +45,9 @@ class MinecraftGame {
     setupRenderer() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87ceeb);
-        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.enabled = this.settings.get('shadowsEnabled');
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+        this.renderer.getPixelRatio = () => 1; // Optimize pixel ratio
         document.getElementById('canvas-container').appendChild(this.renderer.domElement);
     }
 
@@ -118,7 +127,10 @@ class MinecraftGame {
 
         const deltaTime = 1 / 60;
 
+        this.performanceMonitor.startMeasure('frame');
+
         // Update player input and movement
+        this.performanceMonitor.startMeasure('update');
         this.player.update(deltaTime);
 
         // Apply physics
@@ -138,12 +150,18 @@ class MinecraftGame {
 
         // Handle footstep sounds
         this.updateFootsteps();
+        this.performanceMonitor.endMeasure('update');
 
         // Update UI
         this.ui.update();
 
         // Render
+        this.performanceMonitor.startMeasure('render');
         this.renderer.render(this.scene, this.camera);
+        this.performanceMonitor.endMeasure('render');
+
+        this.performanceMonitor.endMeasure('frame');
+        this.performanceMonitor.update();
     }
 
     updateFootsteps() {
