@@ -10,7 +10,8 @@ class MinecraftGame {
         this.setupLighting();
 
         this.world = new World(this.scene);
-        this.player = new Player(this.scene, this.camera);
+        this.physicsEngine = new PhysicsEngine(this.world);
+        this.player = new Player(this.scene, this.camera, this.physicsEngine);
         this.particleSystem = new ParticleSystem(this.scene);
         this.ui = new GameUI(this.player, this.world);
         this.input = new InputManager(this.world, this.player, this.particleSystem);

@@ -1,7 +1,8 @@
 class Player {
-    constructor(scene, camera) {
+    constructor(scene, camera, physicsEngine = null) {
         this.scene = scene;
         this.camera = camera;
+        this.physicsEngine = physicsEngine;
 
         this.position = new THREE.Vector3(0, 80, 0);
         this.velocity = new THREE.Vector3(0, 0, 0);
@@ -21,6 +22,7 @@ class Player {
         this.isSprinting = false;
         this.isCrouching = false;
         this.isFlying = false;
+        this.onGround = false;
 
         this.direction = new THREE.Vector3();
         this.euler = new THREE.Euler(0, 0, 0, 'YXZ');
