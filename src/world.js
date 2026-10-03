@@ -5,6 +5,7 @@ import { TerrainGenerator } from './terrain.js';
 const CHUNK_SIZE = 16;
 const RENDER_DISTANCE = 8;
 const MAX_HEIGHT = 256;
+const MESH_UPDATE_BATCH_SIZE = 4;
 
 export class Chunk {
     constructor(x, z, terrain) {

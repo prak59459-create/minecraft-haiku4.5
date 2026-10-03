@@ -106,28 +106,34 @@ export class TerrainGenerator {
             return BLOCK_TYPES.AIR;
         }
 
+        const depthFromTop = height - y;
+
         if (y === height) {
-            if (height > 65) return BLOCK_TYPES.GRASS;
+            if (height > 70) return BLOCK_TYPES.GRASS;
+            if (height > 64) return BLOCK_TYPES.GRASS;
             if (height > 62) return BLOCK_TYPES.SAND;
             return BLOCK_TYPES.GRASS;
         }
 
-        if (y > height - 4) {
+        if (depthFromTop < 4) {
+            if (height > 70) return BLOCK_TYPES.DIRT;
             if (height > 62) return BLOCK_TYPES.DIRT;
             return BLOCK_TYPES.SAND;
         }
 
-        if (y > 60) {
-            return Math.random() > 0.7 ? BLOCK_TYPES.GRAVEL : BLOCK_TYPES.STONE;
+        if (y > 56) {
+            const stoneNoise = this.mainNoise.noise(x * 0.2, y * 0.2, z * 0.2);
+            if (stoneNoise > 0.3) return BLOCK_TYPES.STONE;
+            return BLOCK_TYPES.GRAVEL;
         }
 
         return BLOCK_TYPES.STONE;
     }
 
     generateTree(x, z, y, blocks) {
-        if (y < 20 || y > 100) return;
+        if (y < 20 || y > 120) return;
 
-        const trunkHeight = 4 + Math.floor(Math.random() * 3);
+        const trunkHeight = 5 + Math.floor(Math.random() * 4);
 
         for (let i = 0; i < trunkHeight; i++) {
             if (y + i < 256) {
@@ -136,14 +142,19 @@ export class TerrainGenerator {
             }
         }
 
-        const leavesStart = y + trunkHeight - 2;
-        for (let dy = 0; dy < 4; dy++) {
-            const radius = dy < 3 ? 2 : 1;
+        const leavesStart = y + trunkHeight - 3;
+        const leafHeight = 5;
+
+        for (let dy = 0; dy < leafHeight; dy++) {
+            const progress = dy / leafHeight;
+            const radius = Math.max(1, Math.round(3 * (1 - progress * 0.6)));
+
             for (let dx = -radius; dx <= radius; dx++) {
                 for (let dz = -radius; dz <= radius; dz++) {
-                    if (dx * dx + dz * dz <= radius * radius) {
+                    const distSq = dx * dx + dz * dz;
+                    if (distSq <= radius * radius + 0.5) {
                         const key = `${x + dx},${leavesStart + dy},${z + dz}`;
-                        if (!blocks.has(key)) {
+                        if (!blocks.has(key) || blocks.get(key) === BLOCK_TYPES.AIR) {
                             blocks.set(key, BLOCK_TYPES.LEAVES);
                         }
                     }
@@ -172,7 +183,9 @@ export class TerrainGenerator {
                     }
                 }
 
-                if (height > 65 && Math.random() > 0.95) {
+                if (height > 68 && Math.random() > 0.92) {
+                    this.generateTree(x, height + 1, z, blocks);
+                } else if (height > 64 && height < 68 && Math.random() > 0.98) {
                     this.generateTree(x, height + 1, z, blocks);
                 }
             }

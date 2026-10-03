@@ -1,4 +1,4 @@
-import { isBlockSolid } from './blocks.js';
+import { isBlockSolid, BLOCK_TYPES } from './blocks.js';
 
 export class Physics {
     constructor(world) {
@@ -6,11 +6,18 @@ export class Physics {
         this.gravity = -0.08;
         this.playerHeight = 1.8;
         this.playerWidth = 0.6;
+        this.inWater = false;
+        this.waterDrag = 0.8;
     }
 
     isBlockAtPosition(x, y, z) {
         const blockType = this.world.getBlockAt(x, y, z);
         return isBlockSolid(blockType);
+    }
+
+    isBlockWater(x, y, z) {
+        const blockType = this.world.getBlockAt(x, y, z);
+        return blockType === BLOCK_TYPES.WATER;
     }
 
     checkCollision(pos, width, height) {
@@ -72,7 +79,19 @@ export class Physics {
         const width = this.playerWidth;
         const height = this.playerHeight;
 
-        player.velocity.y += this.gravity;
+        this.inWater = this.isBlockWater(
+            Math.floor(player.position.x),
+            Math.floor(player.position.y + height * 0.5),
+            Math.floor(player.position.z)
+        );
+
+        if (this.inWater) {
+            player.velocity.y += 0.04;
+            player.velocity.y *= 0.98;
+        } else {
+            player.velocity.y += this.gravity;
+        }
+
         player.velocity.y = Math.max(player.velocity.y, -0.5);
 
         const moveSpeed = player.isSprinting ? 0.15 : (player.isCrouching ? 0.04 : 0.1);

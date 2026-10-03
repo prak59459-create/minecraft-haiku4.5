@@ -18,10 +18,16 @@ class Game {
             1000
         );
 
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            precision: 'highp',
+            stencil: false
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+        this.renderer.shadowMap.autoUpdate = true;
         document.body.appendChild(this.renderer.domElement);
 
         this.world = new World(12345);
@@ -40,6 +46,8 @@ class Game {
         this.loadedChunks = new Map();
         this.time = 0;
         this.dayLength = 20000;
+        this.meshUpdateQueue = [];
+        this.maxMeshUpdatesPerFrame = 2;
 
         this.animate();
     }
@@ -117,23 +125,32 @@ class Game {
         const { chunks, loaded } = this.world.update(this.player.position);
 
         for (const chunk of chunks) {
-            if (!chunk.mesh && chunk.needsUpdate) {
-                const mesh = chunk.generateMesh();
-                if (mesh) {
-                    this.scene.add(mesh);
-                    this.loadedChunks.set(`${chunk.x},${chunk.z}`, mesh);
-                }
-            } else if (chunk.mesh && chunk.needsUpdate) {
+            const key = `${chunk.x},${chunk.z}`;
+
+            if (chunk.needsUpdate) {
+                this.meshUpdateQueue.push(chunk);
+            } else if (!chunk.mesh) {
+                this.meshUpdateQueue.push(chunk);
+            }
+        }
+
+        let updateCount = 0;
+        while (this.meshUpdateQueue.length > 0 && updateCount < this.maxMeshUpdatesPerFrame) {
+            const chunk = this.meshUpdateQueue.shift();
+            const key = `${chunk.x},${chunk.z}`;
+
+            if (chunk.mesh) {
                 this.scene.remove(chunk.mesh);
                 chunk.mesh.geometry.dispose();
                 chunk.mesh.material.dispose();
-
-                const mesh = chunk.generateMesh();
-                if (mesh) {
-                    this.scene.add(mesh);
-                    this.loadedChunks.set(`${chunk.x},${chunk.z}`, mesh);
-                }
             }
+
+            const mesh = chunk.generateMesh();
+            if (mesh) {
+                this.scene.add(mesh);
+                this.loadedChunks.set(key, mesh);
+            }
+            updateCount++;
         }
 
         for (const [key, mesh] of this.loadedChunks) {
