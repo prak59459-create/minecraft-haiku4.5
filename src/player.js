@@ -73,29 +73,30 @@ export class Player {
   }
 
   setupBlockSelector() {
-    const blockTypes = [BLOCKS.DIRT, BLOCKS.GRASS, BLOCKS.STONE, BLOCKS.WOOD, BLOCKS.LEAVES, BLOCKS.WATER, BLOCKS.SAND, BLOCKS.STONE, BLOCKS.DIRT];
-    const blockNames = ['Dirt', 'Grass', 'Stone', 'Wood', 'Leaves', 'Water', 'Sand', 'Stone', 'Dirt'];
-    const selector = document.getElementById('blockSelector');
+    this.blockTypes = [BLOCKS.DIRT, BLOCKS.GRASS, BLOCKS.STONE, BLOCKS.WOOD, BLOCKS.LEAVES, BLOCKS.WATER, BLOCKS.SAND, BLOCKS.STONE, BLOCKS.DIRT];
+    this.blockNames = ['Dirt', 'Grass', 'Stone', 'Wood', 'Leaves', 'Water', 'Sand', 'Stone', 'Dirt'];
+    const slots = document.getElementById('blockSlots');
 
-    blockTypes.forEach((block, i) => {
+    this.blockTypes.forEach((block, i) => {
       const slot = document.createElement('div');
       slot.className = 'blockSlot';
       if (i === 0) slot.classList.add('active');
       slot.textContent = (i + 1);
-      slot.title = blockNames[i];
+      slot.title = this.blockNames[i];
       slot.onclick = () => this.selectBlock(i);
-      selector.appendChild(slot);
+      slots.appendChild(slot);
     });
   }
 
   selectBlock(index) {
     this.selectedBlockIndex = index % 9;
-    const blockTypes = [BLOCKS.DIRT, BLOCKS.GRASS, BLOCKS.STONE, BLOCKS.WOOD, BLOCKS.LEAVES, BLOCKS.WATER, BLOCKS.SAND, BLOCKS.STONE, BLOCKS.DIRT];
-    this.selectedBlock = blockTypes[this.selectedBlockIndex];
+    this.selectedBlock = this.blockTypes[this.selectedBlockIndex];
 
     document.querySelectorAll('.blockSlot').forEach((slot, i) => {
       slot.classList.toggle('active', i === this.selectedBlockIndex);
     });
+
+    document.getElementById('selectedBlockName').textContent = this.blockNames[this.selectedBlockIndex];
   }
 
   update(world, physics) {

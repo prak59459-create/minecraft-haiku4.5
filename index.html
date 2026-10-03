@@ -36,10 +36,22 @@
       left: 50%;
       transform: translateX(-50%);
       display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.6);
+      padding: 12px;
+      border-radius: 8px;
+    }
+    #selectedBlockName {
+      font-size: 14px;
+      color: rgba(255,255,255,0.8);
+      min-width: 80px;
+      text-align: center;
+    }
+    #blockSlots {
+      display: flex;
       gap: 5px;
-      background: rgba(0,0,0,0.5);
-      padding: 10px;
-      border-radius: 5px;
     }
     .blockSlot {
       width: 40px;
@@ -52,10 +64,12 @@
       justify-content: center;
       font-size: 12px;
       cursor: pointer;
+      transition: all 0.1s;
     }
     .blockSlot.active {
       border-color: rgba(255,255,255,0.9);
       background: rgba(100,100,100,0.8);
+      transform: scale(1.1);
     }
     #stats {
       position: absolute;
@@ -85,7 +99,10 @@
 <body>
   <div id="hud">
     <div id="crosshair"></div>
-    <div id="blockSelector"></div>
+    <div id="blockSelector">
+      <div id="selectedBlockName">Dirt</div>
+      <div id="blockSlots"></div>
+    </div>
     <div id="stats"></div>
     <div id="message"></div>
   </div>
