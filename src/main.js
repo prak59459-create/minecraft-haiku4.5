@@ -3,8 +3,10 @@ import { SimplexNoise } from 'simplex-noise';
 import { World } from './world.js';
 import { Player } from './player.js';
 import { UI } from './ui.js';
+import { ParticleSystem } from './particles.js';
+import { Environment } from './environment.js';
 
-let scene, camera, renderer, world, player, ui;
+let scene, camera, renderer, world, player, ui, particles, environment;
 let clock = new THREE.Clock();
 let frameCount = 0;
 let lastFpsTime = 0;
@@ -53,6 +55,10 @@ function init() {
     world = new World(scene);
     player = new Player(camera);
     ui = new UI();
+    particles = new ParticleSystem(scene);
+    environment = new Environment(scene);
+    environment.setSunlight(sunlight);
+    environment.setAmbientLight(ambientLight);
 
     // Handle window resize
     window.addEventListener('resize', onWindowResize);
@@ -73,11 +79,11 @@ function animate() {
     const delta = Math.min(clock.getDelta(), 0.016);
     const elapsed = clock.getElapsedTime();
 
-    // Update player
+    // Update systems
     player.update(delta, world);
-
-    // Update world chunks
     world.updateChunks(player.position);
+    particles.update(delta);
+    environment.update(delta);
 
     // Update camera position
     camera.position.copy(player.position);
@@ -91,24 +97,32 @@ function animate() {
 
     const intersects = raycaster.intersectObjects(world.getVisibleBlocks(), false);
     let selectedBlock = null;
+    let targetPoint = null;
+    const maxDistance = 10;
 
     if (intersects.length > 0) {
-        const intersection = intersects[0];
-        selectedBlock = intersection.object;
-
-        // Update UI with selected block
-        if (selectedBlock) {
-            ui.updateSelectedBlock(selectedBlock.userData.type);
+        for (const intersection of intersects) {
+            if (intersection.distance <= maxDistance) {
+                selectedBlock = intersection.object;
+                targetPoint = intersection.point;
+                break;
+            }
         }
 
-        // Handle mouse clicks
-        if (player.leftClickPressed) {
-            world.destroyBlock(intersection.point, direction);
-            player.leftClickPressed = false;
-        }
-        if (player.rightClickPressed) {
-            world.placeBlock(intersection.point, direction, player.selectedBlockType);
-            player.rightClickPressed = false;
+        // Handle mouse clicks only within reach
+        if (targetPoint && selectedBlock) {
+            if (player.leftClickPressed) {
+                const blockType = getBlockTypeAtPoint(targetPoint, world);
+                world.destroyBlock(targetPoint, direction);
+                if (blockType) {
+                    particles.createBlockBreakParticles(targetPoint, blockType);
+                }
+                player.leftClickPressed = false;
+            }
+            if (player.rightClickPressed) {
+                world.placeBlock(targetPoint, direction, player.selectedBlockType);
+                player.rightClickPressed = false;
+            }
         }
     }
 
@@ -124,6 +138,25 @@ function animate() {
     renderer.render(scene, camera);
 
     frameCount++;
+}
+
+function getBlockTypeAtPoint(point, world) {
+    const blockPos = new THREE.Vector3(
+        Math.floor(point.x),
+        Math.floor(point.y),
+        Math.floor(point.z)
+    );
+
+    const chunkX = Math.floor(blockPos.x / 16);
+    const chunkZ = Math.floor(blockPos.z / 16);
+    const localX = ((blockPos.x % 16) + 16) % 16;
+    const localZ = ((blockPos.z % 16) + 16) % 16;
+
+    const chunk = world.chunks.get(`${chunkX},${chunkZ}`);
+    if (chunk) {
+        return chunk.getBlock(localX, Math.floor(blockPos.y), localZ);
+    }
+    return null;
 }
 
 // Initialize on load
