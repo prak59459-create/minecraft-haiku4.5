@@ -9,23 +9,39 @@ A full-featured 3D Minecraft clone built with Three.js, featuring procedural ter
 - **Mouse**: Look around (click to lock pointer)
 - **Space**: Jump
 - **Shift**: Sprint
-- **Ctrl**: Crouch
+- **Ctrl**: Crouch  
 - **F**: Toggle flying mode (creative mode)
 - **1-9**: Select block type from hotbar
 - **Scroll Wheel**: Cycle through block types
 - **Left Click**: Destroy block
 - **Right Click**: Place block
 - **E**: Toggle inventory
+- **H**: Show/hide help text
 
 ### Gameplay
-- **Procedural Terrain**: Infinite world generation using Simplex noise
+- **Procedural Terrain**: Infinite world generation using multi-scale Simplex noise
+- **Biome System**: Forest and desert biomes with appropriate terrain features
 - **Block Types**: Grass, dirt, stone, wood, leaves, water, and more
 - **Chunk System**: Automatic chunk loading/unloading for performance
-- **Physics**: Gravity, collision detection, jumping, sprinting
-- **Block Interaction**: Place and destroy blocks with raycasting
-- **Day/Night Cycle**: Dynamic lighting that changes throughout the day
-- **Inventory System**: Hotbar for quick block selection
+- **Physics**: Gravity, collision detection, jumping, sprinting, and crouching
+- **Block Interaction**: Place and destroy blocks with raycasting and instant feedback
+- **Day/Night Cycle**: Dynamic 20-second cycle with sky color transitions
+- **Lighting System**: Sun-based directional lighting with dynamic intensity
+- **Inventory System**: Hotbar for quick block selection with keyboard and scroll
 - **Flying Mode**: Creative mode for unrestricted movement
+
+### Audio & Feedback
+- **Sound Effects**: Block placement, destruction, and footstep sounds
+- **Web Audio API**: Procedurally generated audio with adjustable volume
+- **Particle Effects**: Visual feedback when breaking blocks
+- **Head Bobbing**: Realistic head movement when walking/sprinting
+
+### Settings & Performance
+- **Customizable Settings**: FOV, render distance, mouse sensitivity, volume
+- **Performance Monitoring**: Real-time FPS tracking and frame metrics
+- **Dynamic Quality**: Automatic adjustments based on performance
+- **Shadow Rendering**: Toggle shadows for better performance on slower hardware
+- **Persistent Settings**: Game settings saved to localStorage
 
 ## Installation
 
