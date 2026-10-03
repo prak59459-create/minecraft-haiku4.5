@@ -1,0 +1,101 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    background: #000;
+}
+
+#gameCanvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
+
+#ui {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    font-size: 14px;
+    color: white;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+#crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+}
+
+#hotbar {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+}
+
+.hotbar-slot {
+    width: 40px;
+    height: 40px;
+    background: rgba(128, 128, 128, 0.8);
+    border: 2px solid rgba(128, 128, 128, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: white;
+    cursor: pointer;
+}
+
+.hotbar-slot.selected {
+    border: 2px solid rgba(255, 255, 100, 0.8);
+    box-shadow: 0 0 8px rgba(255, 255, 100, 0.6);
+}
+
+#info {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: monospace;
+}
+
+#help {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    font-size: 11px;
+    text-align: center;
+}
+
+.help-text {
+    line-height: 1.4;
+}
