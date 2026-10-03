@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { World } from '../world/world';
 import { BLOCK_TYPES } from '../world/blocks';
+import { CollisionDetector } from '../physics/collision';
 
 const PLAYER_HEIGHT = 1.7;
 const PLAYER_RADIUS = 0.3;
@@ -117,54 +118,31 @@ export class Player {
     }
 
     const newPos = this.position.clone().addScaledVector(this.velocity, deltaTime);
+    this.updateCollision(newPos, world);
+  }
 
-    this.isOnGround = false;
-    if (!this.checkCollision(newPos, world)) {
+  private updateCollision(newPos: THREE.Vector3, world: World) {
+    const collidingBlocks = CollisionDetector.getCollidingBlocks(
+      newPos,
+      PLAYER_RADIUS,
+      PLAYER_HEIGHT,
+      world
+    );
+
+    if (collidingBlocks.length > 0) {
+      const result = CollisionDetector.resolveCollision(
+        newPos,
+        this.velocity,
+        collidingBlocks,
+        PLAYER_RADIUS,
+        PLAYER_HEIGHT
+      );
+      this.position.copy(result.position);
+      this.velocity.copy(result.velocity);
+      this.isOnGround = result.grounded;
+    } else {
       this.position.copy(newPos);
-    } else {
-      this.handleCollision(newPos, world);
-    }
-  }
-
-  private checkCollision(pos: THREE.Vector3, world: World): boolean {
-    const checkRadius = PLAYER_RADIUS;
-    const checkHeight = PLAYER_HEIGHT;
-
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dz = -1; dz <= 1; dz++) {
-        for (let dy = -1; dy <= 2; dy++) {
-          const checkX = Math.floor(pos.x + dx * checkRadius);
-          const checkY = Math.floor(pos.y + dy * checkHeight / 2);
-          const checkZ = Math.floor(pos.z + dz * checkRadius);
-
-          const blockType = world.getBlockAt(new THREE.Vector3(checkX, checkY, checkZ));
-          if (blockType !== BLOCK_TYPES.AIR && blockType !== BLOCK_TYPES.WATER) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
-
-  private handleCollision(newPos: THREE.Vector3, world: World) {
-    const tryPos = new THREE.Vector3(newPos.x, this.position.y, this.position.z);
-    if (!this.checkCollision(tryPos, world)) {
-      this.position.copy(tryPos);
-    } else {
-      tryPos.copy(this.position);
-      tryPos.z = newPos.z;
-      if (!this.checkCollision(tryPos, world)) {
-        this.position.copy(tryPos);
-      }
-    }
-
-    if (this.velocity.y < 0) {
-      const groundCheck = new THREE.Vector3(this.position.x, this.position.y - 0.1, this.position.z);
-      if (!this.checkCollision(groundCheck, world)) {
-        this.isOnGround = true;
-        this.velocity.y = 0;
-      }
+      this.isOnGround = false;
     }
   }
 

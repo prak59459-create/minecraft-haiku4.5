@@ -74,10 +74,15 @@ export class PerlinNoise {
 }
 
 export function getTerrainHeight(perlin: PerlinNoise, x: number, z: number): number {
-  const scale = 0.02;
-  const height = 64 + perlin.noise(x * scale, 0, z * scale) * 32 +
-                 perlin.noise(x * scale * 2, 0, z * scale * 2) * 16 +
-                 perlin.noise(x * scale * 4, 0, z * scale * 4) * 8;
+  const scale1 = 0.01;
+  const scale2 = 0.05;
+  const scale3 = 0.1;
+
+  const height = 64 +
+    perlin.noise(x * scale1, 0, z * scale1) * 32 +
+    perlin.noise(x * scale2, 0, z * scale2) * 16 +
+    perlin.noise(x * scale3, 0, z * scale3) * 8;
+
   return Math.floor(height);
 }
 
@@ -85,8 +90,16 @@ export function getBlockType(x: number, y: number, z: number, perlin: PerlinNois
   const height = getTerrainHeight(perlin, x, z);
 
   if (y > height) return 0; // air
-  if (y === height) return 1; // grass
-  if (y > height - 5) return 2; // dirt
+
+  if (y === height) {
+    const surfaceVariation = perlin.noise(x * 0.1, 0, z * 0.1);
+    if (surfaceVariation > 0.3) {
+      return 5; // leaves (vegetation)
+    }
+    return 1; // grass
+  }
+
+  if (y > height - 4) return 2; // dirt
   if (y > height - 20) return 3; // stone
   return 3; // deep stone
 }
