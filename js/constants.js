@@ -1,0 +1,55 @@
+const CHUNK_SIZE = 16;
+const CHUNK_HEIGHT = 256;
+const RENDER_DISTANCE = 3;
+const BLOCK_SIZE = 1;
+
+const BLOCK_TYPES = {
+    AIR: 0,
+    GRASS: 1,
+    DIRT: 2,
+    STONE: 3,
+    WOOD: 4,
+    LEAVES: 5,
+    WATER: 6,
+    SAND: 7,
+    GRAVEL: 8,
+    COAL: 9
+};
+
+const BLOCK_COLORS = {
+    [BLOCK_TYPES.AIR]: 0x00000000,
+    [BLOCK_TYPES.GRASS]: 0x90EE90,
+    [BLOCK_TYPES.DIRT]: 0x8B4513,
+    [BLOCK_TYPES.STONE]: 0x808080,
+    [BLOCK_TYPES.WOOD]: 0x8B4513,
+    [BLOCK_TYPES.LEAVES]: 0x228B22,
+    [BLOCK_TYPES.WATER]: 0x4488FF,
+    [BLOCK_TYPES.SAND]: 0xFFD700,
+    [BLOCK_TYPES.GRAVEL]: 0xA9A9A9,
+    [BLOCK_TYPES.COAL]: 0x333333
+};
+
+const BLOCK_NAMES = {
+    grass: BLOCK_TYPES.GRASS,
+    dirt: BLOCK_TYPES.DIRT,
+    stone: BLOCK_TYPES.STONE,
+    wood: BLOCK_TYPES.WOOD,
+    leaves: BLOCK_TYPES.LEAVES,
+    water: BLOCK_TYPES.WATER,
+    sand: BLOCK_TYPES.SAND,
+    gravel: BLOCK_TYPES.GRAVEL,
+    coal: BLOCK_TYPES.COAL
+};
+
+const BLOCK_NAME_REVERSE = Object.fromEntries(
+    Object.entries(BLOCK_NAMES).map(([k, v]) => [v, k])
+);
+
+const GRAVITY = 0.008;
+const WALK_SPEED = 0.2;
+const SPRINT_SPEED = 0.35;
+const JUMP_FORCE = 0.15;
+const MOUSE_SENSITIVITY = 0.003;
+
+const DAY_CYCLE_MINUTES = 20;
+const DAY_CYCLE_MS = DAY_CYCLE_MINUTES * 60 * 1000;
