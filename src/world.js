@@ -213,9 +213,20 @@ export class World {
     }
 
     dispose() {
-        for (const chunk of this.chunks.values()) {
+        const chunkArray = Array.from(this.chunks.values());
+        for (const chunk of chunkArray) {
             chunk.dispose();
         }
         this.chunks.clear();
+    }
+
+    getStats() {
+        let blockCount = 0;
+        let meshCount = 0;
+        for (const chunk of this.chunks.values()) {
+            blockCount += chunk.blocks.size;
+            if (chunk.mesh) meshCount++;
+        }
+        return { blockCount, meshCount, chunkCount: this.chunks.size };
     }
 }
