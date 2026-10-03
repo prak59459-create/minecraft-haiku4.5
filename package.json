@@ -1,0 +1,13 @@
+{
+  "name": "minecraft-haiku4.5",
+  "version": "1.0.0",
+  "description": "3D Minecraft clone",
+  "main": "index.js",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "dev": "python3 -m http.server 8000"
+  },
+  "keywords": ["minecraft", "3d", "game"],
+  "author": "",
+  "license": "ISC"
+}
