@@ -2,23 +2,25 @@ class GameRenderer {
     constructor() {
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(CONFIG.FOV, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ antialias: false });
+        this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87ceeb);
         this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowMap;
+        this.renderer.setPixelRatio(window.devicePixelRatio || 1);
         document.body.appendChild(this.renderer.domElement);
 
         this.light = new THREE.DirectionalLight(0xffffff, 0.8);
-        this.light.position.set(100, 100, 100);
-        this.light.target.position.set(0, 0, 0);
-        this.light.shadow.mapSize.width = CONFIG.SHADOW_MAP_SIZE;
-        this.light.shadow.mapSize.height = CONFIG.SHADOW_MAP_SIZE;
+        this.light.castShadow = true;
+        this.light.shadow.mapSize.width = 1024;
+        this.light.shadow.mapSize.height = 1024;
         this.light.shadow.camera.near = 0.5;
         this.light.shadow.camera.far = 500;
         this.light.shadow.camera.left = -200;
         this.light.shadow.camera.right = 200;
         this.light.shadow.camera.top = 200;
         this.light.shadow.camera.bottom = -200;
+        this.light.shadow.bias = -0.0001;
         this.scene.add(this.light);
         this.scene.add(this.light.target);
 
@@ -33,6 +35,7 @@ class GameRenderer {
         const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
         const skyMaterial = new THREE.MeshBasicMaterial({ color: 0x87ceeb });
         const skyMesh = new THREE.Mesh(skyGeometry, skyMaterial);
+        this.skyMesh = skyMesh;
         this.scene.add(skyMesh);
     }
 
@@ -169,14 +172,26 @@ class GameRenderer {
         const nightEnd = CONFIG.NIGHT_END / 24;
 
         let brightness = 0.8;
+        let skyColor = 0x87ceeb;
 
         if (timeOfDay > nightStart && timeOfDay < nightEnd) {
             const nightProgress = (timeOfDay - nightStart) / (nightEnd - nightStart);
             brightness = 0.2 + Math.cos(nightProgress * Math.PI) * 0.3;
+            skyColor = 0x0a0a2e;
+        } else if (timeOfDay < 0.25) {
+            const dawnProgress = timeOfDay / 0.25;
+            brightness = 0.2 + dawnProgress * 0.6;
+            skyColor = Utils.lerpColor(0x0a0a2e, 0x87ceeb, dawnProgress);
+        } else if (timeOfDay > 0.75) {
+            const duskProgress = (timeOfDay - 0.75) / 0.25;
+            brightness = 0.8 - duskProgress * 0.6;
+            skyColor = Utils.lerpColor(0x87ceeb, 0xff6b9d, duskProgress);
         } else {
             brightness = 0.8;
+            skyColor = 0x87ceeb;
         }
 
+        this.skyMesh.material.color.setHex(skyColor);
         this.light.intensity = brightness;
         this.scene.children[1].intensity = 0.3 + brightness * 0.3;
     }

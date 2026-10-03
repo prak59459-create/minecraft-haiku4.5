@@ -47,7 +47,7 @@ class Game {
     update(deltaTime) {
         this.gameTime += deltaTime;
 
-        this.inputManager.update();
+        this.inputManager.update(deltaTime);
 
         this.physics.update(this.player, deltaTime);
 

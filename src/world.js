@@ -58,15 +58,22 @@ class World {
                 for (let y = 0; y < CONFIG.CHUNK_HEIGHT; y++) {
                     let block = BLOCK_TYPES.AIR;
 
-                    if (y < height - 2) {
+                    if (y < height - 3) {
                         block = BLOCK_TYPES.STONE;
-                        if (Math.random() < 0.05) block = BLOCK_TYPES.COAL_ORE;
-                        if (Math.random() < 0.02) block = BLOCK_TYPES.IRON_ORE;
-                        if (Math.random() < 0.005) block = BLOCK_TYPES.GOLD_ORE;
+                        const rand = Math.random();
+                        if (rand < 0.06) block = BLOCK_TYPES.COAL_ORE;
+                        else if (rand < 0.03) block = BLOCK_TYPES.IRON_ORE;
+                        else if (rand < 0.008) block = BLOCK_TYPES.GOLD_ORE;
                     } else if (y < height - 1) {
                         block = BLOCK_TYPES.DIRT;
                     } else if (y === Math.floor(height - 1)) {
-                        block = y >= seaLevel - 2 ? BLOCK_TYPES.GRASS : BLOCK_TYPES.DIRT;
+                        if (y >= seaLevel) {
+                            block = BLOCK_TYPES.GRASS;
+                        } else if (y >= seaLevel - 3) {
+                            block = BLOCK_TYPES.SAND;
+                        } else {
+                            block = BLOCK_TYPES.DIRT;
+                        }
                     } else if (y < seaLevel) {
                         block = BLOCK_TYPES.WATER;
                     }
@@ -83,10 +90,10 @@ class World {
 
     getTerrainHeight(x, z) {
         let height = 64;
-        let scale = 100;
-        let amplitude = 30;
+        let scale = 200;
+        let amplitude = 35;
 
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 5; i++) {
             const nx = x / scale;
             const nz = z / scale;
             height += this.noise.noise2D(nx, nz) * amplitude;

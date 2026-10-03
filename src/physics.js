@@ -51,36 +51,34 @@ class Physics {
     }
 
     raycast(origin, direction, maxDistance = 1000) {
-        let current = origin.clone();
-        const step = 0.1;
+        const step = 0.2;
         let distance = 0;
-
-        const hits = [];
+        let current = origin.clone();
+        let lastBlockKey = null;
 
         while (distance < maxDistance) {
             current.addScaledVector(direction, step);
             distance += step;
 
-            const block = this.getBlockAt(current.x, current.y, current.z);
-            if (block !== BLOCK_TYPES.AIR && BLOCK_PROPERTIES[block]?.solid) {
-                const coords = Utils.getBlockCoords(current.x, current.y, current.z);
-                const blockKey = Utils.blockKey(coords.x, coords.y, coords.z);
+            const coords = Utils.getBlockCoords(current.x, current.y, current.z);
+            const blockKey = Utils.blockKey(coords.x, coords.y, coords.z);
 
-                if (hits.length === 0 || hits[hits.length - 1].blockKey !== blockKey) {
-                    hits.push({
+            if (lastBlockKey !== blockKey) {
+                const block = this.getBlockAt(coords.x, coords.y, coords.z);
+                if (block !== BLOCK_TYPES.AIR && BLOCK_PROPERTIES[block]?.solid) {
+                    return {
                         position: current.clone(),
                         blockCoords: coords,
                         blockKey: blockKey,
                         distance: distance,
                         block: block
-                    });
+                    };
                 }
-
-                if (hits.length >= 2) break;
+                lastBlockKey = blockKey;
             }
         }
 
-        return hits.length > 0 ? hits[0] : null;
+        return null;
     }
 
     update(player, deltaTime) {

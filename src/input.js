@@ -10,6 +10,9 @@ class InputManager {
         this.locked = false;
         this.target = null;
 
+        this.lastBlockAction = 0;
+        this.blockActionCooldown = 0.1;
+
         this.setupEventListeners();
     }
 
@@ -76,7 +79,7 @@ class InputManager {
         this.updateHotbar();
     }
 
-    update() {
+    update(deltaTime = 1/60) {
         const moveDirection = {
             forward: this.keys['w'],
             backward: this.keys['s'],
@@ -87,13 +90,17 @@ class InputManager {
         this.player.isSprinting = this.keys['shift'] && (moveDirection.forward || moveDirection.backward || moveDirection.left || moveDirection.right);
         this.player.isCrouching = this.keys['control'];
 
-        this.player.move(moveDirection, 1/60);
+        this.player.move(moveDirection, deltaTime);
 
-        if (this.mouseDown[0]) {
+        this.lastBlockAction += deltaTime;
+
+        if (this.mouseDown[0] && this.lastBlockAction >= this.blockActionCooldown) {
             this.destroyBlock();
+            this.lastBlockAction = 0;
         }
-        if (this.mouseDown[2]) {
+        if (this.mouseDown[2] && this.lastBlockAction >= this.blockActionCooldown) {
             this.placeBlock();
+            this.lastBlockAction = 0;
         }
     }
 
