@@ -105,13 +105,24 @@ class World {
     }
 
     generateTrees(chunk, chunkLocalX, chunkLocalZ, worldX, worldZ, height) {
-        if (Math.random() > 0.02) return;
+        const treeChance = 0.015 + (height > 70 ? 0.01 : 0);
+        if (Math.random() > treeChance) return;
 
+        const treeType = Math.random();
+
+        if (treeType < 0.8) {
+            this.generateOakTree(chunk, chunkLocalX, chunkLocalZ, height);
+        } else {
+            this.generateTallTree(chunk, chunkLocalX, chunkLocalZ, height);
+        }
+    }
+
+    generateOakTree(chunk, x, z, height) {
         const trunkHeight = 5 + Math.floor(Math.random() * 3);
 
         for (let y = 0; y < trunkHeight && height + y < CONFIG.CHUNK_HEIGHT; y++) {
             if (height + y >= 0) {
-                chunk.setBlock(chunkLocalX, height + y, chunkLocalZ, BLOCK_TYPES.OAK_LOG);
+                chunk.setBlock(x, height + y, z, BLOCK_TYPES.OAK_LOG);
             }
         }
 
@@ -125,12 +136,46 @@ class World {
                         const y = foliageHeight + dy;
                         if (y >= 0 && y < CONFIG.CHUNK_HEIGHT && dx === 0 && dz === 0) continue;
                         if (y >= 0 && y < CONFIG.CHUNK_HEIGHT) {
-                            const localX = chunkLocalX + dx;
-                            const localZ = chunkLocalZ + dz;
+                            const localX = x + dx;
+                            const localZ = z + dz;
                             if (localX >= 0 && localX < CONFIG.CHUNK_SIZE && localZ >= 0 && localZ < CONFIG.CHUNK_SIZE) {
                                 const current = chunk.getBlock(localX, y, localZ);
                                 if (current === BLOCK_TYPES.AIR) {
                                     chunk.setBlock(localX, y, localZ, BLOCK_TYPES.OAK_LEAVES);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    generateTallTree(chunk, x, z, height) {
+        const trunkHeight = 8 + Math.floor(Math.random() * 4);
+
+        for (let y = 0; y < trunkHeight && height + y < CONFIG.CHUNK_HEIGHT; y++) {
+            if (height + y >= 0) {
+                chunk.setBlock(x, height + y, z, BLOCK_TYPES.OAK_LOG);
+            }
+        }
+
+        const foliageStart = height + Math.max(2, trunkHeight - 5);
+
+        for (let level = 0; level < 3; level++) {
+            const foliageY = foliageStart + level * 2;
+            const radius = 3 - level;
+
+            for (let dx = -radius; dx <= radius; dx++) {
+                for (let dz = -radius; dz <= radius; dz++) {
+                    if (dx * dx + dz * dz <= radius * radius) {
+                        const localX = x + dx;
+                        const localZ = z + dz;
+                        if (localX >= 0 && localX < CONFIG.CHUNK_SIZE && localZ >= 0 && localZ < CONFIG.CHUNK_SIZE) {
+                            if (foliageY >= 0 && foliageY < CONFIG.CHUNK_HEIGHT) {
+                                const current = chunk.getBlock(localX, foliageY, localZ);
+                                if (current === BLOCK_TYPES.AIR) {
+                                    chunk.setBlock(localX, foliageY, localZ, BLOCK_TYPES.OAK_LEAVES);
                                 }
                             }
                         }

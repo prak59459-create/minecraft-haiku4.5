@@ -9,7 +9,7 @@ class GameRenderer {
         this.renderer.shadowMap.type = THREE.PCFShadowMap;
         this.renderer.setPixelRatio(window.devicePixelRatio || 1);
 
-        this.scene.fog = new THREE.Fog(CONFIG.FOG_COLOR, CONFIG.FOG_FAR, CONFIG.FOG_NEAR);
+        this.scene.fog = new THREE.Fog(CONFIG.FOG_COLOR, CONFIG.FOG_NEAR, CONFIG.FOG_FAR);
 
         document.body.appendChild(this.renderer.domElement);
 

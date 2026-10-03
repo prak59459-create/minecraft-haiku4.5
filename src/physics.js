@@ -23,19 +23,24 @@ class Physics {
     }
 
     checkCollision(position, radius) {
-        const margin = 0.01;
+        const halfHeight = 1.6;
+
         const checkPoints = [
-            [0, 0, 0],
-            [radius, 0, 0],
-            [-radius, 0, 0],
-            [0, 0, radius],
-            [0, 0, -radius],
-            [radius, 0, radius],
-            [-radius, 0, radius],
-            [radius, 0, -radius],
-            [-radius, 0, -radius],
-            [0, radius - 0.1, 0],
-            [0, -radius, 0]
+            [0, 0.1, 0],
+            [radius * 0.7, 0.1, 0],
+            [-radius * 0.7, 0.1, 0],
+            [0, 0.1, radius * 0.7],
+            [0, 0.1, -radius * 0.7],
+            [radius * 0.5, 0.1, radius * 0.5],
+            [-radius * 0.5, 0.1, radius * 0.5],
+            [radius * 0.5, 0.1, -radius * 0.5],
+            [-radius * 0.5, 0.1, -radius * 0.5],
+            [0, halfHeight - 0.3, 0],
+            [radius * 0.4, halfHeight - 0.3, 0],
+            [-radius * 0.4, halfHeight - 0.3, 0],
+            [0, halfHeight - 0.3, radius * 0.4],
+            [0, halfHeight - 0.3, -radius * 0.4],
+            [0, -radius + 0.1, 0]
         ];
 
         for (const offset of checkPoints) {
