@@ -25,6 +25,9 @@ class Game {
         this.dayTime = 0;
         this.dayStartTime = Date.now();
 
+        this.performanceMonitor = new PerformanceMonitor();
+        this.renderOptimizer = new RenderOptimizer(this.renderer, this.camera, this.scene);
+
         this.animate();
     }
 
@@ -142,6 +145,19 @@ class Game {
 
         this.updateDayNightCycle();
         this.updateUI();
+
+        let vertexCount = 0;
+        this.world.meshScene.children.forEach(mesh => {
+            if (mesh.geometry && mesh.geometry.attributes.position) {
+                vertexCount += mesh.geometry.attributes.position.count;
+            }
+        });
+
+        this.performanceMonitor.recordFrame(
+            this.renderer.info.render.calls,
+            this.world.loadedChunks.size,
+            vertexCount
+        );
 
         this.renderer.render(this.scene, this.camera);
     }
