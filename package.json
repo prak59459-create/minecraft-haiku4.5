@@ -1,11 +1,21 @@
 {
   "name": "minecraft-haiku4.5",
   "version": "1.0.0",
-  "description": "3D Minecraft clone built with Three.js",
+  "description": "3D Minecraft clone built with Three.js featuring procedural terrain, block interaction, and dynamic day/night cycles",
   "main": "index.html",
+  "author": "Claude AI",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prak59459-create/minecraft-haiku4.5"
+  },
   "scripts": {
-    "start": "http-server -p 8080 -c-1",
-    "dev": "http-server -p 8080 -c-1"
+    "start": "http-server -p 8080 -c-1 --gzip",
+    "dev": "http-server -p 8080 -c-1",
+    "serve": "http-server -p 3000 -c-1",
+    "build": "echo 'No build step required for this project'",
+    "test": "echo 'No tests configured yet'",
+    "lint": "echo 'No linting configured yet'"
   },
   "dependencies": {
     "three": "^r128",
@@ -13,5 +23,17 @@
   },
   "devDependencies": {
     "http-server": "^14.1.1"
+  },
+  "keywords": [
+    "minecraft",
+    "three.js",
+    "3d",
+    "game",
+    "webgl",
+    "procedural-generation",
+    "voxel"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
