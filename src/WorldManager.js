@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { SimplexNoise } from 'simplex-noise';
+import { TerrainGenerator } from './TerrainGenerator.js';
 
 export class WorldManager {
     constructor(scene, blockSystem) {
@@ -12,7 +12,7 @@ export class WorldManager {
         this.blockData = new Map();
         this.meshes = new Map();
 
-        this.noise = new SimplexNoise(() => Math.random());
+        this.terrainGenerator = new TerrainGenerator();
         this.renderDistance = 8;
         this.maxChunks = 256;
     }
@@ -76,33 +76,10 @@ export class WorldManager {
                 const worldX = cx * this.chunkSize + x;
                 const worldZ = cz * this.chunkSize + z;
 
-                const height = this.getTerrainHeight(worldX, worldZ);
+                const height = this.terrainGenerator.getTerrainHeight(worldX, worldZ);
 
                 for (let y = 0; y < this.chunkHeight; y++) {
-                    let blockId = 0;
-
-                    if (y === 0) {
-                        blockId = 3;
-                    } else if (y < height - 3) {
-                        blockId = 3;
-                    } else if (y < height) {
-                        blockId = 2;
-                    } else if (y === height) {
-                        blockId = 0;
-                    }
-
-                    if (y > height && y < height + 5 && Math.random() < 0.08) {
-                        blockId = 5;
-                    }
-
-                    if (y > height && y === height + 1 && Math.random() < 0.015) {
-                        blockId = 4;
-                    }
-
-                    if (y === 40 && height <= 40) {
-                        blockId = 6;
-                    }
-
+                    const blockId = this.terrainGenerator.getBlockAtPosition(worldX, y, worldZ, height);
                     const index = x + z * this.chunkSize + y * this.chunkSize * this.chunkSize;
                     data[index] = blockId;
                 }
@@ -112,15 +89,6 @@ export class WorldManager {
         return data;
     }
 
-    getTerrainHeight(x, z) {
-        const scale = 0.05;
-        let height = 64 + this.noise.noise2D(x * scale, z * scale) * 20;
-
-        const detailScale = 0.1;
-        height += this.noise.noise2D(x * detailScale, z * detailScale) * 10;
-
-        return Math.floor(Math.max(20, Math.min(100, height)));
-    }
 
     buildChunkMesh(cx, cz) {
         const key = this.getChunkKey(cx, cz);
