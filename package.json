@@ -1,0 +1,15 @@
+{
+  "name": "minecraft-haiku4.5",
+  "version": "1.0.0",
+  "description": "3D Minecraft Clone",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "http-server -c-1 -p 8080",
+    "dev": "http-server -c-1 -p 8080"
+  },
+  "dependencies": {
+    "three": "^r128",
+    "perlin-noise": "^0.0.5"
+  }
+}
