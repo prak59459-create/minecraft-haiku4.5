@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Clone - Haiku 4.5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+        .crosshair-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%);
+        }
+        #blockSelector {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .blockSlot {
+            width: 40px;
+            height: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(50, 50, 50, 0.8);
+            cursor: pointer;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.1s;
+        }
+        .blockSlot.selected {
+            border-color: #fff;
+            background: rgba(100, 150, 255, 0.8);
+            color: #fff;
+        }
+        #stats {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: monospace;
+            line-height: 1.6;
+        }
+        #info {
+            position: absolute;
+            bottom: 70px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        #dayNightCycle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div id="hud">
+        <div id="crosshair">
+            <div class="crosshair-dot"></div>
+        </div>
+        <div id="stats">
+            <div>FPS: <span id="fps">0</span></div>
+            <div>Pos: <span id="pos">0, 0, 0</span></div>
+            <div>Chunks: <span id="chunks">0</span></div>
+        </div>
+        <div id="info">
+            <div>WASD: Move | Mouse: Look</div>
+            <div>Space: Jump | Shift: Sprint/Crouch</div>
+            <div>LMB: Destroy | RMB: Place</div>
+            <div>1-9/Scroll: Block Select</div>
+        </div>
+        <div id="dayNightCycle">
+            <div>Time: <span id="time">00:00</span></div>
+            <div>Light: <span id="lightLevel">100%</span></div>
+        </div>
+        <div id="blockSelector"></div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
