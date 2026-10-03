@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 
 export class Player {
-    constructor(camera, world) {
+    constructor(camera, world, inputManager, cameraController) {
         this.camera = camera;
         this.world = world;
+        this.inputManager = inputManager;
+        this.cameraController = cameraController;
 
         this.position = new THREE.Vector3(0, 80, 0);
         this.velocity = new THREE.Vector3(0, 0, 0);
@@ -19,76 +21,45 @@ export class Player {
 
         this.isGrounded = false;
         this.isJumping = false;
-        this.isSprinting = false;
-        this.isCrouching = false;
-
-        this.keys = {};
-        this.mouse = new THREE.Vector2(0, 0);
-        this.euler = new THREE.Euler(0, 0, 0, 'YXZ');
-
-        this.raycaster = new THREE.Raycaster();
-        this.rayDirection = new THREE.Vector3(0, 0, -1);
 
         this.setupControls();
     }
 
     setupControls() {
         document.addEventListener('keydown', (e) => {
-            this.keys[e.key.toLowerCase()] = true;
             if (e.key === ' ') {
                 e.preventDefault();
                 this.jump();
             }
         });
 
-        document.addEventListener('keyup', (e) => {
-            this.keys[e.key.toLowerCase()] = false;
-        });
-
         document.addEventListener('mousemove', (e) => {
             const movementX = e.movementX || e.mozMovementX || e.webkitMovementX || 0;
             const movementY = e.movementY || e.mozMovementY || e.webkitMovementY || 0;
 
-            this.euler.setFromQuaternion(this.camera.quaternion);
-            this.euler.rotateY(-movementX * 0.005);
-            this.euler.rotateX(-movementY * 0.005);
-
-            this.euler.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.euler.x));
-
-            this.camera.quaternion.setFromEuler(this.euler);
-        });
-
-        document.addEventListener('click', () => {
-            document.body.requestPointerLock =
-                document.body.requestPointerLock || document.body.mozRequestPointerLock;
-            document.body.requestPointerLock();
+            const sensitivity = this.inputManager.getMouseSensitivity();
+            this.cameraController.rotateMouse(movementX, movementY, sensitivity);
         });
     }
 
     update(deltaTime) {
-        this.isSprinting = this.keys['shift'];
-        this.isCrouching = this.keys['control'] || this.keys['c'];
-
         const moveDir = new THREE.Vector3(0, 0, 0);
 
-        if (this.keys['w']) moveDir.z -= 1;
-        if (this.keys['s']) moveDir.z += 1;
-        if (this.keys['a']) moveDir.x -= 1;
-        if (this.keys['d']) moveDir.x += 1;
+        if (this.inputManager.isMovingForward()) moveDir.z -= 1;
+        if (this.inputManager.isMovingBackward()) moveDir.z += 1;
+        if (this.inputManager.isMovingLeft()) moveDir.x -= 1;
+        if (this.inputManager.isMovingRight()) moveDir.x += 1;
 
         if (moveDir.length() > 0) {
             moveDir.normalize();
 
-            const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
-            const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
+            const forward = this.cameraController.getForwardDirection();
+            const right = this.cameraController.getRightDirection();
 
-            forward.y = 0;
-            right.y = 0;
-            forward.normalize();
-            right.normalize();
-
-            const speedMult = this.isSprinting ? this.sprintMultiplier : 1;
-            const crouchMult = this.isCrouching ? this.crouchMultiplier : 1;
+            const isSprinting = this.inputManager.isSprinting();
+            const isCrouching = this.inputManager.isCrouching();
+            const speedMult = isSprinting ? this.sprintMultiplier : 1;
+            const crouchMult = isCrouching ? this.crouchMultiplier : 1;
             const speed = this.moveSpeed * speedMult * crouchMult;
 
             this.velocity.addScaledVector(forward, moveDir.z * speed * deltaTime);
@@ -119,7 +90,7 @@ export class Player {
             this.velocity.z *= this.airResistance;
         }
 
-        this.camera.position.copy(this.position);
+        this.cameraController.setPosition(this.position);
     }
 
     getGroundLevel(x, z) {
