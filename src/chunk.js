@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BLOCK_TYPES } from './blocks.js';
+import { BLOCK_TYPES, BLOCK_NAMES } from './blocks.js';
 
 const CHUNK_SIZE = 16;
 const CHUNK_HEIGHT = 256;
@@ -11,19 +11,14 @@ export class Chunk {
         this.size = size;
         this.height = height;
         this.blocks = new Uint8Array(size * height * size);
-        this.blockMaterials = new Map();
-        this.initMaterials();
+        this.blockNameToId = new Map();
+        this.initBlockIdMap();
     }
 
-    initMaterials() {
-        for (const [type, data] of Object.entries(BLOCK_TYPES)) {
-            const material = new THREE.MeshStandardMaterial({
-                map: data.texture,
-                roughness: 0.8,
-                metalness: 0.1
-            });
-            this.blockMaterials.set(type, material);
-        }
+    initBlockIdMap() {
+        BLOCK_NAMES.forEach((name, index) => {
+            this.blockNameToId.set(name, index + 1);
+        });
     }
 
     getIndex(x, y, z) {
@@ -36,7 +31,7 @@ export class Chunk {
         }
         const index = this.getIndex(x, y, z);
         const blockId = this.blocks[index];
-        return blockId === 0 ? null : Object.keys(BLOCK_TYPES)[blockId - 1];
+        return blockId === 0 ? null : BLOCK_NAMES[blockId - 1];
     }
 
     setBlock(x, y, z, type) {
@@ -47,7 +42,7 @@ export class Chunk {
         if (type === null) {
             this.blocks[index] = 0;
         } else {
-            const blockId = Object.keys(BLOCK_TYPES).indexOf(type) + 1;
+            const blockId = this.blockNameToId.get(type) || 0;
             this.blocks[index] = blockId;
         }
     }
@@ -62,11 +57,7 @@ export class Chunk {
         const positions = [];
         const normals = [];
         const uvs = [];
-        const materials = [];
-        const groups = [];
-
-        let groupStart = 0;
-        let currentMaterial = null;
+        const faceCount = { count: 0 };
 
         for (let y = 0; y < this.height; y++) {
             for (let z = 0; z < this.size; z++) {
@@ -77,21 +68,19 @@ export class Chunk {
                     const blockData = BLOCK_TYPES[block];
                     if (!blockData.solid) continue;
 
-                    // Check each face
-                    this.addBlockFace(x, y, z, block, positions, normals, uvs, geometry, groupStart);
-                    groupStart = positions.length / 3;
+                    this.addBlockFaces(x, y, z, block, positions, normals, uvs);
                 }
             }
         }
 
         if (positions.length === 0) {
-            // Return empty mesh for empty chunks
-            return new THREE.Mesh(new THREE.BufferGeometry(), new THREE.Material());
+            return new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial());
         }
 
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
         geometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(normals), 3));
         geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
+        geometry.computeBoundingSphere();
 
         const material = new THREE.MeshStandardMaterial({
             roughness: 0.8,
@@ -101,39 +90,30 @@ export class Chunk {
         return new THREE.Mesh(geometry, material);
     }
 
-    addBlockFace(x, y, z, block, positions, normals, uvs, geometry, startIndex) {
+    addBlockFaces(x, y, z, block, positions, normals, uvs) {
         const faces = [
-            { dir: [0, 1, 0], face: 'top', vertices: [[x, y+1, z], [x+1, y+1, z], [x+1, y+1, z+1], [x, y+1, z+1]] },
-            { dir: [0, -1, 0], face: 'bottom', vertices: [[x, y, z], [x, y, z+1], [x+1, y, z+1], [x+1, y, z]] },
-            { dir: [1, 0, 0], face: 'right', vertices: [[x+1, y, z], [x+1, y, z+1], [x+1, y+1, z+1], [x+1, y+1, z]] },
-            { dir: [-1, 0, 0], face: 'left', vertices: [[x, y, z], [x, y+1, z], [x, y+1, z+1], [x, y, z+1]] },
-            { dir: [0, 0, 1], face: 'front', vertices: [[x, y, z+1], [x+1, y, z+1], [x+1, y+1, z+1], [x, y+1, z+1]] },
-            { dir: [0, 0, -1], face: 'back', vertices: [[x, y, z], [x, y+1, z], [x+1, y+1, z], [x+1, y, z]] }
+            { dir: [0, 1, 0], vertices: [[x, y+1, z], [x+1, y+1, z], [x+1, y+1, z+1], [x, y+1, z+1]] },
+            { dir: [0, -1, 0], vertices: [[x, y, z], [x, y, z+1], [x+1, y, z+1], [x+1, y, z]] },
+            { dir: [1, 0, 0], vertices: [[x+1, y, z], [x+1, y, z+1], [x+1, y+1, z+1], [x+1, y+1, z]] },
+            { dir: [-1, 0, 0], vertices: [[x, y, z], [x, y+1, z], [x, y+1, z+1], [x, y, z+1]] },
+            { dir: [0, 0, 1], vertices: [[x, y, z+1], [x+1, y, z+1], [x+1, y+1, z+1], [x, y+1, z+1]] },
+            { dir: [0, 0, -1], vertices: [[x, y, z], [x, y+1, z], [x+1, y+1, z], [x+1, y, z]] }
         ];
 
         for (const faceData of faces) {
             const [dx, dy, dz] = faceData.dir;
-            const nx = x + dx;
-            const ny = y + dy;
-            const nz = z + dz;
-
-            if (!this.isBlockSolid(nx, ny, nz)) {
+            if (!this.isBlockSolid(x + dx, y + dy, z + dz)) {
                 const [v0, v1, v2, v3] = faceData.vertices;
-                const normalVec = new THREE.Vector3(dx, dy, dz);
+                const normal = new THREE.Vector3(dx, dy, dz).normalize();
 
-                // Triangle 1
                 positions.push(...v0, ...v1, ...v2);
-                normals.push(normalVec.x, normalVec.y, normalVec.z);
-                normals.push(normalVec.x, normalVec.y, normalVec.z);
-                normals.push(normalVec.x, normalVec.y, normalVec.z);
-                uvs.push(0, 0, 1, 0, 1, 1);
-
-                // Triangle 2
                 positions.push(...v0, ...v2, ...v3);
-                normals.push(normalVec.x, normalVec.y, normalVec.z);
-                normals.push(normalVec.x, normalVec.y, normalVec.z);
-                normals.push(normalVec.x, normalVec.y, normalVec.z);
-                uvs.push(0, 0, 1, 1, 0, 1);
+
+                for (let i = 0; i < 6; i++) {
+                    normals.push(normal.x, normal.y, normal.z);
+                }
+
+                uvs.push(0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1);
             }
         }
     }

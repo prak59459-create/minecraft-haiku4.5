@@ -175,26 +175,25 @@ export class Player {
     }
 
     checkCollision(position, world) {
-        const tolerance = 0.3;
-
-        // Check surrounding blocks
         const minX = Math.floor(position.x - this.width / 2);
-        const maxX = Math.floor(position.x + this.width / 2) + 1;
+        const maxX = Math.ceil(position.x + this.width / 2);
         const minY = Math.floor(position.y);
-        const maxY = Math.floor(position.y + this.height) + 1;
+        const maxY = Math.ceil(position.y + this.height);
         const minZ = Math.floor(position.z - this.width / 2);
-        const maxZ = Math.floor(position.z + this.width / 2) + 1;
+        const maxZ = Math.ceil(position.z + this.width / 2);
 
-        for (let x = minX; x <= maxX; x++) {
-            for (let y = minY; y <= maxY; y++) {
-                for (let z = minZ; z <= maxZ; z++) {
+        for (let x = minX; x < maxX; x++) {
+            for (let y = minY; y < maxY; y++) {
+                for (let z = minZ; z < maxZ; z++) {
                     const chunkX = Math.floor(x / 16);
                     const chunkZ = Math.floor(z / 16);
+                    const localX = ((x % 16) + 16) % 16;
+                    const localZ = ((z % 16) + 16) % 16;
                     const chunk = world.chunks.get(`${chunkX},${chunkZ}`);
 
                     if (chunk) {
-                        const block = chunk.getBlock(x - chunkX * 16, y, z - chunkZ * 16);
-                        if (block && block !== 'water') {
+                        const block = chunk.getBlock(localX, y, localZ);
+                        if (block && block !== 'water' && block !== 'leaves') {
                             return true;
                         }
                     }

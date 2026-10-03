@@ -20,9 +20,12 @@ export class World {
     }
 
     getTerrainHeight(x, z) {
-        const scale = 0.02;
-        const value = this.noise.noise2D(x * scale, z * scale);
-        const height = Math.floor(64 + value * 32);
+        const scale1 = 0.01;
+        const scale2 = 0.05;
+        const value1 = this.noise.noise2D(x * scale1, z * scale1);
+        const value2 = this.noise.noise2D(x * scale2 + 1000, z * scale2 + 1000);
+        const combined = value1 * 0.8 + value2 * 0.2;
+        const height = Math.floor(64 + combined * 40);
         return Math.max(1, Math.min(CHUNK_HEIGHT - 1, height));
     }
 
@@ -141,14 +144,8 @@ export class World {
     }
 
     destroyBlock(point, direction) {
-        const blockPos = new THREE.Vector3(
-            Math.floor(point.x),
-            Math.floor(point.y),
-            Math.floor(point.z)
-        );
-
-        // Adjust for block face
-        blockPos.add(direction.clone().multiplyScalar(-0.5));
+        const blockPos = this.getBlockPosition(point, direction, true);
+        if (!blockPos) return;
 
         const chunkX = Math.floor(blockPos.x / CHUNK_SIZE);
         const chunkZ = Math.floor(blockPos.z / CHUNK_SIZE);
@@ -156,22 +153,22 @@ export class World {
 
         const chunk = this.chunks.get(key);
         if (chunk) {
-            const localX = Math.floor(blockPos.x) % CHUNK_SIZE;
-            const localZ = Math.floor(blockPos.z) % CHUNK_SIZE;
-            chunk.setBlock(localX, Math.floor(blockPos.y), localZ, null);
-            this.rebuildChunkMesh(key);
+            const localX = ((blockPos.x % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+            const localZ = ((blockPos.z % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+            const y = Math.floor(blockPos.y);
+            const block = chunk.getBlock(localX, y, localZ);
+
+            if (block && block !== 'bedrock') {
+                chunk.setBlock(localX, y, localZ, null);
+                this.rebuildChunkMesh(key);
+                this.rebuildAdjacentChunks(localX, localZ, chunkX, chunkZ);
+            }
         }
     }
 
     placeBlock(point, direction, blockType) {
-        const blockPos = new THREE.Vector3(
-            Math.floor(point.x),
-            Math.floor(point.y),
-            Math.floor(point.z)
-        );
-
-        // Place on the face the player is looking at
-        blockPos.add(direction.clone().multiplyScalar(-0.5));
+        const blockPos = this.getBlockPosition(point, direction, false);
+        if (!blockPos) return;
 
         const chunkX = Math.floor(blockPos.x / CHUNK_SIZE);
         const chunkZ = Math.floor(blockPos.z / CHUNK_SIZE);
@@ -179,10 +176,37 @@ export class World {
 
         const chunk = this.chunks.get(key);
         if (chunk) {
-            const localX = Math.floor(blockPos.x) % CHUNK_SIZE;
-            const localZ = Math.floor(blockPos.z) % CHUNK_SIZE;
-            chunk.setBlock(localX, Math.floor(blockPos.y), localZ, blockType);
-            this.rebuildChunkMesh(key);
+            const localX = ((blockPos.x % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+            const localZ = ((blockPos.z % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+            const y = Math.floor(blockPos.y);
+
+            if (y > 0 && y < CHUNK_HEIGHT) {
+                chunk.setBlock(localX, y, localZ, blockType);
+                this.rebuildChunkMesh(key);
+                this.rebuildAdjacentChunks(localX, localZ, chunkX, chunkZ);
+            }
+        }
+    }
+
+    getBlockPosition(point, direction, destroy) {
+        const pos = point.clone();
+        const offset = destroy ? -0.1 : 0.1;
+        pos.add(direction.clone().multiplyScalar(offset));
+        return new THREE.Vector3(Math.floor(pos.x), Math.floor(pos.y), Math.floor(pos.z));
+    }
+
+    rebuildAdjacentChunks(localX, localZ, chunkX, chunkZ) {
+        const adjacentChunks = [];
+        if (localX === 0) adjacentChunks.push([chunkX - 1, chunkZ]);
+        if (localX === CHUNK_SIZE - 1) adjacentChunks.push([chunkX + 1, chunkZ]);
+        if (localZ === 0) adjacentChunks.push([chunkX, chunkZ - 1]);
+        if (localZ === CHUNK_SIZE - 1) adjacentChunks.push([chunkX, chunkZ + 1]);
+
+        for (const [x, z] of adjacentChunks) {
+            const key = this.getChunkKey(x, z);
+            if (this.chunkMeshes.has(key)) {
+                this.rebuildChunkMesh(key);
+            }
         }
     }
 

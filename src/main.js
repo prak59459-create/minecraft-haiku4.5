@@ -70,7 +70,7 @@ function onWindowResize() {
 function animate() {
     requestAnimationFrame(animate);
 
-    const delta = clock.getDelta();
+    const delta = Math.min(clock.getDelta(), 0.016);
     const elapsed = clock.getElapsedTime();
 
     // Update player
