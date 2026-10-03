@@ -65,8 +65,13 @@ function selectSlot(index) {
 }
 selectSlot(0);
 
+const overlayHint = document.getElementById('overlay-hint');
+overlayEl.querySelector('h1').textContent = 'クリックして開始';
 input.onLockChange = (locked) => {
     overlayEl.style.display = locked ? 'none' : 'flex';
+};
+input.onLockError = () => {
+    overlayHint.textContent = 'マウスをロックできませんでした。少し待ってからもう一度クリックするか、ページを新しいタブで直接開いてください。';
 };
 
 // Interaction

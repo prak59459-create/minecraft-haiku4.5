@@ -55,14 +55,27 @@
     <div id="block-name"></div>
     <div id="hotbar"></div>
     <div id="overlay">
-        <h1>クリックして開始</h1>
+        <h1>読み込み中…</h1>
         <p>
             WASD 移動 / マウス 視点 / Space ジャンプ・泳ぐ<br>
             Shift ダッシュ / C しゃがむ<br>
             左クリック 破壊 / 右クリック 設置<br>
             1-9・ホイール ブロック選択 / Esc 一時停止
         </p>
+        <p id="overlay-hint" style="color:#ffb3b3"></p>
     </div>
+    <script>
+        // Plain script so problems are visible even when the module itself fails to load.
+        (function () {
+            var hint = document.getElementById('overlay-hint');
+            if (location.protocol === 'file:') {
+                hint.textContent = 'file:// では動きません。npm start でサーバーを起動し http://localhost:8000 を開いてください。';
+            }
+            window.addEventListener('error', function (e) {
+                hint.textContent = '読み込みエラー: ' + (e.message || (e.target && (e.target.src || e.target.href)) || '不明');
+            }, true);
+        })();
+    </script>
     <script type="module" src="src/main.js"></script>
 </body>
 </html>

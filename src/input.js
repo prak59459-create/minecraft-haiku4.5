@@ -9,10 +9,19 @@ export class Input {
         this.pressed = [];
         this.locked = false;
         this.onLockChange = () => {};
+        this.onLockError = () => {};
 
-        element.addEventListener('click', () => {
-            if (!this.locked) element.requestPointerLock();
+        // Listen on the document: the start overlay sits on top of the canvas and would swallow canvas clicks.
+        document.addEventListener('click', () => {
+            if (this.locked) return;
+            try {
+                const result = element.requestPointerLock();
+                if (result && typeof result.catch === 'function') result.catch((err) => this.onLockError(err));
+            } catch (err) {
+                this.onLockError(err);
+            }
         });
+        document.addEventListener('pointerlockerror', () => this.onLockError(null));
         document.addEventListener('pointerlockchange', () => {
             this.locked = document.pointerLockElement === element;
             if (!this.locked) {
