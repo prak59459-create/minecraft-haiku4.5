@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Clone - Haiku 4.5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100vh;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 14px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        #crosshair::before,
+        #crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        #crosshair::before {
+            width: 2px;
+            height: 8px;
+            left: 50%;
+            top: -10px;
+            transform: translateX(-50%);
+        }
+
+        #crosshair::after {
+            width: 8px;
+            height: 2px;
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        #blockSelector {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 15;
+        }
+
+        .blockSlot {
+            width: 40px;
+            height: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            cursor: pointer;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: all 0.2s;
+        }
+
+        .blockSlot.selected {
+            border-color: white;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .blockSlot:hover {
+            border-color: rgba(255, 255, 255, 0.7);
+        }
+
+        #info {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <div>FPS: <span id="fps">0</span></div>
+        <div>Chunks: <span id="chunks">0</span></div>
+        <div>Position: <span id="position">0, 0, 0</span></div>
+    </div>
+    <div id="crosshair"></div>
+    <div id="blockSelector"></div>
+    <div id="info">
+        <div>WASD: Move | Mouse: Look | Space: Jump | Shift: Crouch</div>
+        <div>Left Click: Destroy | Right Click: Place</div>
+        <div>1-9 or Scroll: Select Block</div>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
