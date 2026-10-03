@@ -11,7 +11,9 @@ class Game {
         this.noise = new NoiseGenerator(12345);
         this.world = new World(this.scene, this.noise);
         this.physics = new Physics(this.world);
-        this.player = new Player(this.camera, this.world, this.physics);
+        this.particles = new ParticleSystem(this.scene);
+        this.audio = new AudioManager();
+        this.player = new Player(this.camera, this.world, this.physics, this.particles, this.audio);
 
         this.setupLighting();
         this.setupResizeHandler();
@@ -136,6 +138,7 @@ class Game {
 
         this.player.update();
         this.world.update(this.player.position.x, this.player.position.z);
+        this.particles.update();
 
         this.updateDayNightCycle();
         this.updateUI();

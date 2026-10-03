@@ -1,8 +1,10 @@
 class Player {
-    constructor(camera, world, physics) {
+    constructor(camera, world, physics, particles, audio) {
         this.camera = camera;
         this.world = world;
         this.physics = physics;
+        this.particles = particles;
+        this.audio = audio;
 
         this.position = new THREE.Vector3(0, 64, 0);
         this.velocity = new THREE.Vector3(0, 0, 0);
@@ -111,7 +113,17 @@ class Player {
 
         if (result.hit) {
             const pos = result.blockPos;
+            const blockType = this.world.getBlock(pos.x, pos.y, pos.z);
             this.world.setBlock(pos.x, pos.y, pos.z, BLOCK_TYPES.AIR);
+
+            if (this.particles) {
+                const particlePos = new THREE.Vector3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5);
+                this.particles.createBlockBreakParticles(particlePos, blockType);
+            }
+
+            if (this.audio) {
+                this.audio.playBlockBreakSound();
+            }
         }
     }
 
@@ -149,6 +161,10 @@ class Player {
             const placedBlock = this.world.getBlock(newX, newY, newZ);
             if (placedBlock === BLOCK_TYPES.AIR) {
                 this.world.setBlock(newX, newY, newZ, this.currentBlock);
+
+                if (this.audio) {
+                    this.audio.playBlockPlaceSound();
+                }
             }
         }
     }
@@ -181,6 +197,10 @@ class Player {
         if (this.keys[' '] && this.onGround) {
             this.velocity.y = JUMP_FORCE;
             this.onGround = false;
+
+            if (this.audio) {
+                this.audio.playJumpSound();
+            }
         }
 
         this.onGround = this.physics.update(this.position, this.velocity);
