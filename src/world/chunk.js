@@ -36,6 +36,7 @@ export class Chunk {
     generate() {
         const startX = this.chunkX * this.size;
         const startZ = this.chunkZ * this.size;
+        const waterLevel = 62;
 
         for (let x = 0; x < this.size; x++) {
             for (let z = 0; z < this.size; z++) {
@@ -47,23 +48,76 @@ export class Chunk {
                 for (let y = 0; y < this.worldHeight; y++) {
                     let blockType = 'air';
 
-                    if (y < height - 2) {
+                    if (y === 0) {
+                        blockType = 'bedrock';
+                    } else if (y < height - 3) {
                         blockType = 'stone';
                     } else if (y < height - 1) {
                         blockType = 'dirt';
                     } else if (y < height) {
                         blockType = 'grass';
-                    } else if (y === height && Math.random() < 0.1) {
+                    } else if (y <= waterLevel) {
                         blockType = 'water';
-                    } else if (y > 0 && y < 10) {
+                    } else {
                         blockType = 'air';
                     }
 
-                    if (y < 5 && Math.random() < 0.3) {
-                        blockType = 'water';
-                    }
-
                     this.setBlock(x, y, z, blockType);
+                }
+            }
+        }
+
+        this.generateTrees();
+    }
+
+    generateTrees() {
+        const startX = this.chunkX * this.size;
+        const startZ = this.chunkZ * this.size;
+
+        for (let x = 0; x < this.size; x++) {
+            for (let z = 0; z < this.size; z++) {
+                const worldX = startX + x;
+                const worldZ = startZ + z;
+
+                const hash = Math.abs(Math.sin(worldX * 73.1 + worldZ * 97.3) * 10000) % 1000;
+                if (hash < 30) {
+                    const height = this.terrainGenerator.getHeightAt(worldX, worldZ);
+                    if (height > 65 && height < 130) {
+                        this.createTree(x, height, z);
+                    }
+                }
+            }
+        }
+    }
+
+    createTree(x, baseHeight, z) {
+        const trunkHeight = 5 + Math.floor(Math.random() * 3);
+
+        for (let i = 0; i < trunkHeight; i++) {
+            const y = baseHeight + i;
+            if (y < this.worldHeight && this.getBlock(x, y, z) && this.getBlock(x, y, z).type === 'air') {
+                this.setBlock(x, y, z, 'wood');
+            }
+        }
+
+        const foliageRadius = 3;
+        const foliageHeight = baseHeight + trunkHeight;
+
+        for (let dx = -foliageRadius; dx <= foliageRadius; dx++) {
+            for (let dz = -foliageRadius; dz <= foliageRadius; dz++) {
+                for (let dy = 0; dy < 4; dy++) {
+                    const nx = x + dx;
+                    const nz = z + dz;
+                    const ny = foliageHeight + dy;
+
+                    if (nx >= 0 && nx < this.size && nz >= 0 && nz < this.size && ny < this.worldHeight) {
+                        const dist = Math.sqrt(dx * dx + dz * dz + dy * dy);
+                        if (dist <= foliageRadius + 0.5) {
+                            if (this.getBlock(nx, ny, nz) && this.getBlock(nx, ny, nz).type === 'air') {
+                                this.setBlock(nx, ny, nz, 'leaves');
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -120,29 +174,19 @@ export class Chunk {
             this.getBlock(x, y, z - 1)
         ];
 
+        const shouldRenderFace = (neighbor) => !neighbor || neighbor.type === 'air' || neighbor.type === 'water';
+
         const positions = [
-            [
-                [x + 1, y, z], [x + 1, y + 1, z], [x + 1, y + 1, z + 1], [x + 1, y, z + 1]
-            ],
-            [
-                [x, y, z + 1], [x, y + 1, z + 1], [x, y + 1, z], [x, y, z]
-            ],
-            [
-                [x, y + 1, z], [x + 1, y + 1, z], [x + 1, y + 1, z + 1], [x, y + 1, z + 1]
-            ],
-            [
-                [x, y, z + 1], [x + 1, y, z + 1], [x + 1, y, z], [x, y, z]
-            ],
-            [
-                [x + 1, y, z + 1], [x + 1, y + 1, z + 1], [x, y + 1, z + 1], [x, y, z + 1]
-            ],
-            [
-                [x, y, z], [x, y + 1, z], [x + 1, y + 1, z], [x + 1, y, z]
-            ]
+            [[x + 1, y, z], [x + 1, y + 1, z], [x + 1, y + 1, z + 1], [x + 1, y, z + 1]],
+            [[x, y, z + 1], [x, y + 1, z + 1], [x, y + 1, z], [x, y, z]],
+            [[x, y + 1, z], [x + 1, y + 1, z], [x + 1, y + 1, z + 1], [x, y + 1, z + 1]],
+            [[x, y, z + 1], [x + 1, y, z + 1], [x + 1, y, z], [x, y, z]],
+            [[x + 1, y, z + 1], [x + 1, y + 1, z + 1], [x, y + 1, z + 1], [x, y, z + 1]],
+            [[x, y, z], [x, y + 1, z], [x + 1, y + 1, z], [x + 1, y, z]]
         ];
 
         for (let i = 0; i < neighbors.length; i++) {
-            if (!neighbors[i] || neighbors[i].type === 'air') {
+            if (shouldRenderFace(neighbors[i])) {
                 const face = positions[i];
                 const baseIndex = vertices.length / 3;
 
@@ -164,6 +208,7 @@ export class Chunk {
 
     getBlockUV(blockType) {
         const uvMap = {
+            'bedrock': [0, 0.75],
             'grass': [0, 0.875],
             'dirt': [0.125, 0.875],
             'stone': [0.25, 0.875],
@@ -172,7 +217,7 @@ export class Chunk {
             'water': [0.625, 0.875],
             'sand': [0.75, 0.875],
             'gravel': [0.875, 0.875],
-            'cobblestone': [0, 0.75]
+            'cobblestone': [0.125, 0.75]
         };
         return uvMap[blockType] || [0, 0];
     }
@@ -183,16 +228,30 @@ export class Chunk {
         canvas.height = 256;
         const ctx = canvas.getContext('2d');
 
-        const blocks = ['grass', 'dirt', 'stone', 'wood', 'leaves', 'water', 'sand', 'gravel', 'cobblestone'];
-        const colors = ['#90EE90', '#8B4513', '#808080', '#CD853F', '#228B22', '#4169E1', '#EDC9AF', '#A9A9A9', '#696969'];
+        const blocks = ['bedrock', 'grass', 'dirt', 'stone', 'wood', 'leaves', 'water', 'sand', 'gravel', 'cobblestone'];
+        const colors = ['#1a1a1a', '#90EE90', '#8B4513', '#808080', '#CD853F', '#228B22', '#4169E1', '#EDC9AF', '#A9A9A9', '#696969'];
 
         for (let i = 0; i < blocks.length; i++) {
             const x = (i % 8) * 32;
             const y = Math.floor(i / 8) * 32;
             ctx.fillStyle = colors[i];
             ctx.fillRect(x, y, 32, 32);
+
+            for (let px = 0; px < 32; px++) {
+                for (let py = 0; py < 32; py++) {
+                    if (Math.random() < 0.1) {
+                        ctx.fillStyle = colors[i].replace(/[0-9a-f]/g, (c) => {
+                            const val = parseInt(c, 16);
+                            const newVal = Math.max(0, val - 2);
+                            return newVal.toString(16);
+                        });
+                        ctx.fillRect(x + px, y + py, 1, 1);
+                    }
+                }
+            }
+
             ctx.strokeStyle = '#000';
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 0.5;
             ctx.strokeRect(x, y, 32, 32);
         }
 

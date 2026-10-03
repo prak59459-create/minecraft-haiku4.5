@@ -3,15 +3,28 @@ export class TerrainGenerator {
         this.scale = 50;
         this.baseHeight = 64;
         this.seed = Math.random() * 10000;
+        this.heightCache = new Map();
     }
 
     getHeightAt(x, z) {
-        const noise = this.perlinNoise(x * 0.01, z * 0.01);
-        const noise2 = this.perlinNoise(x * 0.005, z * 0.005);
-        const noise3 = this.perlinNoise(x * 0.02, z * 0.02);
+        const cacheKey = `${x},${z}`;
+        if (this.heightCache.has(cacheKey)) {
+            return this.heightCache.get(cacheKey);
+        }
 
-        const height = this.baseHeight + noise * this.scale + noise2 * this.scale * 0.5 + noise3 * this.scale * 0.25;
-        return Math.floor(height);
+        const noise1 = this.perlinNoise(x * 0.01, z * 0.01) * 0.5;
+        const noise2 = this.perlinNoise(x * 0.005, z * 0.005) * 0.3;
+        const noise3 = this.perlinNoise(x * 0.02, z * 0.02) * 0.2;
+
+        const height = Math.floor(this.baseHeight + (noise1 + noise2 + noise3) * this.scale);
+        this.heightCache.set(cacheKey, height);
+
+        if (this.heightCache.size > 10000) {
+            const firstKey = this.heightCache.keys().next().value;
+            this.heightCache.delete(firstKey);
+        }
+
+        return height;
     }
 
     perlinNoise(x, y) {

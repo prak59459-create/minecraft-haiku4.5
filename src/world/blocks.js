@@ -2,15 +2,16 @@ export class BlockDatabase {
     constructor() {
         this.blocks = {
             'air': { id: 0, name: 'air', type: 'air', solid: false },
-            'grass': { id: 1, name: 'grass', type: 'grass', solid: true },
-            'dirt': { id: 2, name: 'dirt', type: 'dirt', solid: true },
-            'stone': { id: 3, name: 'stone', type: 'stone', solid: true },
-            'wood': { id: 4, name: 'wood', type: 'wood', solid: true },
-            'leaves': { id: 5, name: 'leaves', type: 'leaves', solid: true },
-            'water': { id: 6, name: 'water', type: 'water', solid: false },
-            'sand': { id: 7, name: 'sand', type: 'sand', solid: true },
-            'gravel': { id: 8, name: 'gravel', type: 'gravel', solid: true },
-            'cobblestone': { id: 9, name: 'cobblestone', type: 'cobblestone', solid: true }
+            'bedrock': { id: 1, name: 'bedrock', type: 'bedrock', solid: true },
+            'grass': { id: 2, name: 'grass', type: 'grass', solid: true },
+            'dirt': { id: 3, name: 'dirt', type: 'dirt', solid: true },
+            'stone': { id: 4, name: 'stone', type: 'stone', solid: true },
+            'wood': { id: 5, name: 'wood', type: 'wood', solid: true },
+            'leaves': { id: 6, name: 'leaves', type: 'leaves', solid: true },
+            'water': { id: 7, name: 'water', type: 'water', solid: false },
+            'sand': { id: 8, name: 'sand', type: 'sand', solid: true },
+            'gravel': { id: 9, name: 'gravel', type: 'gravel', solid: true },
+            'cobblestone': { id: 10, name: 'cobblestone', type: 'cobblestone', solid: true }
         };
 
         this.blockById = {};

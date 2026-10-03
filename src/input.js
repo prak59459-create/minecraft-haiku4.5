@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 export class Input {
     constructor(player, world) {
         this.player = player;
@@ -146,5 +148,3 @@ export class Input {
         this.player.isCrouching = this.keys.control;
     }
 }
-
-import * as THREE from 'three';

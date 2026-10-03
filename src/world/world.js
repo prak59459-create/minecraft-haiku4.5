@@ -119,38 +119,48 @@ export class World {
         const direction = raycast.direction;
 
         const maxDistance = 5;
-        const step = 0.1;
+        const step = 0.05;
         let distance = 0;
+        let lastValidDistance = 0;
 
         while (distance < maxDistance) {
             const pos = origin.clone().addScaledVector(direction, distance);
-            const block = this.getBlock(pos);
+            const blockX = Math.floor(pos.x);
+            const blockY = Math.floor(pos.y);
+            const blockZ = Math.floor(pos.z);
+
+            const chunk = this.getChunk(blockX, blockZ);
+            if (!chunk) {
+                distance += step;
+                continue;
+            }
+
+            const localX = blockX % this.chunkSize;
+            const localZ = blockZ % this.chunkSize;
+            const block = chunk.getBlock(localX, blockY, localZ);
 
             if (block && block.type !== 'air') {
-                const chunk = this.getChunk(pos.x, pos.z);
-                const localX = Math.floor(pos.x) % this.chunkSize;
-                const localY = Math.floor(pos.y);
-                const localZ = Math.floor(pos.z) % this.chunkSize;
-
-                const normal = this.getNormal(pos, direction);
+                const worldPos = new THREE.Vector3(blockX, blockY, blockZ);
+                const normal = this.getNormal(direction);
 
                 return {
                     block,
                     chunk,
-                    localPos: new THREE.Vector3(localX, localY, localZ),
-                    worldPos: new THREE.Vector3(Math.floor(pos.x), Math.floor(pos.y), Math.floor(pos.z)),
+                    localPos: new THREE.Vector3(localX, blockY, localZ),
+                    worldPos,
                     normal,
                     distance
                 };
             }
 
+            lastValidDistance = distance;
             distance += step;
         }
 
         return null;
     }
 
-    getNormal(blockPos, direction) {
+    getNormal(direction) {
         const absX = Math.abs(direction.x);
         const absY = Math.abs(direction.y);
         const absZ = Math.abs(direction.z);

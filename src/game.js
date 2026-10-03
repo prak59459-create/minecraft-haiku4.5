@@ -56,9 +56,10 @@ export class Game {
     }
 
     update(deltaTime) {
-        this.input.update(deltaTime);
-        this.player.update(deltaTime, this.world);
-        this.physics.update(this.player, this.world, deltaTime);
+        const clampedDelta = Math.min(deltaTime, 0.016);
+        this.input.update(clampedDelta);
+        this.player.update(clampedDelta, this.world);
+        this.physics.update(this.player, this.world, clampedDelta);
         this.world.update(this.player);
         this.updateLighting();
         this.updateUI();
@@ -95,8 +96,9 @@ export class Game {
     }
 
     render() {
-        this.camera.position.lerp(this.player.position, 0.1);
-        this.camera.quaternion.slerp(this.player.camera.quaternion, 0.1);
+        const eyePos = this.player.position.clone().add(new THREE.Vector3(0, this.player.eyeHeight, 0));
+        this.camera.position.copy(eyePos);
+        this.camera.quaternion.copy(this.player.camera.quaternion);
         this.renderer.render(this.scene, this.camera);
     }
 

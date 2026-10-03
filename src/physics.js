@@ -3,8 +3,10 @@ import * as THREE from 'three';
 export class Physics {
     constructor() {
         this.gravity = -9.81 * 5;
-        this.friction = 0.95;
-        this.airResistance = 0.98;
+        this.friction = 0.8;
+        this.airResistance = 0.99;
+        this.playerRadius = 0.3;
+        this.playerHeight = 1.62;
     }
 
     update(player, world, deltaTime) {
@@ -16,39 +18,57 @@ export class Physics {
         player.velocity.z *= this.friction;
 
         const newPos = player.position.clone().add(player.velocity.clone().multiplyScalar(deltaTime));
-
-        const playerRadius = 0.3;
-        const playerHeight = 1.62;
-
         player.isGrounded = false;
 
-        const checkY = newPos.y - playerRadius;
-        if (checkY <= 0 && player.velocity.y <= 0) {
-            newPos.y = playerRadius;
+        if (newPos.y <= this.playerRadius && player.velocity.y <= 0) {
+            newPos.y = this.playerRadius;
             player.velocity.y = 0;
             player.isGrounded = true;
-        }
-
-        const blockBelow = world.getBlock(new THREE.Vector3(newPos.x, newPos.y - playerRadius - 0.01, newPos.z));
-        const blockAtFeet = world.getBlock(newPos);
-        const blockAtHead = world.getBlock(newPos.clone().add(new THREE.Vector3(0, playerHeight, 0)));
-
-        if (blockBelow && blockBelow.type !== 'water' && player.velocity.y <= 0) {
-            newPos.y = Math.floor(newPos.y) + 1 + playerRadius;
-            player.velocity.y = 0;
-            player.isGrounded = true;
-        }
-
-        if (blockAtFeet && blockAtFeet.type !== 'water') {
-            newPos.y = Math.floor(newPos.y) + 1 + playerRadius;
-            player.velocity.y = 0;
-        }
-
-        if (blockAtHead && blockAtHead.type !== 'water') {
-            player.velocity.y = Math.min(0, player.velocity.y);
-            newPos.y = Math.floor(newPos.y + playerHeight) - playerHeight;
+        } else {
+            this.checkVerticalCollisions(player, world, newPos);
         }
 
         player.position.copy(newPos);
+    }
+
+    checkVerticalCollisions(player, world, newPos) {
+        const checkPoints = [
+            new THREE.Vector3(0, -this.playerRadius, 0),
+            new THREE.Vector3(0.25, -this.playerRadius, 0),
+            new THREE.Vector3(-0.25, -this.playerRadius, 0),
+            new THREE.Vector3(0, -this.playerRadius, 0.25),
+            new THREE.Vector3(0, -this.playerRadius, -0.25)
+        ];
+
+        for (const offset of checkPoints) {
+            const checkPos = newPos.clone().add(offset);
+            const block = world.getBlock(checkPos);
+
+            if (block && block.type !== 'air' && block.type !== 'water') {
+                if (player.velocity.y <= 0) {
+                    newPos.y = Math.ceil(checkPos.y) + this.playerRadius;
+                    player.velocity.y = 0;
+                    player.isGrounded = true;
+                }
+            }
+        }
+
+        const headCheckPoints = [
+            new THREE.Vector3(0, this.playerHeight, 0),
+            new THREE.Vector3(0.2, this.playerHeight, 0),
+            new THREE.Vector3(-0.2, this.playerHeight, 0)
+        ];
+
+        for (const offset of headCheckPoints) {
+            const checkPos = newPos.clone().add(offset);
+            const block = world.getBlock(checkPos);
+
+            if (block && block.type !== 'air' && block.type !== 'water') {
+                if (player.velocity.y > 0) {
+                    player.velocity.y = 0;
+                    newPos.y = Math.floor(checkPos.y) - this.playerHeight;
+                }
+            }
+        }
     }
 }
