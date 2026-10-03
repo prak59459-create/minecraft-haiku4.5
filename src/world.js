@@ -208,6 +208,9 @@ export class World {
   }
 
   addBlockVertices(vertices, indices, colors, indexOffset, x, y, z, worldX, worldZ, chunk, r, g, b) {
+    const block = chunk.getBlock(x, y, z);
+    const isWater = block === BLOCKS.WATER;
+
     const faces = [
       // top
       { normal: [0, 1, 0], vertices: [[0,1,0], [1,1,0], [1,1,1], [0,1,1]] },
@@ -229,7 +232,8 @@ export class World {
       const adjZ = face.normal[2];
 
       const adjBlock = this.getBlockAt(worldX + adjX, y + adjY, worldZ + adjZ);
-      if (adjBlock !== BLOCKS.AIR) return;
+      const shouldRender = adjBlock === BLOCKS.AIR || (isWater && adjBlock !== BLOCKS.WATER);
+      if (!shouldRender) return;
 
       const baseIndex = indexOffset + vertices.length / 3;
 
@@ -282,7 +286,8 @@ class Chunk {
 
     const material = new THREE.MeshPhongMaterial({
       vertexColors: true,
-      side: THREE.DoubleSide
+      side: THREE.DoubleSide,
+      flatShading: true
     });
     this.mesh = new THREE.Mesh(new THREE.BufferGeometry(), material);
     this.mesh.castShadow = true;
