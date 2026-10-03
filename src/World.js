@@ -73,8 +73,12 @@ export default class World {
     const chunk = this.chunks.get(key)
     if (!chunk) return 0
 
-    const localX = ((x % this.chunkSize) + this.chunkSize) % this.chunkSize
-    const localZ = ((z % this.chunkSize) + this.chunkSize) % this.chunkSize
+    const localX = x - (chunkX * this.chunkSize)
+    const localZ = z - (chunkZ * this.chunkSize)
+
+    if (localX < 0 || localX >= this.chunkSize || localZ < 0 || localZ >= this.chunkSize) {
+      return 0
+    }
 
     return chunk.getBlock(localX, y, localZ)
   }
@@ -89,8 +93,12 @@ export default class World {
     const chunk = this.chunks.get(key)
     if (!chunk) return false
 
-    const localX = ((x % this.chunkSize) + this.chunkSize) % this.chunkSize
-    const localZ = ((z % this.chunkSize) + this.chunkSize) % this.chunkSize
+    const localX = x - (chunkX * this.chunkSize)
+    const localZ = z - (chunkZ * this.chunkSize)
+
+    if (localX < 0 || localX >= this.chunkSize || localZ < 0 || localZ >= this.chunkSize) {
+      return false
+    }
 
     const changed = chunk.setBlock(localX, y, localZ, type)
     if (changed) {
