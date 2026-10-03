@@ -7,6 +7,10 @@ export class UI {
         this.lastFpsTime = Date.now();
         this.frameCount = 0;
         this.fps = 60;
+        this.maxFps = 0;
+        this.minFps = 999;
+        this.avgFpsBuffer = [];
+        this.avgFpsBufferSize = 60;
     }
 
     initHotbar() {
@@ -63,11 +67,22 @@ export class UI {
             this.fps = this.frameCount;
             this.frameCount = 0;
             this.lastFpsTime = now;
+
+            this.avgFpsBuffer.push(this.fps);
+            if (this.avgFpsBuffer.length > this.avgFpsBufferSize) {
+                this.avgFpsBuffer.shift();
+            }
+
+            this.maxFps = Math.max(...this.avgFpsBuffer);
+            this.minFps = Math.min(...this.avgFpsBuffer);
         }
 
         const fpsEl = document.getElementById('fps');
         if (fpsEl) {
-            fpsEl.textContent = `FPS: ${this.fps}`;
+            const avgFps = this.avgFpsBuffer.length > 0
+                ? Math.round(this.avgFpsBuffer.reduce((a, b) => a + b) / this.avgFpsBuffer.length)
+                : this.fps;
+            fpsEl.textContent = `FPS: ${this.fps} (avg: ${avgFps} min: ${this.minFps})`;
         }
 
         const posEl = document.getElementById('position');
@@ -109,8 +124,23 @@ export class UI {
         }
     }
 
+    updateBlockInfo() {
+        const hit = this.player.getRaycast(5);
+        const blockInfoEl = document.getElementById('blockInfo');
+
+        if (hit && blockInfoEl) {
+            const blockType = this.player.world.getBlockAt(hit.pos.x, hit.pos.y, hit.pos.z);
+            const blockName = BLOCK_DATA[blockType]?.name || 'Unknown';
+            blockInfoEl.textContent = blockName;
+            blockInfoEl.classList.add('active');
+        } else if (blockInfoEl) {
+            blockInfoEl.classList.remove('active');
+        }
+    }
+
     update() {
         this.updateDebugInfo();
         this.updateHotbar();
+        this.updateBlockInfo();
     }
 }

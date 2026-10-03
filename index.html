@@ -66,6 +66,26 @@
             border-radius: 50%;
         }
 
+        .block-info {
+            position: absolute;
+            bottom: 65px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            background: rgba(0,0,0,0.6);
+            padding: 4px 8px;
+            border: 1px solid rgba(100,100,100,0.8);
+            border-radius: 4px;
+            min-width: 100px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .block-info.active {
+            opacity: 1;
+        }
+
         .hotbar {
             position: absolute;
             bottom: 20px;
@@ -153,6 +173,8 @@
         </div>
 
         <div class="hotbar" id="hotbar"></div>
+
+        <div class="block-info" id="blockInfo"></div>
 
         <div class="help-text" id="helpText">
             WASD: Move | Mouse: Look | Space: Jump | Shift: Sprint/Crouch | Click: Destroy/Place | 1-9: Select Block

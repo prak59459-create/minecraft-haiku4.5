@@ -99,46 +99,42 @@ export class Player {
         this.camera.quaternion.setFromEuler(this.euler);
     }
 
-    getRaycast(distance = 10) {
+    getRaycast(distance = 5) {
         const origin = this.camera.position.clone();
-        origin.y -= 1.6;
-
         const direction = new THREE.Vector3();
         this.camera.getWorldDirection(direction);
 
         this.raycaster.set(origin, direction);
 
         const blockPositions = [];
-        const minX = Math.floor(this.position.x - distance);
-        const maxX = Math.floor(this.position.x + distance);
-        const minY = Math.max(0, Math.floor(this.position.y - distance));
-        const maxY = Math.min(256, Math.floor(this.position.y + distance));
-        const minZ = Math.floor(this.position.z - distance);
-        const maxZ = Math.floor(this.position.z + distance);
+        const rayStep = 0.1;
+        let currentDist = 0;
 
-        for (let x = minX; x <= maxX; x++) {
-            for (let y = minY; y <= maxY; y++) {
-                for (let z = minZ; z <= maxZ; z++) {
-                    const blockType = this.world.getBlockAt(x, y, z);
-                    if (blockType !== BLOCK_TYPES.AIR) {
-                        const box = new THREE.Box3(
-                            new THREE.Vector3(x, y, z),
-                            new THREE.Vector3(x + 1, y + 1, z + 1)
-                        );
-                        const intersection = this.raycaster.ray.intersectBox(box);
-                        if (intersection) {
-                            blockPositions.push({
-                                pos: new THREE.Vector3(x, y, z),
-                                dist: origin.distanceTo(intersection),
-                            });
-                        }
-                    }
+        while (currentDist < distance) {
+            const checkPoint = origin.clone().addScaledVector(direction, currentDist);
+            const x = Math.floor(checkPoint.x);
+            const y = Math.floor(checkPoint.y);
+            const z = Math.floor(checkPoint.z);
+
+            const blockType = this.world.getBlockAt(x, y, z);
+            if (blockType !== BLOCK_TYPES.AIR) {
+                const box = new THREE.Box3(
+                    new THREE.Vector3(x, y, z),
+                    new THREE.Vector3(x + 1, y + 1, z + 1)
+                );
+                const intersection = this.raycaster.ray.intersectBox(box);
+                if (intersection) {
+                    return {
+                        pos: new THREE.Vector3(x, y, z),
+                        dist: origin.distanceTo(intersection),
+                        face: this.getFaceHit(checkPoint.sub(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5))),
+                    };
                 }
             }
+            currentDist += rayStep;
         }
 
-        blockPositions.sort((a, b) => a.dist - b.dist);
-        return blockPositions[0] || null;
+        return null;
     }
 
     destroyBlock() {
@@ -158,12 +154,11 @@ export class Player {
             const y = hit.pos.y;
             const z = hit.pos.z;
 
-            const direction = hit.pos.clone().sub(this.camera.position);
-            const face = this.getFaceHit(direction);
-
             let placeX = x;
             let placeY = y;
             let placeZ = z;
+
+            const face = hit.face || this.getFaceHit(hit.pos.clone().sub(this.camera.position));
 
             switch (face) {
                 case 'top': placeY++; break;
