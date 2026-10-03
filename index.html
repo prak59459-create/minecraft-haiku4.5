@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Clone - Haiku 4.5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #fff;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 100;
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            pointer-events: none;
+            z-index: 101;
+        }
+
+        #blockSelector {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 100;
+        }
+
+        .blockSlot {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #fff;
+            cursor: pointer;
+            background: rgba(50, 50, 50, 0.8);
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .blockSlot.active {
+            border-color: #fff;
+            background: rgba(100, 100, 100, 0.9);
+        }
+
+        .blockSlot:hover {
+            background: rgba(80, 80, 80, 0.9);
+        }
+
+        #help {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            line-height: 1.6;
+            max-width: 200px;
+            z-index: 100;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <div>FPS: <span id="fps">0</span></div>
+        <div>Pos: <span id="position">0, 0, 0</span></div>
+        <div>Chunks: <span id="chunks">0</span></div>
+        <div>Time: <span id="time">12:00</span></div>
+    </div>
+
+    <div id="crosshair"></div>
+
+    <div id="blockSelector">
+        <div class="blockSlot active" data-block="grass">🌱 Grass</div>
+        <div class="blockSlot" data-block="dirt">🟫 Dirt</div>
+        <div class="blockSlot" data-block="stone">⬜ Stone</div>
+        <div class="blockSlot" data-block="wood">🪵 Wood</div>
+        <div class="blockSlot" data-block="leaves">🍃 Leaves</div>
+        <div class="blockSlot" data-block="water">💧 Water</div>
+        <div class="blockSlot" data-block="sand">🟨 Sand</div>
+        <div class="blockSlot" data-block="gravel">⚫ Gravel</div>
+        <div class="blockSlot" data-block="coal">⬛ Coal</div>
+    </div>
+
+    <div id="help">
+        <strong>Controls:</strong><br>
+        WASD - Move<br>
+        Mouse - Look<br>
+        Space - Jump<br>
+        Shift - Crouch<br>
+        LMB - Destroy<br>
+        RMB - Place<br>
+        1-9 - Select Block<br>
+        P - Toggle Help<br>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simplex-noise@2.4.0/simplex-noise.js"></script>
+    <script src="js/constants.js"></script>
+    <script src="js/perlin.js"></script>
+    <script src="js/block.js"></script>
+    <script src="js/chunk.js"></script>
+    <script src="js/world.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/physics.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
