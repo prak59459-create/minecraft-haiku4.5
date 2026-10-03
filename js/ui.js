@@ -111,9 +111,10 @@ class GameUI {
 }
 
 class InputManager {
-    constructor(world, player) {
+    constructor(world, player, particleSystem) {
         this.world = world;
         this.player = player;
+        this.particleSystem = particleSystem;
         this.selectedBlock = null;
         this.highlightedBlock = null;
 
@@ -167,5 +168,11 @@ class InputManager {
     }
 
     createDestructionParticles(x, y, z, blockId) {
+        if (this.particleSystem) {
+            this.particleSystem.createBlockDestructionParticles(
+                new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5),
+                blockId
+            );
+        }
     }
 }

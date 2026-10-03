@@ -11,8 +11,9 @@ class MinecraftGame {
 
         this.world = new World(this.scene);
         this.player = new Player(this.scene, this.camera);
+        this.particleSystem = new ParticleSystem(this.scene);
         this.ui = new GameUI(this.player, this.world);
-        this.input = new InputManager(this.world, this.player);
+        this.input = new InputManager(this.world, this.player, this.particleSystem);
 
         this.setupEventListeners();
         this.animate();
@@ -100,6 +101,7 @@ class MinecraftGame {
         this.player.update(this.world);
         this.world.updateChunks(this.player.position);
         this.world.update();
+        this.particleSystem.update();
         this.updateEnvironment();
         this.ui.update();
 

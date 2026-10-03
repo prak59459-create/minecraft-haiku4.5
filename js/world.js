@@ -105,10 +105,14 @@ class Chunk {
             scene.remove(this.mesh);
         }
 
+        if (this.mesh) {
+            this.mesh.geometry.dispose();
+            this.mesh.material.dispose();
+        }
+
         const geometry = new THREE.BufferGeometry();
         const positions = [];
         const colors = [];
-        const normals = [];
         const indices = [];
         let vertexCount = 0;
 
@@ -121,7 +125,7 @@ class Chunk {
                     const blockType = blockRegistry.get(blockId);
                     const color = new THREE.Color(blockType.color);
 
-                    this.addBlockGeometry(x, y, z, blockId, positions, colors, normals, indices, vertexCount);
+                    this.addBlockGeometry(x, y, z, blockId, positions, colors, indices, vertexCount);
                     vertexCount = positions.length / 3;
                 }
             }
@@ -135,6 +139,7 @@ class Chunk {
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
         geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
         geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
+        geometry.computeBoundingSphere();
 
         const material = new THREE.MeshPhongMaterial({
             vertexColors: true,
@@ -146,11 +151,12 @@ class Chunk {
         this.mesh.position.set(this.x * CHUNK_SIZE, 0, this.z * CHUNK_SIZE);
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
+        this.mesh.frustumCulled = true;
 
         scene.add(this.mesh);
     }
 
-    addBlockGeometry(x, y, z, blockId, positions, colors, normals, indices, vertexCount) {
+    addBlockGeometry(x, y, z, blockId, positions, colors, indices, vertexCount) {
         const size = BLOCK_SIZE;
         const bx = x * size;
         const by = y * size;
@@ -160,12 +166,12 @@ class Chunk {
         const color = new THREE.Color(blockType.color);
 
         const faces = [
-            { normal: [0, 1, 0], vertices: [[0, 1, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]] },
-            { normal: [0, -1, 0], vertices: [[0, 0, 1], [1, 0, 1], [1, 0, 0], [0, 0, 0]] },
-            { normal: [0, 0, 1], vertices: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] },
-            { normal: [0, 0, -1], vertices: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
-            { normal: [1, 0, 0], vertices: [[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]] },
-            { normal: [-1, 0, 0], vertices: [[0, 0, 1], [0, 1, 1], [0, 1, 0], [0, 0, 0]] }
+            { vertices: [[0, 1, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]] },
+            { vertices: [[0, 0, 1], [1, 0, 1], [1, 0, 0], [0, 0, 0]] },
+            { vertices: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] },
+            { vertices: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
+            { vertices: [[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]] },
+            { vertices: [[0, 0, 1], [0, 1, 1], [0, 1, 0], [0, 0, 0]] }
         ];
 
         for (const face of faces) {
@@ -178,7 +184,6 @@ class Chunk {
                     Math.floor(color.g * 255),
                     Math.floor(color.b * 255)
                 );
-                normals.push(face.normal[0], face.normal[1], face.normal[2]);
             }
 
             indices.push(startIdx, startIdx + 1, startIdx + 2);
