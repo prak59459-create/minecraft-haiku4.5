@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { World } from '../world/world';
 import { BLOCK_TYPES } from '../world/blocks';
 import { CollisionDetector } from '../physics/collision';
+import { SoundManager } from '../audio/sound';
 
 const PLAYER_HEIGHT = 1.7;
 const PLAYER_RADIUS = 0.3;
@@ -13,6 +14,7 @@ const GRAVITY = 30;
 export class Player {
   camera: THREE.PerspectiveCamera;
   canvas: HTMLCanvasElement;
+  sound: SoundManager;
   position: THREE.Vector3 = new THREE.Vector3(0, 80, 0);
   velocity: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
 
@@ -21,13 +23,15 @@ export class Player {
 
   isOnGround: boolean = false;
   isSprinting: boolean = false;
+  wasOnGround: boolean = false;
 
   keys: { [key: string]: boolean } = {};
   mouseDown: { [key: string]: boolean } = { left: false, right: false };
 
-  constructor(camera: THREE.PerspectiveCamera, canvas: HTMLCanvasElement) {
+  constructor(camera: THREE.PerspectiveCamera, canvas: HTMLCanvasElement, sound: SoundManager) {
     this.camera = camera;
     this.canvas = canvas;
+    this.sound = sound;
     this.position.copy(camera.position);
 
     this.setupInputListeners();
@@ -115,6 +119,7 @@ export class Player {
     if (this.keys[' '] && this.isOnGround) {
       this.velocity.y = JUMP_FORCE;
       this.isOnGround = false;
+      this.sound.playJump();
     }
 
     const newPos = this.position.clone().addScaledVector(this.velocity, deltaTime);
@@ -139,11 +144,18 @@ export class Player {
       );
       this.position.copy(result.position);
       this.velocity.copy(result.velocity);
+
+      if (result.grounded && !this.wasOnGround) {
+        this.sound.playFootstep();
+      }
+
       this.isOnGround = result.grounded;
     } else {
       this.position.copy(newPos);
       this.isOnGround = false;
     }
+
+    this.wasOnGround = this.isOnGround;
   }
 
   private updateInteraction(world: World) {

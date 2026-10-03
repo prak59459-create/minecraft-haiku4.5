@@ -3,6 +3,7 @@ import { Chunk, CHUNK_SIZE } from './chunk';
 import { PerlinNoise } from './perlin';
 import { BLOCK_TYPES } from './blocks';
 import { ParticleSystem } from '../fx/particles';
+import { SoundManager } from '../audio/sound';
 
 const RENDER_DISTANCE = 3;
 
@@ -12,10 +13,12 @@ export class World {
   perlin: PerlinNoise;
   selectedBlock: number = BLOCK_TYPES.DIRT;
   particles: ParticleSystem;
+  sound: SoundManager;
 
-  constructor(scene: THREE.Scene, particles: ParticleSystem) {
+  constructor(scene: THREE.Scene, particles: ParticleSystem, sound: SoundManager) {
     this.scene = scene;
     this.particles = particles;
+    this.sound = sound;
     this.perlin = new PerlinNoise(42);
   }
 
@@ -130,10 +133,11 @@ export class World {
     const chunkZ = Math.floor(blockPos.z / CHUNK_SIZE);
     const chunk = this.chunks.get(`${chunkX},${chunkZ}`);
 
-    if (chunk) {
+    if (chunk && blockType !== BLOCK_TYPES.AIR) {
       const localX = ((blockPos.x % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
       const localZ = ((blockPos.z % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
       chunk.setBlock(localX, blockPos.y, localZ, blockType);
+      this.sound.playBlockPlace(400 + blockType * 50);
       this.rebuildChunk(chunkX, chunkZ);
     }
   }
@@ -145,6 +149,7 @@ export class World {
         blockPos.clone().addScalar(0.5),
         blockType
       );
+      this.sound.playBlockBreak(300 + blockType * 50);
     }
     this.placeBlock(blockPos, BLOCK_TYPES.AIR);
   }

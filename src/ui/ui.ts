@@ -2,6 +2,7 @@ import { Player } from '../player/player';
 import { World } from '../world/world';
 import { BLOCK_NAMES, BLOCK_TYPES } from '../world/blocks';
 import { EnvironmentManager } from '../world/environment';
+import { StatsMonitor } from '../util/stats';
 
 export class UI {
   private hotbarContainer: HTMLElement;
@@ -44,9 +45,9 @@ export class UI {
     });
   }
 
-  update(player: Player, world: World, environment?: EnvironmentManager) {
+  update(player: Player, world: World, environment?: EnvironmentManager, stats?: StatsMonitor) {
     this.updateHotbar(player, world);
-    this.updateInfo(player, world, environment);
+    this.updateInfo(player, world, environment, stats);
   }
 
   private updateHotbar(player: Player, world: World) {
@@ -60,7 +61,7 @@ export class UI {
     });
   }
 
-  private updateInfo(player: Player, world: World, environment?: EnvironmentManager) {
+  private updateInfo(player: Player, world: World, environment?: EnvironmentManager, stats?: StatsMonitor) {
     const blockName = BLOCK_NAMES[world.selectedBlock] || 'Unknown';
     const groundState = player.isOnGround ? 'On Ground' : 'Falling';
     const speedMagnitude = Math.sqrt(
@@ -70,17 +71,24 @@ export class UI {
     const direction = this.getDirection(player.yaw);
     const timeOfDay = environment ? (environment.timeOfDay * 24).toFixed(1) : 'N/A';
 
-    const info = `
+    let info = `
 Block: ${blockName}
 Position: ${player.position.x.toFixed(1)}, ${player.position.y.toFixed(1)}, ${player.position.z.toFixed(1)}
 Speed: ${speedMagnitude} m/s
 Direction: ${direction}
 Status: ${groundState}
-Time: ${timeOfDay}h
-${player.isSprinting ? 'Sprint: ON' : ''}
-    `.trim();
+Time: ${timeOfDay}h`;
 
-    this.infoContainer.textContent = info;
+    if (stats) {
+      info += `
+FPS: ${stats.fps} | Chunks: ${stats.chunkCount} | RAM: ${stats.memoryUsage}MB`;
+    }
+
+    if (player.isSprinting) {
+      info += '\nSprint: ON';
+    }
+
+    this.infoContainer.textContent = info.trim();
   }
 
   private getDirection(yaw: number): string {
