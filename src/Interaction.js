@@ -76,8 +76,13 @@ export default class Interaction {
       const adjacentPos = this.getAdjacentPosition(position, face)
 
       const block = this.player.inventory[this.player.selectedBlock]
-      this.world.setBlock(adjacentPos.x, adjacentPos.y, adjacentPos.z, block)
-      this.playSound('place')
+      if (block !== BlockTypes.EMPTY) {
+        const success = this.world.setBlock(adjacentPos.x, adjacentPos.y, adjacentPos.z, block)
+        if (success) {
+          this.playSound('place')
+          this.spawnParticles(adjacentPos, 'place')
+        }
+      }
     }
   }
 
@@ -94,20 +99,20 @@ export default class Interaction {
     return adjacent
   }
 
-  spawnParticles(position) {
-    const particleCount = 8
+  spawnParticles(position, type = 'break') {
+    const particleCount = type === 'break' ? 12 : 6
     for (let i = 0; i < particleCount; i++) {
       const particle = {
         pos: position.clone().addScaledVector(
           new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5),
-          0.5
+          0.3
         ),
         vel: new THREE.Vector3(
-          (Math.random() - 0.5) * 0.2,
-          Math.random() * 0.2,
-          (Math.random() - 0.5) * 0.2
+          (Math.random() - 0.5) * (type === 'break' ? 0.3 : 0.2),
+          Math.random() * (type === 'break' ? 0.3 : 0.15),
+          (Math.random() - 0.5) * (type === 'break' ? 0.3 : 0.2)
         ),
-        lifetime: 30 + Math.random() * 20,
+        lifetime: (type === 'break' ? 40 : 25) + Math.random() * 15,
         age: 0
       }
 

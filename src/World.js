@@ -122,21 +122,25 @@ export default class World {
 
   raycast(origin, direction, maxDistance = 1000) {
     let currentPos = origin.clone()
-    const step = 0.1
+    const step = 0.05
     let distance = 0
+    let lastBlock = null
 
     while (distance < maxDistance) {
       currentPos.addScaledVector(direction, step)
       distance += step
 
-      const x = Math.round(currentPos.x)
-      const y = Math.round(currentPos.y)
-      const z = Math.round(currentPos.z)
+      const x = Math.floor(currentPos.x)
+      const y = Math.floor(currentPos.y)
+      const z = Math.floor(currentPos.z)
 
       const block = this.getBlock(x, y, z)
       if (block !== 0) {
-        const face = this.getFaceNormal(origin, currentPos)
-        return { hit: true, position: new THREE.Vector3(x, y, z), face }
+        if (lastBlock === null || lastBlock.x !== x || lastBlock.y !== y || lastBlock.z !== z) {
+          lastBlock = { x, y, z }
+          const face = this.getFaceNormal(origin, currentPos)
+          return { hit: true, position: new THREE.Vector3(x, y, z), face }
+        }
       }
     }
 

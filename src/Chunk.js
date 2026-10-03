@@ -138,10 +138,19 @@ export default class Chunk {
             const verts = this.getFaceVertices(face.offset, base)
 
             const startIndex = vertexIndex
+            const worldX = this.chunkX * this.size + x
+            const worldZ = this.chunkZ * this.size + z
+            const variation = Math.sin(worldX * 0.5) * Math.cos(worldZ * 0.5) * 0.15
+            const shade = 1 + variation
+
             for (const v of verts) {
               positions.push(...v)
               normals.push(...face.normal)
-              colors.push(blockColor.r, blockColor.g, blockColor.b)
+              colors.push(
+                Math.max(0, Math.min(1, blockColor.r * shade)),
+                Math.max(0, Math.min(1, blockColor.g * shade)),
+                Math.max(0, Math.min(1, blockColor.b * shade))
+              )
             }
 
             indices.push(startIndex, startIndex + 1, startIndex + 2)
