@@ -28,27 +28,34 @@ class Player {
 
     move(direction, deltaTime) {
         const speed = this.isSprinting ? CONFIG.PLAYER_SPRINT_SPEED : CONFIG.PLAYER_SPEED;
-        const moveVector = new THREE.Vector3();
+        const targetVelocity = new THREE.Vector3();
 
         if (direction.forward) {
-            moveVector.x += Math.sin(this.yaw) * speed;
-            moveVector.z += Math.cos(this.yaw) * speed;
+            targetVelocity.x += Math.sin(this.yaw) * speed;
+            targetVelocity.z += Math.cos(this.yaw) * speed;
         }
         if (direction.backward) {
-            moveVector.x -= Math.sin(this.yaw) * speed;
-            moveVector.z -= Math.cos(this.yaw) * speed;
+            targetVelocity.x -= Math.sin(this.yaw) * speed;
+            targetVelocity.z -= Math.cos(this.yaw) * speed;
         }
         if (direction.left) {
-            moveVector.x += Math.sin(this.yaw - Math.PI / 2) * speed;
-            moveVector.z += Math.cos(this.yaw - Math.PI / 2) * speed;
+            targetVelocity.x += Math.sin(this.yaw - Math.PI / 2) * speed;
+            targetVelocity.z += Math.cos(this.yaw - Math.PI / 2) * speed;
         }
         if (direction.right) {
-            moveVector.x += Math.sin(this.yaw + Math.PI / 2) * speed;
-            moveVector.z += Math.cos(this.yaw + Math.PI / 2) * speed;
+            targetVelocity.x += Math.sin(this.yaw + Math.PI / 2) * speed;
+            targetVelocity.z += Math.cos(this.yaw + Math.PI / 2) * speed;
         }
 
-        this.velocity.x = moveVector.x;
-        this.velocity.z = moveVector.z;
+        const acceleration = 0.8;
+        const timeScale = Math.min(deltaTime * 60, 1);
+        this.velocity.x += (targetVelocity.x - this.velocity.x) * acceleration * timeScale;
+        this.velocity.z += (targetVelocity.z - this.velocity.z) * acceleration * timeScale;
+
+        if (!direction.forward && !direction.backward && !direction.left && !direction.right) {
+            this.velocity.x *= 0.85;
+            this.velocity.z *= 0.85;
+        }
     }
 
     jump() {

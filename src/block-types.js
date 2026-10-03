@@ -12,7 +12,9 @@ const BLOCK_TYPES = {
     IRON_ORE: 10,
     COAL_ORE: 11,
     WATER: 12,
-    GLASS: 13
+    GLASS: 13,
+    OAK_PLANKS: 14,
+    BOOKSHELF: 15
 };
 
 const BLOCK_PROPERTIES = {
@@ -105,13 +107,27 @@ const BLOCK_PROPERTIES = {
         solid: false,
         transparent: true,
         color: [64, 164, 223],
-        selectable: false
+        selectable: true
     },
     [BLOCK_TYPES.GLASS]: {
         name: 'Glass',
         solid: true,
         transparent: true,
         color: [200, 225, 255],
+        selectable: true
+    },
+    [BLOCK_TYPES.OAK_PLANKS]: {
+        name: 'Oak Planks',
+        solid: true,
+        transparent: false,
+        color: [160, 82, 45],
+        selectable: true
+    },
+    [BLOCK_TYPES.BOOKSHELF]: {
+        name: 'Bookshelf',
+        solid: true,
+        transparent: false,
+        color: [100, 60, 40],
         selectable: true
     }
 };
@@ -124,9 +140,6 @@ const SELECTABLE_BLOCKS = [
     BLOCK_TYPES.OAK_LOG,
     BLOCK_TYPES.OAK_LEAVES,
     BLOCK_TYPES.SAND,
-    BLOCK_TYPES.GRAVEL,
-    BLOCK_TYPES.GOLD_ORE,
-    BLOCK_TYPES.IRON_ORE,
-    BLOCK_TYPES.COAL_ORE,
-    BLOCK_TYPES.GLASS
+    BLOCK_TYPES.GLASS,
+    BLOCK_TYPES.OAK_PLANKS,
 ];

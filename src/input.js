@@ -35,11 +35,18 @@ class InputManager {
     }
 
     onKeyDown(e) {
-        this.keys[e.key.toLowerCase()] = true;
+        const key = e.key.toLowerCase();
+        this.keys[key] = true;
 
         if (e.key === ' ') {
             e.preventDefault();
             this.player.jump();
+        }
+
+        const num = parseInt(e.key);
+        if (num >= 1 && num <= 9) {
+            this.player.setSelectedBlock(num - 1);
+            this.updateHotbar();
         }
     }
 
@@ -61,10 +68,15 @@ class InputManager {
         const deltaX = e.movementX || e.mozMovementX || 0;
         const deltaY = e.movementY || e.mozMovementY || 0;
 
-        this.player.yaw -= deltaX * CONFIG.MOUSE_SENSITIVITY;
-        this.player.pitch -= deltaY * CONFIG.MOUSE_SENSITIVITY;
+        const sensitivity = CONFIG.MOUSE_SENSITIVITY * 0.75;
+        this.player.yaw -= deltaX * sensitivity;
+        this.player.pitch -= deltaY * sensitivity;
 
         this.player.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.player.pitch));
+
+        while (this.player.yaw > Math.PI) this.player.yaw -= Math.PI * 2;
+        while (this.player.yaw < -Math.PI) this.player.yaw += Math.PI * 2;
+
         this.player.updateCameraTarget();
     }
 
