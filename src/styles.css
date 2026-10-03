@@ -1,0 +1,177 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Arial', sans-serif;
+  background: #000;
+}
+
+#game-container {
+  width: 100%;
+  height: 100%;
+}
+
+canvas {
+  display: block;
+}
+
+#hud {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  font-family: 'Minecraft', monospace;
+}
+
+#inventory-bar {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 4px;
+  border-radius: 4px;
+  pointer-events: auto;
+}
+
+.inventory-slot {
+  width: 40px;
+  height: 40px;
+  background: rgba(100, 100, 100, 0.8);
+  border: 2px solid rgba(150, 150, 150, 0.6);
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.1s;
+  position: relative;
+}
+
+.inventory-slot:hover {
+  background: rgba(120, 120, 120, 0.9);
+}
+
+.inventory-slot.selected {
+  border: 3px solid #FFD700;
+  background: rgba(110, 110, 110, 1);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.block-icon {
+  font-size: 20px;
+  display: block;
+}
+
+.block-label {
+  font-size: 8px;
+  color: #fff;
+  text-align: center;
+}
+
+#crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+}
+
+#crosshair::before,
+#crosshair::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+#crosshair::before {
+  width: 1px;
+  height: 6px;
+  left: 50%;
+  top: -3px;
+  transform: translateX(-50%);
+}
+
+#crosshair::after {
+  width: 1px;
+  height: 6px;
+  left: 50%;
+  bottom: -3px;
+  transform: translateX(-50%);
+}
+
+#info-panel {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.6;
+  pointer-events: auto;
+  font-family: monospace;
+}
+
+#fps, #coords, #chunks, #day-night {
+  margin: 2px 0;
+}
+
+#day-night {
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+#help-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+#help-overlay.hidden {
+  display: none;
+}
+
+#help-content {
+  background: rgba(50, 50, 50, 0.95);
+  padding: 40px;
+  border-radius: 8px;
+  color: #fff;
+  max-width: 600px;
+  border: 2px solid #FFD700;
+}
+
+#help-content h2 {
+  color: #FFD700;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+#help-content p {
+  margin-bottom: 12px;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+#help-content strong {
+  color: #FFD700;
+}
