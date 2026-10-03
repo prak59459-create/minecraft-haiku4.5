@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 
 export class Input {
-    constructor(player, world) {
+    constructor(player, world, game) {
         this.player = player;
         this.world = world;
+        this.game = game;
         this.pointerLocked = false;
 
         this.keys = {
@@ -104,15 +105,19 @@ export class Input {
         const raycast = this.world.rayCastFromPlayer(this.player);
         if (raycast) {
             this.world.destroyBlock(raycast.chunk, raycast.localPos);
+            const blockWorldPos = raycast.worldPos.clone().add(new THREE.Vector3(0.5, 0.5, 0.5));
+            this.game.particles.createBlockBreakParticles(blockWorldPos, 0x888888);
+            this.game.sound.playBlockBreakSound();
         }
     }
 
     onRightClick() {
         const raycast = this.world.rayCastFromPlayer(this.player);
         if (raycast) {
-            const newPos = raycast.worldPos.add(raycast.normal);
+            const newPos = raycast.worldPos.clone().add(raycast.normal);
             const blockType = this.player.blockInventory[this.player.selectedBlock].type;
             this.world.placeBlock(newPos, blockType);
+            this.game.sound.playBlockPlaceSound();
         }
     }
 

@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 
 export class Chunk {
+    static textureCache = null;
+
     constructor(chunkX, chunkZ, size, blockDatabase, terrainGenerator) {
         this.chunkX = chunkX;
         this.chunkZ = chunkZ;
@@ -11,6 +13,7 @@ export class Chunk {
 
         this.blocks = new Uint16Array(size * size * this.worldHeight);
         this.mesh = null;
+        this.isDirty = true;
     }
 
     getIndex(x, y, z) {
@@ -151,8 +154,12 @@ export class Chunk {
             geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             geometry.computeVertexNormals();
 
+            if (!Chunk.textureCache) {
+                Chunk.textureCache = this.getBlockTexture();
+            }
+
             const material = new THREE.MeshStandardMaterial({
-                map: this.getBlockTexture(),
+                map: Chunk.textureCache,
                 metalness: 0.1,
                 roughness: 0.8
             });
@@ -161,6 +168,7 @@ export class Chunk {
             this.mesh.position.set(this.chunkX * this.size, 0, this.chunkZ * this.size);
             this.mesh.castShadow = true;
             this.mesh.receiveShadow = true;
+            this.isDirty = false;
         }
     }
 

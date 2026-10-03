@@ -3,6 +3,8 @@ import { Player } from './player.js';
 import { World } from './world/world.js';
 import { Input } from './input.js';
 import { Physics } from './physics.js';
+import { ParticleSystem } from './particles.js';
+import { SoundManager } from './sound.js';
 
 export class Game {
     constructor() {
@@ -15,7 +17,9 @@ export class Game {
 
         this.player = new Player();
         this.world = new World(this.scene);
-        this.input = new Input(this.player, this.world);
+        this.particles = new ParticleSystem(this.scene);
+        this.sound = new SoundManager();
+        this.input = new Input(this.player, this.world, this);
         this.physics = new Physics();
 
         this.lastTime = Date.now();
@@ -60,6 +64,7 @@ export class Game {
         this.input.update(clampedDelta);
         this.player.update(clampedDelta, this.world);
         this.physics.update(this.player, this.world, clampedDelta);
+        this.particles.update(clampedDelta);
         this.world.update(this.player);
         this.updateLighting();
         this.updateUI();

@@ -62,33 +62,45 @@ export class World {
     }
 
     getBlock(position) {
-        const chunk = this.getChunk(position.x, position.z);
+        const blockX = Math.floor(position.x);
+        const blockY = Math.floor(position.y);
+        const blockZ = Math.floor(position.z);
+
+        if (blockY < 0 || blockY >= this.worldHeight) return null;
+
+        const chunk = this.getChunk(blockX, blockZ);
         if (!chunk) return null;
 
-        const localX = Math.floor(position.x) % this.chunkSize;
-        const localY = Math.floor(position.y);
-        const localZ = Math.floor(position.z) % this.chunkSize;
+        const chunkX = Math.floor(blockX / this.chunkSize);
+        const chunkStartX = chunkX * this.chunkSize;
+        const localX = blockX - chunkStartX;
 
-        if (localX < 0) return null;
-        if (localY < 0 || localY >= this.worldHeight) return null;
-        if (localZ < 0) return null;
+        const chunkZ = Math.floor(blockZ / this.chunkSize);
+        const chunkStartZ = chunkZ * this.chunkSize;
+        const localZ = blockZ - chunkStartZ;
 
-        return chunk.getBlock(localX, localY, localZ);
+        return chunk.getBlock(localX, blockY, localZ);
     }
 
     setBlock(position, blockType) {
-        const chunk = this.getChunk(position.x, position.z);
+        const blockX = Math.floor(position.x);
+        const blockY = Math.floor(position.y);
+        const blockZ = Math.floor(position.z);
+
+        if (blockY < 0 || blockY >= this.worldHeight) return;
+
+        const chunk = this.getChunk(blockX, blockZ);
         if (!chunk) return;
 
-        const localX = Math.floor(position.x) % this.chunkSize;
-        const localY = Math.floor(position.y);
-        const localZ = Math.floor(position.z) % this.chunkSize;
+        const chunkX = Math.floor(blockX / this.chunkSize);
+        const chunkStartX = chunkX * this.chunkSize;
+        const localX = blockX - chunkStartX;
 
-        if (localX < 0 || localX >= this.chunkSize) return;
-        if (localY < 0 || localY >= this.worldHeight) return;
-        if (localZ < 0 || localZ >= this.chunkSize) return;
+        const chunkZ = Math.floor(blockZ / this.chunkSize);
+        const chunkStartZ = chunkZ * this.chunkSize;
+        const localZ = blockZ - chunkStartZ;
 
-        chunk.setBlock(localX, localY, localZ, blockType);
+        chunk.setBlock(localX, blockY, localZ, blockType);
         chunk.rebuild();
     }
 
