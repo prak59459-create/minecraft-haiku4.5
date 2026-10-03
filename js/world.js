@@ -47,6 +47,7 @@ class World {
 
     generateChunk(chunkX, chunkZ) {
         const chunk = new Chunk(chunkX, chunkZ);
+        const waterLevel = 64;
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let z = 0; z < CHUNK_SIZE; z++) {
@@ -62,17 +63,31 @@ class World {
                         chunk.setBlock(x, y, z, BLOCKS.DIRT);
                     } else if (y < height) {
                         chunk.setBlock(x, y, z, BLOCKS.GRASS);
-                    } else if (y < 64) {
-                        // Water level
-                        if (Math.random() < 0.01) {
+                    } else if (y < waterLevel) {
+                        if (Math.random() < 0.005) {
                             chunk.setBlock(x, y, z, BLOCKS.WATER);
                         }
+                    } else if (y === waterLevel && height < waterLevel) {
+                        chunk.setBlock(x, y, z, BLOCKS.WATER);
                     }
                 }
 
                 // Add trees
                 if (height > 62 && height < 120 && Math.random() < 0.02) {
                     this.generateTree(worldX, height, worldZ);
+                }
+
+                // Add beaches
+                if (height >= waterLevel - 1 && height <= waterLevel + 2) {
+                    if (this.getTerrainHeight(worldX + 1, worldZ) < waterLevel ||
+                        this.getTerrainHeight(worldX - 1, worldZ) < waterLevel ||
+                        this.getTerrainHeight(worldX, worldZ + 1) < waterLevel ||
+                        this.getTerrainHeight(worldX, worldZ - 1) < waterLevel) {
+                        const topBlockY = Math.floor(height) - 1;
+                        if (topBlockY >= 0 && topBlockY < CHUNK_HEIGHT) {
+                            chunk.setBlock(x, topBlockY, z, BLOCKS.SAND);
+                        }
+                    }
                 }
             }
         }

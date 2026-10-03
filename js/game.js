@@ -4,6 +4,8 @@ class Game {
         this.player = new Player();
         this.renderer = renderer;
         this.particles = new ParticleSystem(this.renderer.scene);
+        this.waterSystem = new WaterSystem(this.renderer.scene);
+        this.audioSystem = audioSystem;
 
         this.gameTime = 6; // 6:00 AM
         this.timeSpeed = 0.0005; // Time multiplier
