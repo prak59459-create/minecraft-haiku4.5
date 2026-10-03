@@ -2,6 +2,10 @@ import * as THREE from 'three';
 import { Player } from './Player.js';
 import { WorldManager } from './WorldManager.js';
 import { BlockSystem } from './BlockSystem.js';
+import { Settings } from './Settings.js';
+import { InputManager } from './InputManager.js';
+import { CameraController } from './CameraController.js';
+import { LightingSystem } from './LightingSystem.js';
 
 export class Game {
     constructor() {
@@ -9,19 +13,19 @@ export class Game {
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
 
+        this.settings = new Settings();
+        this.inputManager = new InputManager(this.settings);
+        this.cameraController = new CameraController(this.camera, this.settings);
+
         this.player = null;
         this.world = null;
         this.blockSystem = null;
+        this.lightingSystem = null;
         this.selectedBlock = 1;
 
         this.frameCount = 0;
         this.lastTime = performance.now();
         this.fps = 0;
-
-        this.dayNightCycle = 0;
-        this.ambientLight = null;
-        this.directionalLight = null;
-        this.time = 0;
 
         this.setupScene();
     }
@@ -33,27 +37,15 @@ export class Game {
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
         document.body.appendChild(this.renderer.domElement);
 
-        this.ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        this.scene.add(this.ambientLight);
+        this.scene.fog = new THREE.Fog(0x87ceeb, this.settings.viewDistance, this.settings.fogDistance);
 
-        this.directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        this.directionalLight.position.set(100, 150, 100);
-        this.directionalLight.castShadow = true;
-        this.directionalLight.shadow.mapSize.width = 2048;
-        this.directionalLight.shadow.mapSize.height = 2048;
-        this.directionalLight.shadow.camera.left = -200;
-        this.directionalLight.shadow.camera.right = 200;
-        this.directionalLight.shadow.camera.top = 200;
-        this.directionalLight.shadow.camera.bottom = -200;
-        this.scene.add(this.directionalLight);
-
-        this.scene.fog = new THREE.Fog(0x87ceeb, 500, 1000);
+        this.lightingSystem = new LightingSystem(this.scene);
     }
 
     init() {
         this.blockSystem = new BlockSystem();
-        this.world = new WorldManager(this.scene, this.blockSystem);
-        this.player = new Player(this.camera, this.world);
+        this.world = new WorldManager(this.scene, this.blockSystem, this.settings.renderDistance);
+        this.player = new Player(this.camera, this.world, this.inputManager, this.cameraController);
 
         this.setupUI();
         this.setupEventListeners();
@@ -109,6 +101,12 @@ export class Game {
                 this.selectBlock(key);
             }
         });
+
+        document.addEventListener('click', () => {
+            document.body.requestPointerLock =
+                document.body.requestPointerLock || document.body.mozRequestPointerLock;
+            document.body.requestPointerLock();
+        });
     }
 
     selectBlock(blockId) {
@@ -123,64 +121,22 @@ export class Game {
         });
     }
 
-    updateDayNightCycle(deltaTime) {
-        this.time += deltaTime;
-        const cycleTime = 30; // 30 second day/night cycle
-        const cycleFraction = (this.time % cycleTime) / cycleTime;
-
-        const sunAngle = cycleFraction * Math.PI * 2;
-        const sunHeight = Math.sin(sunAngle);
-        const sunIntensity = Math.max(0.2, Math.cos(sunAngle * 0.5) * 0.5 + 0.5);
-
-        this.directionalLight.position.set(
-            Math.cos(sunAngle) * 150,
-            sunHeight * 150 + 50,
-            Math.sin(sunAngle) * 150
-        );
-
-        this.directionalLight.intensity = sunIntensity * 0.8;
-        this.ambientLight.intensity = Math.max(0.2, sunIntensity * 0.6);
-
-        const skyColor = this.interpolateColor(
-            0x87ceeb,
-            0x1a1a2e,
-            Math.max(0, -sunHeight) * 0.5
-        );
-        this.renderer.setClearColor(skyColor);
-    }
-
-    interpolateColor(c1, c2, t) {
-        const r1 = (c1 >> 16) & 255;
-        const g1 = (c1 >> 8) & 255;
-        const b1 = c1 & 255;
-
-        const r2 = (c2 >> 16) & 255;
-        const g2 = (c2 >> 8) & 255;
-        const b2 = c2 & 255;
-
-        const r = Math.round(r1 + (r2 - r1) * t);
-        const g = Math.round(g1 + (g2 - g1) * t);
-        const b = Math.round(b1 + (b2 - b1) * t);
-
-        return (r << 16) | (g << 8) | b;
-    }
-
     animate() {
         requestAnimationFrame(() => this.animate());
 
         const now = performance.now();
-        const deltaTime = (now - this.lastTime) / 1000;
+        const deltaTime = Math.min((now - this.lastTime) / 1000, 0.016);
         this.lastTime = now;
 
         this.frameCount++;
         if (this.frameCount >= 10) {
-            this.fps = Math.round(1 / (deltaTime * 10));
+            this.fps = Math.round(1 / deltaTime);
             this.frameCount = 0;
         }
 
         this.player.update(deltaTime);
         this.world.updateChunks(this.player.position);
-        this.updateDayNightCycle(deltaTime);
+        this.lightingSystem.update(deltaTime, this.scene);
         this.updateUI();
 
         this.renderer.render(this.scene, this.camera);

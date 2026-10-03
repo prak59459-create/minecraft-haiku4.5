@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { TerrainGenerator } from './TerrainGenerator.js';
 
 export class WorldManager {
-    constructor(scene, blockSystem) {
+    constructor(scene, blockSystem, renderDistance = 8) {
         this.scene = scene;
         this.blockSystem = blockSystem;
 
@@ -13,8 +13,8 @@ export class WorldManager {
         this.meshes = new Map();
 
         this.terrainGenerator = new TerrainGenerator();
-        this.renderDistance = 8;
-        this.maxChunks = 256;
+        this.renderDistance = renderDistance;
+        this.maxChunks = Math.min(256, renderDistance * renderDistance * 4);
     }
 
     getChunkKey(cx, cz) {
