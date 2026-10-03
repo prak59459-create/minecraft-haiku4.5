@@ -126,4 +126,9 @@ document.addEventListener('click', () => {
 
 window.gameState = { scene, world, player, camera, renderer, physics };
 
+window.startGame = () => {
+  document.getElementById('helpOverlay').style.display = 'none';
+  document.body.requestPointerLock();
+};
+
 animate();
