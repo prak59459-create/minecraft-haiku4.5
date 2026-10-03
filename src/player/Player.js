@@ -2,9 +2,11 @@ import * as THREE from 'three';
 import { BlockType } from '../world/BlockType.js';
 
 export class Player {
-    constructor(camera, chunkManager) {
+    constructor(camera, chunkManager, particleSystem = null, soundManager = null) {
         this.camera = camera;
         this.chunkManager = chunkManager;
+        this.particleSystem = particleSystem;
+        this.soundManager = soundManager;
 
         this.position = camera.position.clone();
         this.velocity = new THREE.Vector3();
@@ -134,7 +136,14 @@ export class Player {
 
         const hit = this.chunkManager.raycast(this.camera.position, direction, this.blockReachDistance);
         if (hit && Date.now() - this.lastClickTime > this.clickDelay) {
+            const blockType = this.chunkManager.getBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z);
             this.chunkManager.setBlock(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z, 0);
+            if (this.particleSystem) {
+                this.particleSystem.createDestructionParticles(hit.blockPos, blockType);
+            }
+            if (this.soundManager) {
+                this.soundManager.playBlockBreak();
+            }
             this.lastClickTime = Date.now();
         }
     }
@@ -146,6 +155,9 @@ export class Player {
         const hit = this.chunkManager.raycast(this.camera.position, direction, this.blockReachDistance);
         if (hit && Date.now() - this.lastClickTime > this.clickDelay) {
             this.chunkManager.setBlock(hit.placePos.x, hit.placePos.y, hit.placePos.z, this.selectedBlock);
+            if (this.soundManager) {
+                this.soundManager.playBlockPlace();
+            }
             this.lastClickTime = Date.now();
         }
     }

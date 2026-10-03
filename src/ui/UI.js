@@ -1,11 +1,13 @@
 import { BlockType } from '../world/BlockType.js';
 
 export class UI {
-    constructor(player) {
+    constructor(player, inputManager = null) {
         this.player = player;
+        this.inputManager = inputManager;
         this.frameCount = 0;
         this.lastFrameTime = Date.now();
         this.fps = 0;
+        this.lastSelectedSlot = -1;
 
         this.initElements();
     }
@@ -22,7 +24,10 @@ export class UI {
         this.updateFPS();
         this.updatePosition(player);
         this.updateChunkInfo(chunkManager);
-        this.updateBlockSelector();
+        if (this.lastSelectedSlot !== player.selectedSlot) {
+            this.updateBlockSelector();
+            this.lastSelectedSlot = player.selectedSlot;
+        }
         this.updateEnvironment(lighting);
     }
 

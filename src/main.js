@@ -5,6 +5,12 @@ import { Player } from './player/Player.js';
 import { InputManager } from './input/InputManager.js';
 import { UI } from './ui/UI.js';
 import { Lighting } from './environment/Lighting.js';
+import { ParticleSystem } from './effects/ParticleSystem.js';
+import { SoundManager } from './utils/Sound.js';
+import { PerformanceOptimizer } from './utils/Performance.js';
+import { BlockHighlight } from './world/BlockHighlight.js';
+import { WeatherSystem } from './environment/Weather.js';
+import { Profiler } from './utils/Profiler.js';
 
 const WORLD_CONFIG = {
     chunkSize: 16,
@@ -69,9 +75,23 @@ class MinecraftClone {
         this.inputManager = new InputManager(this.camera, this.player);
     }
 
+    setupParticlesAndSound() {
+        this.player.particleSystem = this.particles;
+        this.player.soundManager = this.soundManager;
+    }
+
     initUI() {
         this.ui = new UI(this.player);
         this.lighting = new Lighting(this.scene);
+        this.particles = new ParticleSystem(this.scene);
+        this.soundManager = new SoundManager();
+        this.soundManager.init();
+        this.performanceOptimizer = new PerformanceOptimizer(this.renderer);
+        this.blockHighlight = new BlockHighlight(this.scene);
+        this.weather = new WeatherSystem(this.scene);
+        this.profiler = new Profiler();
+        this.ui.inputManager = this.inputManager;
+        this.setupParticlesAndSound();
     }
 
     setupEventListeners() {
@@ -96,8 +116,15 @@ class MinecraftClone {
 
     updateEnvironment() {
         this.lighting.update();
+        this.weather.updateRain();
         this.scene.background.copy(this.lighting.skyColor);
         this.scene.fog.color.copy(this.lighting.fogColor);
+
+        // Update block highlight
+        const direction = new THREE.Vector3(0, 0, -1);
+        direction.applyQuaternion(this.camera.quaternion);
+        const hit = this.chunkManager.raycast(this.camera.position, direction, this.player.blockReachDistance);
+        this.blockHighlight.updateHighlight(hit);
     }
 
     updateUI() {
@@ -110,6 +137,7 @@ class MinecraftClone {
         this.updateWorldAround(this.player.camera.position);
         this.updatePhysics();
         this.updateEnvironment();
+        this.particles.update();
         this.updateUI();
 
         this.renderer.render(this.scene, this.camera);

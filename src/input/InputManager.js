@@ -95,18 +95,18 @@ export class InputManager {
                 this.player.selectedSlot = (this.player.selectedSlot + 1) % this.player.blocks.length;
             }
             this.player.selectBlock(this.player.selectedSlot);
+            this.updateBlockSelector();
         });
     }
 
     setupBlockSelectionListeners() {
-        for (let i = 0; i < 9; i++) {
-            document.addEventListener('keydown', (e) => {
-                const key = parseInt(e.key);
-                if (key >= 1 && key <= 9) {
-                    this.player.selectBlock(key - 1);
-                }
-            });
-        }
+        document.addEventListener('keydown', (e) => {
+            const key = parseInt(e.key);
+            if (key >= 1 && key <= 9) {
+                this.player.selectBlock(key - 1);
+                this.updateBlockSelector();
+            }
+        });
 
         const selector = document.getElementById('blockSelector');
         for (let i = 0; i < 9; i++) {
@@ -115,6 +115,7 @@ export class InputManager {
             slot.textContent = i + 1;
             slot.addEventListener('click', () => {
                 this.player.selectBlock(i);
+                this.updateBlockSelector();
             });
             selector.appendChild(slot);
         }
