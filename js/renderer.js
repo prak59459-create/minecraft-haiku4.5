@@ -24,9 +24,13 @@ class Renderer {
         this.sunLight = new THREE.DirectionalLight(0xffffff, 1);
         this.sunLight.position.set(100, 100, 100);
         this.sunLight.castShadow = true;
-        this.sunLight.shadow.mapSize.width = 4096;
-        this.sunLight.shadow.mapSize.height = 4096;
+        this.sunLight.shadow.mapSize.width = 2048;
+        this.sunLight.shadow.mapSize.height = 2048;
         this.sunLight.shadow.camera.far = 500;
+        this.sunLight.shadow.camera.left = -256;
+        this.sunLight.shadow.camera.right = 256;
+        this.sunLight.shadow.camera.top = 256;
+        this.sunLight.shadow.camera.bottom = -256;
         this.scene.add(this.sunLight);
 
         // Skybox

@@ -102,12 +102,18 @@ class Player {
 
         const intersection = this.rayCast(world);
         if (intersection) {
-            world.setBlock(
-                Math.floor(intersection.x),
-                Math.floor(intersection.y),
-                Math.floor(intersection.z),
-                BLOCKS.AIR
-            );
+            const x = Math.floor(intersection.x);
+            const y = Math.floor(intersection.y);
+            const z = Math.floor(intersection.z);
+
+            const blockId = world.getBlock(x, y, z);
+            const blockColor = getBlockColor(blockId);
+
+            world.setBlock(x, y, z, BLOCKS.AIR);
+
+            if (game.particles) {
+                game.particles.createDestructionEffect(x, y, z, blockColor);
+            }
         }
     }
 

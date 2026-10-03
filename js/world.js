@@ -3,6 +3,8 @@ class World {
         this.chunks = new Map();
         this.perlin = new SimplexNoise(WORLD_SEED);
         this.meshes = new Map();
+        this.meshUpdateQueue = new Set();
+        this.generationQueue = [];
     }
 
     getBlock(x, y, z) {
@@ -81,16 +83,21 @@ class World {
     getTerrainHeight(x, z) {
         let height = 64;
 
-        // Large scale terrain
-        height += this.perlin.noise2D(x * 0.005, z * 0.005) * 32;
+        // Large scale terrain (mountains/valleys)
+        const scale1 = this.perlin.noise2D(x * 0.004, z * 0.004);
+        height += scale1 * scale1 * 40;
 
-        // Medium scale detail
-        height += this.perlin.noise2D(x * 0.02, z * 0.02) * 16;
+        // Medium scale detail (rolling hills)
+        const scale2 = this.perlin.noise2D(x * 0.015, z * 0.015);
+        height += scale2 * 18;
 
-        // Small scale detail
-        height += this.perlin.noise2D(x * 0.1, z * 0.1) * 4;
+        // Small scale detail (roughness)
+        height += this.perlin.noise2D(x * 0.08, z * 0.08) * 3;
 
-        return Math.floor(Math.max(1, Math.min(height, 120)));
+        // Micro detail
+        height += this.perlin.noise2D(x * 0.3, z * 0.3) * 1;
+
+        return Math.floor(Math.max(1, Math.min(height, 140)));
     }
 
     generateTree(centerX, baseY, centerZ) {

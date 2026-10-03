@@ -3,6 +3,7 @@ class Game {
         this.world = new World();
         this.player = new Player();
         this.renderer = renderer;
+        this.particles = new ParticleSystem(this.renderer.scene);
 
         this.gameTime = 6; // 6:00 AM
         this.timeSpeed = 0.0005; // Time multiplier
@@ -46,6 +47,9 @@ class Game {
         // Update sky
         const timeOfDay = this.gameTime / 24;
         this.renderer.updateSkyboxColor(timeOfDay);
+
+        // Update particles
+        this.particles.update(deltaTime);
 
         // Update player
         this.player.update(this.world);
