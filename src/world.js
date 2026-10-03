@@ -190,7 +190,7 @@ export class World {
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8BufferAttribute(colors), 3, true));
+    geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
     geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
 
     return geometry;
