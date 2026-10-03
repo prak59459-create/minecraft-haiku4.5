@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Chunk, CHUNK_SIZE } from './chunk';
 import { PerlinNoise } from './perlin';
 import { BLOCK_TYPES } from './blocks';
+import { ParticleSystem } from '../fx/particles';
 
 const RENDER_DISTANCE = 3;
 
@@ -10,9 +11,11 @@ export class World {
   chunks: Map<string, Chunk> = new Map();
   perlin: PerlinNoise;
   selectedBlock: number = BLOCK_TYPES.DIRT;
+  particles: ParticleSystem;
 
-  constructor(scene: THREE.Scene) {
+  constructor(scene: THREE.Scene, particles: ParticleSystem) {
     this.scene = scene;
+    this.particles = particles;
     this.perlin = new PerlinNoise(42);
   }
 
@@ -136,6 +139,13 @@ export class World {
   }
 
   destroyBlock(blockPos: THREE.Vector3) {
+    const blockType = this.getBlockAt(blockPos);
+    if (blockType !== BLOCK_TYPES.AIR) {
+      this.particles.createBlockDestruction(
+        blockPos.clone().addScalar(0.5),
+        blockType
+      );
+    }
     this.placeBlock(blockPos, BLOCK_TYPES.AIR);
   }
 

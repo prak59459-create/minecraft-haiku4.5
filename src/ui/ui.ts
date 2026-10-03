@@ -1,6 +1,7 @@
 import { Player } from '../player/player';
 import { World } from '../world/world';
 import { BLOCK_NAMES, BLOCK_TYPES } from '../world/blocks';
+import { EnvironmentManager } from '../world/environment';
 
 export class UI {
   private hotbarContainer: HTMLElement;
@@ -43,9 +44,9 @@ export class UI {
     });
   }
 
-  update(player: Player, world: World) {
+  update(player: Player, world: World, environment?: EnvironmentManager) {
     this.updateHotbar(player, world);
-    this.updateInfo(player, world);
+    this.updateInfo(player, world, environment);
   }
 
   private updateHotbar(player: Player, world: World) {
@@ -59,7 +60,7 @@ export class UI {
     });
   }
 
-  private updateInfo(player: Player, world: World) {
+  private updateInfo(player: Player, world: World, environment?: EnvironmentManager) {
     const blockName = BLOCK_NAMES[world.selectedBlock] || 'Unknown';
     const groundState = player.isOnGround ? 'On Ground' : 'Falling';
     const speedMagnitude = Math.sqrt(
@@ -67,6 +68,7 @@ export class UI {
     ).toFixed(1);
 
     const direction = this.getDirection(player.yaw);
+    const timeOfDay = environment ? (environment.timeOfDay * 24).toFixed(1) : 'N/A';
 
     const info = `
 Block: ${blockName}
@@ -74,6 +76,7 @@ Position: ${player.position.x.toFixed(1)}, ${player.position.y.toFixed(1)}, ${pl
 Speed: ${speedMagnitude} m/s
 Direction: ${direction}
 Status: ${groundState}
+Time: ${timeOfDay}h
 ${player.isSprinting ? 'Sprint: ON' : ''}
     `.trim();
 
