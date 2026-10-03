@@ -1,0 +1,22 @@
+{
+  "name": "minecraft-haiku4.5",
+  "version": "1.0.0",
+  "description": "3D Minecraft Clone",
+  "type": "module",
+  "main": "src/main.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^r128",
+    "simplex-noise": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/three": "^r128",
+    "@vitejs/plugin-basic-ssl": "^1.1.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.1.0"
+  }
+}
