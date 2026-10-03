@@ -67,25 +67,38 @@ export class World {
                 const worldX = chunkX * this.chunkSize + x;
                 const worldZ = chunkZ * this.chunkSize + z;
 
-                // Use Simplex noise for terrain generation
-                const heightNoise = (this.noise.noise2D(worldX * 0.01, worldZ * 0.01) + 1) * 0.5;
-                const terrainHeight = Math.floor(heightNoise * 80) + 50;
+                // Multi-scale Simplex noise for varied terrain
+                const heightNoise1 = this.noise.noise2D(worldX * 0.005, worldZ * 0.005);
+                const heightNoise2 = this.noise.noise2D(worldX * 0.02, worldZ * 0.02);
+                const heightNoise3 = this.noise.noise2D(worldX * 0.05, worldZ * 0.05);
+
+                const combinedNoise = heightNoise1 * 0.5 + heightNoise2 * 0.3 + heightNoise3 * 0.2;
+                const normalizedNoise = (combinedNoise + 1) * 0.5;
+                const terrainHeight = Math.floor(normalizedNoise * 100) + 40;
+
+                // Determine biome
+                const biomeNoise = this.noise.noise2D(worldX * 0.0008, worldZ * 0.0008);
+                const isForest = biomeNoise > 0.2;
+                const isDesert = biomeNoise < -0.4;
 
                 for (let y = 0; y < this.chunkHeight; y++) {
                     let blockType = 0;
 
-                    if (y < terrainHeight - 3) {
+                    // Water level
+                    if (y < 60 && y < terrainHeight) {
+                        blockType = 6; // water
+                    } else if (y < terrainHeight - 3) {
                         blockType = 3; // stone
                     } else if (y < terrainHeight) {
                         blockType = 2; // dirt
                     } else if (y === terrainHeight) {
-                        blockType = 1; // grass
-                    } else if (y < terrainHeight + 5) {
-                        // Trees
-                        const treeNoise = this.noise.noise2D(worldX * 0.1, worldZ * 0.1);
-                        if (treeNoise > 0.5 && y === terrainHeight + 1) {
+                        blockType = isDesert ? 6 : 1; // sand or grass
+                    } else if (y < terrainHeight + 10 && isForest) {
+                        // Tree generation
+                        const treeNoise = this.noise.noise2D(worldX * 0.05, worldZ * 0.05);
+                        if (treeNoise > 0.4 && y === terrainHeight + 1) {
                             blockType = 4; // wood
-                        } else if (treeNoise > 0.5 && y > terrainHeight && y < terrainHeight + 5) {
+                        } else if (treeNoise > 0.4 && y > terrainHeight && y < terrainHeight + 6) {
                             blockType = 5; // leaves
                         }
                     }

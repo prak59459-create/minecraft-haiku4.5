@@ -148,3 +148,38 @@ body {
 #inventory.visible {
     display: block;
 }
+
+/* Game state indicator */
+#game-state {
+    position: fixed;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px 15px;
+    border-radius: 4px;
+    color: #4f4;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    pointer-events: auto;
+}
+
+/* Controls help text */
+#help-text {
+    position: fixed;
+    top: 100px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 12px;
+    border-radius: 4px;
+    color: #aaa;
+    font-size: 10px;
+    max-width: 200px;
+    pointer-events: auto;
+    display: none;
+    line-height: 1.4;
+}
+
+#help-text.visible {
+    display: block;
+}

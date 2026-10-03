@@ -7,8 +7,24 @@ export class UI {
         this.frameCount = 0;
         this.fps = 0;
         this.lastTime = Date.now();
+        this.showHelp = false;
 
         this.initHotbar();
+        this.setupKeyBindings();
+    }
+
+    setupKeyBindings() {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'h' || e.key === 'H') {
+                this.showHelp = !this.showHelp;
+                const helpEl = document.getElementById('help-text');
+                if (this.showHelp) {
+                    helpEl.classList.add('visible');
+                } else {
+                    helpEl.classList.remove('visible');
+                }
+            }
+        });
     }
 
     initHotbar() {
@@ -84,10 +100,23 @@ export class UI {
         }
     }
 
+    updateGameState() {
+        const stateEl = document.getElementById('game-state');
+        if (stateEl) {
+            const state = this.player.isFlying ? 'FLY MODE' :
+                         this.player.isSprinting ? 'SPRINTING' :
+                         this.player.isCrouching ? 'CROUCHING' :
+                         this.player.isGrounded ? 'STANDING' : 'FALLING';
+            const selectedBlockName = this.world.blockTypes[this.player.selectedBlock].name;
+            stateEl.textContent = `${state} | ${selectedBlockName.toUpperCase()}`;
+        }
+    }
+
     update() {
         this.updateCoordinates();
         this.updateFPS();
         this.updateHotbar();
         this.updateBlockTarget();
+        this.updateGameState();
     }
 }

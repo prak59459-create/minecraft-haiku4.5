@@ -254,16 +254,20 @@ export class Player {
         this.blockTarget = closest;
     }
 
-    handleBlockInteraction(world) {
+    handleBlockInteraction(world, particles, audio) {
         this.rayCast(world);
 
         if (!this.blockTarget) return;
 
         const pos = this.blockTarget.pos;
+        const blockType = world.getBlockType(pos.x, pos.y, pos.z);
+        const blockColor = world.blockTypes[blockType]?.color || 0xffffff;
 
         if (this.mouseDown.left) {
             // Destroy block
             world.setBlockType(pos.x, pos.y, pos.z, 0);
+            if (particles) particles.createBlockDestructionParticles(pos.x, pos.y, pos.z, blockColor);
+            if (audio) audio.playBlockBreak();
             this.mouseDown.left = false;
         }
 
@@ -288,6 +292,7 @@ export class Player {
             // Check collision with player
             if (!(Math.abs(newX - this.position.x) < 1 && Math.abs(newY - this.position.y) < 2 && Math.abs(newZ - this.position.z) < 1)) {
                 world.setBlockType(newX, newY, newZ, this.selectedBlock);
+                if (audio) audio.playBlockPlace();
             }
 
             this.mouseDown.right = false;

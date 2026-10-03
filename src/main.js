@@ -4,6 +4,8 @@ import { World } from './game/world.js';
 import { Player } from './game/player.js';
 import { Physics } from './game/physics.js';
 import { UI } from './game/ui.js';
+import { ParticleSystem } from './game/particles.js';
+import { AudioSystem } from './game/audio.js';
 
 class MinecraftGame {
     constructor() {
@@ -18,9 +20,13 @@ class MinecraftGame {
         this.player = new Player(this.camera, this.renderer.domElement);
         this.physics = new Physics(this.world, this.player);
         this.ui = new UI(this.player, this.world, this.camera);
+        this.particles = new ParticleSystem(this.scene);
+        this.audio = new AudioSystem();
 
         this.time = 0;
         this.dayDuration = 20; // seconds for a full day/night cycle
+        this.lastPlayerPos = this.player.position.clone();
+        this.footstepCooldown = 0;
 
         window.addEventListener('resize', () => this.onWindowResize());
         this.onWindowResize();
@@ -125,13 +131,34 @@ class MinecraftGame {
         this.updateDayNightCycle(deltaTime);
 
         // Handle block interaction
-        this.player.handleBlockInteraction(this.world);
+        this.player.handleBlockInteraction(this.world, this.particles, this.audio);
+
+        // Update particles
+        this.particles.update(deltaTime);
+
+        // Handle footstep sounds
+        this.updateFootsteps();
 
         // Update UI
         this.ui.update();
 
         // Render
         this.renderer.render(this.scene, this.camera);
+    }
+
+    updateFootsteps() {
+        const moveDistance = this.player.position.distanceTo(this.lastPlayerPos);
+        this.lastPlayerPos.copy(this.player.position);
+
+        if (moveDistance > 0.05 && this.player.isGrounded) {
+            this.footstepCooldown -= 1 / 60;
+            if (this.footstepCooldown <= 0) {
+                this.audio.playFootstep();
+                this.footstepCooldown = 0.3;
+            }
+        } else {
+            this.footstepCooldown = 0;
+        }
     }
 
     onWindowResize() {
