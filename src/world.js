@@ -53,43 +53,68 @@ export class World {
                         blockType = 'bedrock';
                     } else if (y < height - 4) {
                         blockType = 'stone';
+                        // Simple cave generation with layered noise
+                        const caveNoise1 = this.noise.noise2D(worldX * 0.03, y * 0.03);
+                        const caveNoise2 = this.noise.noise2D(worldZ * 0.03 + 1000, y * 0.03 + 1000);
+                        if (caveNoise1 > 0.6 && caveNoise2 > 0.6) {
+                            blockType = null;
+                        }
                     } else if (y < height - 1) {
                         blockType = 'dirt';
                     } else if (y < height) {
                         blockType = 'grass';
                     }
 
-                    if (y < WATER_LEVEL && y >= height) {
+                    if (y < WATER_LEVEL && blockType === null) {
                         blockType = 'water';
                     }
 
-                    chunk.setBlock(x, y, z, blockType);
+                    if (blockType) {
+                        chunk.setBlock(x, y, z, blockType);
+                    }
+                }
+
+                // Add water at sea level
+                for (let y = height; y <= WATER_LEVEL && y < CHUNK_HEIGHT; y++) {
+                    if (chunk.getBlock(x, y, z) === null) {
+                        chunk.setBlock(x, y, z, 'water');
+                    }
                 }
 
                 // Add surface details
-                if (height < CHUNK_HEIGHT - 1) {
-                    // Trees
-                    if (Math.random() < 0.05) {
-                        const treeHeight = 4 + Math.floor(Math.random() * 3);
-                        for (let ty = 0; ty < treeHeight; ty++) {
-                            if (height + ty < CHUNK_HEIGHT) {
-                                chunk.setBlock(x, height + ty, z, 'wood');
-                            }
-                        }
-                        // Leaves
-                        for (let ty = 1; ty < treeHeight; ty++) {
-                            for (let tx = -2; tx <= 2; tx++) {
-                                for (let tz = -2; tz <= 2; tz++) {
-                                    if (Math.abs(tx) + Math.abs(tz) <= 3) {
-                                        const lx = x + tx;
-                                        const lz = z + tz;
-                                        const ly = height + ty + 1;
-                                        if (lx >= 0 && lx < CHUNK_SIZE && lz >= 0 && lz < CHUNK_SIZE && ly < CHUNK_HEIGHT) {
-                                            if (chunk.getBlock(lx, ly, lz) === null) {
-                                                chunk.setBlock(lx, ly, lz, 'leaves');
-                                            }
-                                        }
-                                    }
+                if (height > WATER_LEVEL && height < CHUNK_HEIGHT - 1) {
+                    this.addTreeIfSpawned(chunk, x, z, height, worldX, worldZ);
+                }
+            }
+        }
+
+        this.chunks.set(key, chunk);
+        return chunk;
+    }
+
+    addTreeIfSpawned(chunk, x, z, height, worldX, worldZ) {
+        if (Math.random() < 0.08) {
+            const treeHeight = 5 + Math.floor(Math.random() * 4);
+
+            for (let ty = 0; ty < treeHeight; ty++) {
+                if (height + ty < CHUNK_HEIGHT) {
+                    chunk.setBlock(x, height + ty, z, 'wood');
+                }
+            }
+
+            const leafStart = Math.max(1, treeHeight - 3);
+            for (let ty = leafStart; ty < treeHeight + 1; ty++) {
+                const leafRadius = ty === leafStart ? 3 : (ty === treeHeight ? 2 : 3);
+                for (let tx = -leafRadius; tx <= leafRadius; tx++) {
+                    for (let tz = -leafRadius; tz <= leafRadius; tz++) {
+                        const dist = Math.sqrt(tx * tx + tz * tz);
+                        if (dist <= leafRadius + 0.5) {
+                            const lx = x + tx;
+                            const lz = z + tz;
+                            const ly = height + ty;
+                            if (lx >= 0 && lx < CHUNK_SIZE && lz >= 0 && lz < CHUNK_SIZE && ly < CHUNK_HEIGHT) {
+                                if (chunk.getBlock(lx, ly, lz) === null) {
+                                    chunk.setBlock(lx, ly, lz, 'leaves');
                                 }
                             }
                         }
@@ -97,9 +122,6 @@ export class World {
                 }
             }
         }
-
-        this.chunks.set(key, chunk);
-        return chunk;
     }
 
     updateChunks(playerPosition) {
