@@ -10,6 +10,7 @@ class Game {
         this.fps = 0;
         this.gameTime = 0;
         this.loadedChunks = new Set();
+        this.particles = [];
 
         this.animate();
     }
@@ -26,6 +27,7 @@ class Game {
 
         this.player.update(this.renderer.scene, this.world);
         this.updateChunks();
+        this.updateParticles();
 
         this.renderer.render(this.renderer.scene, this.player.camera);
 
@@ -88,6 +90,36 @@ class Game {
                 timeIndicator.textContent = 'Time: Night';
             } else {
                 timeIndicator.textContent = 'Time: Day';
+            }
+        }
+    }
+
+    createParticles(x, y, z, blockId) {
+        const color = getBlockColor(blockId);
+        for (let i = 0; i < 8; i++) {
+            const particle = {
+                position: new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5),
+                velocity: new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.3,
+                    Math.random() * 0.3,
+                    (Math.random() - 0.5) * 0.3
+                ),
+                life: 1.0,
+                color: color
+            };
+            this.particles.push(particle);
+        }
+    }
+
+    updateParticles() {
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.life -= 0.02;
+            p.velocity.y -= 0.01;
+            p.position.add(p.velocity);
+
+            if (p.life <= 0) {
+                this.particles.splice(i, 1);
             }
         }
     }

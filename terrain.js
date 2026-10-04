@@ -111,10 +111,38 @@ class TerrainGenerator {
                         data[idx] = BLOCKS.AIR.id;
                     }
                 }
+
+                if (height > 65 && Math.random() < 0.05) {
+                    this.generateTree(data, x, Math.floor(height), z, worldX, worldZ);
+                }
             }
         }
 
         return data;
+    }
+
+    generateTree(data, localX, baseY, localZ, chunkX, chunkZ) {
+        const height = 4 + Math.floor(Math.random() * 3);
+        for (let y = baseY + 1; y < baseY + height; y++) {
+            if (y < 256) {
+                const idx = localX + y * this.chunkSize + localZ * this.chunkSize * this.chunkHeight;
+                data[idx] = BLOCKS.WOOD.id;
+            }
+        }
+        for (let dx = -2; dx <= 2; dx++) {
+            for (let dz = -2; dz <= 2; dz++) {
+                for (let dy = baseY + height - 3; dy < baseY + height; dy++) {
+                    if (dy < 256 && Math.abs(dx) + Math.abs(dz) <= 3) {
+                        const localX2 = (localX + dx + this.chunkSize) % this.chunkSize;
+                        const localZ2 = (localZ + dz + this.chunkSize) % this.chunkSize;
+                        const idx = localX2 + dy * this.chunkSize + localZ2 * this.chunkSize * this.chunkHeight;
+                        if (data[idx] === BLOCKS.AIR.id) {
+                            data[idx] = BLOCKS.LEAVES.id;
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

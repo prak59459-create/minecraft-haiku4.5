@@ -110,8 +110,10 @@ class Player {
         forward.normalize();
         right.normalize();
 
+        const isInWater = this.isInWater(world);
+
         this.isSprinting = this.keys['shift'];
-        const currentSpeed = this.isSprinting ? this.sprintSpeed : this.speed;
+        const currentSpeed = this.isSprinting && !isInWater ? this.sprintSpeed : this.speed;
 
         if (this.keys['w']) moveDirection.add(forward.multiplyScalar(currentSpeed));
         if (this.keys['s']) moveDirection.add(forward.multiplyScalar(-currentSpeed));
@@ -120,28 +122,43 @@ class Player {
 
         this.velocity.x = moveDirection.x;
         this.velocity.z = moveDirection.z;
-        this.velocity.y -= this.gravity;
-        this.velocity.y = Math.max(-0.5, this.velocity.y);
+
+        if (isInWater) {
+            this.velocity.y = Math.max(-0.15, this.velocity.y - this.gravity * 0.3);
+            if (this.keys[' ']) this.velocity.y = 0.2;
+        } else {
+            this.velocity.y -= this.gravity;
+            this.velocity.y = Math.max(-0.5, this.velocity.y);
+        }
 
         const newPos = this.position.clone().add(this.velocity);
 
         if (!this.isColliding(newPos)) {
             this.position.copy(newPos);
+            this.onGround = false;
         } else {
-            this.velocity.y = 0;
+            this.velocity.y = Math.max(0, this.velocity.y);
             this.onGround = true;
 
-            if (this.isColliding(new THREE.Vector3(newPos.x, this.position.y, this.position.z))) {
-                newPos.x = this.position.x;
+            if (!this.isColliding(new THREE.Vector3(newPos.x, this.position.y, this.position.z))) {
+                this.position.x = newPos.x;
             }
-            if (this.isColliding(new THREE.Vector3(this.position.x, this.position.y, newPos.z))) {
-                newPos.z = this.position.z;
+            if (!this.isColliding(new THREE.Vector3(this.position.x, this.position.y, newPos.z))) {
+                this.position.z = newPos.z;
             }
-            this.position.copy(newPos);
         }
 
         this.camera.position.copy(this.position);
         this.updateBlockHighlight(scene, world);
+    }
+
+    isInWater(world) {
+        const centerBlockId = world.getBlock(
+            Math.floor(this.position.x),
+            Math.floor(this.position.y),
+            Math.floor(this.position.z)
+        );
+        return centerBlockId === BLOCKS.WATER.id;
     }
 
     isColliding(pos) {
@@ -205,7 +222,9 @@ class Player {
 
     breakBlock() {
         if (this.targetBlock) {
+            const blockId = this.world.getBlock(this.targetBlock.x, this.targetBlock.y, this.targetBlock.z);
             this.world.setBlock(this.targetBlock.x, this.targetBlock.y, this.targetBlock.z, BLOCKS.AIR.id);
+            game.createParticles(this.targetBlock.x, this.targetBlock.y, this.targetBlock.z, blockId);
         }
     }
 

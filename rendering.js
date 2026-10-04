@@ -100,12 +100,12 @@ class Renderer {
                     const blockZ = worldZ + z;
                     const color = getBlockColor(blockId);
 
-                    this.addBlockFace(positions, colors, indices, vertexCount, blockX, blockY, blockZ, color, 0, 0, 0, world); // top
-                    this.addBlockFace(positions, colors, indices, vertexCount, blockX, blockY, blockZ, color, 0, 1, 0, world); // bottom
-                    this.addBlockFace(positions, colors, indices, vertexCount, blockX, blockY, blockZ, color, 1, 0, 0, world); // front
-                    this.addBlockFace(positions, colors, indices, vertexCount, blockX, blockY, blockZ, color, 2, 0, 0, world); // back
-                    this.addBlockFace(positions, colors, indices, vertexCount, blockX, blockY, blockZ, color, 3, 0, 0, world); // left
-                    this.addBlockFace(positions, colors, indices, vertexCount, blockX, blockY, blockZ, color, 4, 0, 0, world); // right
+                    this.addBlockFace(positions, colors, indices, vertexCount, blockX, blockY, blockZ, color, 0, 0, 0, world);
+                    this.addBlockFace(positions, colors, indices, vertexCount, blockX, blockY, blockZ, color, 1, 0, 0, world);
+                    this.addBlockFace(positions, colors, indices, vertexCount, blockX, blockY, blockZ, color, 2, 0, 0, world);
+                    this.addBlockFace(positions, colors, indices, vertexCount, blockX, blockY, blockZ, color, 3, 0, 0, world);
+                    this.addBlockFace(positions, colors, indices, vertexCount, blockX, blockY, blockZ, color, 4, 0, 0, world);
+                    this.addBlockFace(positions, colors, indices, vertexCount, blockX, blockY, blockZ, color, 5, 0, 0, world);
                 }
             }
         }
@@ -142,17 +142,9 @@ class Renderer {
         const neighborBlockId = neighbors[face](x, y, z);
         if (isBlockSolid(neighborBlockId)) return;
 
-        const h = (color >> 16) & 255;
+        const r = (color >> 16) & 255;
         const g = (color >> 8) & 255;
         const b = color & 255;
-        const r = (color >> 16) & 255;
-
-        const faceVertices = [
-            { pos: [x, y, z], normal: [0, 1, 0] }, // top face
-            { pos: [x + 1, y, z], normal: [0, 1, 0] },
-            { pos: [x + 1, y, z + 1], normal: [0, 1, 0] },
-            { pos: [x, y, z + 1], normal: [0, 1, 0] },
-        ];
 
         const faceMap = {
             0: { verts: [[x, y + 1, z], [x + 1, y + 1, z], [x + 1, y + 1, z + 1], [x, y + 1, z + 1]] },
