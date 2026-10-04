@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Clone - Haiku 4.5</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="ui">
+        <div id="crosshair"></div>
+        <div id="hud">
+            <div id="coords">X: 0 Y: 0 Z: 0</div>
+            <div id="fps">FPS: 0</div>
+            <div id="blockInfo">Stone</div>
+        </div>
+        <div id="inventory">
+            <div class="inventory-slot selected" data-index="0">1</div>
+            <div class="inventory-slot" data-index="1">2</div>
+            <div class="inventory-slot" data-index="2">3</div>
+            <div class="inventory-slot" data-index="3">4</div>
+            <div class="inventory-slot" data-index="4">5</div>
+            <div class="inventory-slot" data-index="5">6</div>
+            <div class="inventory-slot" data-index="6">7</div>
+            <div class="inventory-slot" data-index="7">8</div>
+            <div class="inventory-slot" data-index="8">9</div>
+        </div>
+        <div id="help">
+            <p><strong>Controls:</strong> WASD Move | Space Jump | Shift Sprint/Crouch | Mouse Look</p>
+            <p>Left-Click Destroy | Right-Click Place | 1-9/Scroll Select Block</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+    <script type="module" src="game.js"></script>
+</body>
+</html>
