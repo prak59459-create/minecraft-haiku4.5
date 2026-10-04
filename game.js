@@ -118,7 +118,9 @@ class Game {
             sprintSpeed: 0.25,
             crouchSpeed: 0.08,
             friction: 0.85,
-            gravity: -0.02
+            gravity: -0.02,
+            bobPhase: 0,
+            headBobAmount: 0.08
         };
 
         this.camera.position.copy(this.player.position);
@@ -312,7 +314,9 @@ class Game {
 
                 const temperature = this.noise.noise2D(worldX * 0.05, worldZ * 0.05);
                 const heightVariation = this.noise.noise2D(worldX * 0.1, worldZ * 0.1);
+                const detailVariation = this.noise.noise2D(worldX * 0.2, worldZ * 0.2);
                 let height = Math.floor((heightVariation + 1) * 20 + 45);
+                height += Math.floor(detailVariation * 5);
 
                 for (let y = 0; y < height; y++) {
                     let blockType = BLOCK_TYPES.stone;
@@ -651,7 +655,18 @@ class Game {
             this.player.groundDetection = false;
         }
 
-        this.camera.position.copy(this.player.position);
+        if (this.player.groundDetection && (this.input.keys['w'] || this.input.keys['a'] || this.input.keys['s'] || this.input.keys['d'])) {
+            this.player.bobPhase += 0.1;
+            const bobAmount = Math.sin(this.player.bobPhase) * this.player.headBobAmount;
+            const bobY = Math.cos(this.player.bobPhase * 2) * this.player.headBobAmount * 0.5;
+            this.camera.position.copy(this.player.position);
+            this.camera.position.y += bobY;
+            this.camera.position.x += Math.sin(this.player.bobPhase * 0.5) * bobAmount * 0.3;
+            this.camera.position.z += Math.cos(this.player.bobPhase * 0.5) * bobAmount * 0.3;
+        } else {
+            this.camera.position.copy(this.player.position);
+            this.player.bobPhase = 0;
+        }
 
         const playerChunkX = Math.floor(this.player.position.x / CHUNK_SIZE);
         const playerChunkZ = Math.floor(this.player.position.z / CHUNK_SIZE);
@@ -793,9 +808,31 @@ class Game {
         this.particleSystem.update();
         this.updateDayNightCycle(this.stats.time);
         this.updateWaterAnimation();
+        this.updateTargetBlock();
         this.updateStats();
 
         this.renderer.render(this.scene, this.camera);
+    }
+
+    updateTargetBlock() {
+        this.raycaster.setFromCamera({ x: 0, y: 0 }, this.camera);
+        const maxDist = 6;
+        let hasTarget = false;
+
+        for (let dist = 0; dist < maxDist; dist += 0.25) {
+            const point = this.raycaster.ray.origin.clone().addScaledVector(this.raycaster.ray.direction, dist);
+            const x = Math.floor(point.x);
+            const y = Math.floor(point.y);
+            const z = Math.floor(point.z);
+
+            if (this.getBlockType(x, y, z) !== BLOCK_TYPES.air) {
+                hasTarget = true;
+                break;
+            }
+        }
+
+        const targetElement = document.getElementById('targetedBlock');
+        targetElement.style.display = hasTarget ? 'block' : 'none';
     }
 
     updateWaterAnimation() {
