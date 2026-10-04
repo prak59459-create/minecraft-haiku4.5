@@ -2,22 +2,40 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.lastBlock = null;
         this.createOutlineMaterial();
     }
 
     createOutlineMaterial() {
-        this.material = new THREE.LineBasicMaterial({
-            color: 0xFFFFFF,
-            linewidth: 2,
+        this.destroyMaterial = new THREE.LineBasicMaterial({
+            color: 0xFF4444,
+            linewidth: 3,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.8,
+            fog: false
         });
+
+        this.placeMaterial = new THREE.LineBasicMaterial({
+            color: 0x44FF44,
+            linewidth: 3,
+            transparent: true,
+            opacity: 0.8,
+            fog: false
+        });
+
+        this.material = this.destroyMaterial;
     }
 
     setSelectedBlock(x, y, z) {
+        const blockKey = `${x},${y},${z}`;
+        if (this.lastBlock === blockKey) return;
+
         if (this.outline) {
             this.scene.remove(this.outline);
+            if (this.outline.geometry) this.outline.geometry.dispose();
         }
+
+        this.lastBlock = blockKey;
 
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
@@ -42,13 +60,16 @@ export class BlockOutline {
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
 
         this.outline = new THREE.LineSegments(geometry, this.material);
+        this.outline.renderOrder = 999;
         this.scene.add(this.outline);
     }
 
     clear() {
         if (this.outline) {
             this.scene.remove(this.outline);
+            if (this.outline.geometry) this.outline.geometry.dispose();
             this.outline = null;
+            this.lastBlock = null;
         }
     }
 

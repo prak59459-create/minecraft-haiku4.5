@@ -42,8 +42,10 @@ export class Chunk {
                 const wx = worldX + x;
                 const wz = worldZ + z;
 
-                let height = getTerrainHeight(wx, wz);
-                let terrainType = getTerrainType(wx, wz);
+                const height = getTerrainHeight(wx, wz);
+                const terrainType = getTerrainType(wx, wz);
+                const isSand = terrainType === 'sand';
+                const isGrass = terrainType === 'grass';
 
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
                     if (y === 0) {
@@ -52,16 +54,10 @@ export class Chunk {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
                     } else if (y < height - 1) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.DIRT);
-                        }
+                        this.setBlock(x, y, z, isSand ? BLOCKS.SAND : BLOCKS.DIRT);
                     } else if (y < height) {
-                        if (terrainType === 'sand') {
+                        if (isSand) {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
@@ -70,7 +66,7 @@ export class Chunk {
                     }
                 }
 
-                if (height > 65) {
+                if (height > 65 && Math.random() > 0.3) {
                     generateTree(this, x, z, height);
                 }
             }
@@ -104,15 +100,19 @@ function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
     let ore = BLOCKS.STONE;
-    const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
-    const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
-    const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
-    const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
+    const yFactor = y / 160;
 
-    if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
-    if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
-    if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
-    if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.02, z * 0.1 + y * 0.01);
+    const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.015, z * 0.08 + y * 0.01);
+    const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.01, z * 0.06 + y * 0.005);
+    const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.005, z * 0.04 + y * 0.003);
+
+    if (y > 160) return BLOCKS.STONE;
+
+    if (y < 160 && coalChance > 0.35 - yFactor * 0.15) ore = BLOCKS.COAL_ORE;
+    if (y < 120 && ironChance > 0.45 - yFactor * 0.15) ore = BLOCKS.IRON_ORE;
+    if (y < 80 && goldChance > 0.50 - yFactor * 0.15) ore = BLOCKS.GOLD_ORE;
+    if (y < 40 && diamondChance > 0.55 - yFactor * 0.15) ore = BLOCKS.DIAMOND_ORE;
 
     return ore;
 }
