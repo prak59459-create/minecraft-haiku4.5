@@ -1,5 +1,7 @@
 import { BLOCKS, isBlockSolid } from './blocks.js';
 
+const WATER_BLOCKS = new Set([BLOCKS.WATER]);
+
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
 const PLAYER_SPEED = 0.1;
@@ -19,6 +21,7 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.isInWater = false;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -79,7 +82,19 @@ export class Player {
     }
 
     applyPhysics() {
-        if (!this.isOnGround) {
+        const eyePos = this.getEyePosition();
+        this.isInWater = this.world.getBlock(
+            Math.floor(eyePos.x),
+            Math.floor(eyePos.y),
+            Math.floor(eyePos.z)
+        ) === BLOCKS.WATER;
+
+        if (this.isInWater) {
+            this.velocity.y *= 0.98;
+            if (this.keys[' ']) {
+                this.velocity.y = 0.15;
+            }
+        } else if (!this.isOnGround) {
             this.velocity.y -= GRAVITY;
         }
 

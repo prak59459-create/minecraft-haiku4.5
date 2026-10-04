@@ -309,13 +309,17 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const renderDist = this.world.renderDistance;
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const dx = Math.abs(cx - playerChunkX);
+            const dz = Math.abs(cz - playerChunkZ);
+            const dist = Math.max(dx, dz);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (dist > renderDist) {
                 if (this.chunkMeshes.has(key)) {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
@@ -328,6 +332,7 @@ class MinecraftGame {
                 if (mesh) {
                     this.scene.add(mesh);
                     this.chunkMeshes.set(key, mesh);
+                    mesh.frustumCulled = true;
                 }
             }
         }
@@ -371,6 +376,11 @@ class MinecraftGame {
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
+
+        if (this.player.isSprinting && Math.random() > 0.5) {
+            const eyePos = this.player.getEyePosition();
+            this.particleSystem.addSprintParticles(eyePos.x, eyePos.y - 0.5, eyePos.z);
+        }
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);
