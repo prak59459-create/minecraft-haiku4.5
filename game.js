@@ -53,20 +53,28 @@ class MinecraftGame {
     setupLighting() {
         const time = Date.now() * 0.0001;
         const sunY = Math.sin(time) * 100 + 100;
-        const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientColor = new THREE.Color();
+        ambientColor.setHSL(0.6, 0.4, 0.3 + sunIntensity * 0.2);
+
+        const ambientLight = new THREE.AmbientLight(ambientColor, 0.4 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const sunColor = new THREE.Color();
+        sunColor.setHSL(0.08, 1, 0.9);
+
+        const directionalLight = new THREE.DirectionalLight(sunColor, 0.5 + sunIntensity * 0.3);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.normalBias = 0.05;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
+        this.ambientLight = ambientLight;
     }
 
     setupEventListeners() {
@@ -408,14 +416,21 @@ class MinecraftGame {
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.4 + sunIntensity * 0.4;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        const skyHue = sunIntensity > 0.4 ? 0.6 : 0.75;
+        const skySaturation = sunIntensity > 0.4 ? 0.4 : 0.1;
+        skyColor.setHSL(skyHue, skySaturation, 0.5 + sunIntensity * 0.35);
         this.scene.background = skyColor;
+
+        const ambientColor = new THREE.Color();
+        ambientColor.setHSL(0.6, 0.4, 0.2 + sunIntensity * 0.2);
+        this.ambientLight.color.copy(ambientColor);
+        this.ambientLight.intensity = 0.3 + sunIntensity * 0.2;
 
         this.scene.fog.color.copy(skyColor);
         this.scene.fog.near = 50 + sunIntensity * 50;
