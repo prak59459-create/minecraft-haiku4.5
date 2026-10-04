@@ -5,6 +5,7 @@ export class WaterRenderer {
         this.scene = scene;
         this.world = world;
         this.waterMeshes = new Map();
+        this.waterGeometries = new Map();
         this.time = 0;
     }
 
@@ -72,11 +73,16 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.7,
+                side: THREE.DoubleSide,
+                shininess: 100,
+                flatShading: false,
+                emissive: new THREE.Color(0x1a4d7f)
             });
 
             const mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
             return mesh;
         }
 

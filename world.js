@@ -48,20 +48,26 @@ export class Chunk {
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
-                    } else if (y < height - 4) {
+                    } else if (y < height - 5) {
                         const block = getOreBlock(wx, y, wz);
-                        this.setBlock(x, y, z, block);
+                        if (block !== BLOCKS.STONE) {
+                            this.setBlock(x, y, z, block);
+                        } else {
+                            this.setBlock(x, y, z, BLOCKS.STONE);
+                        }
                     } else if (y < height - 1) {
-                        if (terrainType === 'sand') {
+                        if (terrainType === 'sand' || terrainType === 'desert') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
                     } else if (y < height) {
-                        if (terrainType === 'sand') {
+                        if (terrainType === 'sand' || terrainType === 'desert') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.SNOW);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
@@ -70,8 +76,12 @@ export class Chunk {
                     }
                 }
 
+                const treeThreshold = terrainType === 'snow' ? 0.65 : terrainType === 'desert' ? 0.9 : 0.5;
                 if (height > 65) {
-                    generateTree(this, x, z, height);
+                    const treeChance = perlinNoise.noise2D(wx * 0.05, wz * 0.05);
+                    if (treeChance > treeThreshold) {
+                        generateTree(this, x, z, height);
+                    }
                 }
             }
         }
@@ -83,25 +93,32 @@ export class Chunk {
 function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
-    let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    let height = 70;
+    height += perlinNoise.noise2D(x * 0.004, z * 0.004) * 40;
+    height += perlinNoise.noise2D(x * 0.015, z * 0.015) * 20;
+    height += perlinNoise.noise2D(x * 0.04, z * 0.04) * 10;
+    height += perlinNoise.noise2D(x * 0.08, z * 0.08) * 5;
 
-    return Math.max(20, Math.min(160, Math.floor(height)));
+    return Math.max(20, Math.min(180, Math.floor(height)));
 }
 
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const humidity = perlinNoise.noise2D(x * 0.025, z * 0.025);
+
+    if (temp < -0.2) return 'snow';
+    if (temp < 0) return 'grass';
+    if (humidity < -0.1) return 'desert';
     return 'grass';
 }
 
 function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
+
+    const caveChance = perlinNoise.noise3D(x * 0.03, y * 0.03, z * 0.03);
+    if (caveChance > 0.3) return BLOCKS.AIR;
 
     let ore = BLOCKS.STONE;
     const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
@@ -113,6 +130,7 @@ function getOreBlock(x, y, z) {
     if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
     if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
     if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    if (y < 20 && perlinNoise.noise2D(x * 0.05, z * 0.05) > 0.6) ore = BLOCKS.LAVA;
 
     return ore;
 }
