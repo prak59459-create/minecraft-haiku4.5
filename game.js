@@ -310,24 +310,38 @@ class Game {
                 const worldZ = chunkZ * CHUNK_SIZE + z;
 
                 const temperature = this.noise.noise2D(worldX * 0.05, worldZ * 0.05);
-                let height = Math.floor((this.noise.noise2D(worldX * 0.1, worldZ * 0.1) + 1) * 20 + 45);
+                const heightVariation = this.noise.noise2D(worldX * 0.1, worldZ * 0.1);
+                let height = Math.floor((heightVariation + 1) * 20 + 45);
 
                 for (let y = 0; y < height; y++) {
+                    let blockType = BLOCK_TYPES.stone;
+
                     if (y < height - 4) {
-                        data[x][y][z] = BLOCK_TYPES.stone;
-                        if (Math.random() < 0.08) data[x][y][z] = BLOCK_TYPES.coal;
-                        if (y < 40 && Math.random() < 0.02) data[x][y][z] = BLOCK_TYPES.obsidian;
+                        blockType = BLOCK_TYPES.stone;
+
+                        const caveNoise = Math.abs(this.noise.noise3D ? this.noise.noise3D(worldX * 0.1, y * 0.1, worldZ * 0.1) : this.noise.noise2D(worldX * 0.1, worldZ * 0.1 + y * 0.05));
+                        if (caveNoise > 0.6) {
+                            blockType = BLOCK_TYPES.air;
+                        } else if (Math.random() < 0.08) {
+                            blockType = BLOCK_TYPES.coal;
+                        } else if (y < 40 && Math.random() < 0.02) {
+                            blockType = BLOCK_TYPES.obsidian;
+                        }
                     } else if (y < height - 1) {
-                        data[x][y][z] = BLOCK_TYPES.dirt;
+                        blockType = BLOCK_TYPES.dirt;
                     } else {
                         if (temperature < -0.3) {
-                            data[x][y][z] = BLOCK_TYPES.ice;
+                            blockType = BLOCK_TYPES.ice;
                         } else if (height < 60) {
-                            data[x][y][z] = BLOCK_TYPES.sand;
+                            blockType = BLOCK_TYPES.sand;
+                        } else if (temperature > 0.5) {
+                            blockType = BLOCK_TYPES.grass;
                         } else {
-                            data[x][y][z] = BLOCK_TYPES.grass;
+                            blockType = BLOCK_TYPES.grass;
                         }
                     }
+
+                    data[x][y][z] = blockType;
                 }
 
                 if (height < 62) {
@@ -336,7 +350,7 @@ class Game {
                     }
                 }
 
-                if (temperature > 0 && Math.random() < 0.025 && height > 65) {
+                if (temperature > 0 && Math.random() < 0.03 && height > 65) {
                     this.generateTree(data, x, height, z);
                 }
             }
@@ -397,11 +411,17 @@ class Game {
         const chunkX = chunkPos[0];
         const chunkZ = chunkPos[1];
 
-        const geometry = new THREE.BufferGeometry();
-        const positions = [];
-        const colors = [];
-        const indices = [];
-        let vertexCount = 0;
+        const solidGeometry = new THREE.BufferGeometry();
+        const solidPositions = [];
+        const solidColors = [];
+        const solidIndices = [];
+        let solidVertexCount = 0;
+
+        const waterGeometry = new THREE.BufferGeometry();
+        const waterPositions = [];
+        const waterColors = [];
+        const waterIndices = [];
+        let waterVertexCount = 0;
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 0; y < CHUNK_HEIGHT; y++) {
@@ -410,27 +430,53 @@ class Game {
                     if (blockType === BLOCK_TYPES.air) continue;
 
                     const color = new THREE.Color(BLOCK_COLORS[Object.keys(BLOCK_TYPES)[blockType]]);
-                    this.addBlockFaces(x, y, z, blockType, chunkX, chunkZ, positions, colors, indices, vertexCount, color);
-                    vertexCount += 24;
+
+                    if (blockType === BLOCK_TYPES.water) {
+                        this.addBlockFaces(x, y, z, blockType, chunkX, chunkZ, waterPositions, waterColors, waterIndices, waterVertexCount, color);
+                        waterVertexCount += 24;
+                    } else {
+                        this.addBlockFaces(x, y, z, blockType, chunkX, chunkZ, solidPositions, solidColors, solidIndices, solidVertexCount, color);
+                        solidVertexCount += 24;
+                    }
                 }
             }
         }
 
-        if (positions.length > 0) {
-            geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
-            geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
-            geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
+        if (solidPositions.length > 0) {
+            solidGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(solidPositions), 3));
+            solidGeometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(solidColors), 3, true));
+            solidGeometry.setIndex(new THREE.BufferAttribute(new Uint32Array(solidIndices), 1));
 
-            const material = new THREE.MeshPhongMaterial({
+            const solidMaterial = new THREE.MeshPhongMaterial({
+                vertexColors: true,
+                side: THREE.FrontSide,
+                flatShading: false,
+                shininess: 30
+            });
+            const solidMesh = new THREE.Mesh(solidGeometry, solidMaterial);
+            solidMesh.castShadow = true;
+            solidMesh.receiveShadow = true;
+            chunk.mesh.add(solidMesh);
+        }
+
+        if (waterPositions.length > 0) {
+            waterGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(waterPositions), 3));
+            waterGeometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(waterColors), 3, true));
+            waterGeometry.setIndex(new THREE.BufferAttribute(new Uint32Array(waterIndices), 1));
+
+            const waterMaterial = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 side: THREE.FrontSide,
                 transparent: true,
-                opacity: 0.9
+                opacity: 0.6,
+                emissive: 0x004488,
+                emissiveIntensity: 0.2,
+                shininess: 100
             });
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            chunk.mesh.add(mesh);
+            const waterMesh = new THREE.Mesh(waterGeometry, waterMaterial);
+            waterMesh.castShadow = false;
+            waterMesh.receiveShadow = true;
+            chunk.mesh.add(waterMesh);
         }
 
         chunk.mesh.position.set(chunkX * CHUNK_SIZE, 0, chunkZ * CHUNK_SIZE);
@@ -706,6 +752,16 @@ class Game {
             document.getElementById('posX').textContent = Math.floor(this.player.position.x);
             document.getElementById('posY').textContent = Math.floor(this.player.position.y);
             document.getElementById('posZ').textContent = Math.floor(this.player.position.z);
+
+            const chunkX = Math.floor(this.player.position.x / CHUNK_SIZE);
+            const chunkZ = Math.floor(this.player.position.z / CHUNK_SIZE);
+            document.getElementById('chunkX').textContent = chunkX;
+            document.getElementById('chunkZ').textContent = chunkZ;
+
+            if (performance.memory) {
+                const memoryMB = Math.floor(performance.memory.usedJSHeapSize / 1048576);
+                document.getElementById('memory').textContent = memoryMB;
+            }
         }
     }
 
