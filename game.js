@@ -817,8 +817,9 @@ class World {
     }
 
     destroyBlock(pos) {
+        const blockType = this.getBlock(pos.x, pos.y, pos.z);
         this.setBlock(pos.x, pos.y, pos.z, BLOCK_TYPES.AIR);
-        this.createParticles(pos);
+        this.createParticles(pos, blockType);
     }
 
     placeBlock(pos, blockType) {
@@ -842,33 +843,57 @@ class World {
         this.setBlock(newPos.x, newPos.y, newPos.z, blockType);
     }
 
-    createParticles(pos) {
-        const particleCount = 8;
+    createParticles(pos, blockType = BLOCK_TYPES.STONE) {
+        const color = BLOCK_COLORS[blockType] || 0xd4a373;
+        const particleCount = 12;
         for (let i = 0; i < particleCount; i++) {
             const angle = (Math.PI * 2 * i) / particleCount;
-            const speed = 5 + Math.random() * 5;
+            const elevation = Math.random() * 2;
+            const speed = 4 + Math.random() * 6;
             new Particle(
                 this.scene,
                 pos.clone().add(new THREE.Vector3(0.5, 0.5, 0.5)),
-                new THREE.Vector3(Math.cos(angle) * speed, 3, Math.sin(angle) * speed)
+                new THREE.Vector3(
+                    Math.cos(angle) * speed,
+                    elevation + 2,
+                    Math.sin(angle) * speed
+                ),
+                color
             );
         }
     }
 }
 
 class Particle {
-    constructor(scene, position, velocity) {
+    constructor(scene, position, velocity, color = 0xd4a373) {
         this.scene = scene;
         this.position = position.clone();
         this.velocity = velocity.clone();
-        this.gravity = 9.8;
-        this.lifetime = 1;
-        this.maxLifetime = 1;
+        this.gravity = 12;
+        this.lifetime = 0.8;
+        this.maxLifetime = 0.8;
+        this.color = color;
+        this.rotation = new THREE.Vector3(
+            Math.random() * Math.PI * 2,
+            Math.random() * Math.PI * 2,
+            Math.random() * Math.PI * 2
+        );
+        this.angularVelocity = new THREE.Vector3(
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10
+        );
 
-        const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-        const material = new THREE.MeshStandardMaterial({ color: 0xd4a373 });
+        const geometry = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+        const material = new THREE.MeshStandardMaterial({
+            color: this.color,
+            transparent: true,
+            roughness: 0.7,
+            metalness: 0
+        });
         this.mesh = new THREE.Mesh(geometry, material);
         this.mesh.position.copy(position);
+        this.mesh.castShadow = true;
         scene.add(this.mesh);
 
         this.animate();
@@ -883,9 +908,17 @@ class Particle {
 
             const deltaTime = 1 / 60;
             this.velocity.y -= this.gravity * deltaTime;
+            this.velocity.x *= 0.98;
+            this.velocity.z *= 0.98;
             this.position.addScaledVector(this.velocity, deltaTime);
+
+            this.rotation.x += this.angularVelocity.x * deltaTime;
+            this.rotation.y += this.angularVelocity.y * deltaTime;
+            this.rotation.z += this.angularVelocity.z * deltaTime;
+
             this.mesh.position.copy(this.position);
-            this.mesh.material.opacity = this.lifetime / this.maxLifetime;
+            this.mesh.rotation.set(this.rotation.x, this.rotation.y, this.rotation.z);
+            this.mesh.material.opacity = Math.pow(this.lifetime / this.maxLifetime, 2);
             this.lifetime -= deltaTime;
 
             requestAnimationFrame(tick);
