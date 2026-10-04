@@ -238,6 +238,13 @@ class MinecraftGame {
         for (const key of this.meshNeedsUpdate) {
             const [cx, cz] = key.split(',').map(Number);
             const chunk = this.world.getChunk(cx, cz);
+
+            if (this.chunkMeshes.has(key)) {
+                const oldMesh = this.chunkMeshes.get(key);
+                this.scene.remove(oldMesh);
+                this.disposeChunkMesh(oldMesh);
+            }
+
             const mesh = this.buildChunkMesh(chunk);
             if (mesh) {
                 this.scene.add(mesh);
@@ -245,6 +252,26 @@ class MinecraftGame {
             }
         }
         this.meshNeedsUpdate.clear();
+    }
+
+    cleanupMemory() {
+        if (this.chunkMeshes.size > 100) {
+            let cleaned = 0;
+            const limit = Math.min(10, this.chunkMeshes.size - 80);
+            for (const [key, mesh] of this.chunkMeshes) {
+                if (cleaned >= limit) break;
+                const [cx, cz] = key.split(',').map(Number);
+                const playerChunkX = Math.floor(this.player.position.x / 16);
+                const playerChunkZ = Math.floor(this.player.position.z / 16);
+
+                if (Math.abs(cx - playerChunkX) > 9 || Math.abs(cz - playerChunkZ) > 9) {
+                    this.scene.remove(mesh);
+                    this.disposeChunkMesh(mesh);
+                    this.chunkMeshes.delete(key);
+                    cleaned++;
+                }
+            }
+        }
     }
 
     buildChunkMesh(chunk) {
@@ -366,19 +393,25 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const chunksToUnload = [];
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
             if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
+                    const mesh = this.chunkMeshes.get(key);
+                    this.scene.remove(mesh);
+                    this.disposeChunkMesh(mesh);
                     this.chunkMeshes.delete(key);
                 }
                 if (this.waterRenderer.waterMeshes.has(key)) {
                     const waterMesh = this.waterRenderer.waterMeshes.get(key);
                     this.scene.remove(waterMesh);
+                    this.disposeChunkMesh(waterMesh);
                     this.waterRenderer.waterMeshes.delete(key);
                 }
+                chunksToUnload.push(key);
                 continue;
             }
 
@@ -396,6 +429,23 @@ class MinecraftGame {
                     this.scene.add(waterMesh);
                     this.waterRenderer.waterMeshes.set(key, waterMesh);
                 }
+            }
+        }
+
+        for (const key of chunksToUnload) {
+            this.world.chunks.delete(key);
+        }
+    }
+
+    disposeChunkMesh(mesh) {
+        if (mesh.geometry) {
+            mesh.geometry.dispose();
+        }
+        if (mesh.material) {
+            if (Array.isArray(mesh.material)) {
+                mesh.material.forEach(m => m.dispose());
+            } else {
+                mesh.material.dispose();
             }
         }
     }
@@ -441,6 +491,11 @@ class MinecraftGame {
 
         this.updateVisibleChunks();
         this.processChunkUpdates();
+
+        if (Math.random() < 0.01) {
+            this.cleanupMemory();
+        }
+
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
