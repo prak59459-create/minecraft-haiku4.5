@@ -129,22 +129,22 @@ export class World {
             for (let z = 0; z < CHUNK_SIZE; z++) {
                 const worldX = chunk.x * CHUNK_SIZE + x;
                 const worldZ = chunk.z * CHUNK_SIZE + z;
+                const height = this.getTerrainHeight(worldX, worldZ);
 
-                let prevBlock = BlockType.AIR;
                 for (let y = CHUNK_HEIGHT - 1; y >= 0; y--) {
-                    const height = this.getTerrainHeight(worldX, worldZ);
                     let block = BlockType.AIR;
 
-                    if (y < height - 3) {
+                    if (y < height - 4) {
                         block = BlockType.STONE;
-                        if (Math.random() < 0.02) block = BlockType.COAL_ORE;
-                        if (Math.random() < 0.01) block = BlockType.IRON_ORE;
-                        if (Math.random() < 0.005) block = BlockType.GOLD_ORE;
-                    } else if (y < height) {
+                        const rand = Math.random();
+                        if (rand < 0.02) block = BlockType.COAL_ORE;
+                        else if (rand < 0.025) block = BlockType.IRON_ORE;
+                        else if (rand < 0.028) block = BlockType.GOLD_ORE;
+                    } else if (y < height - 1) {
                         block = BlockType.DIRT;
                     } else if (y === height - 1) {
-                        block = this.noise.perlin(worldX * 0.1, 0, worldZ * 0.1) > 0.3 ? BlockType.GRASS : BlockType.DIRT;
-                    } else if (y < 63 && block === BlockType.AIR) {
+                        block = this.noise.perlin(worldX * 0.15, 0, worldZ * 0.15) > 0.2 ? BlockType.GRASS : BlockType.DIRT;
+                    } else if (y < 62 && block === BlockType.AIR) {
                         block = BlockType.WATER;
                     }
 
@@ -153,20 +153,23 @@ export class World {
             }
         }
 
-        this.generateTrees(chunk);
+        if (Math.random() < 0.8) {
+            this.generateTrees(chunk);
+        }
         chunk.loaded = true;
     }
 
     private generateTrees(chunk: Chunk): void {
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 2 + Math.floor(Math.random() * 3); i++) {
             const x = Math.floor(Math.random() * CHUNK_SIZE);
             const z = Math.floor(Math.random() * CHUNK_SIZE);
             const worldX = chunk.x * CHUNK_SIZE + x;
             const worldZ = chunk.z * CHUNK_SIZE + z;
             const height = this.getTerrainHeight(worldX, worldZ);
 
-            if (chunk.getBlock(x, height, z) === BlockType.GRASS) {
-                this.generateTree(chunk, x, height, z, 4 + Math.floor(Math.random() * 3));
+            if (chunk.getBlock(x, height, z) === BlockType.GRASS && Math.random() < 0.7) {
+                const treeHeight = 4 + Math.floor(Math.random() * 4);
+                this.generateTree(chunk, x, height, z, treeHeight);
             }
         }
     }
@@ -196,9 +199,11 @@ export class World {
     }
 
     private getTerrainHeight(x: number, z: number): number {
-        const base = this.noise.perlin(x * 0.005, 0, z * 0.005) * 32 + 64;
-        const detail = this.noise.perlin(x * 0.02, 0, z * 0.02) * 16;
-        return Math.floor(Math.max(50, Math.min(120, base + detail)));
+        const base = this.noise.perlin(x * 0.003, 0, z * 0.003) * 40 + 70;
+        const mid = this.noise.perlin(x * 0.01, 0, z * 0.01) * 20;
+        const detail = this.noise.perlin(x * 0.03, 0, z * 0.03) * 10;
+        const height = base + mid + detail;
+        return Math.floor(Math.max(50, Math.min(120, height)));
     }
 
     getBlock(x: number, y: number, z: number): BlockType {
@@ -280,25 +285,28 @@ export class World {
     }
 
     private addBlockFaces(x: number, y: number, z: number, chunk: Chunk, vertices: number[], colors: number[], indices: number[], baseColor: { r: number, g: number, b: number }): void {
+        const block = chunk.getBlock(x, y, z);
+        const isWater = block === BlockType.WATER;
+
         const faces = [
-            { nx: 1, ny: 0, nz: 0, dx: [0,1,0,1], dy: [0,0,1,1], dz: [0,0,0,0] },
-            { nx: -1, ny: 0, nz: 0, dx: [1,0,1,0], dy: [0,0,1,1], dz: [1,1,1,1] },
-            { nx: 0, ny: 1, nz: 0, dx: [0,1,0,1], dy: [1,1,1,1], dz: [0,0,1,1] },
-            { nx: 0, ny: -1, nz: 0, dx: [0,1,0,1], dy: [0,0,0,0], dz: [1,1,0,0] },
-            { nx: 0, ny: 0, nz: 1, dx: [1,0,0,1], dy: [0,0,1,1], dz: [1,1,1,1] },
-            { nx: 0, ny: 0, nz: -1, dx: [0,1,1,0], dy: [0,0,1,1], dz: [0,0,0,0] }
+            { nx: 1, ny: 0, nz: 0, brightness: 0.8, verts: [[1,0,0],[1,1,0],[1,1,1],[1,0,1]] },
+            { nx: -1, ny: 0, nz: 0, brightness: 0.8, verts: [[0,0,1],[0,1,1],[0,1,0],[0,0,0]] },
+            { nx: 0, ny: 1, nz: 0, brightness: 1.0, verts: [[0,1,0],[1,1,0],[1,1,1],[0,1,1]] },
+            { nx: 0, ny: -1, nz: 0, brightness: 0.6, verts: [[0,0,1],[1,0,1],[1,0,0],[0,0,0]] },
+            { nx: 0, ny: 0, nz: 1, brightness: 0.9, verts: [[1,0,1],[1,1,1],[0,1,1],[0,0,1]] },
+            { nx: 0, ny: 0, nz: -1, brightness: 0.9, verts: [[0,0,0],[0,1,0],[1,1,0],[1,0,0]] }
         ];
 
         for (const face of faces) {
             const neighbor = chunk.getBlock(x + face.nx, y + face.ny, z + face.nz);
-            if (neighbor === BlockType.AIR || (neighbor === BlockType.WATER && face.nx === 0 && face.ny === 0 && face.nz === 0)) {
+            if (neighbor === BlockType.AIR || (isWater && neighbor === BlockType.AIR)) {
                 const start = vertices.length / 3;
-                for (let i = 0; i < 4; i++) {
-                    vertices.push(x + face.dx[i], y + face.dy[i], z + face.dz[i]);
-                    let r = baseColor.r, g = baseColor.g, b = baseColor.b;
-                    if (face.ny === 1) { r *= 1.2; g *= 1.2; b *= 1.2; }
-                    if (face.ny === -1) { r *= 0.8; g *= 0.8; b *= 0.8; }
-                    colors.push(Math.min(255, r), Math.min(255, g), Math.min(255, b));
+                for (const vert of face.verts) {
+                    vertices.push(x + vert[0], y + vert[1], z + vert[2]);
+                    const r = Math.min(255, baseColor.r * face.brightness);
+                    const g = Math.min(255, baseColor.g * face.brightness);
+                    const b = Math.min(255, baseColor.b * face.brightness);
+                    colors.push(r, g, b);
                 }
                 indices.push(start, start + 1, start + 2, start + 2, start + 3, start);
             }

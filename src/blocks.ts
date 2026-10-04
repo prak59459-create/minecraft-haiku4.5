@@ -21,17 +21,17 @@ interface BlockColor {
 
 const blockColors: Record<BlockType, BlockColor> = {
     [BlockType.AIR]: { r: 0, g: 0, b: 0 },
-    [BlockType.GRASS]: { r: 76, g: 139, b: 76 },
-    [BlockType.DIRT]: { r: 139, g: 101, b: 56 },
+    [BlockType.GRASS]: { r: 95, g: 145, b: 80 },
+    [BlockType.DIRT]: { r: 153, g: 102, b: 51 },
     [BlockType.STONE]: { r: 128, g: 128, b: 128 },
-    [BlockType.WOOD]: { r: 139, g: 69, b: 19 },
-    [BlockType.LEAVES]: { r: 34, g: 139, b: 34 },
-    [BlockType.WATER]: { r: 30, g: 144, b: 255 },
-    [BlockType.SAND]: { r: 238, g: 214, b: 175 },
-    [BlockType.GRAVEL]: { r: 169, g: 169, b: 169 },
-    [BlockType.COAL_ORE]: { r: 64, g: 64, b: 64 },
-    [BlockType.IRON_ORE]: { r: 192, g: 192, b: 192 },
-    [BlockType.GOLD_ORE]: { r: 255, g: 215, b: 0 }
+    [BlockType.WOOD]: { r: 162, g: 102, b: 38 },
+    [BlockType.LEAVES]: { r: 52, g: 160, b: 52 },
+    [BlockType.WATER]: { r: 64, g: 164, b: 255 },
+    [BlockType.SAND]: { r: 255, g: 220, b: 100 },
+    [BlockType.GRAVEL]: { r: 160, g: 160, b: 160 },
+    [BlockType.COAL_ORE]: { r: 60, g: 60, b: 60 },
+    [BlockType.IRON_ORE]: { r: 200, g: 200, b: 200 },
+    [BlockType.GOLD_ORE]: { r: 255, g: 230, b: 0 }
 };
 
 const blockNames: Record<BlockType, string> = {

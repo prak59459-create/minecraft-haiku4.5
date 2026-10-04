@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { BlockType, getBlockName, getBlockColor } from './blocks.js';
 
 const SELECTABLE_BLOCKS: BlockType[] = [
@@ -139,5 +140,3 @@ export class HUD {
         timeEl.textContent = time;
     }
 }
-
-import * as THREE from 'three';

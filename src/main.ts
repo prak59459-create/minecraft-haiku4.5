@@ -76,8 +76,17 @@ function setupEventListeners(): void {
     });
 
     document.addEventListener('click', () => {
-        if (document.pointerLockElement !== document.documentElement) {
-            document.documentElement.requestPointerLock?.();
+        const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+        if (canvas && document.pointerLockElement !== canvas) {
+            canvas.requestPointerLock?.();
+        }
+    });
+
+    document.addEventListener('pointerlockchange', () => {
+        if (document.pointerLockElement) {
+            console.log('Pointer locked');
+        } else {
+            console.log('Pointer unlocked');
         }
     });
 }

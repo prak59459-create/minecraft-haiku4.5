@@ -222,40 +222,63 @@ export class Player {
         const minZ = this.position.z - PLAYER_WIDTH / 2;
         const maxZ = this.position.z + PLAYER_WIDTH / 2;
 
-        const minBx = Math.floor(minX);
-        const maxBx = Math.floor(maxX);
-        const minBy = Math.floor(minY);
-        const maxBy = Math.floor(maxY);
-        const minBz = Math.floor(minZ);
-        const maxBz = Math.floor(maxZ);
+        const minBx = Math.floor(minX - 1);
+        const maxBx = Math.ceil(maxX + 1);
+        const minBy = Math.floor(minY - 1);
+        const maxBy = Math.ceil(maxY + 1);
+        const minBz = Math.floor(minZ - 1);
+        const maxBz = Math.ceil(maxZ + 1);
 
         this.isGrounded = false;
+        let groundDistance = Infinity;
 
         for (let bx = minBx; bx <= maxBx; bx++) {
             for (let by = minBy; by <= maxBy; by++) {
                 for (let bz = minBz; bz <= maxBz; bz++) {
                     const block = this.world.getBlock(bx, by, bz);
-                    if (isSolid(block)) {
-                        if (this.velocity.y < 0 && maxY >= by && minY < by + 0.5) {
-                            this.position.y = by + PLAYER_HEIGHT;
+                    if (!isSolid(block)) continue;
+
+                    const bMinX = bx;
+                    const bMaxX = bx + 1;
+                    const bMinY = by;
+                    const bMaxY = by + 1;
+                    const bMinZ = bz;
+                    const bMaxZ = bz + 1;
+
+                    if (maxX <= bMinX || minX >= bMaxX || maxY <= bMinY || minY >= bMaxY || maxZ <= bMinZ || minZ >= bMaxZ) {
+                        continue;
+                    }
+
+                    const overlapX = Math.min(maxX - bMinX, bMaxX - minX);
+                    const overlapY = Math.min(maxY - bMinY, bMaxY - minY);
+                    const overlapZ = Math.min(maxZ - bMinZ, bMaxZ - minZ);
+
+                    if (overlapY < Math.min(overlapX, overlapZ)) {
+                        if (this.velocity.y < 0) {
+                            this.position.y += overlapY;
                             this.velocity.y = 0;
-                            this.isGrounded = true;
-                        } else if (this.velocity.y > 0 && minY <= by + 1 && maxY > by + 1) {
-                            this.position.y = by - PLAYER_HEIGHT / 2;
+                            if (overlapY < 0.3) {
+                                this.isGrounded = true;
+                                groundDistance = Math.min(groundDistance, overlapY);
+                            }
+                        } else {
+                            this.position.y -= overlapY;
                             this.velocity.y = 0;
                         }
-
+                    } else if (overlapX < overlapZ) {
                         if (this.velocity.x > 0) {
-                            this.position.x = bx - PLAYER_WIDTH / 2;
-                        } else if (this.velocity.x < 0) {
-                            this.position.x = bx + 1 + PLAYER_WIDTH / 2;
+                            this.position.x -= overlapX;
+                        } else {
+                            this.position.x += overlapX;
                         }
-
+                        this.velocity.x = 0;
+                    } else {
                         if (this.velocity.z > 0) {
-                            this.position.z = bz - PLAYER_WIDTH / 2;
-                        } else if (this.velocity.z < 0) {
-                            this.position.z = bz + 1 + PLAYER_WIDTH / 2;
+                            this.position.z -= overlapZ;
+                        } else {
+                            this.position.z += overlapZ;
                         }
+                        this.velocity.z = 0;
                     }
                 }
             }
