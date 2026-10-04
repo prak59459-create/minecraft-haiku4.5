@@ -1,5 +1,45 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Performance & Quality Update (Session 3)
+
+### Performance Optimizations
+- **Raycasting improvement** - Reduced step size for better accuracy (0.02 vs 0.05)
+- **Chunk rendering optimization** - Better frustum culling and memory management
+- **Dynamic quality adjustment** - Automatic render distance scaling based on FPS
+- **Renderer improvements** - Added high-performance WebGL context with pixel ratio support
+- **Block face culling** - Optimized face rendering for solid blocks
+
+### Visual Improvements
+- **Enhanced lighting system** - Better height-based brightness with distance variation
+- **Dynamic day/night cycle** - Smoother color transitions with realistic sun colors
+- **Improved water rendering** - Better colors, opacity, and lighting
+- **Sprint particles** - Visual feedback when sprinting
+- **Block break effects** - Better particle distribution and physics
+
+### Player Experience
+- **Camera smoothing** - Interpolated camera rotation for better feel
+- **Movement acceleration** - Momentum-based movement with smooth transitions
+- **Swimming mechanics** - Basic water physics and buoyancy
+- **Better audio** - Error handling and sound throttling to prevent audio issues
+- **Master volume control** - Configurable audio levels
+
+### Debug & Development
+- **Enhanced debug display** - Shows player position, velocity, state information
+- **Better performance metrics** - Memory usage, vertex count, draw call statistics
+- **Comprehensive HUD** - Real-time coordinate display and FPS monitoring
+
+### Terrain Generation
+- **Improved height generation** - Better multi-octave noise distribution
+- **Better biome transitions** - Smoother sand/grass transitions
+- **Enhanced ore distribution** - Improved depth-based placement algorithms
+- **Tree generation refinement** - Better tree placement on suitable terrain
+
+### Configuration System
+- **Config integration** - Game uses config.json for all major settings
+- **Runtime customization** - Easy adjustment of game parameters without code changes
+- **Mouse sensitivity** - Configurable camera sensitivity
+- **Render distance** - Adjustable render distance from config
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features

@@ -241,12 +241,13 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.65;
+                    const heightLight = (wy / WORLD_HEIGHT) * 0.35;
+                    const varLight = Math.sin(wx * 0.3 + wz * 0.3 + wy * 0.2) * 0.08;
+                    const distLight = Math.sin((wx + wz) * 0.1) * 0.05;
+                    const brightness = Math.max(0.4, baseLight + heightLight + varLight + distLight);
 
-                    color.multiplyScalar(brightness);
+                    color.multiplyScalar(Math.min(1.2, brightness));
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
                 }
@@ -374,6 +375,8 @@ class MinecraftGame {
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
 
+        this.updateQualitySettings();
+
         const eyePos = this.player.getEyePosition();
         this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
 
@@ -442,6 +445,17 @@ class MinecraftGame {
         }
 
         this.scene.background = skyColor;
+    }
+
+    updateQualitySettings() {
+        const targetFps = Config.get('graphics.fpsTarget') || 60;
+        const fps = this.ui.fpsCounter;
+
+        if (fps < targetFps * 0.8 && this.world.renderDistance > 4) {
+            this.world.renderDistance--;
+        } else if (fps > targetFps * 1.1 && this.world.renderDistance < 16) {
+            this.world.renderDistance++;
+        }
     }
 }
 
