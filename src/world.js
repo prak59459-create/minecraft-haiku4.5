@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { SimplexNoise } from 'simplex-noise';
 import { BLOCK_TYPES, BLOCK_COLORS, TRANSPARENT_BLOCKS } from './blocks.js';
+import { BiomeGenerator, BIOME_TYPES } from './biomes.js';
 
 const CHUNK_SIZE = 16;
 const CHUNK_HEIGHT = 128;
@@ -116,6 +117,7 @@ export class World {
         this.scene = scene;
         this.chunks = new Map();
         this.noise = new SimplexNoise();
+        this.biomeGenerator = new BiomeGenerator(this.noise);
         this.blockOperations = [];
     }
 
@@ -127,9 +129,12 @@ export class World {
                 const worldX = chunkX * CHUNK_SIZE + x;
                 const worldZ = chunkZ * CHUNK_SIZE + z;
 
+                const biome = this.biomeGenerator.getBiomeAtPosition(worldX, worldZ);
+                const heightMod = this.biomeGenerator.getHeightModifier(biome);
+
                 const noiseValue = this.noise.noise2D(worldX * 0.08, worldZ * 0.08);
                 const detailNoise = this.noise.noise2D(worldX * 0.2, worldZ * 0.2);
-                const height = Math.floor(64 + noiseValue * 20 + detailNoise * 5);
+                const height = Math.floor(heightMod.baseHeight + (noiseValue * 20 + detailNoise * 5) * heightMod.scale);
 
                 for (let y = 0; y < CHUNK_HEIGHT; y++) {
                     if (y < 1) {
@@ -140,17 +145,15 @@ export class World {
                     } else if (y < height - 1) {
                         chunk.setBlock(x, y, z, BLOCK_TYPES.DIRT);
                     } else if (y === height) {
-                        if (height > 75) {
-                            chunk.setBlock(x, y, z, BLOCK_TYPES.SAND);
-                        } else {
-                            chunk.setBlock(x, y, z, BLOCK_TYPES.GRASS);
-                        }
+                        const surfaceBlock = this.biomeGenerator.getSurfaceBlock(biome, height);
+                        chunk.setBlock(x, y, z, surfaceBlock);
                     } else {
                         chunk.setBlock(x, y, z, BLOCK_TYPES.AIR);
                     }
                 }
 
-                if (Math.random() < 0.03 && height < 85 && height > 62) {
+                const treeChance = this.biomeGenerator.getTreeChance(biome);
+                if (Math.random() < treeChance && height < 85 && height > 62) {
                     this.generateTree(chunk, x, height + 1, z);
                 }
 
