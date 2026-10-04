@@ -2,6 +2,9 @@ import { World, CHUNK_SIZE_EXPORT, WORLD_HEIGHT_EXPORT } from './world.js';
 import { Player, Camera } from './player.js';
 import { BLOCKS, BLOCK_COLORS, isBlockSolid } from './blocks.js';
 import { UI } from './ui.js';
+import { ParticleSystem } from './particles.js';
+import { WaterRenderer } from './water.js';
+import { AudioManager } from './audio.js';
 
 class MinecraftGame {
     constructor() {
@@ -16,10 +19,14 @@ class MinecraftGame {
         this.player = new Player(this.world);
         this.gameCamera = new Camera();
         this.ui = new UI();
+        this.particleSystem = new ParticleSystem(this.scene);
+        this.waterRenderer = new WaterRenderer(this.scene, this.world);
+        this.audioManager = new AudioManager();
 
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
+        this.lastBreakSound = 0;
 
         this.setupLighting();
         this.setupEventListeners();
@@ -71,6 +78,15 @@ class MinecraftGame {
         if (event.button === 0) {
             this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
             this.updateChunkMesh(hit.x, hit.y, hit.z);
+
+            const color = BLOCK_COLORS[hit.block] || 0x808080;
+            this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
+
+            const now = Date.now();
+            if (now - this.lastBreakSound > 50) {
+                this.audioManager.playBlockSound('break');
+                this.lastBreakSound = now;
+            }
         } else if (event.button === 2) {
             const norm = hit.normal;
             const nx = hit.x + norm.x;
@@ -80,6 +96,7 @@ class MinecraftGame {
             if (!this.isPlayerOccupying(nx, ny, nz)) {
                 this.world.setBlock(nx, ny, nz, this.selectedBlockType);
                 this.updateChunkMesh(nx, ny, nz);
+                this.audioManager.playBlockSound('place');
             }
         }
     }
@@ -291,6 +308,8 @@ class MinecraftGame {
 
         this.updateVisibleChunks();
         this.updateDayNightCycle();
+        this.particleSystem.update();
+        this.waterRenderer.update();
 
         const fps = this.ui.updateFPS();
         this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
