@@ -85,29 +85,40 @@ export class Player {
 
         this.isOnGround = false;
 
-        for (let dy = 0; dy < height; dy += 0.3) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius;
-                const cy = this.position.y + dy;
-                const cz = this.position.z + Math.sin(angle) * radius;
+        const checkPoints = [
+            { dy: 0.1, radius: radius * 0.9 },
+            { dy: height * 0.3, radius: radius * 0.9 },
+            { dy: height * 0.6, radius: radius * 0.9 },
+            { dy: height * 0.9, radius: radius * 0.7 }
+        ];
 
-                if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
-                    this.position.x -= this.velocity.x;
-                    this.position.z -= this.velocity.z;
+        for (const point of checkPoints) {
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+                const cx = this.position.x + Math.cos(angle) * point.radius;
+                const cy = this.position.y + point.dy;
+                const cz = this.position.z + Math.sin(angle) * point.radius;
+
+                const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
+                if (isBlockSolid(block)) {
+                    const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+                    if (moveLen > 0) {
+                        const scale = 1.5 / moveLen;
+                        this.position.x -= this.velocity.x * scale;
+                        this.position.z -= this.velocity.z * scale;
+                    }
                     break;
                 }
             }
         }
 
         if (this.velocity.y < 0) {
-            const checkY = Math.floor(this.position.y - 0.1);
             let onGround = false;
-
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.8;
+                const cy = this.position.y - 0.01;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.8;
 
-                if (isBlockSolid(this.world.getBlock(Math.floor(cx), checkY, Math.floor(cz)))) {
+                if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     onGround = true;
                     break;
                 }
@@ -116,24 +127,23 @@ export class Player {
             if (onGround) {
                 this.isOnGround = true;
                 this.velocity.y = 0;
-                this.position.y = Math.ceil(this.position.y - 0.1);
             }
         }
 
         if (this.velocity.y > 0) {
-            const checkY = Math.floor(this.position.y + height);
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.8;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.8;
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+                const cx = this.position.x + Math.cos(angle) * radius * 0.9;
+                const cy = this.position.y + height + 0.01;
+                const cz = this.position.z + Math.sin(angle) * radius * 0.9;
 
-                if (isBlockSolid(this.world.getBlock(Math.floor(cx), checkY, Math.floor(cz)))) {
+                if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     this.velocity.y = 0;
                     break;
                 }
             }
         }
 
-        if (this.position.y < 0) {
+        if (this.position.y < -10) {
             this.position.y = 100;
             this.velocity.y = 0;
         }
