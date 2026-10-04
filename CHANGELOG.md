@@ -1,5 +1,75 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Major Gameplay & Optimization Update (Session 3)
+
+### Major Features Added
+
+#### Water & Swimming
+- **Swimming mechanics** - Players can swim in water using Space to ascend
+- **Water buoyancy** - Realistic water physics with reduced gravity
+- **Water sounds** - Different audio feedback for underwater movement
+- **Proper jump prevention** while swimming for better control
+
+#### Health & Survival
+- **Health system** - 20 heart health with damage and regeneration
+- **Hunger system** - Hunger bar that depletes over time
+- **Saturation mechanics** - Complex hunger system foundation
+- **Fall damage** - Damage calculation based on fall height
+- **Health regeneration** - Heal when well-fed and safe
+- **Visual HUD** - Real-time health and hunger bars with gradients
+
+#### Terrain Generation Improvements
+- **Cave systems** - Procedurally generated caves at depth 10-80
+- **Gravel biomes** - Beach/coastal terrain with gravel blocks
+- **Biome variation** - Better terrain diversity with moisture-based generation
+- **Multiple tree types** - Oak, Spruce, and Birch trees with different wood
+- **Better ore distribution** - Improved frequency and placement
+- **Lava generation** - Rare underground lava pockets
+
+#### New Block Types
+- Spruce Log & Leaves
+- Birch Log & Leaves
+- Lava blocks
+- Better biome-specific blocks
+
+#### Audio Enhancements
+- **Step sounds** - Footstep audio for ground and water
+- **Fall damage sound** - Audio feedback for taking fall damage
+- **Drown sound** - Underwater damage audio
+- **Better audio variety** - Different tones for different actions
+
+#### Sky & Atmosphere
+- **Dynamic sky renderer** - Real-time sky rendering system
+- **Cloud system** - 20 dynamic clouds that move and fade
+- **Cloud-sky interaction** - Clouds respond to time-of-day colors
+- **Wave motion** - Smooth cloud movement patterns
+
+#### Performance Optimizations
+- **Color caching** - Pre-compute and cache block colors by height
+- **Raycast optimization** - Larger step size for better performance (0.1 instead of 0.05)
+- **Renderer hints** - Power preference for high-performance GPUs
+- **Better shadow mapping** - Expanded camera bounds for better shadows
+- **Efficient mesh generation** - Better index buffer layout
+
+#### Input & Accessibility
+- **Escape key handling** - Properly unlock pointer lock
+- **Better control response** - Swimming prevents jumping
+- **Help text** - Comprehensive control guide with new features
+- **Cleaner UI** - Improved help panel styling
+
+#### Storage & Save System
+- **World save/load system** - localStorage-based chunk persistence
+- **Player position save** - Remember player location
+- **Storage management** - Clear saves and check storage usage
+- **Graceful fallback** - Works without localStorage
+
+### Bug Fixes & Improvements
+- Fixed swimming mechanics blocking
+- Improved collision detection
+- Better sky color transitions
+- Enhanced visual feedback for all actions
+- Better chunk loading efficiency
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features

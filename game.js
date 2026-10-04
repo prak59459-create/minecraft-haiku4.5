@@ -158,6 +158,12 @@ class MinecraftGame {
         this.audioManager.playFallDamageSound();
     }
 
+    handleDeath() {
+        this.player.position = { x: 0, y: 100, z: 0 };
+        this.player.velocity = { x: 0, y: 0, z: 0 };
+        this.healthSystem.respawn();
+    }
+
     raycastBlock() {
         const eyePos = this.player.getEyePosition();
         const direction = new THREE.Vector3(
@@ -289,12 +295,12 @@ class MinecraftGame {
         let faceCount = 0;
 
         const faces = [
-            { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
-            { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
-            { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]] },
-            { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]] },
-            { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
-            { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
+            { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]], bright: 0.85 },
+            { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]], bright: 0.85 },
+            { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]], bright: 1.0 },
+            { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]], bright: 0.7 },
+            { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]], bright: 0.9 },
+            { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]], bright: 0.9 }
         ];
 
         const r = Math.floor(color.r * 255);
@@ -311,9 +317,13 @@ class MinecraftGame {
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
+            const br = Math.floor(r * face.bright);
+            const bg = Math.floor(g * face.bright);
+            const bb = Math.floor(b * face.bright);
+
             for (const [vx, vy, vz] of face.verts) {
                 vertices.push(x + vx, y + vy, z + vz);
-                colors.push(r, g, b);
+                colors.push(br, bg, bb);
             }
 
             indices.push(startIndex, startIndex + 1, startIndex + 2, startIndex, startIndex + 2, startIndex + 3);
@@ -389,6 +399,10 @@ class MinecraftGame {
             eyePos.y + direction.y,
             eyePos.z + direction.z
         );
+
+        if (this.healthSystem.isDead()) {
+            this.handleDeath();
+        }
 
         this.updateVisibleChunks();
         this.updateDayNightCycle();
