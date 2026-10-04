@@ -1,5 +1,60 @@
 # Minecraft Clone - Improvements and Optimizations
 
+## Latest Updates (Session 3 - Current)
+
+### Visual Enhancements
+1. **Particle System Redesign**
+   - Smooth opacity fade-out with power curve
+   - Circular particle distribution patterns
+   - Particle limit management (3000 max)
+   - Better particle physics with gravity and air resistance
+   - Optimized memory usage
+
+2. **Water Rendering Improvements**
+   - Shimmer animation effect
+   - Improved transparency and visual depth
+   - Emissive coloring for underwater atmosphere
+   - Smooth wave animations
+
+3. **Block Selection Feedback**
+   - Pulsing outline animation
+   - Coordinate caching to reduce rebuilds
+   - Smooth opacity transitions
+   - Better visual clarity
+
+### Gameplay Features
+1. **Player Mechanics**
+   - Water detection system
+   - Swimming support with buoyancy
+   - Fall distance tracking
+   - Health system foundation (prepared)
+
+2. **World Persistence**
+   - localStorage-based save/load
+   - Automatic world restoration
+   - F5 quick-save, F9 reset controls
+   - Chunk serialization with compression
+
+### Performance Optimizations (Session 3)
+1. **Rendering**
+   - Mesh caching system
+   - Ambient occlusion calculation
+   - Throttled chunk updates (every 3 frames)
+   - Proper GPU resource cleanup
+   - Smart chunk visibility management
+
+2. **Memory Management**
+   - Mesh disposal on unload
+   - Cache invalidation strategy
+   - Reduced garbage collection
+   - Efficient particle pooling
+
+3. **Terrain Generation**
+   - Enhanced biome system
+   - Better noise functions
+   - Improved terrain variation
+   - Clay and snow biome support
+
 ## Latest Updates (Session 2)
 
 ### Core Improvements

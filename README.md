@@ -160,11 +160,22 @@ audio.js         - Sound effects generation
 
 ### Performance
 
-- Renders 8-chunk radius around player
-- Optimized mesh generation with indexed geometry
-- Dynamic lighting updates for day/night cycle
-- Particle system for visual effects
-- ~60 FPS on modern hardware
+- **Render Distance**: 10-chunk radius (configurable)
+- **Mesh Caching**: Reuse geometry for identical chunks
+- **Ambient Occlusion**: Simple AO lighting for depth
+- **Memory Management**: Automatic chunk cleanup
+- **Particle System**: Up to 3000 particles with smart pooling
+- **Target FPS**: 60 on modern hardware
+- **Storage**: 5MB world save capacity
+
+### Performance Tips
+
+1. **Lower Render Distance** - Reduce render distance in config.json for higher FPS on slower machines
+2. **Disable Shadows** - Toggle shadow mapping in config for better performance
+3. **Particle Limit** - Adjust `particleLimit` in config.json if experiencing lag during block breaking
+4. **Clear Cache** - Use F9 to reset the world if performance degrades over time
+5. **Hardware Acceleration** - Ensure hardware acceleration is enabled in your browser settings
+6. **Close Other Tabs** - Close other browser tabs to free up memory
 
 ## Game Design
 
@@ -177,8 +188,11 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 
 ### Biomes
 
-- **Grass Biome** - Natural terrain with trees and water
-- **Sand Biome** - Desert-like areas with sand blocks
+- **Grass Biome** - Natural terrain with trees and water, default biome
+- **Sand Biome** - Desert-like areas with sand blocks and varied features
+- **Snow Biome** - Cold regions with snow blocks and frozen water (ice)
+- **Clay Biome** - Sandy marshland-like areas with clay blocks
+- **Smooth Transitions** - Biomes blend naturally at boundaries using temperature and humidity noise
 
 ### Ore Distribution
 
@@ -203,6 +217,41 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 - [ ] Multiplayer support
 - [ ] Texture mapping for blocks
 - [ ] Advanced weather systems
+- [ ] Cave generation
+- [ ] Better structure generation
+
+## Troubleshooting
+
+### Issue: Low FPS
+**Solution**: 
+- Press F3 to see current render statistics
+- Reduce render distance in config.json (try 6-8)
+- Close other browser tabs
+- Ensure hardware acceleration is enabled
+
+### Issue: World not saving
+**Solution**:
+- Check browser storage quota (press F3)
+- Clear some old worlds if storage is full
+- Try clearing browser cache and reload
+
+### Issue: Blocks not loading
+**Solution**:
+- Wait for chunks to load (may take a few seconds on first spawn)
+- Move closer to the chunks you want to see
+- Check browser console for errors (F12)
+
+### Issue: Controls not responding
+**Solution**:
+- Click on the game canvas to enable pointer lock
+- Check that NumLock is off if using number pad
+- Try pressing H to show help, then close with H again
+
+### Issue: Sound not working
+**Solution**:
+- Check browser audio settings
+- Verify Web Audio API is not blocked by browser
+- Try a different browser if issue persists
 - [ ] More biome types
 - [ ] Mob system
 - [ ] Crafting system

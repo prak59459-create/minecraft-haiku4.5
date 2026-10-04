@@ -477,3 +477,5 @@ class MinecraftGame {
 }
 
 const game = new MinecraftGame();
+
+window.gameInstance = game;
