@@ -6,6 +6,8 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.waveAmplitude = 0.05;
+        this.waveFrequency = 0.5;
     }
 
     buildWaterMesh(chunk) {
@@ -13,10 +15,11 @@ export class WaterRenderer {
         const vertices = [];
         const colors = [];
         const indices = [];
+        const uvs = [];
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x4A90E2);
+        const waterColor = new THREE.Color(0x2E8B9E);
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -48,11 +51,14 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const r = Math.floor(waterColor.r * 255);
+                        const g = Math.floor(waterColor.g * 255);
+                        const b = Math.floor(waterColor.b * 255);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
+                            colors.push(r, g, b);
+                            uvs.push(vx, vz);
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -65,18 +71,36 @@ export class WaterRenderer {
         if (vertices.length > 0) {
             geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
+            geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
             geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             geometry.computeVertexNormals();
 
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#2E8B9E';
+            ctx.fillRect(0, 0, 64, 64);
+            for (let i = 0; i < 32; i++) {
+                ctx.fillStyle = `rgba(46, 139, 158, ${0.3 + Math.random() * 0.2})`;
+                ctx.fillRect(Math.random() * 64, Math.random() * 64, 8, 8);
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.magFilter = THREE.NearestFilter;
+            texture.minFilter = THREE.NearestFilter;
+
             const material = new THREE.MeshPhongMaterial({
-                vertexColors: true,
-                wireframe: false,
+                map: texture,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.7,
+                side: THREE.FrontSide,
+                shininess: 100,
+                wireframe: false
             });
 
             const mesh = new THREE.Mesh(geometry, material);
+            mesh.receiveShadow = true;
             return mesh;
         }
 
