@@ -2,10 +2,11 @@ class Renderer {
     constructor() {
         this.scene = new THREE.Scene();
         this.camera = null;
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87ceeb);
-        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.enabled = false;
+        this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
         document.body.appendChild(this.renderer.domElement);
 
         this.chunkMeshes = new Map();
@@ -14,11 +15,10 @@ class Renderer {
 
         this.directionalLight = new THREE.DirectionalLight(0xffffff, 1);
         this.directionalLight.position.set(100, 100, 100);
-        this.directionalLight.castShadow = true;
-        this.directionalLight.shadow.camera.far = 500;
-        this.directionalLight.shadow.mapSize.width = 2048;
-        this.directionalLight.shadow.mapSize.height = 2048;
         this.scene.add(this.directionalLight);
+
+        this.fog = new THREE.Fog(0x87ceeb, 100, 400);
+        this.scene.fog = this.fog;
 
         this.timeOfDay = 0;
         this.setupLighting();
@@ -46,6 +46,7 @@ class Renderer {
 
         const skyColor = this.getSkyColor(timePercent);
         this.renderer.setClearColor(skyColor);
+        this.updateFog(timePercent);
     }
 
     getSkyColor(timePercent) {
@@ -69,6 +70,11 @@ class Renderer {
             ).getHex();
         }
         return 0x87ceeb;
+    }
+
+    updateFog(timePercent) {
+        const skyColor = this.getSkyColor(timePercent);
+        this.fog.color.setHex(skyColor);
     }
 
     renderChunk(world, chunkX, chunkZ) {
@@ -195,4 +201,18 @@ function updateBlockSelector() {
     const selector = document.getElementById('block-selector');
     const block = BLOCK_TYPES[game.player.selectedIndex];
     selector.textContent = `Selected: ${block.name} (${game.player.selectedIndex + 1})`;
+}
+
+function updateInventoryDisplay() {
+    const inventory = document.getElementById('inventory');
+    inventory.innerHTML = '';
+    for (let i = 0; i < Math.min(9, BLOCK_TYPES.length); i++) {
+        const block = BLOCK_TYPES[i];
+        const item = document.createElement('div');
+        item.className = 'inventory-item' + (i === game.player.selectedIndex ? ' selected' : '');
+        item.textContent = block.name[0];
+        item.title = `${block.name} (${i + 1})`;
+        item.style.backgroundColor = '#' + block.color.toString(16).padStart(6, '0');
+        inventory.appendChild(item);
+    }
 }

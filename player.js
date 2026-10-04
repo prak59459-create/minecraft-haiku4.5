@@ -188,6 +188,7 @@ class Player {
         if (this.onGround) {
             this.velocity.y = this.jumpForce;
             this.onGround = false;
+            game.audio.playJumpSound();
         }
     }
 
@@ -225,6 +226,7 @@ class Player {
             const blockId = this.world.getBlock(this.targetBlock.x, this.targetBlock.y, this.targetBlock.z);
             this.world.setBlock(this.targetBlock.x, this.targetBlock.y, this.targetBlock.z, BLOCKS.AIR.id);
             game.createParticles(this.targetBlock.x, this.targetBlock.y, this.targetBlock.z, blockId);
+            game.audio.playBreakSound();
         }
     }
 
@@ -237,6 +239,7 @@ class Player {
                 z: this.targetBlock.z + normal.z
             };
             this.world.setBlock(newPos.x, newPos.y, newPos.z, this.selectedBlock);
+            game.audio.playPlaceSound();
         }
     }
 

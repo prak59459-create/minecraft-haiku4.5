@@ -1,6 +1,7 @@
 window.addEventListener('DOMContentLoaded', () => {
     game = new Game();
     updateBlockSelector();
+    updateInventoryDisplay();
     console.log('Minecraft Clone loaded successfully!');
     console.log('Controls: WASD (move), Mouse (look), Space (jump), Shift (sprint), Left-click (break), Right-click (place), 1-9 (block select), Scroll (cycle blocks)');
 });

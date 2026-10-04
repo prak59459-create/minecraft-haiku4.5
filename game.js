@@ -4,6 +4,7 @@ class Game {
         this.renderer = new Renderer();
         this.player = new Player(this.world);
         this.renderer.camera = this.player.camera;
+        this.audio = new AudioManager();
 
         this.frameCount = 0;
         this.lastFrameTime = Date.now();
@@ -91,6 +92,10 @@ class Game {
             } else {
                 timeIndicator.textContent = 'Time: Day';
             }
+        }
+
+        if (this.frameCount % 10 === 0) {
+            updateInventoryDisplay();
         }
     }
 
