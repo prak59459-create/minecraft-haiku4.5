@@ -52,15 +52,20 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.55 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.65 + sunIntensity * 0.25);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.bias = -0.0001;
+        directionalLight.shadow.camera.left = -100;
+        directionalLight.shadow.camera.right = 100;
+        directionalLight.shadow.camera.top = 100;
+        directionalLight.shadow.camera.bottom = -100;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -468,11 +473,17 @@ class MinecraftGame {
         const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.65 + sunIntensity * 0.35;
+
+        const hue = 0.6 + Math.sin(time * 0.5) * 0.1;
+        const saturation = 0.5 - (1 - sunIntensity) * 0.2;
+        const lightness = 0.4 + sunIntensity * 0.4;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        skyColor.setHSL(Math.max(0, Math.min(1, hue)), saturation, lightness);
         this.scene.background = skyColor;
+
+        this.scene.fog = new THREE.Fog(skyColor, 200, 400);
     }
 }
 
