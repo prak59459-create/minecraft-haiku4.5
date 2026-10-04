@@ -20,6 +20,7 @@ export class Player {
         this.isSprinting = false;
         this.isCrouching = false;
         this.lastShiftKey = false;
+        this.lastFootstepTime = 0;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -45,9 +46,18 @@ export class Player {
     }
 
     update() {
+        const prevX = this.position.x;
+        const prevZ = this.position.z;
+
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+
+        const moved = Math.sqrt((this.position.x - prevX) ** 2 + (this.position.z - prevZ) ** 2);
+        if (moved > 0.05 && this.isOnGround && Date.now() - this.lastFootstepTime > 300) {
+            this.lastFootstepTime = Date.now();
+            if (this.onFootstep) this.onFootstep();
+        }
     }
 
     handleMovement() {
@@ -159,9 +169,10 @@ export class Player {
     }
 
     getEyePosition() {
+        const eyeHeight = this.isCrouching ? PLAYER_HEIGHT * 0.6 : PLAYER_HEIGHT * 0.85;
         return {
             x: this.position.x,
-            y: this.position.y + PLAYER_HEIGHT * 0.85,
+            y: this.position.y + eyeHeight,
             z: this.position.z
         };
     }

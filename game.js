@@ -36,6 +36,7 @@ class MinecraftGame {
         this.meshNeedsUpdate = new Set();
 
         this.player.onJump = () => this.audioManager.playJumpSound();
+        this.player.onFootstep = () => this.audioManager.playStepSound();
 
         this.setupLighting();
         this.setupEventListeners();
@@ -241,7 +242,7 @@ class MinecraftGame {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
                     const blockId = chunk.getBlock(x, y, z);
-                    if (blockId === BLOCKS.AIR) continue;
+                    if (blockId === BLOCKS.AIR || blockId === BLOCKS.WATER) continue;
 
                     const wx = chunk.x * CHUNK_SIZE + x;
                     const wy = y;
@@ -249,10 +250,10 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.6;
+                    const heightLight = (wy / WORLD_HEIGHT) * 0.25;
+                    const aoLight = this.calculateAmbientOcclusion(wx, wy, wz, chunk);
+                    const brightness = baseLight + heightLight + aoLight;
 
                     color.multiplyScalar(brightness);
 
@@ -286,6 +287,22 @@ class MinecraftGame {
         return null;
     }
 
+    calculateAmbientOcclusion(x, y, z, chunk) {
+        let aoValue = 0;
+        const neighbors = [
+            [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]
+        ];
+
+        for (const [dx, dy, dz] of neighbors) {
+            const neighbor = this.world.getBlock(x + dx, y + dy, z + dz);
+            if (isBlockSolid(neighbor)) {
+                aoValue += 0.08;
+            }
+        }
+
+        return Math.min(0.15, aoValue);
+    }
+
     addBlockFaces(vertices, colors, indices, x, y, z, blockId, color, chunk) {
         let faceCount = 0;
 
@@ -309,7 +326,7 @@ class MinecraftGame {
             const nz = z + dz;
 
             const neighbor = this.world.getBlock(nx, ny, nz);
-            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+            if (isBlockSolid(neighbor)) continue;
 
             const startIndex = vertices.length / 3;
             for (const [vx, vy, vz] of face.verts) {
@@ -339,6 +356,11 @@ class MinecraftGame {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
                 }
+                if (this.waterRenderer.waterMeshes.has(key)) {
+                    const waterMesh = this.waterRenderer.waterMeshes.get(key);
+                    this.scene.remove(waterMesh);
+                    this.waterRenderer.waterMeshes.delete(key);
+                }
                 continue;
             }
 
@@ -347,6 +369,14 @@ class MinecraftGame {
                 if (mesh) {
                     this.scene.add(mesh);
                     this.chunkMeshes.set(key, mesh);
+                }
+            }
+
+            if (!this.waterRenderer.waterMeshes.has(key)) {
+                const waterMesh = this.waterRenderer.buildWaterMesh(chunk);
+                if (waterMesh) {
+                    this.scene.add(waterMesh);
+                    this.waterRenderer.waterMeshes.set(key, waterMesh);
                 }
             }
         }
