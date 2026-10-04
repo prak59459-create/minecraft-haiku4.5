@@ -1,18 +1,33 @@
 {
   "name": "minecraft-haiku4.5",
   "version": "1.0.0",
-  "description": "A 3D Minecraft clone built with Three.js",
-  "main": "index.js",
+  "description": "A fully-featured 3D Minecraft clone built with Three.js and Node.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node -e \"import('./server.js').then(m => m.start())\"",
+    "start": "node server.js",
     "dev": "node server.js"
   },
-  "keywords": ["minecraft", "3d", "game"],
-  "author": "",
+  "keywords": [
+    "minecraft",
+    "3d",
+    "game",
+    "three.js",
+    "voxel",
+    "procedural",
+    "terrain",
+    "webgl"
+  ],
+  "author": "Claude Code",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prak59459-create/minecraft-haiku4.5"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "dependencies": {
-    "express": "^4.18.2",
-    "three": "^r128"
+    "express": "^4.18.2"
   }
 }
