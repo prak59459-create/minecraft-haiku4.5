@@ -2,14 +2,27 @@ export class Config {
     static async load() {
         try {
             const response = await fetch('config.json');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const config = await response.json();
-            Config.data = config;
-            return config;
+            Config.data = Config.merge(Config.getDefaults(), config);
+            return Config.data;
         } catch (error) {
-            console.warn('Could not load config.json, using defaults');
+            console.warn('Could not load config.json, using defaults:', error);
             Config.data = Config.getDefaults();
             return Config.data;
         }
+    }
+
+    static merge(defaults, custom) {
+        const result = { ...defaults };
+        for (const key in custom) {
+            if (typeof custom[key] === 'object' && custom[key] !== null) {
+                result[key] = this.merge(defaults[key] || {}, custom[key]);
+            } else {
+                result[key] = custom[key];
+            }
+        }
+        return result;
     }
 
     static getDefaults() {

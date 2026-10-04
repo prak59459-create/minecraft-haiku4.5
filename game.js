@@ -245,7 +245,13 @@ class MinecraftGame {
                     const heightLight = (wy / WORLD_HEIGHT) * 0.35;
                     const varLight = Math.sin(wx * 0.3 + wz * 0.3 + wy * 0.2) * 0.08;
                     const distLight = Math.sin((wx + wz) * 0.1) * 0.05;
-                    const brightness = Math.max(0.4, baseLight + heightLight + varLight + distLight);
+
+                    let shadowFactor = 1.0;
+                    if (wy < 30) {
+                        shadowFactor = 0.8 + (wy / 30) * 0.2;
+                    }
+
+                    const brightness = Math.max(0.35, baseLight + heightLight + varLight + distLight) * shadowFactor;
 
                     color.multiplyScalar(Math.min(1.2, brightness));
 
@@ -459,4 +465,31 @@ class MinecraftGame {
     }
 }
 
-const game = new MinecraftGame();
+async function initializeGame() {
+    try {
+        await Config.load();
+        const game = new MinecraftGame();
+        console.log('Game initialized successfully');
+    } catch (error) {
+        console.error('Failed to initialize game:', error);
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #FF6B6B;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            z-index: 9999;
+            max-width: 500px;
+            text-align: center;
+        `;
+        errorDiv.textContent = `Error: ${error.message}. Please refresh the page.`;
+        document.body.appendChild(errorDiv);
+    }
+}
+
+initializeGame();

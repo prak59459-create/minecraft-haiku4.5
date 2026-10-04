@@ -29,11 +29,12 @@ export class Player {
 
     setupKeyboardControls() {
         document.addEventListener('keydown', (e) => {
-            this.keys[e.key.toLowerCase()] = true;
+            const key = e.key.toLowerCase();
+            this.keys[key] = true;
 
             if (e.key === ' ') {
                 e.preventDefault();
-                if (this.isOnGround) {
+                if (this.isOnGround || this.isInWater) {
                     this.velocity.y = JUMP_POWER;
                     this.isOnGround = false;
                     if (this.onJump) this.onJump();
@@ -42,7 +43,12 @@ export class Player {
         });
 
         document.addEventListener('keyup', (e) => {
-            this.keys[e.key.toLowerCase()] = false;
+            const key = e.key.toLowerCase();
+            this.keys[key] = false;
+        });
+
+        window.addEventListener('blur', () => {
+            this.keys = {};
         });
     }
 

@@ -136,6 +136,21 @@ body {
     margin: 3px 0;
 }
 
+.block-tooltip {
+    position: absolute;
+    bottom: 55px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 15;
+    pointer-events: none;
+}
+
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;
