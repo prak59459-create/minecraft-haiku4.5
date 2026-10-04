@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Clone</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="ui-container">
+        <div id="crosshair"></div>
+        <div id="block-selector"></div>
+        <div id="stats">
+            <div id="fps">FPS: 0</div>
+            <div id="position">X: 0 Y: 0 Z: 0</div>
+            <div id="chunks">Chunks: 0</div>
+        </div>
+        <div id="time-indicator">Time: Day</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="blocks.js"></script>
+    <script src="terrain.js"></script>
+    <script src="player.js"></script>
+    <script src="rendering.js"></script>
+    <script src="game.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
