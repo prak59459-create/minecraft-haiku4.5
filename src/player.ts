@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { World } from './world.js';
 import { ParticleSystem } from './particles.js';
+import { AudioManager } from './audio.js';
 import { Inventory } from './inventory.js';
 import { BlockType, isSolid } from './blocks.js';
 
@@ -24,6 +25,7 @@ export class Player {
     keys: KeyState = {};
     world: World;
     particles: ParticleSystem;
+    audio: AudioManager;
     inventory: Inventory;
 
     pitch: number = 0;
@@ -33,12 +35,14 @@ export class Player {
     isSprinting: boolean = false;
     isCrouching: boolean = false;
     jumpCooldown: number = 0;
+    lastStepTime: number = 0;
 
-    constructor(camera: THREE.PerspectiveCamera, world: World, startPos: THREE.Vector3, particles: ParticleSystem) {
+    constructor(camera: THREE.PerspectiveCamera, world: World, startPos: THREE.Vector3, particles: ParticleSystem, audio: AudioManager) {
         this.camera = camera;
         this.world = world;
         this.position = startPos.clone();
         this.particles = particles;
+        this.audio = audio;
         this.inventory = new Inventory();
         this.camera.position.copy(this.position);
     }
@@ -96,6 +100,7 @@ export class Player {
                 this.world.setBlock(hit.x, hit.y, hit.z, BlockType.AIR);
                 this.particles.addDestructionParticles(hit.x, hit.y, hit.z, blockType);
                 this.inventory.addBlock(blockType, 1);
+                this.audio.playBlockBreak();
                 this.updateNearbyChunks(hit.x, hit.y, hit.z);
             }
         }
@@ -110,6 +115,7 @@ export class Player {
                 if (blockType !== BlockType.AIR && this.inventory.canUseSelected()) {
                     this.world.setBlock(adj.x, adj.y, adj.z, blockType);
                     this.inventory.useSelected();
+                    this.audio.playBlockPlace();
                     this.updateNearbyChunks(adj.x, adj.y, adj.z);
                 }
             }
@@ -222,6 +228,7 @@ export class Player {
         if (this.isGrounded && (this.keys[' '] || this.keys['spacebar'])) {
             this.velocity.y = JUMP_FORCE;
             this.isGrounded = false;
+            this.audio.playJump();
         }
 
         this.position.addScaledVector(this.velocity, delta);
@@ -229,6 +236,13 @@ export class Player {
         this.handleCollisions();
         this.camera.position.copy(this.position);
         this.world.updateChunksAround(this.position);
+
+        const walkSpeed = new THREE.Vector2(this.velocity.x, this.velocity.z).length();
+        const currentTime = performance.now();
+        if (walkSpeed > 0.5 && this.isGrounded && currentTime - this.lastStepTime > 400) {
+            this.audio.playStep();
+            this.lastStepTime = currentTime;
+        }
     }
 
     private handleCollisions(): void {
@@ -305,5 +319,9 @@ export class Player {
     selectBlock(index: number): void {
         this.inventory.selectSlot(index);
         this.updateInventoryDisplay();
+    }
+
+    getTargetBlock(): { x: number, y: number, z: number } | null {
+        return this.raycast();
     }
 }

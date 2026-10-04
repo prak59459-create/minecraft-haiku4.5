@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { World } from './world.js';
 import { Player } from './player.js';
 import { ParticleSystem } from './particles.js';
+import { AudioManager } from './audio.js';
+import { BlockHighlight } from './highlight.js';
 import { BlockSelector, HUD } from './ui.js';
 import { BlockType } from './blocks.js';
 
@@ -11,6 +13,8 @@ let renderer: THREE.WebGLRenderer;
 let world: World;
 let player: Player;
 let particles: ParticleSystem;
+let audio: AudioManager;
+let highlight: BlockHighlight;
 let hud: HUD;
 let blockSelector: BlockSelector;
 let sun: THREE.Light;
@@ -35,9 +39,11 @@ function init(): void {
 
     world = new World(scene);
     particles = new ParticleSystem(scene);
+    audio = new AudioManager();
+    highlight = new BlockHighlight(scene);
 
     const startPos = new THREE.Vector3(0, 100, 0);
-    player = new Player(camera, world, startPos, particles);
+    player = new Player(camera, world, startPos, particles, audio);
     player.setupControls();
 
     blockSelector = new BlockSelector();
@@ -126,6 +132,7 @@ function animate(): void {
     player.update(delta);
     particles.update(delta);
     hud.update(player, world);
+    highlight.update(player.getTargetBlock());
 
     updateDayNightCycle();
 
