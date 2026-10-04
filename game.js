@@ -135,7 +135,8 @@ class Game {
             fps: 0,
             frameCount: 0,
             lastTime: Date.now(),
-            chunkCount: 0
+            chunkCount: 0,
+            time: 0
         };
 
         this.initLights();
@@ -662,18 +663,18 @@ class Game {
     }
 
     checkCollision() {
-        const playerSize = 0.3;
-        const playerHeight = 1.7;
+        const playerSize = 0.25;
+        const playerHeight = 1.8;
         const checkPoints = [
-            { x: 0, y: -0.5, z: 0 },
-            { x: playerSize, y: -0.5, z: 0 },
-            { x: -playerSize, y: -0.5, z: 0 },
-            { x: 0, y: -0.5, z: playerSize },
-            { x: 0, y: -0.5, z: -playerSize },
-            { x: playerSize, y: -0.5, z: playerSize },
-            { x: playerSize, y: -0.5, z: -playerSize },
-            { x: -playerSize, y: -0.5, z: playerSize },
-            { x: -playerSize, y: -0.5, z: -playerSize }
+            { x: 0, y: -playerHeight * 0.9, z: 0 },
+            { x: playerSize, y: -playerHeight * 0.9, z: 0 },
+            { x: -playerSize, y: -playerHeight * 0.9, z: 0 },
+            { x: 0, y: -playerHeight * 0.9, z: playerSize },
+            { x: 0, y: -playerHeight * 0.9, z: -playerSize },
+            { x: playerSize, y: -playerHeight * 0.9, z: playerSize },
+            { x: playerSize, y: -playerHeight * 0.9, z: -playerSize },
+            { x: -playerSize, y: -playerHeight * 0.9, z: playerSize },
+            { x: -playerSize, y: -playerHeight * 0.9, z: -playerSize }
         ];
 
         for (const offset of checkPoints) {
@@ -682,7 +683,7 @@ class Game {
             const z = Math.floor(this.player.position.z + offset.z);
 
             const blockType = this.getBlockType(x, y, z);
-            if (blockType !== BLOCK_TYPES.air && blockType !== BLOCK_TYPES.water) {
+            if (blockType !== BLOCK_TYPES.air && blockType !== BLOCK_TYPES.water && blockType !== BLOCK_TYPES.leaves) {
                 return true;
             }
         }
@@ -694,10 +695,19 @@ class Game {
         const chunkZ = this.lastChunkPos.z;
 
         const toRemove = [];
+        const maxDistance = RENDER_DISTANCE + 2;
+
         this.chunks.forEach((chunk, key) => {
             const [cx, cz] = key.split(',').map(Number);
-            if (Math.abs(cx - chunkX) > RENDER_DISTANCE || Math.abs(cz - chunkZ) > RENDER_DISTANCE) {
+            const distance = Math.max(Math.abs(cx - chunkX), Math.abs(cz - chunkZ));
+            if (distance > maxDistance) {
                 this.scene.remove(chunk.mesh);
+                if (chunk.mesh) {
+                    chunk.mesh.children.forEach(child => {
+                        if (child.geometry) child.geometry.dispose();
+                        if (child.material) child.material.dispose();
+                    });
+                }
                 toRemove.push(key);
             }
         });
@@ -723,19 +733,28 @@ class Game {
         this.sunLight.position.x = Math.cos(angle) * 150;
         this.sunLight.position.y = Math.sin(angle) * 150 + 100;
 
-        const brightness = Math.max(0.3, Math.sin(angle) * 0.5 + 0.5);
-        this.sunLight.intensity = brightness * 0.8;
+        const brightness = Math.max(0.2, Math.sin(angle) * 0.5 + 0.5);
+        this.sunLight.intensity = brightness * 0.9;
 
         const skyColor = new THREE.Color();
+        const fogColor = new THREE.Color();
+
         if (cycleTime < 0.25) {
-            skyColor.lerpColors(new THREE.Color(0x1a1a2e), new THREE.Color(0x87ceeb), (cycleTime / 0.25));
+            const t = cycleTime / 0.25;
+            skyColor.lerpColors(new THREE.Color(0x0a0a1a), new THREE.Color(0x87ceeb), t);
+            fogColor.lerpColors(new THREE.Color(0x0a0a1a), new THREE.Color(0xb8d8f0), t);
         } else if (cycleTime < 0.75) {
             skyColor.set(0x87ceeb);
+            fogColor.set(0xb8d8f0);
         } else {
-            skyColor.lerpColors(new THREE.Color(0x87ceeb), new THREE.Color(0x1a1a2e), ((cycleTime - 0.75) / 0.25));
+            const t = (cycleTime - 0.75) / 0.25;
+            skyColor.lerpColors(new THREE.Color(0x87ceeb), new THREE.Color(0x0a0a1a), t);
+            fogColor.lerpColors(new THREE.Color(0xb8d8f0), new THREE.Color(0x0a0a1a), t);
         }
 
         this.sky.material.color.copy(skyColor);
+        this.scene.fog.color.copy(fogColor);
+        this.renderer.setClearColor(skyColor);
     }
 
     updateStats() {
@@ -768,12 +787,27 @@ class Game {
     animate() {
         requestAnimationFrame(() => this.animate());
 
+        this.stats.time = Date.now();
+
         this.updatePlayer();
         this.particleSystem.update();
-        this.updateDayNightCycle(Date.now());
+        this.updateDayNightCycle(this.stats.time);
+        this.updateWaterAnimation();
         this.updateStats();
 
         this.renderer.render(this.scene, this.camera);
+    }
+
+    updateWaterAnimation() {
+        const time = this.stats.time * 0.001;
+        this.chunks.forEach((chunk) => {
+            if (chunk.mesh && chunk.mesh.children.length > 1) {
+                const waterMesh = chunk.mesh.children[chunk.mesh.children.length - 1];
+                if (waterMesh && waterMesh.material.transparent) {
+                    waterMesh.position.y = Math.sin(time * 2) * 0.1;
+                }
+            }
+        });
     }
 }
 
