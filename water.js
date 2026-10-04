@@ -6,6 +6,8 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.waveStrength = 0.15;
+        this.waveSpeed = 0.5;
     }
 
     buildWaterMesh(chunk) {
@@ -48,7 +50,10 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const waterVariation = 0.85 + Math.random() * 0.15;
+                        const color = waterColor.clone().multiplyScalar(waterVariation);
+                        const depthFactor = Math.min(1, wy / 80);
+                        color.multiplyScalar(0.7 + depthFactor * 0.3);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);

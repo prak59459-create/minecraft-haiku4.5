@@ -16,22 +16,33 @@ export class UI {
             slot.addEventListener('click', () => {
                 this.selectBlock(index);
             });
+            slot.addEventListener('mouseover', () => {
+                slot.style.transform = 'scale(1.1)';
+            });
+            slot.addEventListener('mouseout', () => {
+                if (!slot.classList.contains('selected')) {
+                    slot.style.transform = 'scale(1)';
+                }
+            });
         });
 
         document.addEventListener('keydown', (e) => {
             const num = parseInt(e.key);
             if (num >= 1 && num <= 9) {
+                e.preventDefault();
                 this.selectBlock(num - 1);
             }
         });
 
         document.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const direction = e.deltaY > 0 ? 1 : -1;
-            let newIndex = this.selectedBlock + direction;
-            if (newIndex < 0) newIndex = 8;
-            if (newIndex > 8) newIndex = 0;
-            this.selectBlock(newIndex);
+            if (document.pointerLockElement === document.body) {
+                e.preventDefault();
+                const direction = e.deltaY > 0 ? 1 : -1;
+                let newIndex = this.selectedBlock + direction;
+                if (newIndex < 0) newIndex = 8;
+                if (newIndex > 8) newIndex = 0;
+                this.selectBlock(newIndex);
+            }
         }, { passive: false });
     }
 
@@ -45,13 +56,13 @@ export class UI {
         this.selectedBlock = index;
     }
 
-    updateHUD(playerPos, selectedBlock, fps) {
+    updateHUD(playerPos, selectedBlock, fps, chunkCount = 0, meshCount = 0) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
 
         coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
-        fpsEl.textContent = `FPS: ${fps}`;
+        fpsEl.textContent = `FPS: ${fps} | Chunks: ${chunkCount} | Meshes: ${meshCount}`;
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
     }
 
