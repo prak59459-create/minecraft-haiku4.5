@@ -367,6 +367,18 @@
             return Math.floor(height);
         }
 
+        function getCaveNoise(x, y, z) {
+            const n1 = getNoise(x, y, 0.08);
+            const n2 = getNoise(y, z, 0.06);
+            const n3 = getNoise(x, z, 0.1);
+            return (n1 + n2 + n3) / 3;
+        }
+
+        function isCave(x, y, z) {
+            const caveNoise = getCaveNoise(x, y, z);
+            return caveNoise < 0.4 && y < getBlockHeight(x, z) - 4;
+        }
+
         function getBlockType(x, y, z) {
             const maxHeight = getBlockHeight(x, z);
             const biome = getBiomeType(x, z);
@@ -374,12 +386,19 @@
             if (y > WORLD_HEIGHT || y < 0) return null;
             if (y > maxHeight) return null;
 
+            // Check for caves
+            if (isCave(x, y, z)) {
+                return null;
+            }
+
             // Deep stone
             if (y <= maxHeight - 5) {
                 // Add ore deposits
                 const oreNoise = getNoise(x, z, 0.25);
-                if (oreNoise > 0.85) return BLOCKS.COAL_ORE;
-                if (oreNoise > 0.9) return BLOCKS.IRON_ORE;
+                const oreRandomness = Math.sin(x * 12.9898 + y * 78.233 + z * 43.614) * 0.5 + 0.5;
+
+                if (y < 20 && oreNoise > 0.9 && oreRandomness > 0.7) return BLOCKS.IRON_ORE;
+                if (oreNoise > 0.85 && oreRandomness > 0.8) return BLOCKS.COAL_ORE;
                 return BLOCKS.STONE;
             }
 
