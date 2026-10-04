@@ -1,5 +1,7 @@
 import { BLOCKS, isBlockSolid } from './blocks.js';
 
+const WATER_BLOCKS = new Set([BLOCKS.WATER]);
+
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
 const PLAYER_SPEED = 0.1;
@@ -19,6 +21,7 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.isInWater = false;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -53,7 +56,12 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        const isSprinting = this.keys['shift'] && !this.isCrouching && isMoving;
+        const isCrouching = this.keys['shift'] && isMoving;
+
+        const speed = isSprinting ? PLAYER_SPRINT_SPEED : (isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPEED);
+        const acceleration = 0.85;
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -63,15 +71,30 @@ export class Player {
         const cosY = Math.cos(this.rotation.y);
         const sinY = Math.sin(this.rotation.y);
 
-        this.velocity.x = moveX * cosY - moveZ * sinY;
-        this.velocity.z = moveX * sinY + moveZ * cosY;
+        const targetX = moveX * cosY - moveZ * sinY;
+        const targetZ = moveX * sinY + moveZ * cosY;
 
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+        this.velocity.x += (targetX - this.velocity.x) * (1 - acceleration);
+        this.velocity.z += (targetZ - this.velocity.z) * (1 - acceleration);
+
+        this.isSprinting = isSprinting;
+        this.isCrouching = isCrouching;
     }
 
     applyPhysics() {
-        if (!this.isOnGround) {
+        const eyePos = this.getEyePosition();
+        this.isInWater = this.world.getBlock(
+            Math.floor(eyePos.x),
+            Math.floor(eyePos.y),
+            Math.floor(eyePos.z)
+        ) === BLOCKS.WATER;
+
+        if (this.isInWater) {
+            this.velocity.y *= 0.98;
+            if (this.keys[' ']) {
+                this.velocity.y = 0.15;
+            }
+        } else if (!this.isOnGround) {
             this.velocity.y -= GRAVITY;
         }
 
@@ -160,18 +183,25 @@ export class Player {
 }
 
 export class Camera {
-    constructor() {
+    constructor(sensitivity = 0.003) {
         this.rotation = { x: 0, y: 0 };
-        this.mouseSensitivity = 0.003;
+        this.mouseSensitivity = sensitivity;
+        this.smoothing = 0.95;
+        this.targetRotation = { x: 0, y: 0 };
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+            if (document.pointerLockElement !== document.body) return;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            const deltaX = e.movementX * this.mouseSensitivity;
+            const deltaY = e.movementY * this.mouseSensitivity;
+
+            this.targetRotation.y -= deltaX;
+            this.targetRotation.x -= deltaY;
+
+            this.targetRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.targetRotation.x));
         });
 
         document.addEventListener('click', () => {
@@ -182,6 +212,9 @@ export class Camera {
     }
 
     updateFromPlayer(player) {
+        this.rotation.x += (this.targetRotation.x - this.rotation.x) * (1 - this.smoothing);
+        this.rotation.y += (this.targetRotation.y - this.rotation.y) * (1 - this.smoothing);
+
         player.rotation.x = this.rotation.x;
         player.rotation.y = this.rotation.y;
     }

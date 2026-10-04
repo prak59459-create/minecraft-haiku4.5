@@ -14,19 +14,44 @@ export class ParticleSystem {
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
-        const particleCount = 8 + Math.floor(Math.random() * 8);
+        const particleCount = 10 + Math.floor(Math.random() * 10);
 
         for (let i = 0; i < particleCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 0.2 + Math.random() * 0.3;
             const particle = {
                 position: { x, y, z },
                 velocity: {
-                    x: (Math.random() - 0.5) * 0.3,
-                    y: Math.random() * 0.3,
-                    z: (Math.random() - 0.5) * 0.3
+                    x: Math.cos(angle) * velocity,
+                    y: 0.2 + Math.random() * 0.2,
+                    z: Math.sin(angle) * velocity
                 },
                 life: 1,
-                maxLife: 0.8 + Math.random() * 0.4,
-                color: blockColor
+                maxLife: 0.6 + Math.random() * 0.6,
+                color: blockColor,
+                friction: 0.98
+            };
+            this.particles.push(particle);
+        }
+    }
+
+    addSprintParticles(x, y, z) {
+        const particleCount = 2 + Math.floor(Math.random() * 3);
+        const sprintColor = 0x999999;
+
+        for (let i = 0; i < particleCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const particle = {
+                position: { x, y, z },
+                velocity: {
+                    x: Math.cos(angle) * 0.1,
+                    y: Math.random() * 0.05,
+                    z: Math.sin(angle) * 0.1
+                },
+                life: 1,
+                maxLife: 0.3 + Math.random() * 0.2,
+                color: sprintColor,
+                friction: 0.95
             };
             this.particles.push(particle);
         }
@@ -38,6 +63,11 @@ export class ParticleSystem {
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
             p.velocity.y -= gravity;
+
+            const friction = p.friction || 0.99;
+            p.velocity.x *= friction;
+            p.velocity.z *= friction;
+
             p.position.x += p.velocity.x;
             p.position.y += p.velocity.y;
             p.position.z += p.velocity.z;
