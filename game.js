@@ -14,9 +14,12 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World(10);
         this.player = new Player(this.world);
@@ -78,7 +81,7 @@ class MinecraftGame {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'c' || e.key === 'C') {
                 const hit = this.raycastBlock();
-                if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
+                if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER && hit.block !== BLOCKS.LAVA) {
                     this.selectedBlockType = hit.block;
                 }
             }
@@ -89,6 +92,14 @@ class MinecraftGame {
             }
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
+            }
+            if (e.key === 'F11') {
+                e.preventDefault();
+                if (!document.fullscreenElement) {
+                    document.body.requestFullscreen().catch(() => {});
+                } else {
+                    document.exitFullscreen();
+                }
             }
         });
     }
@@ -382,6 +393,15 @@ class MinecraftGame {
         }
 
         this.renderer.render(this.scene, this.camera);
+
+        if (this.showDebug) {
+            this.updateDebugInfo();
+        }
+    }
+
+    updateDebugInfo() {
+        const info = `Pos: ${this.player.position.x.toFixed(1)}, ${this.player.position.y.toFixed(1)}, ${this.player.position.z.toFixed(1)} | Chunks: ${this.world.chunks.size} | Meshes: ${this.chunkMeshes.size}`;
+    }
     }
 
     updateDayNightCycle() {

@@ -87,6 +87,7 @@ export class DebugDisplay {
     }
 
     render() {
+        const fpsColor = this.stats.fps >= 50 ? '#00FF00' : this.stats.fps >= 30 ? '#FFFF00' : '#FF0000';
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
@@ -97,17 +98,20 @@ export class DebugDisplay {
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3: Debug | H: Help',
+            'F11: Fullscreen'
         ];
 
         this.container.innerHTML = lines.map(line => {
             if (line.startsWith('=')) return `<div>${line}</div>`;
+            if (line.startsWith('FPS:')) {
+                return `<div><span style="color: ${fpsColor};">FPS:</span> <span style="color: ${fpsColor};">${this.stats.fps}</span></div>`;
+            }
             const parts = line.split(': ');
             if (parts.length === 2) {
                 return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
             }
-            return `<div>${line}</div>`;
+            return `<div style="color: #AAAAAA; font-size: 9px;">${line}</div>`;
         }).join('');
     }
 }

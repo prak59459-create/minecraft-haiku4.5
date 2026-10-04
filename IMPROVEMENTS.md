@@ -1,6 +1,6 @@
 # Minecraft Clone - Improvements and Optimizations
 
-## Latest Updates (Session 3 - Current)
+## Latest Updates (Session 3 - In Progress)
 
 ### Major Enhancements
 
@@ -49,6 +49,32 @@
 - **Dynamic Block Info**: Block names update when selection changes
 - **Better Visual Feedback**: Improved inventory selection highlighting
 - **Enhanced Help System**: Clearer control instructions
+- **Fullscreen Support**: F11 key for fullscreen gaming experience
+- **Improved Debug Display**: Color-coded FPS (green/yellow/red), better formatting
+
+#### 9. Lava Generation & Rendering
+- **Lava Block**: New liquid block type for underground variety (block 18)
+- **Deep Cave Generation**: Lava spawns in deep underground caves
+- **Lava Visibility**: Increased brightness for better visibility
+- **Lava Sounds**: New audio effect for lava interactions
+
+#### 10. Physics & Movement Improvements
+- **Better Movement Speed**: Increased player movement speed slightly
+- **Improved Jump Physics**: Better jump power and feel
+- **Reduced Gravity**: Slightly reduced gravity for smoother movement
+- **Better Crouch/Sprint**: Improved speed variations
+
+#### 11. Audio System Enhancements
+- **Improved Step Sounds**: High-pass filtered footsteps for realism
+- **Better Sound Effects**: More varied audio frequencies
+- **Lava Audio**: New deep rumbling lava sound effect
+- **Audio Callbacks**: Better integration with physics system
+
+#### 12. Renderer Optimization
+- **High Performance Mode**: Set WebGL renderer to high-performance mode
+- **Pixel Ratio Clamping**: Optimal resolution scaling
+- **Better Shadow Mapping**: PCFShadow for smoother shadows
+- **Shadow Rendering**: Enabled and optimized shadow maps
 
 ### Performance Improvements
 - ~15-20% FPS improvement through optimized shadow mapping
