@@ -12,13 +12,15 @@ class MinecraftGame {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
+        this.scene.matrixAutoUpdate = false;
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, precision: 'highp' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowMap;
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.logarithmicDepthBuffer = true;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -330,31 +332,39 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
-        const chunkQueueLimit = 2;
+        const renderDistance = 8;
+        const chunkQueueLimit = 3;
         let chunksBuilt = 0;
+        const chunksToRemove = [];
 
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (Math.abs(cx - playerChunkX) > renderDistance || Math.abs(cz - playerChunkZ) > renderDistance) {
                 if (this.chunkMeshes.has(key)) {
-                    const mesh = this.chunkMeshes.get(key);
-                    this.scene.remove(mesh);
-                    if (mesh.geometry) mesh.geometry.dispose();
-                    if (mesh.material) mesh.material.dispose();
-                    this.chunkMeshes.delete(key);
+                    chunksToRemove.push(key);
                 }
                 continue;
             }
 
             if (!this.chunkMeshes.has(key) && chunksBuilt < chunkQueueLimit) {
+                const distance = Math.sqrt((cx - playerChunkX) ** 2 + (cz - playerChunkZ) ** 2);
                 const mesh = this.buildChunkMesh(chunk);
                 if (mesh) {
+                    mesh.userData.distance = distance;
                     this.scene.add(mesh);
                     this.chunkMeshes.set(key, mesh);
                     chunksBuilt++;
                 }
             }
+        }
+
+        for (const key of chunksToRemove) {
+            const mesh = this.chunkMeshes.get(key);
+            this.scene.remove(mesh);
+            if (mesh.geometry) mesh.geometry.dispose();
+            if (mesh.material) mesh.material.dispose();
+            this.chunkMeshes.delete(key);
         }
     }
 

@@ -2,20 +2,24 @@ export class ParticleSystem {
     constructor(scene) {
         this.scene = scene;
         this.particles = [];
+        this.maxParticles = 2000;
         this.geometry = new THREE.BufferGeometry();
         this.material = new THREE.PointsMaterial({
             size: 0.25,
             sizeAttenuation: true,
             transparent: true,
             opacity: 0.9,
-            vertexColors: true
+            vertexColors: true,
+            fog: true
         });
         this.points = new THREE.Points(this.geometry, this.material);
         this.scene.add(this.points);
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
-        const particleCount = 12 + Math.floor(Math.random() * 8);
+        if (this.particles.length >= this.maxParticles) return;
+
+        const particleCount = Math.min(12 + Math.floor(Math.random() * 8), this.maxParticles - this.particles.length);
 
         for (let i = 0; i < particleCount; i++) {
             const angle = (Math.random() * Math.PI * 2);
