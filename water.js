@@ -6,6 +6,15 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.waterMaterial = new THREE.MeshPhongMaterial({
+            color: 0x4A90E2,
+            transparent: true,
+            opacity: 0.65,
+            side: THREE.FrontSide,
+            emissive: 0x1A5FA0,
+            emissiveIntensity: 0.1,
+            shininess: 60
+        });
     }
 
     buildWaterMesh(chunk) {
@@ -72,15 +81,30 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.65,
+                side: THREE.FrontSide,
+                emissive: 0x1A5FA0,
+                emissiveIntensity: 0.1,
+                shininess: 60
             });
 
             const mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = false;
+            mesh.receiveShadow = false;
             return mesh;
         }
 
         return null;
+    }
+
+    removeWaterMesh(key) {
+        if (this.waterMeshes.has(key)) {
+            const mesh = this.waterMeshes.get(key);
+            this.scene.remove(mesh);
+            if (mesh.geometry) mesh.geometry.dispose();
+            if (mesh.material) mesh.material.dispose();
+            this.waterMeshes.delete(key);
+        }
     }
 
     update() {

@@ -42,8 +42,10 @@ export class Chunk {
                 const wx = worldX + x;
                 const wz = worldZ + z;
 
-                let height = getTerrainHeight(wx, wz);
-                let terrainType = getTerrainType(wx, wz);
+                const height = getTerrainHeight(wx, wz);
+                const terrainType = getTerrainType(wx, wz);
+                const isSand = terrainType === 'sand';
+                const isGrass = terrainType === 'grass';
 
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
                     if (y === 0) {
@@ -52,16 +54,10 @@ export class Chunk {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
                     } else if (y < height - 1) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.DIRT);
-                        }
+                        this.setBlock(x, y, z, isSand ? BLOCKS.SAND : BLOCKS.DIRT);
                     } else if (y < height) {
-                        if (terrainType === 'sand') {
+                        if (isSand) {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
