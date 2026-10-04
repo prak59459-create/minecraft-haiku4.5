@@ -100,8 +100,11 @@ function getTerrainHeight(x, z) {
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
-    const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const temp = perlinNoise.noise2D(x * 0.015, z * 0.015);
+    const humidity = perlinNoise.noise2D(x * 0.02 + 1000, z * 0.02 + 1000);
+
+    if (temp < -0.4) return 'sand';
+    if (temp > 0.6 && humidity < -0.2) return 'sand';
     return 'grass';
 }
 

@@ -275,7 +275,9 @@ class MinecraftGame {
             const nz = z + dz;
 
             const neighbor = this.world.getBlock(nx, ny, nz);
-            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+            const shouldCull = neighbor !== BLOCKS.AIR && isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER;
+            if (shouldCull && blockId !== BLOCKS.OAK_LEAVES) continue;
+            if (blockId !== BLOCKS.OAK_LEAVES && neighbor === BLOCKS.OAK_LEAVES) continue;
 
             const startIndex = vertices.length / 3;
             for (const [vx, vy, vz] of face.verts) {
@@ -363,7 +365,9 @@ class MinecraftGame {
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+        const chunkCount = this.world.chunks.size;
+        const meshCount = this.chunkMeshes.size;
+        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps, chunkCount, meshCount);
 
         if (this.showDebug) {
             this.debugDisplay.update(this);
