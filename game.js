@@ -26,9 +26,10 @@ class MinecraftGame {
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         const renderDist = Config.get('world.renderDistance') || 8;
+        const mouseSensitivity = Config.get('player.mouseSensitivity') || 0.003;
         this.world = new World(renderDist);
         this.player = new Player(this.world);
-        this.gameCamera = new Camera();
+        this.gameCamera = new Camera(mouseSensitivity);
         this.ui = new UI();
         this.particleSystem = new ParticleSystem(this.scene);
         this.waterRenderer = new WaterRenderer(this.scene, this.world);

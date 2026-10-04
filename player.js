@@ -183,18 +183,25 @@ export class Player {
 }
 
 export class Camera {
-    constructor() {
+    constructor(sensitivity = 0.003) {
         this.rotation = { x: 0, y: 0 };
-        this.mouseSensitivity = 0.003;
+        this.mouseSensitivity = sensitivity;
+        this.smoothing = 0.95;
+        this.targetRotation = { x: 0, y: 0 };
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+            if (document.pointerLockElement !== document.body) return;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            const deltaX = e.movementX * this.mouseSensitivity;
+            const deltaY = e.movementY * this.mouseSensitivity;
+
+            this.targetRotation.y -= deltaX;
+            this.targetRotation.x -= deltaY;
+
+            this.targetRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.targetRotation.x));
         });
 
         document.addEventListener('click', () => {
@@ -205,6 +212,9 @@ export class Camera {
     }
 
     updateFromPlayer(player) {
+        this.rotation.x += (this.targetRotation.x - this.rotation.x) * (1 - this.smoothing);
+        this.rotation.y += (this.targetRotation.y - this.rotation.y) * (1 - this.smoothing);
+
         player.rotation.x = this.rotation.x;
         player.rotation.y = this.rotation.y;
     }

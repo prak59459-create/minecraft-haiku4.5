@@ -85,24 +85,32 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.003, z * 0.003) * 40;
-    height += perlinNoise.noise2D(x * 0.008, z * 0.008) * 25;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 12;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 6;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 2;
+    const n1 = perlinNoise.noise2D(x * 0.002, z * 0.002);
+    const n2 = perlinNoise.noise2D(x * 0.005, z * 0.005);
+    const n3 = perlinNoise.noise2D(x * 0.01, z * 0.01);
+    const n4 = perlinNoise.noise2D(x * 0.025, z * 0.025);
+    const n5 = perlinNoise.noise2D(x * 0.1, z * 0.1);
 
-    return Math.max(15, Math.min(180, Math.floor(height)));
+    height += n1 * 45;
+    height += n2 * 28;
+    height += n3 * 14;
+    height += n4 * 7;
+    height += n5 * 3;
+
+    return Math.max(12, Math.min(185, Math.floor(height)));
 }
 
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
-    const temp = perlinNoise.noise2D(x * 0.015, z * 0.015);
-    const humidity = perlinNoise.noise2D(x * 0.02 + 100, z * 0.02 + 100);
+    const temp = perlinNoise.noise2D(x * 0.012, z * 0.012);
+    const humidity = perlinNoise.noise2D(x * 0.018 + 100, z * 0.018 + 100);
+    const height = perlinNoise.noise2D(x * 0.003, z * 0.003);
 
-    if (temp < -0.4) return 'sand';
-    if (temp > 0.5 && humidity < -0.3) return 'sand';
-    if (humidity > 0.4) return 'grass';
+    if (temp < -0.35) return 'sand';
+    if (temp > 0.45 && humidity < -0.25) return 'sand';
+    if (temp > 0.6 && height < -0.3) return 'grass';
+
     return 'grass';
 }
 
