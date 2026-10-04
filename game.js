@@ -39,6 +39,7 @@ class MinecraftGame {
         this.frameCount = 0;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
+        this.player.onStep = () => this.audioManager.playStepSound();
 
         this.setupLighting();
         this.setupEventListeners();
