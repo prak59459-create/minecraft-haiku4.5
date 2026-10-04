@@ -8,7 +8,8 @@ export class DebugDisplay {
             triangles: 0,
             drawCalls: 0,
             particles: 0,
-            memory: 0
+            memory: 0,
+            renderDistance: 8
         };
         this.createDisplay();
     }
@@ -59,6 +60,7 @@ export class DebugDisplay {
         this.stats.fps = game.ui.fpsCounter;
         this.stats.chunks = game.world.chunks.size;
         this.stats.particles = game.particleSystem.particles.length;
+        this.stats.renderDistance = game.world.renderDistance;
 
         let vertices = 0;
         let triangles = 0;
@@ -91,6 +93,7 @@ export class DebugDisplay {
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
             `Chunks: ${this.stats.chunks}`,
+            `Render Dist: ${this.stats.renderDistance}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
             `Draw Calls: ${this.stats.drawCalls}`,
@@ -98,7 +101,7 @@ export class DebugDisplay {
             `Memory: ${this.stats.memory} MB`,
             '==================',
             'Press F3 to toggle',
-            'Press H for help'
+            '+/- to adjust render distance'
         ];
 
         this.container.innerHTML = lines.map(line => {

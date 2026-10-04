@@ -86,6 +86,14 @@ class MinecraftGame {
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
+            if (e.key === '+' || e.key === '=') {
+                e.preventDefault();
+                this.world.renderDistance = Math.min(16, this.world.renderDistance + 1);
+            }
+            if (e.key === '-' || e.key === '_') {
+                e.preventDefault();
+                this.world.renderDistance = Math.max(2, this.world.renderDistance - 1);
+            }
         });
     }
 
