@@ -85,5 +85,11 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+        const currentChunks = Array.from(this.waterMeshes.values());
+        for (const mesh of currentChunks) {
+            if (mesh && mesh.material) {
+                mesh.material.opacity = 0.5 + Math.sin(this.time * 2) * 0.05;
+            }
+        }
     }
 }

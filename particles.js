@@ -14,18 +14,19 @@ export class ParticleSystem {
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
-        const particleCount = 8 + Math.floor(Math.random() * 8);
+        if (this.particles.length > 1500) return;
+        const particleCount = 10 + Math.floor(Math.random() * 10);
 
         for (let i = 0; i < particleCount; i++) {
             const particle = {
                 position: { x, y, z },
                 velocity: {
-                    x: (Math.random() - 0.5) * 0.3,
-                    y: Math.random() * 0.3,
-                    z: (Math.random() - 0.5) * 0.3
+                    x: (Math.random() - 0.5) * 0.4,
+                    y: Math.random() * 0.4,
+                    z: (Math.random() - 0.5) * 0.4
                 },
                 life: 1,
-                maxLife: 0.8 + Math.random() * 0.4,
+                maxLife: 0.6 + Math.random() * 0.6,
                 color: blockColor
             };
             this.particles.push(particle);
