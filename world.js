@@ -82,10 +82,15 @@ export class Chunk {
                     }
                 }
 
-                const treeThreshold = terrainType === 'snow' ? 0.65 : terrainType === 'desert' ? 0.9 : 0.5;
                 if (height > 65) {
                     const treeChance = perlinNoise.noise2D(wx * 0.05, wz * 0.05);
-                    if (treeChance > treeThreshold) {
+                    let treeThreshold = 0.5;
+
+                    if (terrainType === 'snow') treeThreshold = 0.75;
+                    else if (terrainType === 'desert') treeThreshold = 0.95;
+                    else if (terrainType === 'grass') treeThreshold = 0.45;
+
+                    if (treeChance > treeThreshold && height > 70) {
                         generateTree(this, x, z, height);
                     }
                 }
@@ -100,12 +105,17 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 70;
-    height += perlinNoise.noise2D(x * 0.004, z * 0.004) * 40;
-    height += perlinNoise.noise2D(x * 0.015, z * 0.015) * 20;
-    height += perlinNoise.noise2D(x * 0.04, z * 0.04) * 10;
-    height += perlinNoise.noise2D(x * 0.08, z * 0.08) * 5;
+    const large = perlinNoise.noise2D(x * 0.003, z * 0.003);
+    const medium = perlinNoise.noise2D(x * 0.012, z * 0.012);
+    const small = perlinNoise.noise2D(x * 0.05, z * 0.05);
+    const detail = perlinNoise.noise2D(x * 0.1, z * 0.1);
 
-    return Math.max(20, Math.min(180, Math.floor(height)));
+    height += large * 50;
+    height += medium * 25;
+    height += small * 10;
+    height += detail * 4;
+
+    return Math.max(15, Math.min(190, Math.floor(height)));
 }
 
 function getTerrainType(x, z) {
@@ -123,20 +133,24 @@ function getTerrainType(x, z) {
 function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
-    const caveChance = perlinNoise.noise3D(x * 0.03, y * 0.03, z * 0.03);
-    if (caveChance > 0.3) return BLOCKS.AIR;
+    const caveChance = perlinNoise.noise3D(x * 0.025, y * 0.025, z * 0.025);
+    if (caveChance > 0.25) return BLOCKS.AIR;
 
     let ore = BLOCKS.STONE;
-    const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
-    const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
-    const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
-    const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
 
-    if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
-    if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
-    if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
-    if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
-    if (y < 20 && perlinNoise.noise2D(x * 0.05, z * 0.05) > 0.6) ore = BLOCKS.LAVA;
+    const normalizedY = y / WORLD_HEIGHT;
+    const coalChance = perlinNoise.noise2D(x * 0.12 + y * 0.08, z * 0.12 + y * 0.08);
+    const ironChance = perlinNoise.noise2D(x * 0.1 + y * 0.06, z * 0.1 + y * 0.06);
+    const goldChance = perlinNoise.noise2D(x * 0.08 + y * 0.04, z * 0.08 + y * 0.04);
+    const diamondChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
+    const lavaChance = perlinNoise.noise2D(x * 0.06, z * 0.06);
+
+    if (y > 160 && coalChance > 0.6) ore = BLOCKS.COAL_ORE;
+    else if (y > 100 && y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
+    else if (y > 50 && y < 120 && ironChance > 0.65) ore = BLOCKS.IRON_ORE;
+    else if (y > 16 && y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
+    else if (y < 50 && y > 10 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    else if (y < 25 && y > 5 && lavaChance > 0.65) ore = BLOCKS.LAVA;
 
     return ore;
 }

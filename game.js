@@ -284,7 +284,11 @@ class MinecraftGame {
             const nz = z + dz;
 
             const neighbor = this.world.getBlock(nx, ny, nz);
-            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+            const isNeighborSolid = isBlockSolid(neighbor);
+            const isNeighborWater = neighbor === BLOCKS.WATER;
+            const isNeighborTransparent = neighbor === BLOCKS.GLASS || neighbor === BLOCKS.OAK_LEAVES;
+
+            if (isNeighborSolid && !isNeighborWater && !isNeighborTransparent) continue;
 
             const startIndex = vertices.length / 3;
             for (const [vx, vy, vz] of face.verts) {
