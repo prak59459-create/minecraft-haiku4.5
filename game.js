@@ -13,9 +13,10 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -36,6 +37,7 @@ class MinecraftGame {
 
         this.player.onJump = () => this.audioManager.playJumpSound();
         this.player.onStepCallback = (type) => this.handlePlayerStep(type);
+        this.player.onFallDamage = (damage) => this.handleFallDamage(damage);
 
         this.setupLighting();
         this.setupEventListeners();
@@ -57,6 +59,11 @@ class MinecraftGame {
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -200;
+        directionalLight.shadow.camera.right = 200;
+        directionalLight.shadow.camera.top = 200;
+        directionalLight.shadow.camera.bottom = -200;
+        directionalLight.shadow.bias = -0.0001;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -133,6 +140,16 @@ class MinecraftGame {
             this.audioManager.playStepSound(type);
             this.lastStepSound = now;
         }
+    }
+
+    handleFallDamage(damage) {
+        const color = 0xFF0000;
+        this.particleSystem.addBlockBreakParticles(
+            this.player.position.x,
+            this.player.position.y + 0.5,
+            this.player.position.z,
+            color
+        );
     }
 
     raycastBlock() {
@@ -293,8 +310,7 @@ class MinecraftGame {
                 colors.push(r, g, b);
             }
 
-            indices.push(startIndex, startIndex + 1, startIndex + 2);
-            indices.push(startIndex, startIndex + 2, startIndex + 3);
+            indices.push(startIndex, startIndex + 1, startIndex + 2, startIndex, startIndex + 2, startIndex + 3);
             faceCount++;
         }
 

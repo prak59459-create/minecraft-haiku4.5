@@ -25,6 +25,8 @@ export class Player {
         this.keys = {};
         this.lastStepPos = { x: 0, z: 0 };
         this.stepDistance = 0.5;
+        this.lastYVelocity = 0;
+        this.fallDamageThreshold = 0.5;
         this.setupKeyboardControls();
     }
 
@@ -34,11 +36,15 @@ export class Player {
 
             if (e.key === ' ') {
                 e.preventDefault();
-                if (this.isOnGround) {
+                if (this.isOnGround && !this.isSwimming) {
                     this.velocity.y = JUMP_POWER;
                     this.isOnGround = false;
                     if (this.onJump) this.onJump();
                 }
+            }
+
+            if (e.key === 'Escape' && document.pointerLockElement) {
+                document.exitPointerLock();
             }
         });
 
@@ -52,6 +58,7 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        this.checkFallDamage();
     }
 
     handleMovement() {
@@ -180,6 +187,16 @@ export class Player {
         if (this.onStepCallback) {
             this.onStepCallback(this.isSwimming ? 'water' : 'ground');
         }
+    }
+
+    checkFallDamage() {
+        if (this.isOnGround && this.lastYVelocity < -this.fallDamageThreshold) {
+            const damage = Math.max(0, Math.floor((Math.abs(this.lastYVelocity) - this.fallDamageThreshold) * 2));
+            if (damage > 0 && this.onFallDamage) {
+                this.onFallDamage(damage);
+            }
+        }
+        this.lastYVelocity = this.velocity.y;
     }
 
     getEyePosition() {
