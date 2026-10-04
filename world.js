@@ -12,6 +12,34 @@ export function initPerlinNoise() {
     }
 }
 
+function carveCaves(chunk) {
+    if (!perlinNoise) return;
+
+    const CHUNK_SIZE = 16;
+    const WORLD_HEIGHT = 256;
+    const worldX = chunk.x * CHUNK_SIZE;
+    const worldZ = chunk.z * CHUNK_SIZE;
+
+    for (let x = 0; x < CHUNK_SIZE; x++) {
+        for (let z = 0; z < CHUNK_SIZE; z++) {
+            for (let y = 10; y < 80; y++) {
+                const wx = worldX + x;
+                const wz = worldZ + z;
+
+                const caveChance = perlinNoise.noise2D(wx * 0.05 + y * 0.02, wz * 0.05);
+                const caveDensity = perlinNoise.noise2D(wx * 0.08, y * 0.08 + wz * 0.08);
+
+                if (caveChance > 0.5 && caveDensity > 0.3) {
+                    const block = chunk.getBlock(x, y, z);
+                    if (block !== BLOCKS.BEDROCK && block !== BLOCKS.WATER) {
+                        chunk.setBlock(x, y, z, BLOCKS.AIR);
+                    }
+                }
+            }
+        }
+    }
+}
+
 export class Chunk {
     constructor(x, z) {
         this.x = x;
@@ -54,14 +82,16 @@ export class Chunk {
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'gravel') {
+                            this.setBlock(x, y, z, BLOCKS.GRAVEL);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
                     } else if (y < height) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
+                        } else if (terrainType === 'gravel') {
+                            this.setBlock(x, y, z, BLOCKS.GRAVEL);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
@@ -76,6 +106,7 @@ export class Chunk {
             }
         }
 
+        carveCaves(this);
         this.generated = true;
     }
 }
@@ -96,7 +127,11 @@ function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const moisture = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
+    if (temp < -0.4) return 'gravel';
+    if (temp < -0.2) return 'sand';
+    if (moisture > 0.4) return 'grass_wet';
     return 'grass';
 }
 
