@@ -622,7 +622,7 @@ class World {
         let frequency = 0.005;
         let maxHeight = 0;
 
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 5; i++) {
             const v = this.noise.noise2D(x * frequency, z * frequency);
             height += v * amplitude;
             maxHeight += amplitude;
@@ -630,8 +630,14 @@ class World {
             frequency *= 2;
         }
 
-        height = (height / maxHeight) * 30 + 63;
-        return Math.floor(Math.max(5, Math.min(120, height)));
+        height = (height / maxHeight) * 40 + 60;
+
+        const ridgeNoise = Math.abs(this.noise.noise2D(x * 0.01, z * 0.01));
+        if (ridgeNoise > 0.7) {
+            height += (ridgeNoise - 0.7) * 40;
+        }
+
+        return Math.floor(Math.max(10, Math.min(120, height)));
     }
 
     generateTrees(blocks, cx, cz) {
@@ -651,23 +657,27 @@ class World {
     }
 
     generateTree(blocks, x, y, z) {
-        const trunkHeight = 5 + Math.floor(Math.random() * 3);
+        const trunkHeight = 6 + Math.floor(Math.random() * 4);
+        const logType = Math.random() > 0.5 ? BLOCK_TYPES.OAK_LOG : BLOCK_TYPES.BIRCH_LOG;
 
         for (let i = 0; i < trunkHeight; i++) {
             if (y + i < this.chunkHeight) {
-                blocks[x][y + i][z] = BLOCK_TYPES.WOOD;
+                blocks[x][y + i][z] = logType;
             }
         }
 
-        const foliageStart = y + trunkHeight - 3;
-        const foliageRadius = 2;
+        const foliageStart = y + trunkHeight - 4;
 
-        for (let dx = -foliageRadius; dx <= foliageRadius; dx++) {
-            for (let dy = 0; dy < 4; dy++) {
-                for (let dz = -foliageRadius; dz <= foliageRadius; dz++) {
-                    if (Math.abs(dx) + Math.abs(dz) <= foliageRadius) {
+        for (let layer = 0; layer < 5; layer++) {
+            const layerY = foliageStart + layer;
+            const layerRadius = Math.max(1, 3 - Math.floor(layer * 0.8));
+
+            for (let dx = -layerRadius; dx <= layerRadius; dx++) {
+                for (let dz = -layerRadius; dz <= layerRadius; dz++) {
+                    const dist = Math.sqrt(dx * dx + dz * dz);
+                    if (dist <= layerRadius + 0.5) {
                         const nx = x + dx;
-                        const ny = foliageStart + dy;
+                        const ny = layerY;
                         const nz = z + dz;
 
                         if (nx >= 0 && nx < this.chunkSize && ny < this.chunkHeight &&

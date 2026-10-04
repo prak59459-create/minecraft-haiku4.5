@@ -112,6 +112,25 @@
             height: 80px;
             border-radius: 3px;
         }
+        #help {
+            position: fixed;
+            bottom: 120px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            max-width: 180px;
+            line-height: 1.4;
+            z-index: 98;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        #help:hover {
+            background: rgba(0,0,0,0.9);
+            border-color: rgba(255,255,255,0.4);
+        }
     </style>
 </head>
 <body>
@@ -124,6 +143,15 @@
     <div id="blockPreview">
         <div>Block:</div>
         <canvas id="previewCanvas"></canvas>
+    </div>
+    <div id="help" onclick="this.style.display='none'">
+        <strong>WASD</strong> Move<br>
+        <strong>Mouse</strong> Look<br>
+        <strong>Space</strong> Jump<br>
+        <strong>Shift</strong> Sprint<br>
+        <strong>L-Click</strong> Break<br>
+        <strong>R-Click</strong> Place<br>
+        <strong>1-9</strong> Block Select
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
