@@ -7,7 +7,11 @@ const BLOCK_TYPES = {
     LEAVES: 5,
     WATER: 6,
     SAND: 7,
-    GRAVEL: 8
+    GRAVEL: 8,
+    COBBLESTONE: 9,
+    OAK_LOG: 10,
+    BIRCH_LOG: 11,
+    SPRUCE_LOG: 12
 };
 
 const BLOCK_COLORS = {
@@ -18,7 +22,11 @@ const BLOCK_COLORS = {
     [BLOCK_TYPES.LEAVES]: 0x558b2f,
     [BLOCK_TYPES.WATER]: 0x1976d2,
     [BLOCK_TYPES.SAND]: 0xfdd835,
-    [BLOCK_TYPES.GRAVEL]: 0x9e9e9e
+    [BLOCK_TYPES.GRAVEL]: 0x9e9e9e,
+    [BLOCK_TYPES.COBBLESTONE]: 0x6b6b6b,
+    [BLOCK_TYPES.OAK_LOG]: 0x5d4a37,
+    [BLOCK_TYPES.BIRCH_LOG]: 0x9d8b75,
+    [BLOCK_TYPES.SPRUCE_LOG]: 0x4a3728
 };
 
 class Game {
@@ -141,8 +149,8 @@ class Game {
     setupUI() {
         const blocks = [
             BLOCK_TYPES.STONE, BLOCK_TYPES.DIRT, BLOCK_TYPES.GRASS,
-            BLOCK_TYPES.WOOD, BLOCK_TYPES.LEAVES, BLOCK_TYPES.WATER,
-            BLOCK_TYPES.SAND, BLOCK_TYPES.GRAVEL
+            BLOCK_TYPES.WOOD, BLOCK_TYPES.SAND, BLOCK_TYPES.GRAVEL,
+            BLOCK_TYPES.WATER, BLOCK_TYPES.OAK_LOG
         ];
 
         const hotbar = document.getElementById('hotbar');
@@ -160,8 +168,8 @@ class Game {
     selectBlock(index) {
         const blocks = [
             BLOCK_TYPES.STONE, BLOCK_TYPES.DIRT, BLOCK_TYPES.GRASS,
-            BLOCK_TYPES.WOOD, BLOCK_TYPES.LEAVES, BLOCK_TYPES.WATER,
-            BLOCK_TYPES.SAND, BLOCK_TYPES.GRAVEL
+            BLOCK_TYPES.WOOD, BLOCK_TYPES.SAND, BLOCK_TYPES.GRAVEL,
+            BLOCK_TYPES.WATER, BLOCK_TYPES.OAK_LOG
         ];
 
         this.selectedBlockIndex = index;
@@ -385,7 +393,17 @@ class Player {
 
         this.velocity.x = this.direction.x;
         this.velocity.z = this.direction.z;
-        this.velocity.y -= this.gravity * deltaTime;
+
+        const inWater = this.isInWater();
+        if (inWater) {
+            this.velocity.y *= 0.8;
+            this.velocity.y -= this.gravity * deltaTime * 0.3;
+            if (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']) {
+                this.velocity.y += 2;
+            }
+        } else {
+            this.velocity.y -= this.gravity * deltaTime;
+        }
 
         const nextPos = this.position.clone().add(this.velocity.clone().multiplyScalar(deltaTime));
 
@@ -424,6 +442,16 @@ class Player {
         }
         return false;
     }
+
+    isInWater() {
+        const world = window.game.world;
+        const centerBlock = world.getBlock(
+            Math.floor(this.position.x),
+            Math.floor(this.position.y + this.height * 0.5),
+            Math.floor(this.position.z)
+        );
+        return centerBlock === BLOCK_TYPES.WATER;
+    }
 }
 
 class World {
@@ -437,7 +465,8 @@ class World {
         this.noise = new SimplexNoise();
         this.highlighted = null;
         this.highlightMesh = null;
-        this.renderDistance = 2;
+        this.renderDistance = 3;
+        this.meshUpdateQueue = [];
     }
 
     getChunkKey(x, z) {
@@ -489,6 +518,25 @@ class World {
 
         if (chunk) {
             chunk.needsUpdate = true;
+            if (!this.meshUpdateQueue.includes(chunk)) {
+                this.meshUpdateQueue.push(chunk);
+            }
+        }
+
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dz = -1; dz <= 1; dz++) {
+                if (dx === 0 && dz === 0) continue;
+                const ncx = cx + dx;
+                const ncz = cz + dz;
+                const nkey = this.getChunkKey(ncx, ncz);
+                const nchunk = this.chunks.get(nkey);
+                if (nchunk) {
+                    nchunk.needsUpdate = true;
+                    if (!this.meshUpdateQueue.includes(nchunk)) {
+                        this.meshUpdateQueue.push(nchunk);
+                    }
+                }
+            }
         }
     }
 
@@ -503,21 +551,31 @@ class World {
                 const gz = cz * this.chunkSize + z;
 
                 const height = this.getTerrainHeight(gx, gz);
+                const caveNoise = this.noise.noise3D(gx * 0.1, 30 * 0.1, gz * 0.1);
 
                 for (let y = 0; y < height; y++) {
-                    if (y < height - 1) {
-                        blocks[x][y][z] = BLOCK_TYPES.DIRT;
+                    const caveFactor = this.noise.noise3D(gx * 0.05, y * 0.05, gz * 0.05);
+                    if (Math.abs(caveFactor) > 0.4 && y > 10 && y < 80) continue;
+
+                    let blockType = BLOCK_TYPES.STONE;
+
+                    if (y < height - 4) {
+                        blockType = BLOCK_TYPES.STONE;
+                    } else if (y < height - 1) {
+                        blockType = height > 70 ? BLOCK_TYPES.GRAVEL : BLOCK_TYPES.DIRT;
                     } else {
-                        blocks[x][y][z] = BLOCK_TYPES.GRASS;
+                        blockType = height < 65 ? BLOCK_TYPES.SAND : BLOCK_TYPES.GRASS;
                     }
 
-                    if (y < height - 4) blocks[x][y][z] = BLOCK_TYPES.STONE;
+                    blocks[x][y][z] = blockType;
                 }
 
-                if (height < 63 && Math.random() < 0.1) {
-                    const waterHeight = Math.min(height + 1, 63);
-                    for (let y = height; y < waterHeight; y++) {
-                        blocks[x][y][z] = BLOCK_TYPES.WATER;
+                const seaLevel = 62;
+                if (height <= seaLevel + 3) {
+                    for (let y = height; y < seaLevel + 1; y++) {
+                        if (y < this.chunkHeight) {
+                            blocks[x][y][z] = BLOCK_TYPES.WATER;
+                        }
                     }
                 }
             }
@@ -608,12 +666,19 @@ class World {
         const keysToRemove = [];
         for (const [key, chunk] of this.chunks) {
             const distance = Math.max(Math.abs(chunk.x - px), Math.abs(chunk.z - pz));
-            if (distance > this.renderDistance + 1) {
+            if (distance > this.renderDistance + 2) {
                 keysToRemove.push(key);
             }
         }
 
         keysToRemove.forEach(key => this.unloadChunk(key));
+
+        for (let i = 0; i < 2 && this.meshUpdateQueue.length > 0; i++) {
+            const chunk = this.meshUpdateQueue.shift();
+            if (chunk && this.chunks.get(`${chunk.x},${chunk.z}`)) {
+                this.buildChunkMesh(chunk);
+            }
+        }
     }
 
     loadChunk(cx, cz) {
@@ -644,12 +709,20 @@ class World {
         if (chunk.mesh) {
             this.scene.remove(chunk.mesh);
         }
+        if (chunk.transparentMesh) {
+            this.scene.remove(chunk.transparentMesh);
+        }
 
         const geometry = new THREE.BufferGeometry();
+        const transparentGeometry = new THREE.BufferGeometry();
         const positions = [];
         const colors = [];
         const indices = [];
+        const tPositions = [];
+        const tColors = [];
+        const tIndices = [];
         let vertexCount = 0;
+        let tVertexCount = 0;
 
         for (let x = 0; x < this.chunkSize; x++) {
             for (let y = 0; y < this.chunkHeight; y++) {
@@ -660,32 +733,61 @@ class World {
                     const gx = chunk.x * this.chunkSize + x;
                     const gz = chunk.z * this.chunkSize + z;
 
-                    this.addBlockGeometry(
-                        positions, colors, indices, vertexCount,
-                        gx, y, gz, block
-                    );
+                    const isTransparent = block === BLOCK_TYPES.WATER || block === BLOCK_TYPES.LEAVES;
 
-                    vertexCount += 24;
+                    if (isTransparent) {
+                        this.addBlockGeometry(
+                            tPositions, tColors, tIndices, tVertexCount,
+                            gx, y, gz, block
+                        );
+                        tVertexCount += 24;
+                    } else {
+                        this.addBlockGeometry(
+                            positions, colors, indices, vertexCount,
+                            gx, y, gz, block
+                        );
+                        vertexCount += 24;
+                    }
                 }
             }
         }
 
-        geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
-        geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
-        geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
+        if (positions.length > 0) {
+            geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
+            geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
 
-        const material = new THREE.MeshStandardMaterial({
-            vertexColors: true,
-            side: THREE.FrontSide,
-            roughness: 0.8,
-            metalness: 0.1
-        });
+            const material = new THREE.MeshStandardMaterial({
+                vertexColors: true,
+                side: THREE.FrontSide,
+                roughness: 0.8,
+                metalness: 0.1
+            });
 
-        chunk.mesh = new THREE.Mesh(geometry, material);
-        chunk.mesh.castShadow = true;
-        chunk.mesh.receiveShadow = true;
+            chunk.mesh = new THREE.Mesh(geometry, material);
+            chunk.mesh.castShadow = true;
+            chunk.mesh.receiveShadow = true;
+            this.scene.add(chunk.mesh);
+        }
 
-        this.scene.add(chunk.mesh);
+        if (tPositions.length > 0) {
+            transparentGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(tPositions), 3));
+            transparentGeometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(tColors), 3, true));
+            transparentGeometry.setIndex(new THREE.BufferAttribute(new Uint32Array(tIndices), 1));
+
+            const material = new THREE.MeshStandardMaterial({
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.6,
+                side: THREE.DoubleSide,
+                roughness: 0.3,
+                metalness: 0.0
+            });
+
+            chunk.transparentMesh = new THREE.Mesh(transparentGeometry, material);
+            chunk.transparentMesh.receiveShadow = true;
+            this.scene.add(chunk.transparentMesh);
+        }
     }
 
     addBlockGeometry(positions, colors, indices, startIndex, x, y, z, blockType) {
