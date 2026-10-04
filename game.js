@@ -306,6 +306,14 @@ class MinecraftGame {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    getDistanceToChunk(cx, cz) {
+        const playerChunkX = Math.floor(this.player.position.x / 16);
+        const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const dx = cx - playerChunkX;
+        const dz = cz - playerChunkZ;
+        return Math.sqrt(dx * dx + dz * dz);
+    }
+
     animate() {
         requestAnimationFrame(() => this.animate());
 
