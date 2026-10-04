@@ -68,6 +68,24 @@ export class Player {
 
         this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
         this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+
+        this.handleFootsteps();
+    }
+
+    handleFootsteps() {
+        if (!this.isOnGround) return;
+
+        const movementSpeed = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+        if (movementSpeed < 0.05) return;
+
+        if (!this.lastFootstepTime) this.lastFootstepTime = 0;
+        const now = Date.now();
+        const footstepInterval = this.isSprinting ? 200 : 400;
+
+        if (now - this.lastFootstepTime > footstepInterval) {
+            if (this.onFootstep) this.onFootstep();
+            this.lastFootstepTime = now;
+        }
     }
 
     applyPhysics() {

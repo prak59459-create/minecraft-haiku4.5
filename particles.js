@@ -11,9 +11,12 @@ export class ParticleSystem {
         });
         this.points = new THREE.Points(this.geometry, this.material);
         this.scene.add(this.points);
+        this.maxParticles = 2000;
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
+        if (this.particles.length > this.maxParticles - 16) return;
+
         const particleCount = 8 + Math.floor(Math.random() * 8);
 
         for (let i = 0; i < particleCount; i++) {
