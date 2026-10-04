@@ -52,19 +52,23 @@ export class Chunk {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
                     } else if (y < height - 1) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.DIRT);
+                        let dirtBlock = BLOCKS.DIRT;
+                        if (terrainType === 'sand' || terrainType === 'desert') {
+                            dirtBlock = BLOCKS.SAND;
+                        } else if (terrainType === 'mountain') {
+                            dirtBlock = y > height - 3 ? BLOCKS.DIRT : BLOCKS.STONE;
                         }
+                        this.setBlock(x, y, z, dirtBlock);
                     } else if (y < height) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
+                        let topBlock = BLOCKS.GRASS;
+                        if (terrainType === 'sand' || terrainType === 'desert') {
+                            topBlock = BLOCKS.SAND;
+                        } else if (terrainType === 'mountain') {
+                            topBlock = BLOCKS.STONE;
+                        } else if (terrainType === 'savanna') {
+                            topBlock = BLOCKS.GRASS;
                         }
+                        this.setBlock(x, y, z, topBlock);
                     } else if (y < 62) {
                         this.setBlock(x, y, z, BLOCKS.WATER);
                     }
@@ -93,15 +97,31 @@ function getTerrainHeight(x, z) {
     height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
     height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
 
-    return Math.max(20, Math.min(160, Math.floor(height)));
+    const biome = getTerrainType(x, z);
+    if (biome === 'mountain') {
+        height += Math.abs(perlinNoise.noise2D(x * 0.03, z * 0.03)) * 50;
+    } else if (biome === 'desert') {
+        height -= 10;
+    }
+
+    return Math.max(20, Math.min(200, Math.floor(height)));
 }
 
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
-    return 'grass';
+    const humidity = perlinNoise.noise2D(x * 0.025, z * 0.025);
+
+    if (humidity > 0.5) {
+        if (temp > 0.4) return 'mountain';
+        if (temp < -0.3) return 'forest';
+        return 'plains';
+    } else {
+        if (temp < -0.5) return 'desert';
+        if (temp > 0.5) return 'savanna';
+        return 'sand';
+    }
 }
 
 function getOreBlock(x, y, z) {
