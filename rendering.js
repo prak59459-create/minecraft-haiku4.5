@@ -214,11 +214,12 @@ function updateBlockSelector() {
 function updateInventoryDisplay() {
     const inventory = document.getElementById('inventory');
     inventory.innerHTML = '';
+    const blockEmojis = ['🌱', '⬜', '🪨', '🌳', '🍃', '💧', '🏖️', '⬛', '📦', '🪵', '🌲', '🌕', '🪵'];
     for (let i = 0; i < Math.min(9, BLOCK_TYPES.length); i++) {
         const block = BLOCK_TYPES[i];
         const item = document.createElement('div');
         item.className = 'inventory-item' + (i === game.player.selectedIndex ? ' selected' : '');
-        item.textContent = (i + 1);
+        item.textContent = blockEmojis[i] || (i + 1);
         item.title = `${block.name} (${i + 1})`;
         item.style.backgroundColor = '#' + block.color.toString(16).padStart(6, '0');
         inventory.appendChild(item);

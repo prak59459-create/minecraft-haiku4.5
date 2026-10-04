@@ -8,7 +8,11 @@ const BLOCKS = {
     WATER: { id: 6, name: 'Water', solid: false, color: 0x1e90ff, transparent: true },
     SAND: { id: 7, name: 'Sand', solid: true, color: 0xf5deb3 },
     GRAVEL: { id: 8, name: 'Gravel', solid: true, color: 0xa9a9a9 },
-    COBBLESTONE: { id: 9, name: 'Cobblestone', solid: true, color: 0x696969 }
+    COBBLESTONE: { id: 9, name: 'Cobblestone', solid: true, color: 0x696969 },
+    OAK_WOOD: { id: 10, name: 'Oak', solid: true, color: 0x8b5a2b },
+    SPRUCE_WOOD: { id: 11, name: 'Spruce', solid: true, color: 0x654321 },
+    BIRCH_WOOD: { id: 12, name: 'Birch', solid: true, color: 0xd4a574 },
+    DARK_OAK_WOOD: { id: 13, name: 'Dark Oak', solid: true, color: 0x4a2511 }
 };
 
 const BLOCK_TYPES = Object.values(BLOCKS).filter(b => b.id !== 0);
