@@ -94,8 +94,15 @@ export class Chunk {
                     }
                 }
 
-                if (height > 65) {
+                if (height > 65 && height < 140) {
                     generateTree(this, x, z, height);
+                }
+
+                if (height > 60 && height <= 64) {
+                    const gravelChance = perlinNoise.noise2D(wx * 0.05, wz * 0.05);
+                    if (gravelChance > 0.6) {
+                        this.setBlock(x, height - 1, z, BLOCKS.GRAVEL);
+                    }
                 }
             }
         }
@@ -121,6 +128,7 @@ function getTerrainType(x, z) {
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
     if (temp < -0.3) return 'sand';
+    if (temp > 0.4) return 'mountain';
     return 'grass';
 }
 
@@ -159,7 +167,8 @@ function generateTree(chunk, x, z, height) {
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
     if (treeChance < 0.5) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    const trunkVariation = perlinNoise.noise2D(worldX * 0.1, worldZ * 0.1);
+    const trunkHeight = Math.floor(5 + trunkVariation * 3);
     const y = height;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
@@ -170,13 +179,14 @@ function generateTree(chunk, x, z, height) {
         }
     }
 
-    const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    const foliageStart = y + Math.max(2, trunkHeight - 3);
+    const foliageRadius = 2 + Math.floor(trunkVariation * 2);
+    const foliageHeight = 4 + Math.floor(Math.random() * 3);
 
-    for (let dy = 0; dy < foliageRadius + 2; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
-        for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
-            for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
+    for (let dy = 0; dy < foliageHeight; dy++) {
+        const currentRadius = Math.max(1, foliageRadius - Math.floor(dy / 2));
+        for (let angle = 0; angle < Math.PI * 2; angle += 0.35) {
+            for (let dist = 0; dist <= currentRadius; dist += 0.6) {
                 const dx = Math.round(Math.cos(angle) * dist);
                 const dz = Math.round(Math.sin(angle) * dist);
                 const fx = x + dx;

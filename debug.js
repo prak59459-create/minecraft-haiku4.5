@@ -62,14 +62,17 @@ export class DebugDisplay {
 
         let vertices = 0;
         let triangles = 0;
+        let totalGeometrySize = 0;
         for (const mesh of game.chunkMeshes.values()) {
             if (mesh && mesh.geometry) {
                 const positions = mesh.geometry.getAttribute('position');
                 if (positions) {
                     vertices += positions.count;
+                    totalGeometrySize += positions.array.byteLength / 1024;
                     const index = mesh.geometry.getIndex();
                     if (index) {
                         triangles += index.count / 3;
+                        totalGeometrySize += index.array.byteLength / 1024;
                     }
                 }
             }
@@ -78,10 +81,14 @@ export class DebugDisplay {
         this.stats.vertices = vertices;
         this.stats.triangles = triangles;
         this.stats.drawCalls = game.chunkMeshes.size;
+        this.stats.geometrySize = (totalGeometrySize / 1024).toFixed(1);
 
         if (performance.memory) {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
         }
+
+        this.stats.renderDistance = game.world.renderDistance;
+        this.stats.visibleChunks = game.chunkMeshes.size;
 
         this.render();
     }
@@ -90,15 +97,16 @@ export class DebugDisplay {
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
-            `Chunks: ${this.stats.chunks}`,
+            `Chunks: ${this.stats.chunks} / Visible: ${this.stats.visibleChunks}`,
+            `Render Distance: ${this.stats.renderDistance}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
             `Draw Calls: ${this.stats.drawCalls}`,
+            `Geometry: ${this.stats.geometrySize} MB`,
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3 to toggle | H for help'
         ];
 
         this.container.innerHTML = lines.map(line => {
