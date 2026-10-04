@@ -6,7 +6,30 @@ export class UI {
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.messageTimeout = null;
         this.setupInventoryUI();
+        this.setupMessageDisplay();
+    }
+
+    setupMessageDisplay() {
+        const messageDiv = document.createElement('div');
+        messageDiv.id = 'game-message';
+        messageDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            display: none;
+            z-index: 1000;
+            white-space: nowrap;
+        `;
+        document.body.appendChild(messageDiv);
     }
 
     setupInventoryUI() {
@@ -70,5 +93,21 @@ export class UI {
     toggleHelp() {
         const help = document.getElementById('help');
         help.classList.toggle('show');
+    }
+
+    showMessage(text, duration = 3000) {
+        const messageDiv = document.getElementById('game-message');
+        if (!messageDiv) return;
+
+        if (this.messageTimeout) {
+            clearTimeout(this.messageTimeout);
+        }
+
+        messageDiv.textContent = text;
+        messageDiv.style.display = 'block';
+
+        this.messageTimeout = setTimeout(() => {
+            messageDiv.style.display = 'none';
+        }, duration);
     }
 }

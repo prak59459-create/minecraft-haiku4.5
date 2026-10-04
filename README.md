@@ -18,11 +18,14 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Procedural Generation** - Infinite world generation using Perlin noise
 - **Multiple Biomes** - Grass, sand, and varied terrain types
 - **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
-  - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
+- **Multiple Block Types** (19 total):
+  - Core Blocks: Stone, Grass, Dirt, Cobblestone, Bedrock
+  - Vegetation: Oak Log, Oak Leaves
+  - Sand & Variants: Sand, Gravel, Clay
+  - Water: Water, Ice
+  - Weather: Snow
+  - Ores: Coal Ore, Iron Ore, Gold Ore, Diamond Ore, Lapis Ore
+  - Decorative: Bookshelf
 - **Ore Generation** - Procedural ore generation at various depths
 - **Tree Generation** - Natural tree placement in suitable terrain
 
@@ -52,12 +55,32 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Block Inventory** - Visual block selector with 9 slots
 - **Crosshair** - Center screen targeting reticle
 - **Help Panel** - In-game control instructions (Press H)
+- **Message Display** - On-screen notifications for game events
+- **Debug Display** - Detailed performance metrics (F3)
+
+### World Persistence
+- **Auto-Save System** - Worlds are automatically saved to localStorage
+- **Manual Save** - Press F5 to save the current world
+- **World Restoration** - Saved worlds restore automatically on page reload
+- **Storage Management** - Automatic compression with 5MB limit per world
+- **Export/Import** - Ability to export and backup worlds as JSON files
+
+### Enhanced Biomes
+- **Grass Biome** - Default terrain with varied elevation
+- **Sand Biome** - Desert regions with sand and varied features
+- **Snow Biome** - Cold regions with snow blocks and ice water
+- **Clay Regions** - Sandy marshland-like areas
+- **Smooth Transitions** - Natural biome boundaries and gradients
 
 ### Performance Optimization
 - **Chunk-based Rendering** - Only visible chunks are rendered
+- **Mesh Caching** - Reuse geometry data for repeated chunks
+- **Ambient Occlusion** - Simple AO calculation for better lighting
 - **Indexed Geometry** - Efficient mesh generation with indices
 - **Vertex Colors** - Per-vertex coloring for variations
+- **Smart Updates** - Throttled chunk visibility checks
 - **Memory Management** - Automatic chunk cleanup for distant areas
+- **Resource Cleanup** - Proper disposal of unused GPU resources
 
 ## Controls
 
@@ -77,6 +100,8 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 | **C** | Pick Block (Pick the block you're looking at) |
 | **H** | Toggle Help |
 | **F3** | Toggle Debug Info |
+| **F5** | Save World |
+| **F9** | Reset World |
 
 ## Getting Started
 
