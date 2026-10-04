@@ -13,11 +13,18 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
+            precision: 'highp',
+            powerPreference: 'high-performance'
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.setClearColor(0x87CEEB);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+        this.renderer.sortObjects = false;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -374,6 +381,8 @@ class MinecraftGame {
     animate() {
         requestAnimationFrame(() => this.animate());
 
+        const startTime = performance.now();
+
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
 
@@ -382,7 +391,7 @@ class MinecraftGame {
         this.camera.position.set(eyePos.x, eyePos.y + bob, eyePos.z);
 
         const targetFOV = this.player.isSprinting ? 85 : 75;
-        this.camera.fov += (targetFOV - this.camera.fov) * 0.1;
+        this.camera.fov += (targetFOV - this.camera.fov) * 0.15;
         this.camera.updateProjectionMatrix();
 
         const direction = new THREE.Vector3(
@@ -412,6 +421,11 @@ class MinecraftGame {
         }
 
         this.renderer.render(this.scene, this.camera);
+
+        const frameTime = performance.now() - startTime;
+        if (frameTime > 20) {
+            console.debug(`Frame took ${frameTime.toFixed(1)}ms`);
+        }
     }
 
     updateDayNightCycle() {

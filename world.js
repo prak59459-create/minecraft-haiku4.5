@@ -66,7 +66,7 @@ export class Chunk {
                     }
                 }
 
-                if (height > 65) {
+                if (height > 65 && Math.random() > 0.3) {
                     generateTree(this, x, z, height);
                 }
             }
