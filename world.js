@@ -59,9 +59,11 @@ export class Chunk {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
                         } else if (terrainType === 'dark_grass') {
-                            this.setBlock(x, y, z, BLOCKS.COARSE_DIRT);
+                            const dirtVariation = perlinNoise.noise2D(wx * 0.1, wz * 0.1);
+                            this.setBlock(x, y, z, dirtVariation > 0.3 ? BLOCKS.GRAVEL : BLOCKS.COARSE_DIRT);
                         } else {
-                            this.setBlock(x, y, z, BLOCKS.DIRT);
+                            const dirtVariation = perlinNoise.noise2D(wx * 0.1, wz * 0.1);
+                            this.setBlock(x, y, z, dirtVariation > 0.4 ? BLOCKS.GRAVEL : BLOCKS.DIRT);
                         }
                     } else if (y < height) {
                         if (terrainType === 'sand') {
@@ -113,13 +115,14 @@ function getTerrainType(x, z) {
 function isCaveBlock(x, y, z) {
     if (!perlinNoise || y < 10) return false;
 
-    const caveNoise1 = perlinNoise.noise3D(x * 0.02, y * 0.02, z * 0.02);
-    const caveNoise2 = perlinNoise.noise3D(x * 0.05, y * 0.05, z * 0.05);
-    const caveValue = (caveNoise1 + caveNoise2) / 2;
+    const caveNoise1 = perlinNoise.noise3D(x * 0.015, y * 0.015, z * 0.015);
+    const caveNoise2 = perlinNoise.noise3D(x * 0.04, y * 0.04, z * 0.04);
+    const caveValue = (caveNoise1 * 0.7 + caveNoise2 * 0.3);
 
-    if (y < 30) return caveValue > 0.5;
-    if (y < 60) return caveValue > 0.55;
-    return caveValue > 0.6;
+    if (y < 30) return caveValue > 0.55;
+    if (y < 60) return caveValue > 0.60;
+    if (y < 100) return caveValue > 0.65;
+    return caveValue > 0.70;
 }
 
 function getOreBlock(x, y, z) {
