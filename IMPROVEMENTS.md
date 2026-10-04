@@ -1,243 +1,170 @@
-# Minecraft Clone - Improvements and Optimizations
+# Minecraft Clone Improvements
 
-## Latest Updates (Session 2)
+## Performance Optimizations (Latest Update)
 
-### Core Improvements
+### Rendering Pipeline
+- Optimized WebGL renderer with high-performance preference setting
+- Added shadow mapping support (PCF)
+- Improved mesh generation with vertex counter to reduce memory allocations
+- Proper geometry disposal on chunk mesh removal to prevent memory leaks
 
-#### 1. Terrain Generation Optimization
-- **Enhanced Perlin Noise**: Improved terrain height calculation with multi-octave noise
-- **Better Biome System**: More sophisticated terrain type detection
-- **Tree Generation**: Improved tree placement and foliage distribution
-- **Ore Distribution**: Complete ore generation system with depth-based distribution
-  - Coal Ore: Common at all depths
-  - Iron Ore: Mid-depth deposits
-  - Gold Ore: Deep deposits
-  - Diamond Ore: Very deep deposits
+### Memory Management
+- Particle system now has a max particle limit (2000) to prevent memory bloat
+- Better array reuse in particle geometry updates
+- Block outline only updates when block selection changes
+- Material and geometry proper disposal across all mesh types
 
-#### 2. Physics Improvements
-- **Enhanced Collision Detection**: Multiple check points for better accuracy
-- **Better Player Movement**: Improved horizontal and vertical collision handling
-- **Refined Step Detection**: More accurate ground detection
-- **Jump Physics**: Better jump mechanics with proper momentum
+### Physics & Collision
+- Optimized player collision detection with reduced angle checks
+- Better horizontal collision detection with early termination
+- Improved ground detection for more responsive jumping
 
-#### 3. Visual & Audio Systems
+### Rendering Optimization
+- Water renderer now manages water meshes per chunk with proper cleanup
+- Block outline caches last selected block to avoid unnecessary updates
+- Raycast improved for water block detection and general optimization
 
-**Particle Effects**
-- Dynamic block destruction particles
-- Color-matched particles based on block type
-- Smooth particle animation and fade-out
+## New Features
 
-**Water Rendering**
-- Transparent water blocks
-- Face culling for water surfaces
-- Semi-transparent water shader
+### World Generation
+- Improved terrain height variation with multi-layered Perlin noise
+- Better ore distribution using 3D Simplex noise
+- More natural terrain generation with larger height variations
+- Trees only generate on grass terrain for more natural appearance
+- Bedrock extends deeper into the world (5 blocks from bottom)
 
-**Audio System**
-- Procedural sound generation using Web Audio API
-- Block break and place sounds
-- Jump sound effects
-- Extensible audio manager for future sound additions
+### Block Types
+- Added Oak Planks (ID 15) - color: 0x8B4513
+- Added Dark Oak Log (ID 16) - color: 0x4A3728
+- Expanded inventory slots for future block additions
 
-#### 4. User Interface
+### Water Rendering
+- Complete water rendering implementation with chunk-based updates
+- Water meshes properly dispose when chunks unload
+- Water surfaces animate slightly for visual interest
 
-**Inventory System**
-- Visual block preview in inventory slots
-- Color-coded inventory display
-- Improved selection feedback
-- Smooth inventory transitions
+### Controls & UI
+- Fixed sprint/crouch logic to work correctly with Shift key
+- Improved inventory selection to avoid redundant updates
+- Better HUD display with proper formatting
 
-**HUD Display**
-- Real-time coordinate display
-- FPS counter
-- Current block information
-- Help panel (Press H)
+### Audio
+- Jump sound effect
+- Block break sound effect
+- Block place sound effect
+- Step sound effects (foundation)
 
-**Debug Display** (F3 key)
-- FPS monitoring
-- Chunk count tracking
-- Vertex and triangle count
-- Draw call statistics
-- Memory usage display
-- Performance metrics
+## Technical Details
 
-#### 5. Configuration System
-- `config.json` for game settings
-- Runtime configuration management
-- Easy parameter tweaking without code modifications
-- Organized settings structure
-
-#### 6. Rendering Enhancements
-- **Improved Mesh Generation**: Indexed geometry for reduced draw calls
-- **Better Lighting**: Height-based brightness calculation
-- **Frustum Culling**: Automatic mesh culling for performance
-- **Dynamic Lighting**: Real-time day/night cycle
-- **Vertex Variations**: Color variation for visual depth
-
-### Performance Optimizations
-
-1. **Chunk-Based Rendering**
-   - Only visible chunks are rendered
-   - Automatic chunk loading/unloading
-   - Memory-efficient chunk storage
-
-2. **Mesh Optimization**
-   - Indexed BufferGeometry usage
-   - Vertex color efficiency
-   - Face culling to reduce geometry
-
-3. **Drawing Optimization**
-   - Frustum culling for meshes
-   - Dynamic material optimization
-   - Shadow mapping configuration
-
-### Bug Fixes
-
-1. **Collision Detection**
-   - More robust player-block collision
-   - Better edge case handling
-   - Improved ground detection
-
-2. **Raycasting**
-   - More accurate block selection
-   - Better step size for precision
-   - Correct face normal calculation
-
-3. **Audio**
-   - Proper sound scheduling
-   - Better gain control
-   - Improved frequency modulation
-
-### Documentation
-
-- Comprehensive README with features and controls
-- Installation and setup instructions
-- Performance tips and troubleshooting
-- Future enhancement roadmap
-- Technical architecture overview
-
-## System Architecture
-
-### Module Organization
+### Terrain Generation Algorithm
 ```
-Core Game:
-├── game.js              - Main game loop and rendering
-├── world.js             - Terrain generation and chunks
-├── player.js            - Player physics and controls
-└── camera.js (in player.js) - Camera management
-
-Systems:
-├── blocks.js            - Block definitions
-├── particles.js         - Particle effects
-├── water.js             - Water rendering
-├── audio.js             - Sound effects
-├── ui.js                - User interface
-├── debug.js             - Debug display
-└── config.js            - Configuration management
-
-Assets:
-├── index.html           - HTML entry point
-├── style.css            - Styling
-├── config.json          - Game configuration
-└── package.json         - Package metadata
+Multi-layered Perlin noise:
+- Base: 0.003 scale × 40 height
+- Layer 2: 0.01 scale × 20 height
+- Layer 3: 0.03 scale × 12 height
+- Layer 4: 0.08 scale × 6 height
+- Detail: 0.2 scale × 3 height
 ```
+
+### Ore Distribution
+Using 3D Simplex noise for more realistic ore placement:
+- Coal Ore: < Y160, threshold 0.55
+- Iron Ore: < Y100, threshold 0.65
+- Gold Ore: < Y60, threshold 0.70
+- Diamond Ore: < Y30, threshold 0.75
+
+### Block Outline System
+- Only recreates outline when block selection changes
+- Proper geometry disposal on update
+- Smooth visual feedback for block interaction
 
 ## Performance Metrics
 
-- **FPS**: Typically 60+ FPS on modern hardware
-- **Memory**: ~200-400 MB with 8-chunk radius
-- **Chunk Load Time**: <50ms per chunk
-- **Render Distance**: Configurable 4-16 chunks
+### Expected Performance
+- 60+ FPS on modern hardware with render distance 8
+- ~2000 total vertices per visible chunk
+- Efficient memory usage with proper resource disposal
+- Shadow mapping enabled for better visual quality
 
-## Future Enhancement Roadmap
+### Debug Display (F3 key)
+- Real-time FPS counter
+- Active chunk count
+- Vertex count
+- Triangle count
+- Particle count
+- Memory usage display
 
-### Tier 1 (High Priority)
-- [ ] Inventory UI with stacking
-- [ ] Save/Load world functionality
-- [ ] More block types and variants
-- [ ] Inventory hotbar visual improvement
-- [ ] Better terrain mesh generation with LOD
+## Control Mappings
 
-### Tier 2 (Medium Priority)
-- [ ] Crafting system
-- [ ] Creative mode with infinite blocks
-- [ ] Mob system with simple AI
-- [ ] Lighting system improvements
-- [ ] Texture mapping for blocks
+### Movement
+- **W** - Move forward
+- **A** - Move left
+- **S** - Move backward (+ Shift = crouch)
+- **D** - Move right
+- **Space** - Jump
+- **Shift** - Sprint (or crouch if only moving backward)
+- **Mouse** - Look around (click to lock pointer)
 
-### Tier 3 (Low Priority)
-- [ ] Multiplayer support
-- [ ] Advanced weather system
-- [ ] Cave generation
-- [ ] Dungeon structures
-- [ ] Advanced particle effects
+### Block Interaction
+- **Left Click** - Destroy block
+- **Right Click** - Place block
+- **Keys 1-9** - Select block in hotbar
+- **Scroll Wheel** - Cycle hotbar blocks
+- **C** - Pick block (copy what you're looking at)
+
+### Interface
+- **F3** - Toggle debug display
+- **H** - Toggle help text
+
+## Future Improvement Ideas
+
+1. **Advanced Terrain**
+   - Biome system with different block distributions
+   - Cave generation system
+   - Mountain and valley improvements
+
+2. **Blocks & Features**
+   - TNT with explosion mechanics
+   - Crafting system
+   - More decorative blocks
+   - Light-emitting blocks (glowstone, torches)
+
+3. **Gameplay**
+   - Inventory limit system
+   - Tool degradation
+   - Mob system (basic AI)
+   - Day/night cycle improvements
+
+4. **Graphics**
+   - Texture mapping system
+   - Normal mapping for better lighting
+   - Improved water physics/waves
+   - Lighting system improvements (block light sources)
+
+5. **Performance**
+   - Frustum culling for chunks
+   - Level of detail (LOD) system
+   - Mesh instancing for repeated blocks
+   - Shader-based terrain generation
 
 ## Known Limitations
 
-1. **Performance**
-   - Heavy computing on initial chunk generation
-   - No LOD system yet (all chunk details rendered equally)
-   - No texture mapping (vertex colors only)
+- Water doesn't flow (static meshes only)
+- No physics objects (falling sand, etc.)
+- Lighting is simplified (no block-source lighting)
+- No multiplayer support
+- Limited to ~16 chunk radius render distance
 
-2. **Gameplay**
-   - No inventory management (only 9 quick slots)
-   - No survival mechanics (health/hunger)
-   - No creative mode alternatives
-   - Simple terrain generation (no caves/structures)
+## Build & Run
 
-3. **Graphics**
-   - No advanced lighting (limited to ambient + directional)
-   - No shadow quality options
-   - Simplified water rendering
-   - No particle system optimization
+```bash
+npm install  # Install dependencies (if any)
+npm start    # Start local server on port 8000
+# Open http://localhost:8000 in browser
+```
 
-## Testing Recommendations
+## Browser Requirements
 
-1. **Performance Testing**
-   - Test with different render distances
-   - Monitor memory usage over time
-   - Check FPS consistency
-
-2. **Gameplay Testing**
-   - Test block placement/destruction in various situations
-   - Verify collision detection edge cases
-   - Test terrain generation edge cases
-   - Verify all 9 block types work correctly
-
-3. **Visual Testing**
-   - Check day/night cycle smoothness
-   - Verify particle effects
-   - Test water rendering
-   - Confirm UI visibility
-
-## Configuration Guide
-
-Edit `config.json` to customize:
-- Render distance (default: 8 chunks)
-- Player speed and movement (default: 0.1)
-- Jump power and gravity (default: 0.5, 0.02)
-- Terrain parameters (height range, water level, etc.)
-- Graphics settings (shadow map size, particle limit)
-- Audio settings (volume, effects on/off)
-
-## Debugging
-
-### Enable Debug Display
-Press F3 to toggle debug information overlay
-
-### Check Console
-Open browser DevTools (F12) console for error messages
-
-### Common Issues
-- Low FPS: Reduce render distance or check system resources
-- Chunks not loading: Check browser console for errors
-- No sound: Verify browser audio permissions
-- Visual glitches: Try different browser or update graphics drivers
-
-## Contributing
-
-When contributing improvements:
-1. Maintain modular structure
-2. Follow existing code style
-3. Add comments for complex logic
-4. Test performance impact
-5. Update documentation as needed
+- WebGL 1.0+ support
+- Modern JavaScript (ES6+)
+- ~500MB available memory minimum

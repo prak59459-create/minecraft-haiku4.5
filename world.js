@@ -48,7 +48,9 @@ export class Chunk {
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
-                    } else if (y < height - 4) {
+                    } else if (y < 5) {
+                        this.setBlock(x, y, z, BLOCKS.BEDROCK);
+                    } else if (y < height - 5) {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
                     } else if (y < height - 1) {
@@ -70,7 +72,7 @@ export class Chunk {
                     }
                 }
 
-                if (height > 65) {
+                if (height > 65 && terrainType === 'grass') {
                     generateTree(this, x, z, height);
                 }
             }
@@ -124,9 +126,9 @@ function generateTree(chunk, x, z, height) {
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
-    if (treeChance < 0.5) return;
+    if (treeChance < 0.45) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    const trunkHeight = 5 + Math.floor(Math.random() * 5);
     const y = height;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
@@ -137,13 +139,13 @@ function generateTree(chunk, x, z, height) {
         }
     }
 
-    const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    const foliageStart = y + Math.max(trunkHeight - 4, 2);
+    const foliageRadius = 2 + Math.floor(Math.random() * 3);
 
-    for (let dy = 0; dy < foliageRadius + 2; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
-        for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
-            for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
+    for (let dy = 0; dy < foliageRadius + 3; dy++) {
+        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 2));
+        for (let angle = 0; angle < Math.PI * 2; angle += 0.5) {
+            for (let dist = 0.5; dist <= radiusAtLevel; dist += 0.8) {
                 const dx = Math.round(Math.cos(angle) * dist);
                 const dz = Math.round(Math.sin(angle) * dist);
                 const fx = x + dx;
