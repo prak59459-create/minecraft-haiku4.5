@@ -7,6 +7,7 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { Config } from './config.js';
 
 class MinecraftGame {
     constructor() {
@@ -24,19 +25,21 @@ class MinecraftGame {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
-        this.world = new World();
+        const renderDist = Config.get('world.renderDistance') || 8;
+        this.world = new World(renderDist);
         this.player = new Player(this.world);
         this.gameCamera = new Camera();
         this.ui = new UI();
         this.particleSystem = new ParticleSystem(this.scene);
         this.waterRenderer = new WaterRenderer(this.scene, this.world);
         this.audioManager = new AudioManager();
+        this.audioManager.setMasterVolume(Config.get('audio.masterVolume') || 0.5);
         this.debugDisplay = new DebugDisplay();
         this.blockOutline = new BlockOutline(this.scene);
 
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
-        this.raycastDistance = 6;
+        this.raycastDistance = Config.get('raycast.distance') || 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
 

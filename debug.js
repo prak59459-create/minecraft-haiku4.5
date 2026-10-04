@@ -8,7 +8,13 @@ export class DebugDisplay {
             triangles: 0,
             drawCalls: 0,
             particles: 0,
-            memory: 0
+            memory: 0,
+            playerPos: { x: 0, y: 0, z: 0 },
+            playerVel: { x: 0, y: 0, z: 0 },
+            inWater: false,
+            onGround: false,
+            sprinting: false,
+            renderDistance: 8
         };
         this.createDisplay();
     }
@@ -59,6 +65,20 @@ export class DebugDisplay {
         this.stats.fps = game.ui.fpsCounter;
         this.stats.chunks = game.world.chunks.size;
         this.stats.particles = game.particleSystem.particles.length;
+        this.stats.playerPos = {
+            x: game.player.position.x.toFixed(1),
+            y: game.player.position.y.toFixed(1),
+            z: game.player.position.z.toFixed(1)
+        };
+        this.stats.playerVel = {
+            x: game.player.velocity.x.toFixed(3),
+            y: game.player.velocity.y.toFixed(3),
+            z: game.player.velocity.z.toFixed(3)
+        };
+        this.stats.inWater = game.player.isInWater;
+        this.stats.onGround = game.player.isOnGround;
+        this.stats.sprinting = game.player.isSprinting;
+        this.stats.renderDistance = game.world.renderDistance;
 
         let vertices = 0;
         let triangles = 0;
@@ -87,22 +107,33 @@ export class DebugDisplay {
     }
 
     render() {
+        const { playerPos, playerVel, inWater, onGround, sprinting, renderDistance } = this.stats;
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
+            '',
+            '--- Rendering ---',
             `Chunks: ${this.stats.chunks}`,
+            `Render Dist: ${renderDistance}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
             `Draw Calls: ${this.stats.drawCalls}`,
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
-            '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            '',
+            '--- Player ---',
+            `Pos: (${playerPos.x}, ${playerPos.y}, ${playerPos.z})`,
+            `Vel: (${playerVel.x}, ${playerVel.y}, ${playerVel.z})`,
+            `Ground: ${onGround ? 'YES' : 'NO'}`,
+            `Water: ${inWater ? 'YES' : 'NO'}`,
+            `Sprint: ${sprinting ? 'YES' : 'NO'}`,
+            '==================='
         ];
 
         this.container.innerHTML = lines.map(line => {
             if (line.startsWith('=')) return `<div>${line}</div>`;
+            if (line.startsWith('-')) return `<div style="color: #888;">${line}</div>`;
+            if (line === '') return `<div style="height: 3px;"></div>`;
             const parts = line.split(': ');
             if (parts.length === 2) {
                 return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
