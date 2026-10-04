@@ -35,6 +35,8 @@ class MinecraftGame {
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
+        this.lastStepSound = 0;
+        this.lastPlayerPos = { x: 0, y: 0, z: 0 };
         this.showDebug = false;
         this.faceColorCache = new Map();
 
@@ -71,8 +73,18 @@ class MinecraftGame {
     }
 
     setupFog() {
-        const fogDistance = 200;
-        this.scene.fog = new THREE.Fog(0x87CEEB, fogDistance * 0.8, fogDistance);
+        const fogDistance = 240;
+        this.scene.fog = new THREE.Fog(0x87CEEB, fogDistance * 0.7, fogDistance);
+    }
+
+    updateFogWithDayNightCycle() {
+        const time = Date.now() * 0.00002;
+        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const fogColor = new THREE.Color();
+        fogColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        if (this.scene.fog) {
+            this.scene.fog.color = fogColor;
+        }
     }
 
     setupEventListeners() {
@@ -359,11 +371,31 @@ class MinecraftGame {
         return Math.sqrt(dx * dx + dz * dz);
     }
 
+    updateStepSounds() {
+        const playerPos = this.player.position;
+        const distTraveled = Math.sqrt(
+            (playerPos.x - this.lastPlayerPos.x) ** 2 +
+            (playerPos.z - this.lastPlayerPos.z) ** 2
+        );
+
+        if (distTraveled > 0.3 && this.player.isOnGround) {
+            const now = Date.now();
+            if (now - this.lastStepSound > 300) {
+                this.audioManager.playStepSound();
+                this.lastStepSound = now;
+            }
+        }
+
+        this.lastPlayerPos = { ...playerPos };
+    }
+
     animate() {
         requestAnimationFrame(() => this.animate());
 
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
+
+        this.updateStepSounds();
 
         const eyePos = this.player.getEyePosition();
         this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
@@ -408,6 +440,8 @@ class MinecraftGame {
         const skyColor = new THREE.Color();
         skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
         this.scene.background = skyColor;
+
+        this.updateFogWithDayNightCycle();
     }
 }
 
