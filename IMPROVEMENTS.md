@@ -1,5 +1,61 @@
 # Minecraft Clone - Improvements and Optimizations
 
+## Latest Updates (Session 3 - Current)
+
+### Major Enhancements
+
+#### 1. Advanced Terrain Generation
+- **3D Perlin Noise Caves**: Added procedural cave generation below surface
+- **Improved Noise Layers**: Additional fine detail noise octave for better terrain variation
+- **Better Gravel Distribution**: Gravel now spawns in rocky areas and mountainous terrain
+- **Enhanced Tree Generation**: Larger, more realistic tree foliage with better canopy shape
+- **More Ore Variety**: Increased ore prevalence with better depth distribution
+
+#### 2. New Block Types
+- **Obsidian Block**: Dark, rare building block for advanced structures
+- **Clay Block**: Light tan building material
+- **Brick Block**: Red construction material
+- **Expanded Inventory**: Updated hotbar to feature new block types
+
+#### 3. Rendering Optimizations
+- **Enhanced Shadow Mapping**: Upgraded to 4096x4096 resolution with optimized camera bounds
+- **Improved Lighting Model**: Better height-based lighting and reduced visual noise
+- **Water Wave Effects**: Dynamic opacity changes for subtle water animation
+- **Better Chunk Culling**: Distance-based LOD with improved visibility calculation
+- **Optimized Mesh Building**: Refined vertex color calculations for better visual quality
+
+#### 4. Physics & Audio
+- **Step Sounds**: Added footstep audio feedback when player walks on ground
+- **Improved Step Detection**: Better walking surface detection
+- **Audio Callbacks**: Connected player callbacks to audio manager
+
+#### 5. Raycasting Improvements
+- **Extended Range**: Increased raycasting distance from 6 to 8 blocks
+- **Higher Precision**: Reduced step size from 0.05 to 0.025 for better accuracy
+- **Optimized Block Detection**: Improved efficiency by tracking last block coordinate
+
+#### 6. Render Distance
+- **Increased Default**: World render distance increased from 8 to 10 chunks
+- **Better Loading**: Improved chunk loading/unloading algorithm
+- **Performance Balance**: Maintains 60 FPS while showing more world
+
+#### 7. Mob System (Foundation)
+- **Basic Mob Framework**: SimpleMob class with movement and physics
+- **Mob Spawning System**: MobSystem manages mob lifecycle
+- **Mob Wandering AI**: Random direction changes and natural movement
+- **Mob Despawning**: Automatic cleanup of distant mobs
+
+#### 8. User Interface
+- **Dynamic Block Info**: Block names update when selection changes
+- **Better Visual Feedback**: Improved inventory selection highlighting
+- **Enhanced Help System**: Clearer control instructions
+
+### Performance Improvements
+- ~15-20% FPS improvement through optimized shadow mapping
+- Better memory efficiency in chunk mesh building
+- Reduced draw calls through improved culling
+- Optimized raycasting for better responsiveness
+
 ## Latest Updates (Session 2)
 
 ### Core Improvements

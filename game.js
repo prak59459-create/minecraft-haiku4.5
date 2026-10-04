@@ -7,6 +7,7 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { MobSystem } from './mobs.js';
 
 class MinecraftGame {
     constructor() {
@@ -17,7 +18,7 @@ class MinecraftGame {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
 
-        this.world = new World();
+        this.world = new World(10);
         this.player = new Player(this.world);
         this.gameCamera = new Camera();
         this.ui = new UI();
@@ -26,10 +27,12 @@ class MinecraftGame {
         this.audioManager = new AudioManager();
         this.debugDisplay = new DebugDisplay();
         this.blockOutline = new BlockOutline(this.scene);
+        this.mobSystem = new MobSystem(this.scene, this.world);
 
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
-        this.raycastDistance = 6;
+        this.raycastDistance = 8;
+        this.raycastStep = 0.025;
         this.lastBreakSound = 0;
         this.showDebug = false;
 
@@ -140,8 +143,9 @@ class MinecraftGame {
         );
 
         let hit = null;
+        let lastBlockCoord = { x: Math.floor(eyePos.x), y: Math.floor(eyePos.y), z: Math.floor(eyePos.z) };
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = this.raycastStep; dist <= this.raycastDistance; dist += this.raycastStep) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -150,25 +154,19 @@ class MinecraftGame {
             const by = Math.floor(y);
             const bz = Math.floor(z);
 
+            if (bx === lastBlockCoord.x && by === lastBlockCoord.y && bz === lastBlockCoord.z) continue;
+
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
-                const prevX = eyePos.x + direction.x * prevDist;
-                const prevY = eyePos.y + direction.y * prevDist;
-                const prevZ = eyePos.z + direction.z * prevDist;
-
-                const prevBx = Math.floor(prevX);
-                const prevBy = Math.floor(prevY);
-                const prevBz = Math.floor(prevZ);
-
                 let normal = { x: 0, y: 0, z: 0 };
-                if (prevBx !== bx) normal.x = prevBx < bx ? -1 : 1;
-                else if (prevBy !== by) normal.y = prevBy < by ? -1 : 1;
-                else if (prevBz !== bz) normal.z = prevBz < bz ? -1 : 1;
+                if (lastBlockCoord.x !== bx) normal.x = lastBlockCoord.x < bx ? -1 : 1;
+                else if (lastBlockCoord.y !== by) normal.y = lastBlockCoord.y < by ? -1 : 1;
+                else if (lastBlockCoord.z !== bz) normal.z = lastBlockCoord.z < bz ? -1 : 1;
 
                 hit = { x: bx, y: by, z: bz, block, normal, dist };
                 break;
             }
+            lastBlockCoord = { x: bx, y: by, z: bz };
         }
 
         if (!hit) {
@@ -368,6 +366,7 @@ class MinecraftGame {
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
+        this.mobSystem.update(this.player.position);
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);
