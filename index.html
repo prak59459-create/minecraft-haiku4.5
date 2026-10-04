@@ -118,6 +118,19 @@
             font-family: monospace;
             border: 1px solid #0f0;
         }
+        #selectedBlockInfo {
+            position: absolute;
+            bottom: 220px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: 4px;
+            border: 2px solid rgba(0, 255, 0, 0.5);
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -137,6 +150,7 @@
         <div id="status"></div>
         <div id="blockTooltip"></div>
         <div id="stats"></div>
+        <div id="selectedBlockInfo"></div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -662,15 +676,17 @@
                 const div = document.createElement('div');
                 div.className = 'blockIcon';
                 if (blockType === selectedBlock) div.classList.add('selected');
-                div.innerHTML = `<span title="${BLOCK_NAMES[blockType]}">${index + 1}</span>`;
+                div.innerHTML = `<span title="${BLOCK_NAMES[blockType]} (${index + 1})" style="cursor: pointer;">${index + 1}</span>`;
                 div.style.backgroundColor = `rgb(${
                     [(BLOCK_COLORS[blockType] >> 16) & 255,
                     (BLOCK_COLORS[blockType] >> 8) & 255,
                     BLOCK_COLORS[blockType] & 255].join(',')
                 })`;
+                div.style.boxShadow = blockType === selectedBlock ? '0 0 10px rgba(0,255,0,0.5)' : 'none';
                 div.addEventListener('click', () => {
                     selectedBlock = blockType;
                     updateBlockSelector();
+                    playSound(500 + index * 50, 0.08, 'sine');
                 });
                 container.appendChild(div);
             });
@@ -847,9 +863,21 @@
             const playerChunkX = Math.floor(player.position.x / CHUNK_SIZE);
             const playerChunkZ = Math.floor(player.position.z / CHUNK_SIZE);
 
+            // Load visible chunks
             for (let x = playerChunkX - 2; x <= playerChunkX + 2; x++) {
                 for (let z = playerChunkZ - 2; z <= playerChunkZ + 2; z++) {
                     generateChunk(x, z);
+                }
+            }
+
+            // Unload distant chunks to save memory
+            const maxChunkDistance = 4;
+            for (const [key, chunkData] of chunks) {
+                const [cx, cz] = key.split(',').map(Number);
+                const distance = Math.max(Math.abs(cx - playerChunkX), Math.abs(cz - playerChunkZ));
+                if (distance > maxChunkDistance) {
+                    scene.remove(chunkData.group);
+                    chunks.delete(key);
                 }
             }
 
@@ -895,6 +923,13 @@
                 Chunks: ${chunks.size}<br>
                 Particles: ${particles.length}<br>
                 Memory: ${(performance.memory ? (performance.memory.usedJSHeapSize / 1048576).toFixed(1) : 'N/A')} MB
+            `;
+
+            // Update selected block info
+            const blockColor = BLOCK_COLORS[selectedBlock];
+            const rgb = `rgb(${(blockColor >> 16) & 255}, ${(blockColor >> 8) & 255}, ${blockColor & 255})`;
+            document.getElementById('selectedBlockInfo').innerHTML = `
+                <span style="color: ${rgb}; font-weight: bold;">Selected: ■ ${BLOCK_NAMES[selectedBlock]}</span>
             `;
 
             renderer.render(scene, camera);
