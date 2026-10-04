@@ -257,7 +257,8 @@ class Game {
         this.raycaster.setFromCamera(this.mouse, this.camera);
 
         const chunks = Array.from(this.world.chunks.values());
-        const meshes = chunks.map(c => c.mesh).filter(m => m);
+        const meshes = chunks
+            .flatMap(c => [c.mesh, c.transparentMesh].filter(m => m));
 
         const intersects = this.raycaster.intersectObjects(meshes);
 
@@ -303,17 +304,27 @@ class Game {
         this.sunLight.position.y = 80 + Math.sin(angle) * 60;
         this.sunLight.position.z = Math.sin(angle) * 150;
 
-        const sunIntensity = Math.max(0.3, Math.sin(angle) * 0.5 + 0.8);
+        const sunIntensity = Math.max(0.2, Math.sin(angle) * 0.5 + 0.8);
         this.sunLight.intensity = sunIntensity;
-        this.ambientLight.intensity = 0.3 + sunIntensity * 0.3;
+        this.ambientLight.intensity = 0.25 + sunIntensity * 0.35;
 
         const skyColor = new THREE.Color();
-        if (Math.sin(angle) > 0) {
-            skyColor.setHSL(0.6, 0.6, 0.5 + Math.sin(angle) * 0.2);
+        const sunHeight = Math.sin(angle);
+
+        if (sunHeight > 0.1) {
+            const hue = 0.6 - Math.abs(angle - Math.PI) * 0.1;
+            const saturation = 0.7;
+            const lightness = 0.5 + sunHeight * 0.3;
+            skyColor.setHSL(hue, saturation, lightness);
+        } else if (sunHeight > -0.3) {
+            const hue = 0.05 + (sunHeight + 0.3) * 0.5;
+            skyColor.setHSL(hue, 0.8, 0.15 + sunHeight * 0.3);
         } else {
-            skyColor.setHSL(0.8, 0.2, 0.1);
+            skyColor.setHSL(0.65, 0.3, 0.05 + (sunHeight + 1) * 0.05);
         }
+
         this.scene.background = skyColor;
+        this.scene.fog.color = skyColor;
     }
 
     updateUI() {
