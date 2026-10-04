@@ -1,5 +1,40 @@
 # Minecraft Clone - Improvements and Optimizations
 
+## Latest Updates (Session 3)
+
+### Performance Enhancements
+- **Dynamic render distance scaling** - Automatically adjusts based on FPS
+- **Improved raycasting** - Better step size for more efficient block detection
+- **Enhanced chunk management** - Better memory handling and frustum culling
+- **Renderer optimization** - High-performance WebGL context with pixel ratio support
+- **Shadow effects** - Depth-based shadows for realistic lighting at lower heights
+
+### Visual Quality Improvements
+- **Enhanced lighting system** - Height-based and distance-based brightness
+- **Improved day/night cycle** - Smoother color transitions with realistic sun colors
+- **Better water rendering** - Improved colors, opacity, and visual effects
+- **Sprint particles** - Visual feedback for sprinting
+- **Better block destruction** - Improved particle effects and physics
+
+### Gameplay Enhancements
+- **Camera smoothing** - Interpolated rotation for smoother control
+- **Movement acceleration** - Momentum-based movement with inertia
+- **Swimming mechanics** - Water physics and buoyancy
+- **Better audio** - Error handling and sound throttling
+- **Configurable settings** - Load all parameters from config.json
+
+### User Interface
+- **Block tooltips** - Hover over inventory slots to see block names
+- **Better error messages** - User-friendly error display
+- **Enhanced debug display** - Shows player position, velocity, state
+- **Improved controls** - Window blur handling for key input
+
+### Development Features
+- **Config system** - Deep merge support for partial config overrides
+- **Error handling** - Graceful fallback to defaults
+- **Debug metrics** - Comprehensive performance monitoring
+- **Better terrain** - More varied and interesting world generation
+
 ## Latest Updates (Session 2)
 
 ### Core Improvements
