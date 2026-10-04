@@ -33,6 +33,7 @@ export class Player {
                 if (this.isOnGround) {
                     this.velocity.y = JUMP_POWER;
                     this.isOnGround = false;
+                    if (this.onJump) this.onJump();
                 }
             }
         });

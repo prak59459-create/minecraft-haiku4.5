@@ -5,6 +5,7 @@ import { UI } from './ui.js';
 import { ParticleSystem } from './particles.js';
 import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
+import { DebugDisplay } from './debug.js';
 
 class MinecraftGame {
     constructor() {
@@ -22,12 +23,15 @@ class MinecraftGame {
         this.particleSystem = new ParticleSystem(this.scene);
         this.waterRenderer = new WaterRenderer(this.scene, this.world);
         this.audioManager = new AudioManager();
+        this.debugDisplay = new DebugDisplay();
 
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+
+        this.player.onJump = () => this.audioManager.playJumpSound();
 
         this.setupLighting();
         this.setupEventListeners();
@@ -67,9 +71,10 @@ class MinecraftGame {
                     this.selectedBlockType = hit.block;
                 }
             }
-            if (e.key === 'F3' || e.key === 'f3') {
+            if (e.key === 'F3') {
                 e.preventDefault();
                 this.showDebug = !this.showDebug;
+                this.debugDisplay.toggle();
             }
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
@@ -200,7 +205,12 @@ class MinecraftGame {
                     const wz = chunk.z * CHUNK_SIZE + z;
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
-                    const brightness = 0.75 + (Math.abs(Math.sin(wy * 0.1)) * 0.25);
+
+                    const baseLight = 0.7;
+                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
+                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
+                    const brightness = baseLight + heightLight + varLight;
+
                     color.multiplyScalar(brightness);
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
@@ -220,11 +230,13 @@ class MinecraftGame {
                 vertexColors: true,
                 wireframe: false,
                 flatShading: false,
-                side: THREE.FrontSide
+                side: THREE.FrontSide,
+                shininess: 30
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
+            mesh.frustumCulled = true;
             return mesh;
         }
 
@@ -321,6 +333,10 @@ class MinecraftGame {
 
         const fps = this.ui.updateFPS();
         this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+
+        if (this.showDebug) {
+            this.debugDisplay.update(this);
+        }
 
         this.renderer.render(this.scene, this.camera);
     }
