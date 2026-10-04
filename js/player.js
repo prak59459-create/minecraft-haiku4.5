@@ -26,6 +26,12 @@ class Player {
         this.selectedBlockType = 1;
         this.blockDistance = 6;
 
+        this.isInWater = false;
+        this.swimSpeed = 5;
+        this.waterDrag = 0.85;
+        this.blockBreakCooldown = 0;
+        this.breakDelay = 0.15;
+
         this.setupControls();
     }
 
@@ -163,10 +169,14 @@ class Player {
 
     update(deltaTime) {
         this.deltaTime = deltaTime;
+        this.blockBreakCooldown -= deltaTime;
+
+        // Check if in water
+        this.isInWater = this.checkInWater();
 
         // Movement
-        const isSprinting = this.keys['shift'];
-        const moveSpeed = isSprinting ? this.sprintSpeed : this.speed;
+        const isSprinting = this.keys['shift'] && !this.isInWater;
+        const moveSpeed = this.isInWater ? this.swimSpeed : (isSprinting ? this.sprintSpeed : this.speed);
 
         this.direction.set(0, 0, 0);
         if (this.keys['w']) this.direction.z -= 1;
@@ -182,16 +192,25 @@ class Player {
             const rotationMatrix = new THREE.Matrix4().makeRotationFromEuler(cameraDirection);
             this.direction.applyMatrix4(rotationMatrix);
 
-            this.velocity.x = this.direction.x * moveSpeed;
-            this.velocity.z = this.direction.z * moveSpeed;
+            if (this.isInWater) {
+                this.velocity.x = this.direction.x * moveSpeed;
+                this.velocity.z = this.direction.z * moveSpeed;
+                this.velocity.y = this.direction.y * moveSpeed;
+            } else {
+                this.velocity.x = this.direction.x * moveSpeed;
+                this.velocity.z = this.direction.z * moveSpeed;
+            }
         } else {
-            this.velocity.x *= 0.85;
-            this.velocity.z *= 0.85;
+            const drag = this.isInWater ? this.waterDrag * 0.5 : 0.85;
+            this.velocity.x *= drag;
+            this.velocity.z *= drag;
         }
 
-        // Gravity
-        if (!this.isOnGround) {
+        // Gravity and water buoyancy
+        if (!this.isOnGround && !this.isInWater) {
             this.velocity.y -= this.gravity * deltaTime;
+        } else if (this.isInWater && !this.keys['w'] && !this.keys['s'] && !this.keys['a'] && !this.keys['d']) {
+            this.velocity.y *= this.waterDrag;
         }
 
         // Collision detection
@@ -212,63 +231,84 @@ class Player {
         }
     }
 
+    checkInWater() {
+        const checkPos = this.position.clone();
+        checkPos.y += this.eyeHeight * 0.5;
+        const block = this.world.getBlock(Math.round(checkPos.x), Math.round(checkPos.y), Math.round(checkPos.z));
+        return isBlockLiquid(block);
+    }
+
     handleCollisions() {
-        const checkRadius = this.playerRadius;
-        const checkPoints = [
-            new THREE.Vector3(0, 0, 0),
-            new THREE.Vector3(checkRadius, 0, 0),
-            new THREE.Vector3(-checkRadius, 0, 0),
-            new THREE.Vector3(0, 0, checkRadius),
-            new THREE.Vector3(0, 0, -checkRadius),
-            new THREE.Vector3(checkRadius, 0, checkRadius),
-            new THREE.Vector3(-checkRadius, 0, checkRadius),
-            new THREE.Vector3(checkRadius, 0, -checkRadius),
-            new THREE.Vector3(-checkRadius, 0, -checkRadius),
-        ];
+        const radius = this.playerRadius;
 
-        // Check ground
-        for (let point of checkPoints) {
-            const checkPos = this.position.clone().add(point);
-            const blockBelow = this.world.getBlock(
-                Math.round(checkPos.x),
-                Math.floor(checkPos.y - 0.1),
-                Math.round(checkPos.z)
-            );
-            if (isBlockSolid(blockBelow)) {
-                this.isOnGround = true;
-                this.velocity.y = 0;
-                this.position.y = Math.floor(checkPos.y) + 1;
-                break;
-            }
-        }
+        // Check vertical collisions (ground/ceiling)
+        const groundCheckRadius = 0.2;
+        let groundCollided = false;
 
-        // Check head collision
-        for (let point of checkPoints) {
-            const checkPos = this.position.clone().add(point);
-            const blockAbove = this.world.getBlock(
-                Math.round(checkPos.x),
-                Math.ceil(checkPos.y + this.playerHeight),
-                Math.round(checkPos.z)
-            );
-            if (isBlockSolid(blockAbove) && this.velocity.y > 0) {
-                this.velocity.y = 0;
+        for (let dx = -groundCheckRadius; dx <= groundCheckRadius; dx += groundCheckRadius) {
+            for (let dz = -groundCheckRadius; dz <= groundCheckRadius; dz += groundCheckRadius) {
+                const checkX = Math.round(this.position.x + dx);
+                const checkZ = Math.round(this.position.z + dz);
+
+                // Check block below
+                const blockBelow = this.world.getBlock(checkX, Math.floor(this.position.y - 0.01), checkZ);
+                if (isBlockSolid(blockBelow) && !groundCollided) {
+                    this.isOnGround = true;
+                    this.velocity.y = Math.max(0, this.velocity.y);
+                    this.position.y = Math.floor(this.position.y) + 0.5;
+                    groundCollided = true;
+                }
+
+                // Check block above
+                const blockAbove = this.world.getBlock(checkX, Math.ceil(this.position.y + this.playerHeight), checkZ);
+                if (isBlockSolid(blockAbove) && this.velocity.y > 0) {
+                    this.velocity.y = 0;
+                }
             }
         }
 
         // Check horizontal collisions
-        for (let point of checkPoints) {
-            const checkPos = this.position.clone().add(point);
-            checkPos.y += 0.5;
+        const horizontalCheckHeight = [0.3, 0.8, 1.2];
 
-            const blockX = this.world.getBlock(
-                Math.round(checkPos.x),
-                Math.round(checkPos.y),
-                Math.round(checkPos.z)
-            );
-            if (isBlockSolid(blockX)) {
-                this.position.x = Math.round(checkPos.x) === Math.round(this.position.x + point.x) ?
-                    Math.floor(this.position.x) + 0.5 : this.position.x;
-                this.velocity.x = 0;
+        for (let height of horizontalCheckHeight) {
+            const checkY = this.position.y + height;
+
+            // Check X axis
+            for (let dz = -radius; dz <= radius; dz += radius) {
+                const checkZ = Math.round(this.position.z + dz);
+
+                if (this.velocity.x > 0) {
+                    const block = this.world.getBlock(Math.ceil(this.position.x + radius), Math.round(checkY), checkZ);
+                    if (isBlockSolid(block)) {
+                        this.position.x = Math.floor(this.position.x) + (1 - radius);
+                        this.velocity.x = 0;
+                    }
+                } else if (this.velocity.x < 0) {
+                    const block = this.world.getBlock(Math.floor(this.position.x - radius), Math.round(checkY), checkZ);
+                    if (isBlockSolid(block)) {
+                        this.position.x = Math.ceil(this.position.x) + radius;
+                        this.velocity.x = 0;
+                    }
+                }
+            }
+
+            // Check Z axis
+            for (let dx = -radius; dx <= radius; dx += radius) {
+                const checkX = Math.round(this.position.x + dx);
+
+                if (this.velocity.z > 0) {
+                    const block = this.world.getBlock(checkX, Math.round(checkY), Math.ceil(this.position.z + radius));
+                    if (isBlockSolid(block)) {
+                        this.position.z = Math.floor(this.position.z) + (1 - radius);
+                        this.velocity.z = 0;
+                    }
+                } else if (this.velocity.z < 0) {
+                    const block = this.world.getBlock(checkX, Math.round(checkY), Math.floor(this.position.z - radius));
+                    if (isBlockSolid(block)) {
+                        this.position.z = Math.ceil(this.position.z) + radius;
+                        this.velocity.z = 0;
+                    }
+                }
             }
         }
     }

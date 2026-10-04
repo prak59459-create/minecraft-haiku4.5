@@ -77,13 +77,40 @@ html, body {
     padding: 10px;
     border-radius: 4px;
     font-family: monospace;
+    border: 1px solid rgba(100, 200, 100, 0.3);
 }
 
 #info p {
     margin: 4px 0;
 }
 
-#pos, #chunk, #time, #fps {
+#pos, #chunk, #time, #fps, #blocks {
     color: #0f0;
     font-weight: bold;
+}
+
+#help-text {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: rgba(200, 200, 200, 0.9);
+    font-size: 11px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    text-align: center;
+    font-family: monospace;
+    border: 1px solid rgba(100, 150, 100, 0.4);
+    opacity: 0.6;
+    transition: opacity 0.3s;
+}
+
+#help-text:hover {
+    opacity: 1;
+}
+
+#help-text p {
+    margin: 2px 0;
+    line-height: 1.3;
 }

@@ -63,26 +63,43 @@ class World {
                 const worldZ = offsetZ + z;
 
                 const height = this.getTerrainHeight(worldX, worldZ);
+                const biomeType = this.getBiomeType(worldX, worldZ);
 
                 for (let y = 0; y < CHUNK_HEIGHT; y++) {
                     let blockType = 0;
 
-                    if (y < height - 3) {
+                    if (y < height - 4) {
                         blockType = 3; // Stone
+                    } else if (y < height - 1) {
+                        blockType = biomeType === 'sand' ? 7 : 2; // Dirt or Sand
                     } else if (y < height) {
                         blockType = 2; // Dirt
                     } else if (y === height) {
-                        blockType = 1; // Grass
+                        if (biomeType === 'sand') {
+                            blockType = 7; // Sand
+                        } else if (biomeType === 'gravel') {
+                            blockType = 8; // Gravel
+                        } else {
+                            blockType = 1; // Grass
+                        }
                     } else if (y < SEA_LEVEL && height <= SEA_LEVEL) {
                         blockType = 6; // Water
+                    }
+
+                    // Add caves
+                    if (blockType !== 0 && this.isCaveBlock(worldX, y, worldZ)) {
+                        blockType = 0;
                     }
 
                     chunk.setBlock(x, y, z, blockType);
                 }
 
                 // Add trees
-                if (Math.random() < 0.02 && height > SEA_LEVEL) {
-                    this.generateTree(chunk, x, Math.floor(height), z);
+                if (biomeType !== 'sand' && biomeType !== 'gravel') {
+                    const treeChance = biomeType === 'forest' ? 0.05 : 0.02;
+                    if (Math.random() < treeChance && height > SEA_LEVEL) {
+                        this.generateTree(chunk, x, Math.floor(height), z);
+                    }
                 }
             }
         }
@@ -130,6 +147,22 @@ class World {
         const n2 = this.noise.noise(x * scale * 0.5, z * scale * 0.5) * 80;
         const height = SEA_LEVEL + n1 + n2;
         return Math.floor(Math.clamp(height, 10, 200));
+    }
+
+    getBiomeType(x, z) {
+        const scale = 0.02;
+        const biomeNoise = this.noise.noise(x * scale, z * scale);
+
+        if (biomeNoise < -0.3) return 'forest';
+        if (biomeNoise < 0) return 'grass';
+        if (biomeNoise < 0.3) return 'sand';
+        return 'gravel';
+    }
+
+    isCaveBlock(x, y, z) {
+        const scale = 0.1;
+        const caveNoise = this.noise.noise(x * scale, y * scale * 0.5, z * scale);
+        return caveNoise > 0.6 && y > 20 && y < 100;
     }
 
     getBlock(x, y, z) {
