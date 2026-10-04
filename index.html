@@ -140,8 +140,9 @@
         <div id="info">
             <div>W/A/S/D - Move</div>
             <div>Mouse - Look</div>
-            <div>Space - Jump</div>
-            <div>Shift - Sprint/Crouch</div>
+            <div>Space - Jump / Fly Up</div>
+            <div>Shift - Sprint / Fly Down</div>
+            <div>F - Toggle Flight Mode</div>
             <div>Left Click - Destroy</div>
             <div>Right Click - Place</div>
             <div>1-9 / Scroll - Block Select</div>
@@ -269,6 +270,7 @@
             isJumping: false,
             isSprinting: false,
             isCrouching: false,
+            isFlying: false,
             speed: 0.25,
             sprintSpeed: 0.45,
             jumpForce: 0.85,
@@ -294,6 +296,10 @@
                     selectedBlock = blockTypes[blockIndex];
                     updateBlockSelector();
                 }
+            }
+            if (e.key.toLowerCase() === 'f') {
+                player.isFlying = !player.isFlying;
+                playSound(player.isFlying ? 600 : 400, 0.1, 'sine');
             }
         });
 
@@ -798,58 +804,75 @@
                 player.velocity.z *= player.friction;
             }
 
-            // Jump
-            if (keys[' '] && !player.isJumping) {
-                const blockBelow = getBlock(
-                    Math.floor(player.position.x),
-                    Math.floor(player.position.y) - 1,
-                    Math.floor(player.position.z)
-                );
-                if (blockBelow) {
-                    player.velocity.y = player.jumpForce;
-                    player.isJumping = true;
+            // Jump/Fly vertical movement
+            if (keys[' ']) {
+                if (player.isFlying) {
+                    player.velocity.y = currentSpeed;
+                } else if (!player.isJumping) {
+                    const blockBelow = getBlock(
+                        Math.floor(player.position.x),
+                        Math.floor(player.position.y) - 1,
+                        Math.floor(player.position.z)
+                    );
+                    if (blockBelow) {
+                        player.velocity.y = player.jumpForce;
+                        player.isJumping = true;
+                    }
                 }
+            } else if (player.isFlying && keys['shift']) {
+                player.velocity.y = -currentSpeed;
+            } else if (player.isFlying) {
+                player.velocity.y *= 0.9;
             }
 
-            // Gravity
-            player.velocity.y -= player.gravity;
+            // Gravity (only when not flying)
+            if (!player.isFlying) {
+                player.velocity.y -= player.gravity;
+            }
+
             player.position.add(player.velocity);
 
-            // Collision detection
-            const footY = Math.floor(player.position.y);
-            const footX = Math.floor(player.position.x);
-            const footZ = Math.floor(player.position.z);
+            // Collision detection (skip if flying)
+            if (!player.isFlying) {
+                const footY = Math.floor(player.position.y);
+                const footX = Math.floor(player.position.x);
+                const footZ = Math.floor(player.position.z);
 
-            if (getBlock(footX, footY, footZ)) {
-                player.position.y = footY + 1.1;
-                player.velocity.y = 0;
-                player.isJumping = false;
-            }
+                if (getBlock(footX, footY, footZ)) {
+                    player.position.y = footY + 1.1;
+                    player.velocity.y = 0;
+                    player.isJumping = false;
+                }
 
-            if (player.position.y < 0) {
-                player.position.copy(new THREE.Vector3(50, 80, 50));
-                player.velocity.set(0, 0, 0);
-            }
+                if (player.position.y < 0) {
+                    player.position.copy(new THREE.Vector3(50, 80, 50));
+                    player.velocity.set(0, 0, 0);
+                }
 
-            // Clamp height for terrain collision
-            const terrainHeight = getBlockHeight(player.position.x, player.position.z) + 2;
-            if (player.position.y < terrainHeight) {
-                player.position.y = terrainHeight;
-                player.velocity.y = 0;
-                player.isJumping = false;
-            }
+                // Clamp height for terrain collision
+                const terrainHeight = getBlockHeight(player.position.x, player.position.z) + 2;
+                if (player.position.y < terrainHeight) {
+                    player.position.y = terrainHeight;
+                    player.velocity.y = 0;
+                    player.isJumping = false;
+                }
 
-            // Water physics
-            const blockAtPlayer = getBlock(
-                Math.floor(player.position.x),
-                Math.floor(player.position.y),
-                Math.floor(player.position.z)
-            );
-            if (blockAtPlayer === BLOCKS.WATER) {
-                player.velocity.y *= 0.7; // Water resistance
-                player.gravity = 0.02; // Reduced gravity in water
+                // Water physics
+                const blockAtPlayer = getBlock(
+                    Math.floor(player.position.x),
+                    Math.floor(player.position.y),
+                    Math.floor(player.position.z)
+                );
+                if (blockAtPlayer === BLOCKS.WATER) {
+                    player.velocity.y *= 0.7; // Water resistance
+                    player.gravity = 0.02; // Reduced gravity in water
+                } else {
+                    player.gravity = 0.05; // Normal gravity
+                }
             } else {
-                player.gravity = 0.05; // Normal gravity
+                // In flying mode, clamp to world bounds
+                if (player.position.y < 0) player.position.y = 0;
+                if (player.position.y > WORLD_HEIGHT) player.position.y = WORLD_HEIGHT;
             }
 
             // Update camera
@@ -925,10 +948,12 @@
                 Memory: ${(performance.memory ? (performance.memory.usedJSHeapSize / 1048576).toFixed(1) : 'N/A')} MB
             `;
 
-            // Update selected block info
+            // Update selected block info and flying mode
             const blockColor = BLOCK_COLORS[selectedBlock];
             const rgb = `rgb(${(blockColor >> 16) & 255}, ${(blockColor >> 8) & 255}, ${blockColor & 255})`;
+            const flyingMode = player.isFlying ? '<span style="color: #ffff00; font-weight: bold;">✈ FLYING</span>' : '';
             document.getElementById('selectedBlockInfo').innerHTML = `
+                ${flyingMode}<br>
                 <span style="color: ${rgb}; font-weight: bold;">Selected: ■ ${BLOCK_NAMES[selectedBlock]}</span>
             `;
 
