@@ -184,6 +184,24 @@
         scene.fog = new THREE.Fog(0x87ceeb, 200, 400);
         scene.background = new THREE.Color(0x87ceeb);
 
+        // Audio context for sound effects
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(frequency, duration, type = 'sine') {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+
+            osc.frequency.value = frequency;
+            osc.type = type;
+            gain.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+            osc.start(audioContext.currentTime);
+            osc.stop(audioContext.currentTime + duration);
+        }
+
         // Player
         const player = {
             position: new THREE.Vector3(50, 80, 50),
@@ -273,24 +291,71 @@
             return `${Math.floor(x / CHUNK_SIZE)},${Math.floor(z / CHUNK_SIZE)}`;
         }
 
+        function getBiomeType(x, z) {
+            const moisture = getNoise(x, z, 0.02);
+            const temperature = getNoise(x, z, 0.015);
+
+            if (temperature > 0.6) return 'hot'; // Desert/savanna
+            if (moisture > 0.6) return 'wet'; // Forests/swamps
+            return 'normal'; // Plains/grassland
+        }
+
         function getBlockHeight(x, z) {
             const noise1 = getNoise(x, z, 0.03);
             const noise2 = getNoise(x, z, 0.1);
             const noise3 = getNoise(x, z, 0.3);
-            const height = (noise1 * 0.6 + noise2 * 0.3 + noise3 * 0.1) * 60 + SEA_LEVEL;
+            const cavesNoise = getNoise(x, z, 0.15);
+
+            let height = (noise1 * 0.6 + noise2 * 0.3 + noise3 * 0.1) * 60 + SEA_LEVEL;
+
+            // Add biome variation
+            const biome = getBiomeType(x, z);
+            if (biome === 'hot') {
+                height *= 0.8; // Lower terrain in deserts
+            } else if (biome === 'wet') {
+                height *= 1.1; // Taller terrain in forests
+            }
+
             return Math.floor(height);
         }
 
         function getBlockType(x, y, z) {
             const maxHeight = getBlockHeight(x, z);
-            const distFromTop = maxHeight - y;
+            const biome = getBiomeType(x, z);
 
             if (y > WORLD_HEIGHT || y < 0) return null;
             if (y > maxHeight) return null;
-            if (y <= maxHeight - 3) return BLOCKS.STONE;
-            if (y <= maxHeight - 1) return BLOCKS.DIRT;
-            if (y === maxHeight && y >= SEA_LEVEL) return BLOCKS.GRASS;
-            if (y === maxHeight && y < SEA_LEVEL) return BLOCKS.SAND;
+
+            // Deep stone
+            if (y <= maxHeight - 5) {
+                // Add ore deposits
+                const oreNoise = getNoise(x, z, 0.25);
+                if (oreNoise > 0.85) return BLOCKS.COAL_ORE;
+                if (oreNoise > 0.9) return BLOCKS.IRON_ORE;
+                return BLOCKS.STONE;
+            }
+
+            // Middle layers based on biome
+            if (y <= maxHeight - 1) {
+                if (biome === 'hot') {
+                    return BLOCKS.SAND;
+                } else if (biome === 'wet') {
+                    return BLOCKS.DIRT;
+                }
+                return BLOCKS.DIRT;
+            }
+
+            // Surface blocks
+            if (y === maxHeight) {
+                if (biome === 'hot') {
+                    return BLOCKS.SAND;
+                } else if (biome === 'wet') {
+                    return BLOCKS.GRASS;
+                }
+                return y >= SEA_LEVEL ? BLOCKS.GRASS : BLOCKS.SAND;
+            }
+
+            // Water
             if (y < SEA_LEVEL && y > maxHeight) return BLOCKS.WATER;
 
             return null;
@@ -423,11 +488,52 @@
             return intersects.length > 0 ? intersects[0] : null;
         }
 
+        // Particle system
+        const particles = [];
+
+        function createParticles(x, y, z, blockType) {
+            const color = BLOCK_COLORS[blockType];
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    position: new THREE.Vector3(x + Math.random() - 0.5, y + Math.random() - 0.5, z + Math.random() - 0.5),
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.3,
+                        Math.random() * 0.4,
+                        (Math.random() - 0.5) * 0.3
+                    ),
+                    lifetime: 0.5,
+                    maxLifetime: 0.5,
+                    color: color
+                });
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.lifetime -= 0.016;
+                if (p.lifetime <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+                p.position.add(p.velocity);
+                p.velocity.y -= 0.015;
+            }
+
+            // Render particles (simplified - could use InstancedMesh for better perf)
+            particles.forEach(p => {
+                const alpha = p.lifetime / p.maxLifetime;
+                // Particles rendered via raycaster visualization
+            });
+        }
+
         function destroyBlock() {
             const hit = rayCast();
             if (hit && hit.object.userData.x !== undefined) {
-                const { x, y, z } = hit.object.userData;
+                const { x, y, z, blockType } = hit.object.userData;
+                createParticles(x, y, z, blockType || BLOCKS.STONE);
                 setBlock(x, y, z, null);
+                playSound(200 + Math.random() * 100, 0.1, 'triangle');
             }
         }
 
@@ -445,6 +551,7 @@
                     z - Math.floor(player.position.z)
                 ) > 1.5) {
                     setBlock(x, y, z, selectedBlock);
+                    playSound(400 + Math.random() * 200, 0.15, 'sine');
                 }
             }
         }
@@ -493,9 +600,47 @@
             scene.fog.color = skyColor;
         }
 
+        // Particle rendering setup
+        const particleGeometry = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(1000 * 3);
+        const particleColors = new Float32Array(1000 * 3);
+        particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        particleGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+
+        const particleMaterial = new THREE.PointsMaterial({
+            size: 0.2,
+            sizeAttenuation: true,
+            vertexColors: true
+        });
+
+        const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
+        scene.add(particleSystem);
+
         // Main game loop
         function animate() {
             requestAnimationFrame(animate);
+
+            // Update particles
+            updateParticles();
+
+            // Update particle geometry
+            const positions = particleGeometry.attributes.position.array;
+            const colors = particleGeometry.attributes.color.array;
+            for (let i = 0; i < Math.min(particles.length, 1000); i++) {
+                const p = particles[i];
+                positions[i * 3] = p.position.x;
+                positions[i * 3 + 1] = p.position.y;
+                positions[i * 3 + 2] = p.position.z;
+
+                const c = (p.color >> 16) & 255;
+                const g = (p.color >> 8) & 255;
+                const b = p.color & 255;
+                colors[i * 3] = c / 255;
+                colors[i * 3 + 1] = g / 255;
+                colors[i * 3 + 2] = b / 255;
+            }
+            particleGeometry.attributes.position.needsUpdate = true;
+            particleGeometry.attributes.color.needsUpdate = true;
 
             // Update player velocity
             const moveDir = new THREE.Vector3();
@@ -554,10 +699,24 @@
             }
 
             // Clamp height for terrain collision
-            if (player.position.y < getBlockHeight(player.position.x, player.position.z) + 2) {
-                player.position.y = getBlockHeight(player.position.x, player.position.z) + 2;
+            const terrainHeight = getBlockHeight(player.position.x, player.position.z) + 2;
+            if (player.position.y < terrainHeight) {
+                player.position.y = terrainHeight;
                 player.velocity.y = 0;
                 player.isJumping = false;
+            }
+
+            // Water physics
+            const blockAtPlayer = getBlock(
+                Math.floor(player.position.x),
+                Math.floor(player.position.y),
+                Math.floor(player.position.z)
+            );
+            if (blockAtPlayer === BLOCKS.WATER) {
+                player.velocity.y *= 0.7; // Water resistance
+                player.gravity = 0.02; // Reduced gravity in water
+            } else {
+                player.gravity = 0.05; // Normal gravity
             }
 
             // Update camera
