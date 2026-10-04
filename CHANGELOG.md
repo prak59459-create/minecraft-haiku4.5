@@ -1,5 +1,91 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Optimization and Enhancement Update (Session 3 Complete)
+
+### Major Features Added
+
+#### World Persistence
+- **Save/Load System**: Automatic world saving every 5 seconds using localStorage
+- **Manual Save**: Ctrl+S to save world at any time
+- **Player Position Persistence**: Spawn point and position saved/restored
+- **Chunk Management**: Efficient chunk storage and loading
+
+#### Cave Generation
+- **3D Perlin Noise**: Natural-looking cave systems
+- **Varying Cave Size**: Different cave dimensions for variety
+- **Ore Preservation**: Ores still spawn in caves
+
+#### Enhanced Terrain
+- **Mountain Biome**: Three distinct terrain types (grass, sand, mountain)
+- **Improved Tree Generation**: More natural-looking trees with variation
+- **Gravel Patches**: Natural-looking gravel near water level
+- **Better Biome Transitions**: Smoother terrain changes
+
+#### Gameplay Improvements
+- **Respawn System**: Press R to respawn at spawn point
+- **Water Physics**: Movement slowed in water, buoyancy system
+- **New Block Types**: Clay (15) and Mycelium (16)
+- **Dynamic Render Distance**: Adjust with +/- keys (2-16 chunks)
+- **Step Sounds**: Audio feedback when walking
+
+#### Lighting Enhancements
+- **Improved Day/Night Cycle**: Better color transitions throughout the day
+- **Dynamic Sun Position**: Sun orbits player for immersive lighting
+- **Better Shadow Rendering**: Improved shadow camera and bias
+- **Enhanced Ambient Lighting**: More realistic light intensity
+
+#### Audio Improvements
+- **Step Sound System**: Automatic footstep sounds while moving
+- **Enhanced Block Sounds**: More variation in break/place sounds
+- **Better Audio Frequencies**: More natural sound generation
+
+#### Debug Features
+- **Enhanced Debug Display**: Shows geometry size and memory info
+- **Render Distance Display**: Monitor current settings
+- **Performance Metrics**: Track FPS, chunks, vertices, triangles
+
+### Performance Optimizations
+
+1. **Rendering**
+   - Improved raycasting step size (0.1 blocks, was 0.05)
+   - Better chunk visibility culling
+   - Geometry disposal on chunk unload
+   - Optimized block outline rendering
+
+2. **Memory Management**
+   - Proper mesh cleanup when chunks unload
+   - Particle system limit (2000 particles max)
+   - Efficient buffer geometry handling
+   - Chunk memory tracking
+
+3. **Physics**
+   - Optimized collision detection
+   - Water interaction handling
+   - Better ground detection
+
+### Bug Fixes
+
+- Fixed memory leaks in chunk unloading
+- Improved block outline cleanup
+- Better water rendering performance
+- Fixed shadow camera clipping
+- Improved death detection
+
+### New Files
+
+- `worldsave.js` - World persistence system
+- `meshpool.js` - Mesh pooling framework (foundation)
+- `OPTIMIZATIONS.md` - Performance tuning guide
+
+### Documentation
+
+- Enhanced README with new features
+- Added OPTIMIZATIONS.md for performance tuning
+- Updated help panel with new controls
+- Better control descriptions
+
+---
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features

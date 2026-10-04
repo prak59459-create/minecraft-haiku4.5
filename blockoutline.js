@@ -17,6 +17,7 @@ export class BlockOutline {
     setSelectedBlock(x, y, z) {
         if (this.outline) {
             this.scene.remove(this.outline);
+            this.outline.geometry.dispose();
         }
 
         const geometry = new THREE.BufferGeometry();
@@ -40,14 +41,17 @@ export class BlockOutline {
         }
 
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
+        geometry.computeVertexNormals();
 
         this.outline = new THREE.LineSegments(geometry, this.material);
+        this.outline.renderOrder = 999;
         this.scene.add(this.outline);
     }
 
     clear() {
         if (this.outline) {
             this.scene.remove(this.outline);
+            if (this.outline.geometry) this.outline.geometry.dispose();
             this.outline = null;
         }
     }

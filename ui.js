@@ -71,4 +71,31 @@ export class UI {
         const help = document.getElementById('help');
         help.classList.toggle('show');
     }
+
+    showMessage(message, duration = 2000) {
+        const messageEl = document.createElement('div');
+        messageEl.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 15px 30px;
+            border-radius: 4px;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 100;
+            text-align: center;
+            font-family: monospace;
+        `;
+        messageEl.textContent = message;
+        document.getElementById('ui').appendChild(messageEl);
+
+        setTimeout(() => {
+            messageEl.style.opacity = '0';
+            messageEl.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => messageEl.remove(), 300);
+        }, duration);
+    }
 }

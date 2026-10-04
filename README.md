@@ -15,16 +15,18 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Pick Block** - Press C to pick the block you're looking at
 
 ### World & Terrain
-- **Procedural Generation** - Infinite world generation using Perlin noise
-- **Multiple Biomes** - Grass, sand, and varied terrain types
+- **Procedural Generation** - Infinite world generation using multi-octave Perlin noise
+- **Multiple Biomes** - Grass, sand, mountain, and varied terrain types
 - **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
+- **Cave Generation** - Natural cave systems using 3D noise
+- **Multiple Block Types** (16 total):
   - Stone, Grass, Dirt, Cobblestone
   - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
+  - Sand, Water, Gravel, Bedrock, Clay, Mycelium
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
 - **Ore Generation** - Procedural ore generation at various depths
-- **Tree Generation** - Natural tree placement in suitable terrain
+- **Tree Generation** - Natural tree placement with varied appearance
+- **Gravel Patches** - Natural decoration near water level
 
 ### Physics & Collision
 - **Gravity System** - Realistic falling and landing
@@ -41,11 +43,21 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 ### Audio
 - **Procedural Sound Effects**:
-  - Block break sounds
-  - Block place sounds
-  - Jump sounds (prepared)
-  - Step sounds (prepared)
-- **Web Audio API** - Dynamic audio generation
+  - Block break sounds with variation
+  - Block place sounds with pitch variation
+  - Jump sounds with frequency modulation
+  - Step sounds triggered while moving
+  - Sound variation system for natural audio
+- **Web Audio API** - Dynamic real-time audio generation
+- **Audio Context** - Proper audio initialization and management
+
+### Gameplay Features
+- **World Persistence** - Auto-save every 5 seconds with Ctrl+S manual save
+- **Player Persistence** - Spawn point and position save/restore
+- **Respawn System** - Press R to respawn when fallen
+- **Dynamic Render Distance** - Adjust with +/- keys (2-16 chunks)
+- **Water Physics** - Movement slowing and buoyancy in water
+- **Performance Monitoring** - Real-time FPS, memory, and performance metrics
 
 ### User Interface
 - **HUD Display** - Real-time coordinates, FPS, and block info
@@ -61,6 +73,7 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 ## Controls
 
+### Movement
 | Key | Action |
 |-----|--------|
 | **W** | Move Forward |
@@ -70,13 +83,24 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 | **Space** | Jump |
 | **Shift** | Sprint / Crouch |
 | **Mouse** | Look Around (Click to enable) |
+
+### Building
+| Key | Action |
+|-----|--------|
 | **Left-Click** | Destroy Block |
 | **Right-Click** | Place Block |
 | **1-9** | Select Block Slot |
 | **Scroll Wheel** | Change Selected Block |
 | **C** | Pick Block (Pick the block you're looking at) |
+
+### Special
+| Key | Action |
+|-----|--------|
 | **H** | Toggle Help |
 | **F3** | Toggle Debug Info |
+| **+/-** | Adjust Render Distance |
+| **R** | Respawn (when dead) |
+| **Ctrl+S** | Save World |
 
 ## Getting Started
 
@@ -170,6 +194,18 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 - **Clean Separation** - Game logic, rendering, and physics separate
 - **Extensible** - Easy to add new block types or biomes
 
+### Recently Added (v1.1.0)
+
+- [x] World save/load functionality with localStorage
+- [x] Cave generation system
+- [x] Water interaction physics
+- [x] New block types (Clay, Mycelium)
+- [x] Dynamic render distance adjustment
+- [x] Respawn system with spawn points
+- [x] Step sounds and audio improvements
+- [x] Performance monitoring and optimization
+- [x] Better lighting and shadows
+
 ### Future Enhancements
 
 - [ ] Inventory UI with multiple stacks
@@ -177,10 +213,15 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 - [ ] Survival mode with health/hunger
 - [ ] Multiplayer support
 - [ ] Texture mapping for blocks
-- [ ] Advanced weather systems
-- [ ] More biome types
-- [ ] Mob system
+- [ ] Advanced weather systems (rain, snow)
+- [ ] More biome types (forest, desert, swamp)
+- [ ] Mob system with AI
 - [ ] Crafting system
+- [ ] Mining progression (different tools)
+- [ ] Dungeon and structure generation
+- [ ] Advanced particles (dust, smoke)
+- [ ] Level of Detail (LOD) system
+- [ ] Screen space ambient occlusion (SSAO)
 
 ## Performance Tips
 

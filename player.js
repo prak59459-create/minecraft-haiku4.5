@@ -1,5 +1,8 @@
 import { BLOCKS, isBlockSolid } from './blocks.js';
 
+const WATER_FRICTION = 0.8;
+const WATER_SLOW_FACTOR = 0.6;
+
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
 const PLAYER_SPEED = 0.1;
@@ -12,6 +15,7 @@ export class Player {
     constructor(world) {
         this.world = world;
         this.position = { x: 0, y: 100, z: 0 };
+        this.spawnPoint = { x: 0, y: 100, z: 0 };
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
 
@@ -19,9 +23,24 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.isDead = false;
 
         this.keys = {};
         this.setupKeyboardControls();
+    }
+
+    setSpawnPoint(x, y, z) {
+        this.spawnPoint = { x, y, z };
+    }
+
+    respawn() {
+        this.position = { x: this.spawnPoint.x, y: this.spawnPoint.y, z: this.spawnPoint.z };
+        this.velocity = { x: 0, y: 0, z: 0 };
+        this.isDead = false;
+    }
+
+    resetDeathMessage() {
+        delete this.deathMessageShown;
     }
 
     setupKeyboardControls() {
@@ -47,6 +66,25 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        this.checkWaterInteraction();
+    }
+
+    checkWaterInteraction() {
+        const eyeBlock = this.world.getBlock(
+            Math.floor(this.position.x),
+            Math.floor(this.position.y + PLAYER_HEIGHT * 0.85),
+            Math.floor(this.position.z)
+        );
+
+        if (eyeBlock === BLOCKS.WATER) {
+            this.velocity.y *= WATER_FRICTION;
+            this.velocity.x *= WATER_SLOW_FACTOR;
+            this.velocity.z *= WATER_SLOW_FACTOR;
+
+            if (this.keys[' ']) {
+                this.velocity.y = 0.15;
+            }
+        }
     }
 
     handleMovement() {
@@ -145,8 +183,7 @@ export class Player {
         }
 
         if (this.position.y < -10) {
-            this.position.y = 100;
-            this.velocity.y = 0;
+            this.isDead = true;
         }
     }
 
