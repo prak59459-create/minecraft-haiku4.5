@@ -74,15 +74,37 @@ class TerrainGenerator {
         let frequency = 1;
         let maxValue = 0;
 
-        for (let i = 0; i < 5; i++) {
-            height += this.noise.noise(x * frequency * 0.01, z * frequency * 0.01) * amplitude;
+        for (let i = 0; i < 6; i++) {
+            height += this.noise.noise(x * frequency * 0.01, z * frequency * 0.01, i) * amplitude;
             maxValue += amplitude;
             amplitude *= 0.5;
             frequency *= 2;
         }
 
-        height = (height / maxValue) * 64 + 64;
-        return Math.floor(Math.max(0, Math.min(this.chunkHeight, height)));
+        height = height / maxValue;
+        let finalHeight = 64;
+
+        if (height < -0.3) {
+            finalHeight = 55;
+        } else if (height < 0) {
+            finalHeight = 60 + (height + 0.3) / 0.3 * 4;
+        } else if (height < 0.3) {
+            finalHeight = 64 + height / 0.3 * 16;
+        } else if (height < 0.6) {
+            finalHeight = 80 + (height - 0.3) / 0.3 * 20;
+        } else {
+            finalHeight = 100 + (height - 0.6) / 0.4 * 60;
+        }
+
+        return Math.floor(Math.max(0, Math.min(this.chunkHeight, finalHeight)));
+    }
+
+    getTerrainType(x, z, height) {
+        let type = 'plains';
+        if (height > 120) type = 'mountain';
+        else if (height > 80) type = 'hill';
+        else if (height < 62) type = 'beach';
+        return type;
     }
 
     generateChunk(chunkX, chunkZ) {
@@ -93,18 +115,39 @@ class TerrainGenerator {
         for (let x = 0; x < this.chunkSize; x++) {
             for (let z = 0; z < this.chunkSize; z++) {
                 const height = this.getHeight(worldX + x, worldZ + z);
+                const terrainType = this.getTerrainType(worldX + x, worldZ + z, height);
 
                 for (let y = 0; y < this.chunkHeight; y++) {
                     const idx = x + y * this.chunkSize + z * this.chunkSize * this.chunkHeight;
 
+                    const caveNoise = this.noise.noise(
+                        (worldX + x) * 0.05,
+                        y * 0.05,
+                        (worldZ + z) * 0.05
+                    );
+
                     if (y < 10) {
                         data[idx] = BLOCKS.STONE.id;
+                    } else if (caveNoise > 0.5 && y < height - 10) {
+                        data[idx] = BLOCKS.AIR.id;
                     } else if (y < height - 4) {
                         data[idx] = BLOCKS.STONE.id;
                     } else if (y < height - 1) {
-                        data[idx] = BLOCKS.DIRT.id;
+                        if (terrainType === 'beach') {
+                            data[idx] = BLOCKS.SAND.id;
+                        } else if (terrainType === 'mountain' && y < height - 2) {
+                            data[idx] = BLOCKS.STONE.id;
+                        } else {
+                            data[idx] = BLOCKS.DIRT.id;
+                        }
                     } else if (y === height - 1) {
-                        data[idx] = BLOCKS.GRASS.id;
+                        if (terrainType === 'beach') {
+                            data[idx] = BLOCKS.SAND.id;
+                        } else if (terrainType === 'mountain') {
+                            data[idx] = BLOCKS.STONE.id;
+                        } else {
+                            data[idx] = BLOCKS.GRASS.id;
+                        }
                     } else if (y < 62) {
                         data[idx] = BLOCKS.WATER.id;
                     } else {
@@ -112,7 +155,7 @@ class TerrainGenerator {
                     }
                 }
 
-                if (height > 65 && Math.random() < 0.05) {
+                if (height > 65 && height < 100 && Math.random() < 0.04) {
                     this.generateTree(data, x, Math.floor(height), z, worldX, worldZ);
                 }
             }
@@ -149,9 +192,10 @@ class TerrainGenerator {
 class World {
     constructor() {
         this.chunks = new Map();
+        this.modifiedBlocks = new Map();
         this.generator = new TerrainGenerator();
         this.chunkSize = 16;
-        this.viewDistance = 8;
+        this.viewDistance = 6;
     }
 
     getChunk(chunkX, chunkZ) {
@@ -184,6 +228,19 @@ class World {
         const chunk = this.getChunk(chunkX, chunkZ);
         const idx = localX + y * this.chunkSize + localZ * this.chunkSize * 256;
         chunk[idx] = blockId;
+
+        const key = `${chunkX},${chunkZ}`;
+        this.modifiedBlocks.set(key, true);
+    }
+
+    isChunkModified(chunkX, chunkZ) {
+        const key = `${chunkX},${chunkZ}`;
+        return this.modifiedBlocks.has(key);
+    }
+
+    clearChunkModified(chunkX, chunkZ) {
+        const key = `${chunkX},${chunkZ}`;
+        this.modifiedBlocks.delete(key);
     }
 
     getChunksInView(playerX, playerZ) {

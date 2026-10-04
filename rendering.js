@@ -79,6 +79,14 @@ class Renderer {
 
     renderChunk(world, chunkX, chunkZ) {
         const key = `${chunkX},${chunkZ}`;
+        if (world.isChunkModified(chunkX, chunkZ) && this.chunkMeshes.has(key)) {
+            const oldMesh = this.chunkMeshes.get(key);
+            this.scene.remove(oldMesh);
+            oldMesh.geometry.dispose();
+            oldMesh.material.dispose();
+            this.chunkMeshes.delete(key);
+            world.clearChunkModified(chunkX, chunkZ);
+        }
         if (this.chunkMeshes.has(key)) {
             return this.chunkMeshes.get(key);
         }
