@@ -24,18 +24,19 @@ let meshCache: Map<string, THREE.Mesh> = new Map();
 function init(): void {
     const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x87ceeb);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87ceeb);
-    scene.fog = new THREE.Fog(0x87ceeb, 200, 400);
+    scene.fog = new THREE.Fog(0x87ceeb, 150, 400);
 
     world = new World(scene);
     particles = new ParticleSystem(scene);

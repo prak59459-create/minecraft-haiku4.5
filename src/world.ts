@@ -1,9 +1,10 @@
 import { BlockType } from './blocks.js';
 import * as THREE from 'three';
 
-const CHUNK_SIZE = 16;
-const CHUNK_HEIGHT = 128;
-const RENDER_DISTANCE = 10;
+// World configuration constants
+const CHUNK_SIZE = 16;                      // Width/length of each chunk in blocks
+const CHUNK_HEIGHT = 128;                   // Height of world in blocks
+const RENDER_DISTANCE = 10;                 // Chunk render distance from player
 
 interface Vector3Like {
     x: number;
@@ -278,7 +279,9 @@ export class World {
         const material = new THREE.MeshStandardMaterial({
             vertexColors: true,
             roughness: 0.8,
-            metalness: 0.1
+            metalness: 0.0,
+            side: THREE.FrontSide,
+            flatShading: false
         });
 
         return new THREE.Mesh(geometry, material);
@@ -288,6 +291,8 @@ export class World {
         const block = chunk.getBlock(x, y, z);
         const isWater = block === BlockType.WATER;
 
+        // Face definitions: direction vector and vertex positions
+        // Brightness affects shading for depth perception (top faces brightest, bottom darkest)
         const faces = [
             { nx: 1, ny: 0, nz: 0, brightness: 0.8, verts: [[1,0,0],[1,1,0],[1,1,1],[1,0,1]] },
             { nx: -1, ny: 0, nz: 0, brightness: 0.8, verts: [[0,0,1],[0,1,1],[0,1,0],[0,0,0]] },
@@ -299,7 +304,9 @@ export class World {
 
         for (const face of faces) {
             const neighbor = chunk.getBlock(x + face.nx, y + face.ny, z + face.nz);
-            if (neighbor === BlockType.AIR || (isWater && neighbor === BlockType.AIR)) {
+            const shouldRender = neighbor === BlockType.AIR || (isWater && neighbor === BlockType.AIR);
+
+            if (shouldRender) {
                 const start = vertices.length / 3;
                 for (const vert of face.verts) {
                     vertices.push(x + vert[0], y + vert[1], z + vert[2]);
