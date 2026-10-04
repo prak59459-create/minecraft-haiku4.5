@@ -114,6 +114,12 @@ function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
     let ore = BLOCKS.STONE;
+
+    const caveNoise = perlinNoise.noise2D(x * 0.05 + y * 0.02, z * 0.05 + y * 0.02);
+    if (caveNoise > 0.6) {
+        return BLOCKS.AIR;
+    }
+
     const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
     const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
     const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);

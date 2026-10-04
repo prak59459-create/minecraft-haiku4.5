@@ -70,15 +70,22 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
+        ambientLight.intensity = 0.5;
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7 + sunIntensity * 0.2);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.near = 10;
+        directionalLight.shadow.camera.left = -256;
+        directionalLight.shadow.camera.right = 256;
+        directionalLight.shadow.camera.top = 256;
+        directionalLight.shadow.camera.bottom = -256;
+        directionalLight.shadow.bias = -0.0001;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -439,13 +446,22 @@ class MinecraftGame {
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.4 + sunIntensity * 0.35;
 
-        const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        let skyColor = new THREE.Color();
+
+        if (sunIntensity > 0.3) {
+            const dayColor = new THREE.Color(0x87CEEB);
+            const sunsetColor = new THREE.Color(0xFF8C00);
+            const t = Math.max(0, Math.min(1, (sunIntensity - 0.3) / 0.7));
+            skyColor.lerpColors(sunsetColor, dayColor, t);
+        } else {
+            skyColor.setHSL(0.65, 0.3, 0.1 + sunIntensity * 0.3);
+        }
+
         this.scene.background = skyColor;
     }
 }

@@ -100,7 +100,7 @@ export class Player {
 
     checkCollisions() {
         const radius = PLAYER_WIDTH / 2;
-        const height = PLAYER_HEIGHT;
+        const height = this.isCrouching ? PLAYER_HEIGHT * 0.6 : PLAYER_HEIGHT;
 
         this.isOnGround = false;
 
@@ -111,7 +111,9 @@ export class Player {
             { dy: height * 0.9, radius: radius * 0.7 }
         ];
 
+        let collided = false;
         for (const point of checkPoints) {
+            if (collided) break;
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
@@ -125,6 +127,7 @@ export class Player {
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
+                    collided = true;
                     break;
                 }
             }
