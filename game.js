@@ -316,13 +316,14 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const renderDist = Math.min(16, this.world.renderDistance);
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (Math.abs(cx - playerChunkX) > renderDist || Math.abs(cz - playerChunkZ) > renderDist) {
                 if (this.chunkMeshes.has(key)) {
                     const mesh = this.chunkMeshes.get(key);
                     this.scene.remove(mesh);
@@ -359,6 +360,9 @@ class MinecraftGame {
     animate() {
         requestAnimationFrame(() => this.animate());
 
+        const now = performance.now();
+        const deltaTime = now - this.lastFrameTime;
+
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
 
@@ -379,7 +383,7 @@ class MinecraftGame {
         this.updateVisibleChunks();
         this.updateDayNightCycle();
         this.particleSystem.update();
-        this.waterRenderer.update(this.player.position.x, this.player.position.z);
+        this.waterRenderer.update(this.player.position.x, this.player.position.z, this.world.renderDistance);
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);
@@ -392,6 +396,7 @@ class MinecraftGame {
         }
 
         this.renderer.render(this.scene, this.camera);
+        this.lastFrameTime = now;
     }
 
     updateDayNightCycle() {

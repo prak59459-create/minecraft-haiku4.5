@@ -90,8 +90,7 @@ export class WaterRenderer {
         return null;
     }
 
-    updateVisibleWater(playerChunkX, playerChunkZ) {
-        const renderDistance = 8;
+    updateVisibleWater(playerChunkX, playerChunkZ, renderDistance) {
         const chunksToRender = new Set();
 
         for (const [key, chunk] of this.world.chunks) {
@@ -127,10 +126,10 @@ export class WaterRenderer {
         });
     }
 
-    update(playerX, playerZ) {
+    update(playerX, playerZ, renderDistance = 8) {
         this.time += 0.016;
         const playerChunkX = Math.floor(playerX / 16);
         const playerChunkZ = Math.floor(playerZ / 16);
-        this.updateVisibleWater(playerChunkX, playerChunkZ);
+        this.updateVisibleWater(playerChunkX, playerChunkZ, Math.min(16, renderDistance));
     }
 }
