@@ -93,6 +93,7 @@ export class Player {
             { dy: height * 0.9, radius: radius * 0.7 }
         ];
 
+        let horizontalCollision = false;
         for (const point of checkPoints) {
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
@@ -107,9 +108,11 @@ export class Player {
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
+                    horizontalCollision = true;
                     break;
                 }
             }
+            if (horizontalCollision) break;
         }
 
         if (this.velocity.y < 0) {

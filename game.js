@@ -13,9 +13,16 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: false });
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
+            alpha: false,
+            powerPreference: 'high-performance'
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
         this.scene.fog = new THREE.Fog(0x87CEEB, 200, 400);
 
         this.world = new World();
@@ -215,7 +222,9 @@ class MinecraftGame {
                     let brightness = baseLight + heightLight + varLight;
 
                     if (blockId === BLOCKS.LAVA) {
-                        brightness = Math.max(0.9, Math.sin(Date.now() * 0.002) * 0.2 + 0.8);
+                        brightness = Math.max(0.95, Math.sin(Date.now() * 0.002 + wx * 0.1 + wz * 0.1) * 0.15 + 0.85);
+                    } else if (blockId === BLOCKS.GLASS) {
+                        brightness = Math.max(brightness, 0.8);
                     }
 
                     color.multiplyScalar(brightness);
@@ -298,7 +307,7 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
-        const chunksToKeep = new Set();
+        const chunksToRender = [];
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
             const dist = Math.max(Math.abs(cx - playerChunkX), Math.abs(cz - playerChunkZ));
@@ -311,13 +320,18 @@ class MinecraftGame {
                 continue;
             }
 
-            chunksToKeep.add(key);
             if (!this.chunkMeshes.has(key)) {
-                const mesh = this.buildChunkMesh(chunk);
-                if (mesh) {
-                    this.scene.add(mesh);
-                    this.chunkMeshes.set(key, mesh);
-                }
+                chunksToRender.push({ key, chunk, dist });
+            }
+        }
+
+        chunksToRender.sort((a, b) => a.dist - b.dist);
+
+        for (const { key, chunk } of chunksToRender.slice(0, 4)) {
+            const mesh = this.buildChunkMesh(chunk);
+            if (mesh) {
+                this.scene.add(mesh);
+                this.chunkMeshes.set(key, mesh);
             }
         }
     }

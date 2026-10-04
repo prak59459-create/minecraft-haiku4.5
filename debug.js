@@ -83,13 +83,20 @@ export class DebugDisplay {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
         }
 
+        this.playerPos = game.player.position;
+        this.playerRot = game.gameCamera.rotation;
+
         this.render();
     }
 
     render() {
+        const pos = this.playerPos;
+        const rot = this.playerRot;
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
+            `Pos: ${pos.x.toFixed(2)} ${pos.y.toFixed(2)} ${pos.z.toFixed(2)}`,
+            `Rot: ${rot.y.toFixed(2)} ${rot.x.toFixed(2)}`,
             `Chunks: ${this.stats.chunks}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
@@ -97,8 +104,7 @@ export class DebugDisplay {
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3 to toggle | H for help'
         ];
 
         this.container.innerHTML = lines.map(line => {
@@ -107,7 +113,7 @@ export class DebugDisplay {
             if (parts.length === 2) {
                 return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
             }
-            return `<div>${line}</div>`;
+            return `<div style="opacity: 0.7;">${line}</div>`;
         }).join('');
     }
 }
