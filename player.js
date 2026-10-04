@@ -2,11 +2,13 @@ import { BLOCKS, isBlockSolid } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
-const PLAYER_SPEED = 0.1;
-const PLAYER_SPRINT_SPEED = 0.15;
-const PLAYER_CROUCH_SPEED = 0.05;
-const GRAVITY = 0.02;
-const JUMP_POWER = 0.5;
+const PLAYER_SPEED = 0.12;
+const PLAYER_SPRINT_SPEED = 0.18;
+const PLAYER_CROUCH_SPEED = 0.06;
+const GRAVITY = 0.025;
+const JUMP_POWER = 0.55;
+const FRICTION = 0.85;
+const ACCELERATION = 0.8;
 
 export class Player {
     constructor(world) {
@@ -19,6 +21,9 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+
+        this.lastStepTime = 0;
+        this.stepInterval = 300;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -53,6 +58,7 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
         const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
 
         if (this.keys['w']) moveZ -= speed;
@@ -63,11 +69,24 @@ export class Player {
         const cosY = Math.cos(this.rotation.y);
         const sinY = Math.sin(this.rotation.y);
 
-        this.velocity.x = moveX * cosY - moveZ * sinY;
-        this.velocity.z = moveX * sinY + moveZ * cosY;
+        const targetVelX = moveX * cosY - moveZ * sinY;
+        const targetVelZ = moveX * sinY + moveZ * cosY;
 
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+        if (this.isOnGround) {
+            this.velocity.x = this.velocity.x * FRICTION + targetVelX * ACCELERATION;
+            this.velocity.z = this.velocity.z * FRICTION + targetVelZ * ACCELERATION;
+        } else {
+            this.velocity.x = targetVelX;
+            this.velocity.z = targetVelZ;
+        }
+
+        this.isSprinting = this.keys['shift'] && !this.isCrouching && isMoving;
+        this.isCrouching = this.keys['shift'] && isMoving;
+
+        if (this.isOnGround && isMoving && Date.now() - this.lastStepTime > this.stepInterval) {
+            if (this.onStep) this.onStep();
+            this.lastStepTime = Date.now();
+        }
     }
 
     applyPhysics() {
@@ -162,16 +181,23 @@ export class Player {
 export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
-        this.mouseSensitivity = 0.003;
+        this.smoothRotation = { x: 0, y: 0 };
+        this.mouseSensitivity = 0.0035;
+        this.smoothFactor = 0.8;
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+            const deltaX = e.movementX * this.mouseSensitivity;
+            const deltaY = e.movementY * this.mouseSensitivity;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            this.smoothRotation.y -= deltaX;
+            this.smoothRotation.x -= deltaY;
+            this.smoothRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.smoothRotation.x));
+
+            this.rotation.y = this.rotation.y * this.smoothFactor + this.smoothRotation.y * (1 - this.smoothFactor);
+            this.rotation.x = this.rotation.x * this.smoothFactor + this.smoothRotation.x * (1 - this.smoothFactor);
         });
 
         document.addEventListener('click', () => {
