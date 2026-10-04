@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Haiku 4.5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            overflow: hidden;
+        }
+
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            color: #fff;
+            font-size: 16px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+        }
+
+        #blockSelector {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .blockSlot {
+            width: 40px;
+            height: 40px;
+            background: rgba(128, 128, 128, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .blockSlot.active {
+            border-color: rgba(255, 255, 255, 1);
+            background: rgba(128, 128, 128, 0.7);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        #stats {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            line-height: 1.6;
+            font-family: 'Courier New', monospace;
+        }
+
+        #blockInfo {
+            position: absolute;
+            bottom: 80px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            line-height: 1.8;
+            text-align: right;
+        }
+
+        #timeOfDay {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <div id="hud">
+        <div id="crosshair"></div>
+        <div id="timeOfDay">Day</div>
+        <div id="stats">
+            <div>FPS: <span id="fps">0</span></div>
+            <div>Pos: <span id="pos">0, 0, 0</span></div>
+            <div>Chunk: <span id="chunk">0, 0</span></div>
+            <div>Block: <span id="targetBlock">None</span></div>
+        </div>
+        <div id="blockInfo">
+            <div>Selected: <span id="selectedBlock">Grass</span></div>
+            <div>Inventory: <span id="inventory">∞</span></div>
+        </div>
+        <div id="blockSelector"></div>
+        <div id="controls">
+            <div><strong>Controls:</strong></div>
+            <div>W/A/S/D: Move</div>
+            <div>Mouse: Look</div>
+            <div>Space: Jump</div>
+            <div>Shift: Sprint/Crouch</div>
+            <div>LClick: Destroy</div>
+            <div>RClick: Place</div>
+            <div>1-9: Block Select</div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
