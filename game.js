@@ -65,7 +65,7 @@ class Game {
 
     setupScene() {
         this.scene.background = new THREE.Color(0x87ceeb);
-        this.scene.fog = new THREE.Fog(0x87ceeb, 200, 400);
+        this.scene.fog = new THREE.Fog(0x87ceeb, 150, 350);
 
         this.sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
         this.sunLight.position.set(100, 100, 100);
@@ -497,6 +497,22 @@ class World {
         this.highlightMesh = null;
         this.renderDistance = 3;
         this.meshUpdateQueue = [];
+
+        this.opaqueMaterial = new THREE.MeshStandardMaterial({
+            vertexColors: true,
+            side: THREE.FrontSide,
+            roughness: 0.8,
+            metalness: 0.1
+        });
+
+        this.transparentMaterial = new THREE.MeshStandardMaterial({
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.6,
+            side: THREE.DoubleSide,
+            roughness: 0.3,
+            metalness: 0.0
+        });
     }
 
     getChunkKey(x, z) {
@@ -797,14 +813,7 @@ class World {
             geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
             geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
 
-            const material = new THREE.MeshStandardMaterial({
-                vertexColors: true,
-                side: THREE.FrontSide,
-                roughness: 0.8,
-                metalness: 0.1
-            });
-
-            chunk.mesh = new THREE.Mesh(geometry, material);
+            chunk.mesh = new THREE.Mesh(geometry, this.opaqueMaterial);
             chunk.mesh.castShadow = true;
             chunk.mesh.receiveShadow = true;
             this.scene.add(chunk.mesh);
@@ -815,16 +824,7 @@ class World {
             transparentGeometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(tColors), 3, true));
             transparentGeometry.setIndex(new THREE.BufferAttribute(new Uint32Array(tIndices), 1));
 
-            const material = new THREE.MeshStandardMaterial({
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.6,
-                side: THREE.DoubleSide,
-                roughness: 0.3,
-                metalness: 0.0
-            });
-
-            chunk.transparentMesh = new THREE.Mesh(transparentGeometry, material);
+            chunk.transparentMesh = new THREE.Mesh(transparentGeometry, this.transparentMaterial);
             chunk.transparentMesh.receiveShadow = true;
             this.scene.add(chunk.transparentMesh);
         }
