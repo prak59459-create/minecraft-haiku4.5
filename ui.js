@@ -3,9 +3,11 @@ import { BLOCK_NAMES } from './blocks.js';
 export class UI {
     constructor() {
         this.selectedBlock = 1;
-        this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        this.blocks = [1, 2, 3, 7, 5, 15, 8, 16, 17];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.frameCount = 0;
+        this.avgFps = 60;
         this.setupInventoryUI();
     }
 
@@ -61,7 +63,14 @@ export class UI {
         this.lastTime = now;
 
         if (delta > 0) {
-            this.fpsCounter = Math.round(1000 / delta);
+            const fps = 1000 / delta;
+            this.frameCount++;
+
+            if (this.frameCount % 10 === 0) {
+                this.avgFps = Math.round(fps * 0.7 + this.avgFps * 0.3);
+            }
+
+            this.fpsCounter = Math.round(fps);
         }
 
         return this.fpsCounter;

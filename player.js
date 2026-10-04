@@ -93,6 +93,7 @@ export class Player {
             { dy: height * 0.9, radius: radius * 0.7 }
         ];
 
+        let horizontalCollision = false;
         for (const point of checkPoints) {
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
@@ -107,9 +108,11 @@ export class Player {
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
+                    horizontalCollision = true;
                     break;
                 }
             }
+            if (horizontalCollision) break;
         }
 
         if (this.velocity.y < 0) {
@@ -162,16 +165,20 @@ export class Player {
 export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
+        this.targetRotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
+        this.smoothing = 0.85;
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+            if (document.pointerLockElement === document.body) {
+                this.targetRotation.y -= e.movementX * this.mouseSensitivity;
+                this.targetRotation.x -= e.movementY * this.mouseSensitivity;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+                this.targetRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.targetRotation.x));
+            }
         });
 
         document.addEventListener('click', () => {
@@ -179,9 +186,20 @@ export class Camera {
                 document.body.requestPointerLock();
             }
         });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (document.pointerLockElement === document.body) {
+                    document.exitPointerLock?.();
+                }
+            }
+        });
     }
 
     updateFromPlayer(player) {
+        this.rotation.x += (this.targetRotation.x - this.rotation.x) * (1 - this.smoothing);
+        this.rotation.y += (this.targetRotation.y - this.rotation.y) * (1 - this.smoothing);
+
         player.rotation.x = this.rotation.x;
         player.rotation.y = this.rotation.y;
     }

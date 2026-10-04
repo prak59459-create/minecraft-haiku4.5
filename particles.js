@@ -2,30 +2,37 @@ export class ParticleSystem {
     constructor(scene) {
         this.scene = scene;
         this.particles = [];
+        this.maxParticles = 2000;
         this.geometry = new THREE.BufferGeometry();
         this.material = new THREE.PointsMaterial({
             size: 0.2,
             sizeAttenuation: true,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9,
+            vertexColors: true
         });
         this.points = new THREE.Points(this.geometry, this.material);
         this.scene.add(this.points);
+
+        this.positionArray = new Float32Array(this.maxParticles * 3);
+        this.colorArray = new Float32Array(this.maxParticles * 3);
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
-        const particleCount = 8 + Math.floor(Math.random() * 8);
+        if (this.particles.length >= this.maxParticles) return;
+
+        const particleCount = Math.min(12, this.maxParticles - this.particles.length);
 
         for (let i = 0; i < particleCount; i++) {
             const particle = {
-                position: { x, y, z },
-                velocity: {
-                    x: (Math.random() - 0.5) * 0.3,
-                    y: Math.random() * 0.3,
-                    z: (Math.random() - 0.5) * 0.3
-                },
+                px: x + (Math.random() - 0.5) * 0.2,
+                py: y + (Math.random() - 0.5) * 0.2,
+                pz: z + (Math.random() - 0.5) * 0.2,
+                vx: (Math.random() - 0.5) * 0.2,
+                vy: Math.random() * 0.25,
+                vz: (Math.random() - 0.5) * 0.2,
                 life: 1,
-                maxLife: 0.8 + Math.random() * 0.4,
+                maxLife: 0.6 + Math.random() * 0.4,
                 color: blockColor
             };
             this.particles.push(particle);
@@ -34,17 +41,20 @@ export class ParticleSystem {
 
     update() {
         const gravity = 0.01;
+        let count = 0;
 
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
-            p.velocity.y -= gravity;
-            p.position.x += p.velocity.x;
-            p.position.y += p.velocity.y;
-            p.position.z += p.velocity.z;
+            p.vy -= gravity;
+            p.px += p.vx;
+            p.py += p.vy;
+            p.pz += p.vz;
             p.life -= 1 / 60;
 
             if (p.life <= 0) {
                 this.particles.splice(i, 1);
+            } else {
+                count++;
             }
         }
 
@@ -58,24 +68,22 @@ export class ParticleSystem {
             return;
         }
 
-        const positions = new Float32Array(this.particles.length * 3);
-        const colors = new Float32Array(this.particles.length * 3);
+        const particleCount = this.particles.length;
 
-        for (let i = 0; i < this.particles.length; i++) {
+        for (let i = 0; i < particleCount; i++) {
             const p = this.particles[i];
-            positions[i * 3] = p.position.x;
-            positions[i * 3 + 1] = p.position.y;
-            positions[i * 3 + 2] = p.position.z;
+            this.positionArray[i * 3] = p.px;
+            this.positionArray[i * 3 + 1] = p.py;
+            this.positionArray[i * 3 + 2] = p.pz;
 
             const color = new THREE.Color(p.color);
             const alpha = p.life / p.maxLife;
-            colors[i * 3] = color.r;
-            colors[i * 3 + 1] = color.g;
-            colors[i * 3 + 2] = color.b;
+            this.colorArray[i * 3] = color.r;
+            this.colorArray[i * 3 + 1] = color.g;
+            this.colorArray[i * 3 + 2] = color.b;
         }
 
-        this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        this.material.opacity = 0.8;
+        this.geometry.setAttribute('position', new THREE.BufferAttribute(this.positionArray.slice(0, particleCount * 3), 3));
+        this.geometry.setAttribute('color', new THREE.BufferAttribute(this.colorArray.slice(0, particleCount * 3), 3));
     }
 }
