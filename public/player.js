@@ -9,7 +9,7 @@ const SPRINT_SPEED = 0.18;
 const CROUCH_SPEED = 0.05;
 
 export class Player {
-  constructor(camera) {
+  constructor(camera, onJump = null) {
     this.camera = camera;
     this.position = new THREE.Vector3(0, 80, 0);
     this.velocity = new THREE.Vector3(0, 0, 0);
@@ -19,6 +19,7 @@ export class Player {
     this.isSprinting = false;
     this.isCrouching = false;
     this.onGround = false;
+    this.onJumpCallback = onJump;
 
     this.keys = {};
     this.camera.position.copy(this.position);
@@ -45,6 +46,7 @@ export class Player {
     if (this.onGround) {
       this.velocity.y = JUMP_FORCE;
       this.onGround = false;
+      if (this.onJumpCallback) this.onJumpCallback();
     }
   }
 

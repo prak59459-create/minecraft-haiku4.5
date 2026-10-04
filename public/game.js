@@ -2,6 +2,7 @@ import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/thr
 import { World, BLOCK_TYPES, CHUNK_SIZE } from './terrain.js';
 import { Player } from './player.js';
 import { ParticleSystem } from './particles.js';
+import { AudioManager } from './audio.js';
 
 const BLOCK_NAMES = {
   [BLOCK_TYPES.GRASS]: 'Grass',
@@ -50,7 +51,8 @@ class Game {
     document.body.appendChild(this.renderer.domElement);
 
     this.world = new World();
-    this.player = new Player(this.camera);
+    this.audio = new AudioManager();
+    this.player = new Player(this.camera, () => this.audio.playJump());
     this.particles = new ParticleSystem(this.scene);
 
     this.selectedBlockIndex = 0;
@@ -195,6 +197,7 @@ class Game {
         new THREE.Color(BLOCK_COLORS[blockType] || 0x888888),
         12
       );
+      this.audio.playBlockBreak();
       this.refreshNearbyChunks(target.blockPos);
     }
   }
@@ -206,6 +209,7 @@ class Game {
       const adjacentPos = this.getAdjacentBlock(target.blockPos);
       if (adjacentPos) {
         this.world.setBlock(adjacentPos.x, adjacentPos.y, adjacentPos.z, blockType);
+        this.audio.playBlockPlace();
         this.refreshNearbyChunks(adjacentPos);
       }
     }
