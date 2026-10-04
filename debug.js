@@ -62,14 +62,17 @@ export class DebugDisplay {
 
         let vertices = 0;
         let triangles = 0;
+        let geometryMemory = 0;
         for (const mesh of game.chunkMeshes.values()) {
             if (mesh && mesh.geometry) {
                 const positions = mesh.geometry.getAttribute('position');
                 if (positions) {
                     vertices += positions.count;
+                    geometryMemory += positions.array.byteLength;
                     const index = mesh.geometry.getIndex();
                     if (index) {
                         triangles += index.count / 3;
+                        geometryMemory += index.array.byteLength;
                     }
                 }
             }
@@ -83,6 +86,7 @@ export class DebugDisplay {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
         }
 
+        this.geometryMemory = (geometryMemory / 1048576).toFixed(1);
         this.render();
     }
 
@@ -96,9 +100,9 @@ export class DebugDisplay {
             `Draw Calls: ${this.stats.drawCalls}`,
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
+            `Geometry: ${this.geometryMemory || '0'} MB`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3: Toggle | H: Help | C: Pick Block'
         ];
 
         this.container.innerHTML = lines.map(line => {
@@ -107,7 +111,7 @@ export class DebugDisplay {
             if (parts.length === 2) {
                 return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
             }
-            return `<div>${line}</div>`;
+            return `<div style="color: #CCCCCC; font-size: 10px;">${line}</div>`;
         }).join('');
     }
 }

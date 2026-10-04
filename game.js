@@ -537,4 +537,9 @@ class MinecraftGame {
     }
 }
 
-const game = new MinecraftGame();
+try {
+    const game = new MinecraftGame();
+} catch (error) {
+    console.error('Failed to initialize game:', error);
+    document.body.innerHTML = '<div style="color: white; padding: 20px; font-family: monospace;">Error initializing game. Check browser console for details.</div>';
+}
