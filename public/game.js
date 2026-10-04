@@ -1,6 +1,7 @@
 import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js';
 import { World, BLOCK_TYPES, CHUNK_SIZE } from './terrain.js';
 import { Player } from './player.js';
+import { ParticleSystem } from './particles.js';
 
 const BLOCK_NAMES = {
   [BLOCK_TYPES.GRASS]: 'Grass',
@@ -26,6 +27,18 @@ const HOTBAR_BLOCKS = [
   BLOCK_TYPES.COBBLESTONE
 ];
 
+const BLOCK_COLORS = {
+  [BLOCK_TYPES.GRASS]: 0x2d5016,
+  [BLOCK_TYPES.DIRT]: 0x8b6f47,
+  [BLOCK_TYPES.STONE]: 0x808080,
+  [BLOCK_TYPES.WOOD]: 0x6b4423,
+  [BLOCK_TYPES.LEAVES]: 0x2d7a1f,
+  [BLOCK_TYPES.WATER]: 0x3366cc,
+  [BLOCK_TYPES.SAND]: 0xdbbc7a,
+  [BLOCK_TYPES.GRAVEL]: 0x999999,
+  [BLOCK_TYPES.COBBLESTONE]: 0x707070
+};
+
 class Game {
   constructor() {
     this.scene = new THREE.Scene();
@@ -38,10 +51,13 @@ class Game {
 
     this.world = new World();
     this.player = new Player(this.camera);
+    this.particles = new ParticleSystem(this.scene);
 
     this.selectedBlockIndex = 0;
     this.highlightedBlock = null;
     this.meshCache = new Map();
+    this.lastTime = Date.now();
+    this.dayNightLight = null;
 
     this.setupScene();
     this.setupLighting();
@@ -56,26 +72,54 @@ class Game {
   }
 
   setupLighting() {
-    const skyLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    skyLight.position.set(100, 100, 100);
-    skyLight.castShadow = true;
-    skyLight.shadow.mapSize.width = 2048;
-    skyLight.shadow.mapSize.height = 2048;
-    skyLight.shadow.camera.near = 0.5;
-    skyLight.shadow.camera.far = 500;
-    skyLight.shadow.camera.left = -200;
-    skyLight.shadow.camera.right = 200;
-    skyLight.shadow.camera.top = 200;
-    skyLight.shadow.camera.bottom = -200;
-    this.scene.add(skyLight);
+    this.dayNightLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    this.dayNightLight.position.set(100, 100, 100);
+    this.dayNightLight.castShadow = true;
+    this.dayNightLight.shadow.mapSize.width = 2048;
+    this.dayNightLight.shadow.mapSize.height = 2048;
+    this.dayNightLight.shadow.camera.near = 0.5;
+    this.dayNightLight.shadow.camera.far = 500;
+    this.dayNightLight.shadow.camera.left = -200;
+    this.dayNightLight.shadow.camera.right = 200;
+    this.dayNightLight.shadow.camera.top = 200;
+    this.dayNightLight.shadow.camera.bottom = -200;
+    this.scene.add(this.dayNightLight);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     this.scene.add(ambientLight);
 
     this.dayNightCycle = {
       time: 0.25,
-      speed: 0.0001
+      speed: 0.00005,
+      skyColors: [
+        0x000066, 0x1a1a4d, 0x4d7aff, 0x87ceeb, 0xff9500, 0xff6633, 0x1a1a4d, 0x000066
+      ]
     };
+  }
+
+  updateDayNightCycle() {
+    this.dayNightCycle.time = (this.dayNightCycle.time + this.dayNightCycle.speed) % 1;
+    const sunPos = this.dayNightCycle.time * Math.PI * 2;
+
+    this.dayNightLight.position.set(
+      Math.cos(sunPos) * 150,
+      Math.max(Math.sin(sunPos) * 150, 20),
+      50
+    );
+
+    const timeOfDay = Math.floor(this.dayNightCycle.time * this.dayNightCycle.skyColors.length);
+    const nextIndex = (timeOfDay + 1) % this.dayNightCycle.skyColors.length;
+    const t = (this.dayNightCycle.time * this.dayNightCycle.skyColors.length) % 1;
+
+    const color1 = new THREE.Color(this.dayNightCycle.skyColors[timeOfDay]);
+    const color2 = new THREE.Color(this.dayNightCycle.skyColors[nextIndex]);
+    color1.lerp(color2, t);
+
+    this.scene.background = color1;
+    this.scene.fog.color = color1;
+
+    const brightness = Math.max(0.2, Math.sin(sunPos) * 0.8 + 0.6);
+    this.dayNightLight.intensity = brightness;
   }
 
   setupEvents() {
@@ -144,7 +188,13 @@ class Game {
   handleLeftClick() {
     const target = this.player.getBlockInSight(this.world);
     if (target) {
+      const blockType = this.world.getBlock(target.blockPos.x, target.blockPos.y, target.blockPos.z);
       this.world.setBlock(target.blockPos.x, target.blockPos.y, target.blockPos.z, BLOCK_TYPES.AIR);
+      this.particles.createBlockParticles(
+        target.position,
+        new THREE.Color(BLOCK_COLORS[blockType] || 0x888888),
+        12
+      );
       this.refreshNearbyChunks(target.blockPos);
     }
   }
@@ -258,7 +308,13 @@ class Game {
   animate() {
     requestAnimationFrame(() => this.animate());
 
+    const now = Date.now();
+    const deltaTime = (now - this.lastTime) / 1000;
+    this.lastTime = now;
+
     this.player.update(this.world);
+    this.updateDayNightCycle();
+    this.particles.update(deltaTime);
     this.updateScene();
 
     this.renderer.render(this.scene, this.camera);

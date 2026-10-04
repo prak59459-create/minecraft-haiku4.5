@@ -1,5 +1,6 @@
 import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js';
 import { PerlinNoise } from './noise.js';
+import { BiomeGenerator } from './biomes.js';
 
 export const BLOCK_TYPES = {
   AIR: 0,
@@ -32,12 +33,12 @@ const BLOCK_COLORS = {
 };
 
 export class Chunk {
-  constructor(x, z, noise) {
+  constructor(x, z, biomeGen) {
     this.x = x;
     this.z = z;
     this.blocks = new Uint8Array(CHUNK_SIZE * CHUNK_HEIGHT * CHUNK_SIZE);
     this.mesh = null;
-    this.noise = noise;
+    this.biomeGen = biomeGen;
     this.generate();
   }
 
@@ -46,26 +47,21 @@ export class Chunk {
       for (let lz = 0; lz < CHUNK_SIZE; lz++) {
         const wx = this.x * CHUNK_SIZE + lx;
         const wz = this.z * CHUNK_SIZE + lz;
-
-        const height = Math.floor(
-          this.noise.turbulence(wx / TERRAIN_SCALE, wz / TERRAIN_SCALE, 0, 4) * 60 + 32
-        );
+        const height = this.biomeGen.getHeight(wx, wz);
+        const biome = this.biomeGen.getBiome(wx, wz);
 
         for (let y = 0; y < CHUNK_HEIGHT; y++) {
           if (y <= height) {
-            if (y === height) {
-              this.setBlock(lx, y, lz, BLOCK_TYPES.GRASS);
-            } else if (y > height - 4) {
-              this.setBlock(lx, y, lz, BLOCK_TYPES.DIRT);
-            } else {
-              this.setBlock(lx, y, lz, BLOCK_TYPES.STONE);
-            }
+            const block = this.biomeGen.getSurfaceBlock(wx, y, wz, height, biome);
+            this.setBlock(lx, y, lz, block);
           } else if (y < WATER_LEVEL) {
             this.setBlock(lx, y, lz, BLOCK_TYPES.WATER);
           }
         }
       }
     }
+
+    this.biomeGen.generateTrees(this, this.biomeGen.getBiome(this.x * CHUNK_SIZE + 8, this.z * CHUNK_SIZE + 8));
   }
 
   setBlock(x, y, z, type) {
@@ -149,7 +145,7 @@ export class Chunk {
 export class World {
   constructor() {
     this.chunks = new Map();
-    this.noise = new PerlinNoise(42);
+    this.biomeGen = new BiomeGenerator(42);
     this.loadRadius = 3;
   }
 
@@ -161,7 +157,7 @@ export class World {
   loadChunk(x, z) {
     const key = `${x},${z}`;
     if (!this.chunks.has(key)) {
-      const chunk = new Chunk(x, z, this.noise);
+      const chunk = new Chunk(x, z, this.biomeGen);
       chunk.buildMesh();
       this.chunks.set(key, chunk);
       return chunk;
