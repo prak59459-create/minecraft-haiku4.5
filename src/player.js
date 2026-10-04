@@ -114,9 +114,6 @@ export class Player {
         forward.normalize();
         right.normalize();
 
-        this.isSprinting = this.keys['ShiftLeft'] || this.keys['ShiftRight'];
-        this.currentSpeed = this.isSprinting ? this.sprintSpeed : this.speed;
-
         let moveX = 0;
         let moveZ = 0;
 
@@ -129,14 +126,29 @@ export class Player {
             .addScaledVector(forward, moveZ);
 
         if (this.direction.length() > 0) {
-            this.direction.normalize();
-            this.velocity.x = this.direction.x * this.currentSpeed;
-            this.velocity.z = this.direction.z * this.currentSpeed;
             this.isMoving = true;
         } else {
-            this.velocity.x *= 0.7;
-            this.velocity.z *= 0.7;
             this.isMoving = false;
+        }
+
+        this.isSprinting = (this.keys['ShiftLeft'] || this.keys['ShiftRight']) && this.isMoving;
+        this.currentSpeed = this.isSprinting ? this.sprintSpeed : this.speed;
+
+        if (this.isMoving) {
+            this.direction.normalize();
+            this.velocity.x += this.direction.x * this.currentSpeed * 0.2;
+            this.velocity.z += this.direction.z * this.currentSpeed * 0.2;
+        } else {
+            this.velocity.x *= 0.85;
+            this.velocity.z *= 0.85;
+        }
+
+        const maxSpeed = this.currentSpeed * 1.5;
+        const currentSpeed = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+        if (currentSpeed > maxSpeed) {
+            const scale = maxSpeed / currentSpeed;
+            this.velocity.x *= scale;
+            this.velocity.z *= scale;
         }
 
         if (this.keys['Space'] && this.isOnGround) {

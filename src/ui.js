@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { BLOCK_NAMES } from './blocks.js';
 
 export class UI {
@@ -84,5 +85,3 @@ export class UI {
         }
     }
 }
-
-import * as THREE from 'three';

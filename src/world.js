@@ -33,12 +33,8 @@ export class Chunk {
     buildMesh() {
         this.clearMesh();
 
-        const geometry = new THREE.BufferGeometry();
-        const positions = [];
-        const colors = [];
-        const indices = [];
-
-        let vertexCount = 0;
+        const blockGeometry = new THREE.BoxGeometry(1, 1, 1);
+        const blocksByType = new Map();
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 0; y < CHUNK_HEIGHT; y++) {
@@ -47,79 +43,63 @@ export class Chunk {
 
                     if (block === BLOCK_TYPES.AIR) continue;
 
-                    const blockColor = BLOCK_COLORS[block];
-                    const color = new THREE.Color(blockColor);
-
                     const worldX = this.x * CHUNK_SIZE + x;
                     const worldY = y;
                     const worldZ = this.z * CHUNK_SIZE + z;
 
-                    this.addBlockFaces(
-                        x, y, z, block,
-                        worldX, worldY, worldZ,
-                        positions, colors, indices, vertexCount, color
-                    );
+                    if (!this.shouldRenderFace(x, y, z, block)) continue;
 
-                    vertexCount = positions.length / 3;
+                    if (!blocksByType.has(block)) {
+                        blocksByType.set(block, []);
+                    }
+                    blocksByType.get(block).push({ x: worldX, y: worldY, z: worldZ });
                 }
             }
         }
 
-        if (positions.length > 0) {
-            geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
-            geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
-            geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
+        for (let [blockType, positions] of blocksByType) {
+            if (positions.length === 0) continue;
 
+            const color = new THREE.Color(BLOCK_COLORS[blockType]);
             const material = new THREE.MeshPhongMaterial({
-                vertexColors: true,
+                color: color,
                 side: THREE.FrontSide,
                 flatShading: false
             });
 
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            this.scene.add(mesh);
-            this.meshes.push(mesh);
+            const group = new THREE.Group();
+
+            for (let pos of positions) {
+                const mesh = new THREE.Mesh(blockGeometry, material);
+                mesh.position.set(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                group.add(mesh);
+            }
+
+            this.scene.add(group);
+            this.meshes.push(group);
         }
     }
 
-    addBlockFaces(x, y, z, block, worldX, worldY, worldZ, positions, colors, indices, vertexCount, color) {
-        const neighbors = {
-            up: this.getBlock(x, y + 1, z),
-            down: this.getBlock(x, y - 1, z),
-            front: this.getBlock(x, y, z + 1),
-            back: this.getBlock(x, y, z - 1),
-            right: this.getBlock(x + 1, y, z),
-            left: this.getBlock(x - 1, y, z),
-        };
-
-        const faces = [
-            { normal: [0, 1, 0], dir: neighbors.up, verts: [[0,1,0], [1,1,0], [1,1,1], [0,1,1]] },
-            { normal: [0, -1, 0], dir: neighbors.down, verts: [[0,0,1], [1,0,1], [1,0,0], [0,0,0]] },
-            { normal: [0, 0, 1], dir: neighbors.front, verts: [[0,0,1], [1,0,1], [1,1,1], [0,1,1]] },
-            { normal: [0, 0, -1], dir: neighbors.back, verts: [[1,0,0], [0,0,0], [0,1,0], [1,1,0]] },
-            { normal: [1, 0, 0], dir: neighbors.right, verts: [[1,0,0], [1,0,1], [1,1,1], [1,1,0]] },
-            { normal: [-1, 0, 0], dir: neighbors.left, verts: [[0,0,1], [0,0,0], [0,1,0], [0,1,1]] }
+    shouldRenderFace(x, y, z, block) {
+        const neighbors = [
+            this.getBlock(x, y + 1, z),
+            this.getBlock(x, y - 1, z),
+            this.getBlock(x, y, z + 1),
+            this.getBlock(x, y, z - 1),
+            this.getBlock(x + 1, y, z),
+            this.getBlock(x - 1, y, z),
         ];
 
-        for (let face of faces) {
-            if (face.dir === BLOCK_TYPES.AIR || TRANSPARENT_BLOCKS.has(face.dir)) {
-                const baseIdx = vertexCount + positions.length / 3;
-
-                for (let vert of face.verts) {
-                    positions.push(worldX + vert[0], worldY + vert[1], worldZ + vert[2]);
-                    colors.push(color.r, color.g, color.b);
-                }
-
-                const shading = 0.7 + 0.3 * Math.random();
-                indices.push(
-                    baseIdx, baseIdx + 1, baseIdx + 2,
-                    baseIdx, baseIdx + 2, baseIdx + 3
-                );
+        for (let neighbor of neighbors) {
+            if (neighbor === BLOCK_TYPES.AIR || TRANSPARENT_BLOCKS.has(neighbor)) {
+                return true;
             }
         }
+        return false;
     }
+
 
     clearMesh() {
         for (let mesh of this.meshes) {
@@ -147,28 +127,35 @@ export class World {
                 const worldX = chunkX * CHUNK_SIZE + x;
                 const worldZ = chunkZ * CHUNK_SIZE + z;
 
-                const noiseValue = this.noise.noise2D(worldX * 0.1, worldZ * 0.1);
-                const height = Math.floor(64 + noiseValue * 16);
+                const noiseValue = this.noise.noise2D(worldX * 0.08, worldZ * 0.08);
+                const detailNoise = this.noise.noise2D(worldX * 0.2, worldZ * 0.2);
+                const height = Math.floor(64 + noiseValue * 20 + detailNoise * 5);
 
                 for (let y = 0; y < CHUNK_HEIGHT; y++) {
                     if (y < 1) {
                         chunk.setBlock(x, y, z, BLOCK_TYPES.BEDROCK);
-                    } else if (y < height - 4) {
+                    } else if (y < height - 6) {
                         chunk.setBlock(x, y, z, BLOCK_TYPES.STONE);
-                    } else if (y < height) {
+                    } else if (y < height - 1) {
                         chunk.setBlock(x, y, z, BLOCK_TYPES.DIRT);
                     } else if (y === height) {
-                        chunk.setBlock(x, y, z, BLOCK_TYPES.GRASS);
-                    } else if (y < height + 5 && Math.random() < 0.1) {
-                        chunk.setBlock(x, y, z, BLOCK_TYPES.LEAVES);
+                        if (height > 75) {
+                            chunk.setBlock(x, y, z, BLOCK_TYPES.SAND);
+                        } else {
+                            chunk.setBlock(x, y, z, BLOCK_TYPES.GRASS);
+                        }
                     } else {
                         chunk.setBlock(x, y, z, BLOCK_TYPES.AIR);
                     }
                 }
 
-                if (Math.random() < 0.02 && height < 80) {
-                    const waterLevel = 64;
-                    for (let y = height; y <= waterLevel; y++) {
+                if (Math.random() < 0.03 && height < 85 && height > 62) {
+                    this.generateTree(chunk, x, height + 1, z);
+                }
+
+                const waterLevel = 62;
+                if (height < waterLevel) {
+                    for (let y = height + 1; y <= waterLevel; y++) {
                         chunk.setBlock(x, y, z, BLOCK_TYPES.WATER);
                     }
                 }
@@ -178,6 +165,32 @@ export class World {
         chunk.buildMesh();
         chunk.isGenerated = true;
         return chunk;
+    }
+
+    generateTree(chunk, x, baseY, z) {
+        const height = 4 + Math.floor(Math.random() * 3);
+
+        for (let y = baseY; y < baseY + height; y++) {
+            if (y < CHUNK_HEIGHT) {
+                chunk.setBlock(x, y, z, BLOCK_TYPES.OAK_LOG);
+            }
+        }
+
+        for (let dy = -2; dy <= 2; dy++) {
+            for (let dz = -2; dz <= 2; dz++) {
+                const distance = Math.sqrt(dy * dy + dz * dz);
+                if (distance < 2.5) {
+                    const nx = x + dy;
+                    const nz = z + dz;
+                    if (nx >= 0 && nx < CHUNK_SIZE && nz >= 0 && nz < CHUNK_SIZE) {
+                        const foliageY = baseY + height - 2;
+                        if (foliageY < CHUNK_HEIGHT) {
+                            chunk.setBlock(nx, foliageY, nz, BLOCK_TYPES.LEAVES);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     getChunk(x, z) {
@@ -209,7 +222,7 @@ export class World {
         }
     }
 
-    handleBlockOperations(player) {
+    handleBlockOperations(player, particles, soundManager) {
         const raycaster = new THREE.Raycaster();
         raycaster.ray.origin.copy(player.position);
         raycaster.ray.origin.y += player.eyeHeight;
@@ -225,7 +238,12 @@ export class World {
                 const bx = Math.floor(point.x);
                 const by = Math.floor(point.y);
                 const bz = Math.floor(point.z);
-                this.destroyBlock(bx, by, bz);
+                const blockType = this.getBlock(bx, by, bz);
+                if (blockType !== BLOCK_TYPES.AIR && blockType !== BLOCK_TYPES.WATER) {
+                    this.destroyBlock(bx, by, bz);
+                    if (soundManager) soundManager.playBlockBreak();
+                    if (particles) particles.createBlockBreakParticles(bx, by, bz, BLOCK_COLORS[blockType]);
+                }
                 player.isDestroyingBlock = false;
             }
 
@@ -233,6 +251,7 @@ export class World {
                 const normal = face.normal;
                 const placePos = new THREE.Vector3(point.x, point.y, point.z).add(normal.multiplyScalar(0.5));
                 this.placeBlock(Math.floor(placePos.x), Math.floor(placePos.y), Math.floor(placePos.z), player.selectedBlockType);
+                if (soundManager) soundManager.playBlockPlace();
                 player.isPlacingBlock = false;
             }
         }

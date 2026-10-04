@@ -3,6 +3,8 @@ import { World } from './world.js';
 import { Player } from './player.js';
 import { Physics } from './physics.js';
 import { UI } from './ui.js';
+import { SoundManager } from './sounds.js';
+import { ParticleSystem } from './particles.js';
 
 class Game {
     constructor() {
@@ -30,6 +32,8 @@ class Game {
         this.player = new Player(this.camera);
         this.physics = new Physics(this.world);
         this.ui = new UI(this.player, this.world);
+        this.soundManager = new SoundManager();
+        this.particles = new ParticleSystem(this.scene);
 
         this.clock = new THREE.Clock();
         this.lastFrameTime = 0;
@@ -77,6 +81,7 @@ class Game {
         window.addEventListener('click', (e) => {
             if (document.pointerLockElement !== document.body) {
                 document.body.requestPointerLock();
+                this.soundManager.initialize();
             } else {
                 this.handleClickAt(e);
             }
@@ -176,7 +181,9 @@ class Game {
         this.physics.update(this.player, this.world, deltaTime);
         this.world.updateChunks(this.player.position);
 
-        this.world.handleBlockOperations(this.player);
+        this.world.handleBlockOperations(this.player, this.particles, this.soundManager);
+
+        this.particles.update(deltaTime);
 
         this.camera.position.copy(this.player.position);
         this.camera.position.y += this.player.eyeHeight;
