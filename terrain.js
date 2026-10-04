@@ -66,9 +66,15 @@ class TerrainGenerator {
         this.noise = new SimplexNoise(seed);
         this.chunkSize = 16;
         this.chunkHeight = 256;
+        this.heightCache = new Map();
     }
 
     getHeight(x, z) {
+        const key = `${x},${z}`;
+        if (this.heightCache.has(key)) {
+            return this.heightCache.get(key);
+        }
+
         let height = 0;
         let amplitude = 1;
         let frequency = 1;
@@ -96,7 +102,15 @@ class TerrainGenerator {
             finalHeight = 100 + (height - 0.6) / 0.4 * 60;
         }
 
-        return Math.floor(Math.max(0, Math.min(this.chunkHeight, finalHeight)));
+        finalHeight = Math.floor(Math.max(0, Math.min(this.chunkHeight, finalHeight)));
+        if (this.heightCache.size > 10000) {
+            const keysToDelete = Array.from(this.heightCache.keys()).slice(0, 5000);
+            for (let k of keysToDelete) {
+                this.heightCache.delete(k);
+            }
+        }
+        this.heightCache.set(key, finalHeight);
+        return finalHeight;
     }
 
     getTerrainType(x, z, height) {
@@ -250,7 +264,10 @@ class World {
 
         for (let x = -this.viewDistance; x <= this.viewDistance; x++) {
             for (let z = -this.viewDistance; z <= this.viewDistance; z++) {
-                chunks.push({ x: chunkX + x, z: chunkZ + z });
+                const dist = Math.sqrt(x * x + z * z);
+                if (dist <= this.viewDistance) {
+                    chunks.push({ x: chunkX + x, z: chunkZ + z });
+                }
             }
         }
         return chunks;

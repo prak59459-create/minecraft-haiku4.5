@@ -87,23 +87,32 @@ class Game {
 
     updateUI() {
         const fps = document.getElementById('fps');
-        if (fps) fps.textContent = `FPS: ${this.fps}`;
+        if (fps) {
+            const fpsColor = this.fps < 30 ? '#ff6666' : this.fps < 60 ? '#ffff00' : '#00ff00';
+            fps.textContent = `FPS: ${this.fps}`;
+            fps.style.color = fpsColor;
+        }
 
         const pos = document.getElementById('position');
         if (pos) {
+            const chunkX = Math.floor(this.player.position.x / 16);
+            const chunkZ = Math.floor(this.player.position.z / 16);
             pos.textContent = `X: ${this.player.position.x.toFixed(1)} Y: ${this.player.position.y.toFixed(1)} Z: ${this.player.position.z.toFixed(1)}`;
         }
 
         const chunks = document.getElementById('chunks');
-        if (chunks) chunks.textContent = `Chunks: ${this.loadedChunks.size}`;
+        if (chunks) {
+            chunks.textContent = `Chunks: ${this.loadedChunks.size}`;
+        }
 
         const timeIndicator = document.getElementById('time-indicator');
         if (timeIndicator) {
             const timePercent = (this.gameTime % 20000) / 20000;
+            const hour = Math.floor(timePercent * 24);
             if (timePercent < 0.25 || timePercent > 0.75) {
-                timeIndicator.textContent = 'Time: Night';
+                timeIndicator.textContent = `🌙 Night (${hour}:00)`;
             } else {
-                timeIndicator.textContent = 'Time: Day';
+                timeIndicator.textContent = `☀️ Day (${hour}:00)`;
             }
         }
 

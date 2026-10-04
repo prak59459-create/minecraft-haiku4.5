@@ -208,7 +208,7 @@ class Renderer {
 function updateBlockSelector() {
     const selector = document.getElementById('block-selector');
     const block = BLOCK_TYPES[game.player.selectedIndex];
-    selector.textContent = `Selected: ${block.name} (${game.player.selectedIndex + 1})`;
+    selector.textContent = `📦 ${block.name}`;
 }
 
 function updateInventoryDisplay() {
@@ -218,7 +218,7 @@ function updateInventoryDisplay() {
         const block = BLOCK_TYPES[i];
         const item = document.createElement('div');
         item.className = 'inventory-item' + (i === game.player.selectedIndex ? ' selected' : '');
-        item.textContent = block.name[0];
+        item.textContent = (i + 1);
         item.title = `${block.name} (${i + 1})`;
         item.style.backgroundColor = '#' + block.color.toString(16).padStart(6, '0');
         inventory.appendChild(item);
