@@ -1,6 +1,8 @@
 # Minecraft Clone - Haiku 4.5
 
-A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaScript. Experience procedural terrain generation, block destruction and placement, and an immersive 3D environment.
+A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaScript. Experience procedural terrain generation with caves and biomes, block destruction and placement, advanced physics, and immersive 3D environments. Built with optimization and extensibility in mind.
+
+**Latest Version:** Session 3 - Enhanced with caves, biomes, comprehensive utilities, and professional systems architecture.
 
 ## Features
 
@@ -181,6 +183,37 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 - [ ] More biome types
 - [ ] Mob system
 - [ ] Crafting system
+
+## Advanced Systems (Session 3)
+
+### Terrain Generation
+- **Cave Systems** - Procedural underground caves using Perlin noise
+- **Biome System** - 5 distinct biomes (Plains, Mountains, Forest, Desert, Savanna)
+- **Multiple Tree Types** - Oak, Birch, and Spruce with biome-specific distribution
+- **Enhanced Ore Distribution** - 8 ore types with depth-appropriate placement
+
+### New Block Types (24 Total)
+- **Trees**: Birch Log/Leaves, Spruce Log/Leaves/Wood
+- **Deep Mining**: Deepslate, Copper Ore, Tin Ore, Emerald Ore
+- **Liquids**: Lava (light-emitting)
+
+### Professional Systems Architecture
+- **InventoryManager** (`inventory.js`) - 9-slot hotbar with item stacking
+- **GameSettings** (`settings.js`) - Comprehensive settings with graphics profiles
+- **WorldStorage** (`storage.js`) - IndexedDB-based world persistence
+- **PhysicsEngine** (`physics.js`) - Advanced collision detection and raycast
+- **Utilities** (`utils.js`) - Math, string, color, performance, and array helpers
+
+### Enhanced Graphics
+- **LOD System** - Level-of-detail terrain rendering for performance
+- **Improved Lighting** - Hemisphere light, better shadows, atmospheric fog
+- **Water Effects** - Procedural water texture with improved transparency
+- **Particle Physics** - Air resistance, gravity simulation, fade-out effects
+
+### User Interface
+- **HUD Toggle** - Press F1 to hide/show interface
+- **Notification System** - Auto-dismissing notifications
+- **Message Dialogs** - Modal messages for user feedback
 
 ## Performance Tips
 

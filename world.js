@@ -52,26 +52,34 @@ export class Chunk {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
                     } else if (y < height - 1) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.DIRT);
+                        let dirtBlock = BLOCKS.DIRT;
+                        if (terrainType === 'sand' || terrainType === 'desert') {
+                            dirtBlock = BLOCKS.SAND;
+                        } else if (terrainType === 'mountain') {
+                            dirtBlock = y > height - 3 ? BLOCKS.DIRT : BLOCKS.STONE;
                         }
+                        this.setBlock(x, y, z, dirtBlock);
                     } else if (y < height) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
+                        let topBlock = BLOCKS.GRASS;
+                        if (terrainType === 'sand' || terrainType === 'desert') {
+                            topBlock = BLOCKS.SAND;
+                        } else if (terrainType === 'mountain') {
+                            topBlock = BLOCKS.STONE;
+                        } else if (terrainType === 'savanna') {
+                            topBlock = BLOCKS.GRASS;
                         }
+                        this.setBlock(x, y, z, topBlock);
                     } else if (y < 62) {
                         this.setBlock(x, y, z, BLOCKS.WATER);
                     }
                 }
 
+                generateCaves(this, x, z, height);
+
                 if (height > 65) {
-                    generateTree(this, x, z, height);
+                    const treeType = terrainType === 'sand' ? 'oak' :
+                                   perlinNoise && perlinNoise.noise2D(wx * 0.03, wz * 0.03) > 0.3 ? 'birch' : 'oak';
+                    generateTree(this, x, z, height, treeType);
                 }
             }
         }
@@ -89,35 +97,82 @@ function getTerrainHeight(x, z) {
     height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
     height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
 
-    return Math.max(20, Math.min(160, Math.floor(height)));
+    const biome = getTerrainType(x, z);
+    if (biome === 'mountain') {
+        height += Math.abs(perlinNoise.noise2D(x * 0.03, z * 0.03)) * 50;
+    } else if (biome === 'desert') {
+        height -= 10;
+    }
+
+    return Math.max(20, Math.min(200, Math.floor(height)));
 }
 
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
-    return 'grass';
+    const humidity = perlinNoise.noise2D(x * 0.025, z * 0.025);
+
+    if (humidity > 0.5) {
+        if (temp > 0.4) return 'mountain';
+        if (temp < -0.3) return 'forest';
+        return 'plains';
+    } else {
+        if (temp < -0.5) return 'desert';
+        if (temp > 0.5) return 'savanna';
+        return 'sand';
+    }
 }
 
 function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
-    let ore = BLOCKS.STONE;
-    const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
+    let ore = y < 50 ? BLOCKS.DEEPSLATE : BLOCKS.STONE;
+
+    const coalChance = perlinNoise.noise3D ?
+        perlinNoise.noise3D(x * 0.1, y * 0.05, z * 0.1) :
+        perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
     const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
     const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
     const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
+    const copperChance = perlinNoise.noise2D(x * 0.07 + y * 0.04, z * 0.07 + y * 0.04);
+    const emeraldChance = perlinNoise.noise2D(x * 0.05 + y * 0.02, z * 0.05 + y * 0.02);
 
     if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
     if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
     if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
     if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    if (y < 100 && y > 30 && copperChance > 0.65) ore = BLOCKS.COPPER_ORE;
+    if (y < 60 && y > 20 && emeraldChance > 0.72) ore = BLOCKS.EMERALD_ORE;
 
     return ore;
 }
 
-function generateTree(chunk, x, z, height) {
+function generateCaves(chunk, x, z, height) {
+    if (!perlinNoise) return;
+
+    const worldX = chunk.x * CHUNK_SIZE + x;
+    const worldZ = chunk.z * CHUNK_SIZE + z;
+
+    for (let y = 15; y < Math.min(height - 5, 120); y++) {
+        const caveNoise = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02) +
+                         perlinNoise.noise2D(y * 0.1, worldX * 0.05);
+
+        if (caveNoise > 0.3 && caveNoise < 0.7) {
+            const caveMask = perlinNoise.noise2D(worldX * 0.03 + y * 0.02, worldZ * 0.03);
+            if (Math.abs(caveMask) > 0.5) {
+                if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
+                    if (chunk.getBlock(x, y, z) !== BLOCKS.WATER &&
+                        chunk.getBlock(x, y, z) !== BLOCKS.BEDROCK) {
+                        chunk.setBlock(x, y, z, BLOCKS.AIR);
+                    }
+                }
+            }
+        }
+    }
+}
+
+function generateTree(chunk, x, z, height, treeType = 'oak') {
     if (!perlinNoise) return;
 
     const worldX = chunk.x * CHUNK_SIZE + x;
@@ -125,22 +180,29 @@ function generateTree(chunk, x, z, height) {
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
     if (treeChance < 0.5) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    const logBlock = treeType === 'birch' ? BLOCKS.BIRCH_LOG :
+                    treeType === 'spruce' ? BLOCKS.SPRUCE_LOG : BLOCKS.OAK_LOG;
+    const leafBlock = treeType === 'birch' ? BLOCKS.BIRCH_LEAVES :
+                     treeType === 'spruce' ? BLOCKS.SPRUCE_LEAVES : BLOCKS.OAK_LEAVES;
+
+    const trunkHeight = treeType === 'spruce' ? 6 + Math.floor(Math.random() * 6) :
+                       4 + Math.floor(Math.random() * 4);
     const y = height;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
             if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
-                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
+                chunk.setBlock(x, y + i, z, logBlock);
             }
         }
     }
 
-    const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    const foliageStart = treeType === 'spruce' ? y + trunkHeight - 6 : y + trunkHeight - 3;
+    const foliageRadius = treeType === 'spruce' ? 3 + Math.floor(Math.random() * 2) :
+                         2 + Math.floor(Math.random() * 2);
 
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
+        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / (treeType === 'spruce' ? 2 : 1.5)));
         for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
             for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
                 const dx = Math.round(Math.cos(angle) * dist);
@@ -151,7 +213,7 @@ function generateTree(chunk, x, z, height) {
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
                     if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
-                        chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                        chunk.setBlock(fx, fy, fz, leafBlock);
                     }
                 }
             }
