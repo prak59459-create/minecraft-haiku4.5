@@ -7,13 +7,23 @@ export class BlockOutline {
     }
 
     createOutlineMaterial() {
-        this.material = new THREE.LineBasicMaterial({
-            color: 0xFFFFFF,
+        this.destroyMaterial = new THREE.LineBasicMaterial({
+            color: 0xFF4444,
             linewidth: 3,
             transparent: true,
-            opacity: 0.7,
+            opacity: 0.8,
             fog: false
         });
+
+        this.placeMaterial = new THREE.LineBasicMaterial({
+            color: 0x44FF44,
+            linewidth: 3,
+            transparent: true,
+            opacity: 0.8,
+            fog: false
+        });
+
+        this.material = this.destroyMaterial;
     }
 
     setSelectedBlock(x, y, z) {
