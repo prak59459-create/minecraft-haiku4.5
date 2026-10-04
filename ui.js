@@ -11,9 +11,9 @@ export class UI {
 
     setupInventoryUI() {
         const slots = document.querySelectorAll('.inventory-slot');
-        slots.forEach(slot => {
+        slots.forEach((slot, index) => {
+            const blockId = parseInt(slot.dataset.block);
             slot.addEventListener('click', () => {
-                const index = parseInt(slot.dataset.index);
                 this.selectBlock(index);
             });
         });

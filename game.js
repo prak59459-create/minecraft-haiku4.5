@@ -27,6 +27,7 @@ class MinecraftGame {
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
+        this.showDebug = false;
 
         this.setupLighting();
         this.setupEventListeners();
@@ -65,6 +66,13 @@ class MinecraftGame {
                 if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
                     this.selectedBlockType = hit.block;
                 }
+            }
+            if (e.key === 'F3' || e.key === 'f3') {
+                e.preventDefault();
+                this.showDebug = !this.showDebug;
+            }
+            if (e.key === 'h' || e.key === 'H') {
+                this.ui.toggleHelp();
             }
         });
     }
