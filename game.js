@@ -42,22 +42,43 @@ class MinecraftGame {
     }
 
     setupLighting() {
-        const time = Date.now() * 0.0001;
-        const sunY = Math.sin(time) * 100 + 100;
-        const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
+        const time = Date.now() * 0.00005;
+        const sunY = Math.sin(time) * 120 + 120;
+        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunColor = this.getSunColor(Math.sin(time));
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
-        directionalLight.position.set(150, sunY, 150);
+        const directionalLight = new THREE.DirectionalLight(sunColor, 0.5 + sunIntensity * 0.35);
+        directionalLight.position.set(200, sunY, 200);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
-        directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.far = 600;
+        directionalLight.shadow.camera.left = -150;
+        directionalLight.shadow.camera.right = 150;
+        directionalLight.shadow.camera.top = 150;
+        directionalLight.shadow.camera.bottom = -150;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
+        this.ambientLight = ambientLight;
+    }
+
+    getSunColor(sunProgress) {
+        if (sunProgress < -0.3) {
+            const t = (sunProgress + 0.3) / 0.2;
+            return new THREE.Color(0x1a1a2e);
+        } else if (sunProgress < 0.3) {
+            const t = (sunProgress + 0.3) / 0.6;
+            return new THREE.Color().lerpColors(
+                new THREE.Color(0xff9900),
+                new THREE.Color(0xffffcc),
+                (t + 1) * 0.5
+            );
+        }
+        return new THREE.Color(0xffffdd);
     }
 
     setupEventListeners() {
@@ -134,8 +155,9 @@ class MinecraftGame {
         );
 
         let hit = null;
+        const stepSize = 0.02;
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = stepSize; dist <= this.raycastDistance; dist += stepSize) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -146,7 +168,7 @@ class MinecraftGame {
 
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
+                const prevDist = Math.max(stepSize, dist - stepSize);
                 const prevX = eyePos.x + direction.x * prevDist;
                 const prevY = eyePos.y + direction.y * prevDist;
                 const prevZ = eyePos.z + direction.z * prevDist;
@@ -364,15 +386,35 @@ class MinecraftGame {
     }
 
     updateDayNightCycle() {
-        const time = Date.now() * 0.00002;
-        const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const time = Date.now() * 0.00005;
+        const sunProgress = Math.sin(time);
+        const sunY = sunProgress * 120 + 120;
+        const sunIntensity = Math.max(0.15, sunProgress + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.color = this.getSunColor(sunProgress);
+        this.directionalLight.intensity = 0.4 + sunIntensity * 0.4;
+        this.ambientLight.intensity = 0.3 + sunIntensity * 0.2;
 
-        const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        let skyColor;
+        if (sunProgress < -0.4) {
+            skyColor = new THREE.Color(0x0a0a1a);
+        } else if (sunProgress < -0.2) {
+            const t = (sunProgress + 0.4) / 0.2;
+            skyColor = new THREE.Color(0x0a0a1a).lerp(new THREE.Color(0x1a3a5a), t);
+        } else if (sunProgress < 0.2) {
+            const t = (sunProgress + 0.2) / 0.4;
+            skyColor = new THREE.Color(0x1a3a5a).lerp(new THREE.Color(0x87ceeb), t);
+        } else if (sunProgress < 0.4) {
+            const t = (sunProgress - 0.2) / 0.2;
+            skyColor = new THREE.Color(0x87ceeb).lerp(new THREE.Color(0xff9966), t);
+        } else if (sunProgress < 0.6) {
+            const t = (sunProgress - 0.4) / 0.2;
+            skyColor = new THREE.Color(0xff9966).lerp(new THREE.Color(0x1a3a5a), t);
+        } else {
+            skyColor = new THREE.Color(0x1a3a5a);
+        }
+
         this.scene.background = skyColor;
     }
 }
