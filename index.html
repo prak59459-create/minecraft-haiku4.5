@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Haiku 4.5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
+        canvas {
+            display: block;
+        }
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #fff;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            z-index: 10;
+        }
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .crosshair-line {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.7);
+        }
+        .crosshair-h {
+            width: 8px;
+            height: 2px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .crosshair-v {
+            width: 2px;
+            height: 8px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        #hotbar {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            z-index: 10;
+        }
+        .hotbar-slot {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #888;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .hotbar-slot.selected {
+            border-color: #fff;
+            background: rgba(100, 100, 100, 0.9);
+        }
+        #blockInfo {
+            position: absolute;
+            bottom: 90px;
+            left: 10px;
+            color: #fff;
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px;
+            border-radius: 5px;
+            min-width: 120px;
+            border: 1px solid #444;
+        }
+        #targetedBlock {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            pointer-events: none;
+            display: none;
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: right;
+            max-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="loadingScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; font-size: 20px; color: white;">
+        Loading Minecraft Haiku 4.5...
+    </div>
+
+    <div id="hud">
+        <div><strong>Minecraft Haiku 4.5</strong></div>
+        <div style="margin-top: 5px;">Position: <span id="posX">0</span>, <span id="posY">0</span>, <span id="posZ">0</span></div>
+        <div>Chunk: <span id="chunkX">0</span>, <span id="chunkZ">0</span></div>
+        <div>FPS: <span id="fps">60</span> | Memory: <span id="memory">0</span>MB</div>
+        <div>Chunks Loaded: <span id="chunks">0</span></div>
+        <div style="margin-top: 5px; font-size: 12px; opacity: 0.7;">Click to look | WASD to move</div>
+    </div>
+
+    <div id="crosshair">
+        <div class="crosshair-line crosshair-h"></div>
+        <div class="crosshair-line crosshair-v"></div>
+    </div>
+
+    <div id="targetedBlock"></div>
+
+    <div id="hotbar">
+        <div class="hotbar-slot selected" data-block="grass">🟩</div>
+        <div class="hotbar-slot" data-block="dirt">🟫</div>
+        <div class="hotbar-slot" data-block="stone">⬛</div>
+        <div class="hotbar-slot" data-block="wood">🟧</div>
+        <div class="hotbar-slot" data-block="leaves">🟢</div>
+        <div class="hotbar-slot" data-block="sand">🟨</div>
+        <div class="hotbar-slot" data-block="water">🟦</div>
+        <div class="hotbar-slot" data-block="coal">⬜</div>
+        <div class="hotbar-slot" data-block="obsidian">🟪</div>
+        <div class="hotbar-slot" data-block="ice">🧊</div>
+    </div>
+
+    <div id="blockInfo">
+        Selected: Grass
+    </div>
+
+    <div id="controls">
+        <div><strong>Controls</strong></div>
+        <div>W/A/S/D - Move</div>
+        <div>Space - Jump</div>
+        <div>Shift - Crouch</div>
+        <div>Mouse - Look</div>
+        <div>L.Click - Destroy</div>
+        <div>R.Click - Place</div>
+        <div>1-9 - Block Select</div>
+        <div style="margin-top: 5px; border-top: 1px solid #444; padding-top: 5px;">
+            <div>+/- - Mouse Sens</div>
+            <div>F - Fullscreen</div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@r152/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@r152/examples/jsm/",
+            "simplex-noise": "https://cdn.jsdelivr.net/npm/simplex-noise@4.0.1/+esm"
+        }
+    }
+    </script>
+
+    <script type="module" src="game.js"></script>
+</body>
+</html>
