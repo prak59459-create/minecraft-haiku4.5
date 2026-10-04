@@ -180,9 +180,27 @@
         sunLight.shadow.camera.far = 500;
         scene.add(sunLight);
 
-        // Fog
-        scene.fog = new THREE.Fog(0x87ceeb, 200, 400);
+        // Fog and sky
+        scene.fog = new THREE.Fog(0x87ceeb, 250, 500);
         scene.background = new THREE.Color(0x87ceeb);
+
+        // Add starfield for night sky
+        const starGeometry = new THREE.BufferGeometry();
+        const starPositions = new Float32Array(1000 * 3);
+        for (let i = 0; i < starPositions.length; i += 3) {
+            starPositions[i] = (Math.random() - 0.5) * 400;
+            starPositions[i + 1] = (Math.random() - 0.5) * 400;
+            starPositions[i + 2] = (Math.random() - 0.5) * 400;
+        }
+        starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+        const starMaterial = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 0.5,
+            transparent: true,
+            opacity: 0
+        });
+        const starField = new THREE.Points(starGeometry, starMaterial);
+        scene.add(starField);
 
         // Audio context for sound effects
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -209,10 +227,12 @@
             isJumping: false,
             isSprinting: false,
             isCrouching: false,
-            speed: 0.2,
-            sprintSpeed: 0.35,
-            jumpForce: 0.8,
-            gravity: 0.05
+            speed: 0.25,
+            sprintSpeed: 0.45,
+            jumpForce: 0.85,
+            gravity: 0.05,
+            acceleration: 0.05,
+            friction: 0.92
         };
 
         camera.position.copy(player.position);
@@ -367,8 +387,6 @@
 
             const group = new THREE.Group();
             const blocks = {};
-            const materials = [];
-            const geometries = [];
 
             for (let x = 0; x < CHUNK_SIZE; x++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
@@ -384,7 +402,37 @@
                 }
             }
 
-            // Batch render blocks
+            // Generate trees in forests
+            for (let x = 2; x < CHUNK_SIZE - 2; x++) {
+                for (let z = 2; z < CHUNK_SIZE - 2; z++) {
+                    const worldX = chunkX * CHUNK_SIZE + x;
+                    const worldZ = chunkZ * CHUNK_SIZE + z;
+                    const biome = getBiomeType(worldX, worldZ);
+
+                    if (biome === 'wet' && Math.random() > 0.95) {
+                        const height = getBlockHeight(worldX, worldZ);
+                        // Tree trunk
+                        for (let dy = 0; dy < 5; dy++) {
+                            const blockKey = `${x},${height + dy + 1},${z}`;
+                            if (!blocks[blockKey]) blocks[blockKey] = BLOCKS.WOOD;
+                        }
+                        // Tree leaves
+                        for (let dx = -2; dx <= 2; dx++) {
+                            for (let dz = -2; dz <= 2; dz++) {
+                                if (Math.abs(dx) <= 1 && Math.abs(dz) <= 1) continue;
+                                for (let dy = 3; dy <= 5; dy++) {
+                                    if (x + dx >= 0 && x + dx < CHUNK_SIZE && z + dz >= 0 && z + dz < CHUNK_SIZE) {
+                                        const blockKey = `${x + dx},${height + dy},${z + dz}`;
+                                        if (!blocks[blockKey]) blocks[blockKey] = BLOCKS.LEAVES;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Batch render blocks using instanced geometry for better performance
             const blocksByType = {};
             for (const [key, blockType] of Object.entries(blocks)) {
                 if (!blocksByType[blockType]) blocksByType[blockType] = [];
@@ -392,12 +440,14 @@
                 blocksByType[blockType].push([x, y, z]);
             }
 
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
             for (const [blockType, positions] of Object.entries(blocksByType)) {
-                const geometry = new THREE.BoxGeometry(1, 1, 1);
                 const material = new THREE.MeshStandardMaterial({
                     color: BLOCK_COLORS[blockType],
                     roughness: 0.8,
-                    metalness: 0.2
+                    metalness: blockType === BLOCKS.WATER ? 0.5 : 0.2,
+                    transparent: blockType === BLOCKS.WATER || blockType === BLOCKS.LEAVES,
+                    opacity: blockType === BLOCKS.WATER ? 0.7 : (blockType === BLOCKS.LEAVES ? 0.9 : 1)
                 });
 
                 for (const [x, y, z] of positions) {
@@ -590,12 +640,21 @@
                 0
             );
 
-            const brightness = Math.max(0.2, Math.sin(sunPosition));
-            sunLight.intensity = brightness * 0.8;
-            ambientLight.intensity = 0.2 + brightness * 0.4;
+            const brightness = Math.max(0.15, Math.sin(sunPosition));
+            sunLight.intensity = brightness * 0.9;
+            ambientLight.intensity = 0.15 + brightness * 0.45;
 
-            const skyColor = new THREE.Color();
-            skyColor.setHSL(0.6, 0.8, 0.3 + brightness * 0.4);
+            // Sky color transitions
+            let skyColor = new THREE.Color();
+            if (brightness > 0.5) {
+                // Day
+                skyColor.setHSL(0.6, 0.8, 0.3 + brightness * 0.3);
+            } else {
+                // Night
+                skyColor.setHSL(0.7, 0.5, 0.1);
+                starField.material.opacity = Math.max(0, (0.5 - brightness) / 0.5);
+            }
+
             scene.background = skyColor;
             scene.fog.color = skyColor;
         }
@@ -642,7 +701,7 @@
             particleGeometry.attributes.position.needsUpdate = true;
             particleGeometry.attributes.color.needsUpdate = true;
 
-            // Update player velocity
+            // Update player velocity with smooth acceleration
             const moveDir = new THREE.Vector3();
             player.isSprinting = keys['shift'];
             player.isCrouching = keys['shift'] && !keys['w'] && !keys['a'] && !keys['s'] && !keys['d'];
@@ -658,11 +717,16 @@
                 const angle = Math.atan2(mouse.x, 1);
                 const rotMatrix = new THREE.Matrix4().makeRotationY(angle);
                 moveDir.applyMatrix4(rotMatrix);
-                player.velocity.x = moveDir.x * currentSpeed;
-                player.velocity.z = moveDir.z * currentSpeed;
+
+                // Smooth acceleration towards target speed
+                const targetVelX = moveDir.x * currentSpeed;
+                const targetVelZ = moveDir.z * currentSpeed;
+                player.velocity.x += (targetVelX - player.velocity.x) * player.acceleration;
+                player.velocity.z += (targetVelZ - player.velocity.z) * player.acceleration;
             } else {
-                player.velocity.x *= 0.8;
-                player.velocity.z *= 0.8;
+                // Friction when not moving
+                player.velocity.x *= player.friction;
+                player.velocity.z *= player.friction;
             }
 
             // Jump
@@ -736,9 +800,14 @@
                 }
             }
 
-            // Update info
+            // Update info panel
+            const chunkX = Math.floor(player.position.x / CHUNK_SIZE);
+            const chunkZ = Math.floor(player.position.z / CHUNK_SIZE);
+            const biome = getBiomeType(player.position.x, player.position.z);
+            const biomeNames = { hot: 'Desert', wet: 'Forest', normal: 'Plains' };
+
             document.getElementById('position').textContent =
-                `Position: ${player.position.x.toFixed(1)}, ${player.position.y.toFixed(1)}, ${player.position.z.toFixed(1)}`;
+                `Position: ${player.position.x.toFixed(1)}, ${player.position.y.toFixed(1)}, ${player.position.z.toFixed(1)} | Chunk: ${chunkX}, ${chunkZ} | Biome: ${biomeNames[biome]}`;
 
             // Update day/night cycle
             updateDayNightCycle();
