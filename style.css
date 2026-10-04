@@ -51,8 +51,14 @@ body {
     z-index: 10;
 }
 
-#coords, #fps, #blockInfo {
+#coords, #fps, #blockInfo, #status {
     margin-bottom: 5px;
+}
+
+#status {
+    font-size: 11px;
+    color: rgba(255, 200, 100, 0.9);
+    min-height: 14px;
 }
 
 #inventory {
