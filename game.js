@@ -212,7 +212,10 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.65;
+                    let baseLight = 0.65;
+                    if (blockId === BLOCKS.LAVA) {
+                        baseLight = 0.9;
+                    }
                     const heightLight = (wy / WORLD_HEIGHT) * 0.35;
                     const varLight = Math.sin(wx * 0.3 + wz * 0.3) * 0.05;
                     const brightness = baseLight + heightLight + varLight;
@@ -273,7 +276,7 @@ class MinecraftGame {
             const nz = z + dz;
 
             const neighbor = this.world.getBlock(nx, ny, nz);
-            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER && neighbor !== BLOCKS.LAVA) continue;
 
             const startIndex = vertices.length / 3;
             for (const [vx, vy, vz] of face.verts) {

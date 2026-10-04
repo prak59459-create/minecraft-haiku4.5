@@ -16,7 +16,8 @@ export const BLOCKS = {
     DIAMOND_ORE: 14,
     OBSIDIAN: 15,
     CLAY: 16,
-    BRICK: 17
+    BRICK: 17,
+    LAVA: 18
 };
 
 export const BLOCK_NAMES = {
@@ -37,7 +38,8 @@ export const BLOCK_NAMES = {
     14: 'Diamond Ore',
     15: 'Obsidian',
     16: 'Clay',
-    17: 'Brick'
+    17: 'Brick',
+    18: 'Lava'
 };
 
 export const BLOCK_COLORS = {
@@ -58,7 +60,8 @@ export const BLOCK_COLORS = {
     14: 0x00CED1,
     15: 0x0A0A0A,
     16: 0xC1B59E,
-    17: 0xAA3333
+    17: 0xAA3333,
+    18: 0xFF6B00
 };
 
 export const SOLID_BLOCKS = new Set([
@@ -82,6 +85,7 @@ export const SOLID_BLOCKS = new Set([
 
 export const TRANSPARENT_BLOCKS = new Set([
     BLOCKS.WATER,
+    BLOCKS.LAVA,
     BLOCKS.OAK_LEAVES
 ]);
 

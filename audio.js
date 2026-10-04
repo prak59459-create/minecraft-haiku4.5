@@ -66,15 +66,40 @@ export class AudioManager {
         const now = audioContext.currentTime;
         const osc = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
+        const filter = audioContext.createBiquadFilter();
+
+        osc.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(100, now);
+
+        osc.frequency.setValueAtTime(180 + Math.random() * 80, now);
+        gainNode.gain.setValueAtTime(0.03, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.005, now + 0.08);
+
+        osc.start(now);
+        osc.stop(now + 0.08);
+    }
+
+    playLavaSound() {
+        if (!this.audioContext) return;
+
+        const audioContext = this.audioContext;
+        const now = audioContext.currentTime;
+        const osc = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
 
         osc.connect(gainNode);
         gainNode.connect(audioContext.destination);
 
-        osc.frequency.setValueAtTime(200 + Math.random() * 100, now);
-        gainNode.gain.setValueAtTime(0.05, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+        gainNode.gain.setValueAtTime(0.1, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
 
         osc.start(now);
-        osc.stop(now + 0.05);
+        osc.stop(now + 0.3);
     }
 }

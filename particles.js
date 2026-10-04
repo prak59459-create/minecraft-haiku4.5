@@ -4,41 +4,47 @@ export class ParticleSystem {
         this.particles = [];
         this.geometry = new THREE.BufferGeometry();
         this.material = new THREE.PointsMaterial({
-            size: 0.2,
+            size: 0.15,
             sizeAttenuation: true,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9,
+            sizeVariation: true
         });
         this.points = new THREE.Points(this.geometry, this.material);
         this.scene.add(this.points);
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
-        if (this.particles.length > 1500) return;
-        const particleCount = 10 + Math.floor(Math.random() * 10);
+        if (this.particles.length > 2000) return;
+        const particleCount = 12 + Math.floor(Math.random() * 12);
 
         for (let i = 0; i < particleCount; i++) {
+            const angle = (Math.random() * Math.PI * 2);
+            const speed = 0.2 + Math.random() * 0.3;
             const particle = {
                 position: { x, y, z },
                 velocity: {
-                    x: (Math.random() - 0.5) * 0.4,
-                    y: Math.random() * 0.4,
-                    z: (Math.random() - 0.5) * 0.4
+                    x: Math.cos(angle) * speed,
+                    y: (Math.random() * 0.3 + 0.1),
+                    z: Math.sin(angle) * speed
                 },
                 life: 1,
-                maxLife: 0.6 + Math.random() * 0.6,
-                color: blockColor
+                maxLife: 0.8 + Math.random() * 0.8,
+                color: blockColor,
+                size: 0.1 + Math.random() * 0.15
             };
             this.particles.push(particle);
         }
     }
 
     update() {
-        const gravity = 0.01;
+        const gravity = 0.008;
 
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
             p.velocity.y -= gravity;
+            p.velocity.x *= 0.99;
+            p.velocity.z *= 0.99;
             p.position.x += p.velocity.x;
             p.position.y += p.velocity.y;
             p.position.z += p.velocity.z;
@@ -77,6 +83,6 @@ export class ParticleSystem {
 
         this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        this.material.opacity = 0.8;
+        this.material.opacity = 0.85;
     }
 }
