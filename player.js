@@ -83,27 +83,31 @@ export class Player {
     checkCollisions() {
         const radius = PLAYER_WIDTH / 2;
         const height = PLAYER_HEIGHT;
-
         this.isOnGround = false;
 
+        const checkBlockCollision = (x, y, z) => {
+            return isBlockSolid(this.world.getBlock(Math.floor(x), Math.floor(y), Math.floor(z)));
+        };
+
         const checkPoints = [
-            { dy: 0.1, radius: radius * 0.9 },
-            { dy: height * 0.3, radius: radius * 0.9 },
-            { dy: height * 0.6, radius: radius * 0.9 },
-            { dy: height * 0.9, radius: radius * 0.7 }
+            { dy: 0.1, radius: radius * 0.85 },
+            { dy: height * 0.3, radius: radius * 0.85 },
+            { dy: height * 0.6, radius: radius * 0.85 },
+            { dy: height * 0.9, radius: radius * 0.65 }
         ];
 
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            const sampleCount = 12;
+            for (let i = 0; i < sampleCount; i++) {
+                const angle = (i / sampleCount) * Math.PI * 2;
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
                 const cz = this.position.z + Math.sin(angle) * point.radius;
 
-                const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
-                if (isBlockSolid(block)) {
+                if (checkBlockCollision(cx, cy, cz)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
-                    if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
+                    if (moveLen > 0.01) {
+                        const scale = 1.6 / moveLen;
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
@@ -113,39 +117,40 @@ export class Player {
         }
 
         if (this.velocity.y < 0) {
-            let onGround = false;
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.8;
-                const cy = this.position.y - 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.8;
+            const sampleCount = 8;
+            for (let i = 0; i < sampleCount; i++) {
+                const angle = (i / sampleCount) * Math.PI * 2;
+                const cx = this.position.x + Math.cos(angle) * radius * 0.7;
+                const cy = this.position.y - 0.05;
+                const cz = this.position.z + Math.sin(angle) * radius * 0.7;
 
-                if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
-                    onGround = true;
-                    break;
-                }
-            }
-
-            if (onGround) {
-                this.isOnGround = true;
-                this.velocity.y = 0;
-            }
-        }
-
-        if (this.velocity.y > 0) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.9;
-                const cy = this.position.y + height + 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.9;
-
-                if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
+                if (checkBlockCollision(cx, cy, cz)) {
+                    this.isOnGround = true;
                     this.velocity.y = 0;
                     break;
                 }
             }
         }
 
-        if (this.position.y < -10) {
+        if (this.velocity.y > 0) {
+            const sampleCount = 8;
+            for (let i = 0; i < sampleCount; i++) {
+                const angle = (i / sampleCount) * Math.PI * 2;
+                const cx = this.position.x + Math.cos(angle) * radius * 0.8;
+                const cy = this.position.y + height + 0.05;
+                const cz = this.position.z + Math.sin(angle) * radius * 0.8;
+
+                if (checkBlockCollision(cx, cy, cz)) {
+                    this.velocity.y = 0;
+                    break;
+                }
+            }
+        }
+
+        if (this.position.y < -50) {
             this.position.y = 100;
+            this.position.x = 0;
+            this.position.z = 0;
             this.velocity.y = 0;
         }
     }
@@ -163,6 +168,7 @@ export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
+        this.bobTime = 0;
         this.setupMouseControls();
     }
 
@@ -184,5 +190,9 @@ export class Camera {
     updateFromPlayer(player) {
         player.rotation.x = this.rotation.x;
         player.rotation.y = this.rotation.y;
+
+        this.bobTime += 0.016;
+        const isMoving = Math.abs(player.velocity.x) > 0.01 || Math.abs(player.velocity.z) > 0.01;
+        player.cameraBob = isMoving ? Math.sin(this.bobTime * 6) * 0.02 : 0;
     }
 }
