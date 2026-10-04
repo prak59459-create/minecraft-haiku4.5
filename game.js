@@ -126,7 +126,7 @@ class Game {
         this.camera.position.copy(this.player.position);
         this.input = {
             keys: {},
-            mouse: { x: 0, y: 0, locked: false },
+            mouse: { x: 0, y: 0, locked: false, sensitivity: 0.003 },
             selectedBlock: 'grass'
         };
 
@@ -186,12 +186,11 @@ class Game {
 
         document.addEventListener('mousemove', (e) => {
             if (this.input.mouse.locked) {
-                const sensitivity = 0.003;
                 this.player.rotation.order = 'YXZ';
                 this.player.rotation.setFromQuaternion(this.camera.quaternion);
 
-                this.player.rotation.y -= e.movementX * sensitivity;
-                this.player.rotation.x -= e.movementY * sensitivity;
+                this.player.rotation.y -= e.movementX * this.input.mouse.sensitivity;
+                this.player.rotation.x -= e.movementY * this.input.mouse.sensitivity;
 
                 this.player.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.player.rotation.x));
 
@@ -201,11 +200,30 @@ class Game {
 
         document.addEventListener('keydown', (e) => {
             this.input.keys[e.key.toLowerCase()] = true;
+
             if (e.key >= '1' && e.key <= '9') {
                 const blockTypes = ['grass', 'dirt', 'stone', 'wood', 'leaves', 'sand', 'water', 'coal', 'obsidian'];
                 const index = parseInt(e.key) - 1;
                 this.selectBlock(blockTypes[index]);
                 this.updateBlockInfo();
+            }
+
+            if (e.key === '+' || e.key === '=') {
+                this.input.mouse.sensitivity = Math.min(0.01, this.input.mouse.sensitivity + 0.0005);
+            }
+
+            if (e.key === '-' || e.key === '_') {
+                this.input.mouse.sensitivity = Math.max(0.0005, this.input.mouse.sensitivity - 0.0005);
+            }
+
+            if (e.key === 'f' || e.key === 'F') {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
             }
         });
 
@@ -502,6 +520,8 @@ class Game {
             [0, 0, -1], [0, 0, 1], [-1, 0, 0], [1, 0, 0], [0, 1, 0], [0, -1, 0]
         ];
 
+        const faceBrightness = [0.9, 0.9, 0.8, 0.8, 1.0, 0.7];
+
         for (let faceIdx = 0; faceIdx < 6; faceIdx++) {
             const [dx, dy, dz] = directions[faceIdx];
             if (this.getBlockType(chunkX * CHUNK_SIZE + x + dx, y + dy, chunkZ * CHUNK_SIZE + z + dz) !== BLOCK_TYPES.air) {
@@ -510,10 +530,15 @@ class Game {
 
             const faceVertices = faces[faceIdx];
             const facePositions = [];
+            const brightness = faceBrightness[faceIdx];
 
             for (const [vx, vy, vz] of faceVertices) {
                 facePositions.push(x + vx, y + vy, z + vz);
-                colors.push(Math.floor(color.r * 255), Math.floor(color.g * 255), Math.floor(color.b * 255));
+                colors.push(
+                    Math.floor(color.r * 255 * brightness),
+                    Math.floor(color.g * 255 * brightness),
+                    Math.floor(color.b * 255 * brightness)
+                );
             }
 
             positions.push(...facePositions);
