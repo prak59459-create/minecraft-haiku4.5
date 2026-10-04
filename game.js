@@ -264,7 +264,9 @@ class MinecraftGame {
                 wireframe: false,
                 flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 0
+                shininess: 10,
+                specularHighlights: true,
+                emissive: 0x000000
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
