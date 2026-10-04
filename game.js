@@ -144,6 +144,14 @@ class Game {
         this.initLights();
         this.initControls();
         this.setupEventListeners();
+
+        setTimeout(() => {
+            const loadingScreen = document.getElementById('loadingScreen');
+            if (loadingScreen) {
+                loadingScreen.style.display = 'none';
+            }
+        }, 500);
+
         this.animate();
     }
 

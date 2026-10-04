@@ -91,3 +91,43 @@ Then open `http://localhost:3000` in your browser.
 - Optimized mesh generation with face culling
 - Particle effects for visual feedback
 - Render distance: 8 chunks (128 blocks)
+- Proper garbage collection for terrain unloading
+
+## Advanced Gameplay Features
+
+- **Immersive Movement**: Head bob animation for realistic walking feel
+- **Block Targeting**: Visual feedback showing targeted blocks for placement/destruction
+- **Terrain Features**:
+  - Procedural caves using noise functions
+  - Temperature-based biomes affecting terrain type
+  - Ore distribution throughout stone layers
+  - Dynamic tree generation with variable sizes
+  
+- **User Preferences**:
+  - Adjustable mouse sensitivity with +/- keys
+  - Fullscreen mode support with F key
+  - Number key hotbar for quick block selection
+  
+- **Visual Effects**:
+  - Dynamic day/night cycle (20-second cycle)
+  - Fog color changes with time of day
+  - Water animations with wave effect
+  - Per-face brightness shading for depth perception
+  - Particle effects when destroying blocks
+
+## System Requirements
+
+- Modern browser with WebGL support
+- Minimum: 4GB RAM, dedicated GPU recommended
+- Internet connection for initial Three.js CDN load
+
+## File Structure
+
+```
+minecraft-haiku4.5/
+├── game.js          # Main game logic (878 lines)
+├── index.html       # Game interface and styling
+├── server.js        # Express.js development server
+├── package.json     # Project dependencies
+└── README.md        # This file
+```
