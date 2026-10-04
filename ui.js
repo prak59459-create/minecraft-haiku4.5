@@ -6,7 +6,15 @@ export class UI {
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.healthPercent = 100;
+        this.hungerPercent = 100;
         this.setupInventoryUI();
+        this.setupHealthDisplay();
+    }
+
+    setupHealthDisplay() {
+        this.healthFill = document.getElementById('health-fill');
+        this.hungerFill = document.getElementById('hunger-fill');
     }
 
     setupInventoryUI() {
@@ -70,5 +78,14 @@ export class UI {
     toggleHelp() {
         const help = document.getElementById('help');
         help.classList.toggle('show');
+    }
+
+    updateHealthDisplay(healthPercent, hungerPercent) {
+        if (this.healthFill) {
+            this.healthFill.style.width = Math.max(0, Math.min(100, healthPercent)) + '%';
+        }
+        if (this.hungerFill) {
+            this.hungerFill.style.width = Math.max(0, Math.min(100, hungerPercent)) + '%';
+        }
     }
 }

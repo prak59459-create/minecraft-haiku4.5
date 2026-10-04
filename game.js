@@ -8,6 +8,7 @@ import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
 import { SkyRenderer } from './sky.js';
+import { HealthSystem } from './health.js';
 
 class MinecraftGame {
     constructor() {
@@ -29,6 +30,7 @@ class MinecraftGame {
         this.debugDisplay = new DebugDisplay();
         this.blockOutline = new BlockOutline(this.scene);
         this.skyRenderer = new SkyRenderer(this.scene);
+        this.healthSystem = new HealthSystem();
 
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
@@ -145,6 +147,7 @@ class MinecraftGame {
     }
 
     handleFallDamage(damage) {
+        this.healthSystem.takeDamage(damage);
         const color = 0xFF0000;
         this.particleSystem.addBlockBreakParticles(
             this.player.position.x,
@@ -152,6 +155,7 @@ class MinecraftGame {
             this.player.position.z,
             color
         );
+        this.audioManager.playFallDamageSound();
     }
 
     raycastBlock() {
@@ -397,6 +401,9 @@ class MinecraftGame {
 
         const fps = this.ui.updateFPS();
         this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+
+        this.healthSystem.update();
+        this.ui.updateHealthDisplay(this.healthSystem.getHealthPercentage(), this.healthSystem.getHungerPercentage());
 
         if (this.showDebug) {
             this.debugDisplay.update(this);
