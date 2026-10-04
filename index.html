@@ -92,6 +92,32 @@
             border-radius: 4px;
             font-family: monospace;
         }
+        #blockTooltip {
+            position: absolute;
+            bottom: 80px;
+            right: 10px;
+            color: white;
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 4px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            font-family: monospace;
+            pointer-events: none;
+            min-width: 150px;
+        }
+        #stats {
+            position: absolute;
+            top: 150px;
+            left: 10px;
+            color: #0f0;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            border: 1px solid #0f0;
+        }
     </style>
 </head>
 <body>
@@ -109,6 +135,8 @@
             <div id="position">Position: 0, 0, 0</div>
         </div>
         <div id="status"></div>
+        <div id="blockTooltip"></div>
+        <div id="stats"></div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -675,6 +703,12 @@
         const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
         scene.add(particleSystem);
 
+        // Performance tracking
+        let frameCount = 0;
+        let lastFpsUpdate = Date.now();
+        let currentFps = 0;
+        let lastHitBlock = null;
+
         // Main game loop
         function animate() {
             requestAnimationFrame(animate);
@@ -811,6 +845,38 @@
 
             // Update day/night cycle
             updateDayNightCycle();
+
+            // Update block tooltip
+            const hit = rayCast();
+            if (hit && hit.object.userData.blockType) {
+                const blockType = hit.object.userData.blockType;
+                const blockName = BLOCK_NAMES[blockType] || 'Unknown';
+                const color = BLOCK_COLORS[blockType];
+                const rgb = `rgb(${(color >> 16) & 255}, ${(color >> 8) & 255}, ${color & 255})`;
+                document.getElementById('blockTooltip').innerHTML = `
+                    <div style="color: ${rgb}; font-weight: bold;">■ ${blockName}</div>
+                    <div style="font-size: 10px; margin-top: 5px;">Position: ${hit.object.userData.x}, ${hit.object.userData.y}, ${hit.object.userData.z}</div>
+                    <div style="font-size: 10px;">Distance: ${hit.distance.toFixed(1)}m</div>
+                `;
+            } else {
+                document.getElementById('blockTooltip').innerHTML = '';
+            }
+
+            // Update FPS counter
+            frameCount++;
+            const now = Date.now();
+            if (now - lastFpsUpdate >= 1000) {
+                currentFps = frameCount;
+                frameCount = 0;
+                lastFpsUpdate = now;
+            }
+
+            document.getElementById('stats').innerHTML = `
+                FPS: ${currentFps}<br>
+                Chunks: ${chunks.size}<br>
+                Particles: ${particles.length}<br>
+                Memory: ${(performance.memory ? (performance.memory.usedJSHeapSize / 1048576).toFixed(1) : 'N/A')} MB
+            `;
 
             renderer.render(scene, camera);
         }
