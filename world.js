@@ -44,6 +44,7 @@ export class Chunk {
 
                 let height = getTerrainHeight(wx, wz);
                 let terrainType = getTerrainType(wx, wz);
+                const seaLevel = 62;
 
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
                     if (y === 0) {
@@ -65,12 +66,12 @@ export class Chunk {
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
-                    } else if (y < 62) {
+                    } else if (y < seaLevel) {
                         this.setBlock(x, y, z, BLOCKS.WATER);
                     }
                 }
 
-                if (height > 65) {
+                if (height > seaLevel + 3 && terrainType === 'grass') {
                     generateTree(this, x, z, height);
                 }
             }

@@ -13,9 +13,16 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
+            powerPreference: 'high-performance'
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -290,17 +297,18 @@ class MinecraftGame {
             const nz = z + dz;
 
             const neighbor = this.world.getBlock(nx, ny, nz);
-            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
-            const startIndex = vertices.length / 3;
-            for (const [vx, vy, vz] of face.verts) {
-                vertices.push(x + vx, y + vy, z + vz);
-                colors.push(r, g, b);
+            if (neighbor === BLOCKS.AIR || neighbor === BLOCKS.WATER) {
+                const startIndex = vertices.length / 3;
+                for (const [vx, vy, vz] of face.verts) {
+                    vertices.push(x + vx, y + vy, z + vz);
+                    colors.push(r, g, b);
+                }
+
+                indices.push(startIndex, startIndex + 1, startIndex + 2);
+                indices.push(startIndex, startIndex + 2, startIndex + 3);
+                faceCount++;
             }
-
-            indices.push(startIndex, startIndex + 1, startIndex + 2);
-            indices.push(startIndex, startIndex + 2, startIndex + 3);
-            faceCount++;
         }
 
         return faceCount > 0;
@@ -339,9 +347,13 @@ class MinecraftGame {
     }
 
     onWindowResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(width, height);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
     }
 
     getDistanceToChunk(cx, cz) {
