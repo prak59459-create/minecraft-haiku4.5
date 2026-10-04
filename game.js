@@ -54,15 +54,20 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
-        directionalLight.position.set(150, sunY, 150);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5 + sunIntensity * 0.3);
+        directionalLight.position.set(200, sunY, 200);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
-        directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.far = 600;
+        directionalLight.shadow.camera.left = -256;
+        directionalLight.shadow.camera.right = 256;
+        directionalLight.shadow.camera.top = 256;
+        directionalLight.shadow.camera.bottom = -256;
+        directionalLight.shadow.bias = -0.0001;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -98,6 +103,12 @@ class MinecraftGame {
                 e.preventDefault();
                 this.world.renderDistance = Math.max(2, this.world.renderDistance - 1);
                 this.ui.showMessage(`Render Distance: ${this.world.renderDistance}`);
+            }
+            if (e.key === 'r' || e.key === 'R') {
+                if (this.player.isDead) {
+                    this.player.respawn();
+                    this.ui.showMessage('Respawned!');
+                }
             }
         });
     }
@@ -409,6 +420,11 @@ class MinecraftGame {
         const fps = this.ui.updateFPS();
         this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
 
+        if (this.player.isDead && !this.player.deathMessageShown) {
+            this.ui.showMessage('You fell too far! Press R to respawn', 5000);
+            this.player.deathMessageShown = true;
+        }
+
         if (this.showDebug) {
             this.debugDisplay.update(this);
         }
@@ -433,7 +449,17 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 120 + 100;
         const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
 
-        this.directionalLight.position.set(200, sunY, 200);
+        const playerX = this.player.position.x;
+        const playerZ = this.player.position.z;
+        const sunDistance = 300;
+
+        this.directionalLight.position.set(
+            playerX + Math.cos(time) * sunDistance,
+            sunY,
+            playerZ + Math.sin(time) * sunDistance
+        );
+
+        this.directionalLight.target.position.set(playerX, 0, playerZ);
         this.directionalLight.intensity = 0.4 + sunIntensity * 0.4;
 
         const skyColor = new THREE.Color();

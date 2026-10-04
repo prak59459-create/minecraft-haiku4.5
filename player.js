@@ -15,6 +15,7 @@ export class Player {
     constructor(world) {
         this.world = world;
         this.position = { x: 0, y: 100, z: 0 };
+        this.spawnPoint = { x: 0, y: 100, z: 0 };
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
 
@@ -22,9 +23,24 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.isDead = false;
 
         this.keys = {};
         this.setupKeyboardControls();
+    }
+
+    setSpawnPoint(x, y, z) {
+        this.spawnPoint = { x, y, z };
+    }
+
+    respawn() {
+        this.position = { x: this.spawnPoint.x, y: this.spawnPoint.y, z: this.spawnPoint.z };
+        this.velocity = { x: 0, y: 0, z: 0 };
+        this.isDead = false;
+    }
+
+    resetDeathMessage() {
+        delete this.deathMessageShown;
     }
 
     setupKeyboardControls() {
@@ -167,8 +183,7 @@ export class Player {
         }
 
         if (this.position.y < -10) {
-            this.position.y = 100;
-            this.velocity.y = 0;
+            this.isDead = true;
         }
     }
 
