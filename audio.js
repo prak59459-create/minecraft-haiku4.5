@@ -59,7 +59,7 @@ export class AudioManager {
         osc.stop(now + 0.1);
     }
 
-    playStepSound() {
+    playStepSound(type = 'ground') {
         if (!this.audioContext) return;
 
         const audioContext = this.audioContext;
@@ -70,11 +70,18 @@ export class AudioManager {
         osc.connect(gainNode);
         gainNode.connect(audioContext.destination);
 
-        osc.frequency.setValueAtTime(200 + Math.random() * 100, now);
-        gainNode.gain.setValueAtTime(0.05, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-
-        osc.start(now);
-        osc.stop(now + 0.05);
+        if (type === 'water') {
+            osc.frequency.setValueAtTime(150 + Math.random() * 50, now);
+            gainNode.gain.setValueAtTime(0.03, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.005, now + 0.08);
+            osc.start(now);
+            osc.stop(now + 0.08);
+        } else {
+            osc.frequency.setValueAtTime(200 + Math.random() * 100, now);
+            gainNode.gain.setValueAtTime(0.05, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+            osc.start(now);
+            osc.stop(now + 0.05);
+        }
     }
 }

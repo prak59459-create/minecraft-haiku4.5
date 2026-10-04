@@ -109,10 +109,12 @@ function getOreBlock(x, y, z) {
     const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
     const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
 
-    if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
-    if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
-    if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
-    if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    if (y < 160 && coalChance > 0.45) ore = BLOCKS.COAL_ORE;
+    if (y < 120 && ironChance > 0.55) ore = BLOCKS.IRON_ORE;
+    if (y < 80 && goldChance > 0.65) ore = BLOCKS.GOLD_ORE;
+    if (y < 40 && diamondChance > 0.70) ore = BLOCKS.DIAMOND_ORE;
+
+    if (y < 30 && Math.random() < 0.1) ore = BLOCKS.LAVA;
 
     return ore;
 }
@@ -125,13 +127,25 @@ function generateTree(chunk, x, z, height) {
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
     if (treeChance < 0.5) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    const treeType = Math.floor(treeChance * 3) % 3;
+    const trunkHeight = treeType === 2 ? 3 + Math.floor(Math.random() * 3) : 4 + Math.floor(Math.random() * 4);
     const y = height;
+
+    let logBlock = BLOCKS.OAK_LOG;
+    let leafBlock = BLOCKS.OAK_LEAVES;
+
+    if (treeType === 1) {
+        logBlock = BLOCKS.SPRUCE_LOG;
+        leafBlock = BLOCKS.SPRUCE_LEAVES;
+    } else if (treeType === 2) {
+        logBlock = BLOCKS.BIRCH_LOG;
+        leafBlock = BLOCKS.BIRCH_LEAVES;
+    }
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
             if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
-                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
+                chunk.setBlock(x, y + i, z, logBlock);
             }
         }
     }
@@ -151,7 +165,7 @@ function generateTree(chunk, x, z, height) {
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
                     if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
-                        chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                        chunk.setBlock(fx, fy, fz, leafBlock);
                     }
                 }
             }

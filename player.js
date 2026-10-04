@@ -19,8 +19,12 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.isSwimming = false;
+        this.inWater = false;
 
         this.keys = {};
+        this.lastStepPos = { x: 0, z: 0 };
+        this.stepDistance = 0.5;
         this.setupKeyboardControls();
     }
 
@@ -44,6 +48,7 @@ export class Player {
     }
 
     update() {
+        this.checkWaterCollision();
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
@@ -71,7 +76,11 @@ export class Player {
     }
 
     applyPhysics() {
-        if (!this.isOnGround) {
+        if (this.isSwimming) {
+            if (this.keys[' ']) {
+                this.velocity.y = 0.2;
+            }
+        } else if (!this.isOnGround) {
             this.velocity.y -= GRAVITY;
         }
 
@@ -147,6 +156,29 @@ export class Player {
         if (this.position.y < -10) {
             this.position.y = 100;
             this.velocity.y = 0;
+        }
+    }
+
+    checkWaterCollision() {
+        const cx = Math.floor(this.position.x);
+        const cy = Math.floor(this.position.y + PLAYER_HEIGHT * 0.5);
+        const cz = Math.floor(this.position.z);
+
+        const block = this.world.getBlock(cx, cy, cz);
+        this.inWater = block === BLOCKS.WATER;
+
+        if (this.inWater) {
+            this.isSwimming = true;
+            this.velocity.y *= 0.95;
+            this.velocity.y = Math.max(-0.1, this.velocity.y - 0.01);
+        } else {
+            this.isSwimming = false;
+        }
+    }
+
+    triggerStepSound() {
+        if (this.onStepCallback) {
+            this.onStepCallback(this.isSwimming ? 'water' : 'ground');
         }
     }
 
