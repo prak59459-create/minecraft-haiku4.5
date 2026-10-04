@@ -4,6 +4,9 @@ const CHUNK_SIZE = 16;
 const CHUNK_HEIGHT = 256;
 const WORLD_HEIGHT = 256;
 
+export const CHUNK_SIZE_EXPORT = CHUNK_SIZE;
+export const WORLD_HEIGHT_EXPORT = WORLD_HEIGHT;
+
 let perlinNoise;
 
 export function initPerlinNoise() {
@@ -54,14 +57,16 @@ export class Chunk {
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
                     } else if (y < height) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.SNOW);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
@@ -71,7 +76,14 @@ export class Chunk {
                 }
 
                 if (height > 65) {
-                    generateTree(this, x, z, height);
+                    const terrainTypeVal = getTerrainType(wx, wz);
+                    if (terrainTypeVal === 'sand') {
+                        // No trees on sand
+                    } else if (terrainTypeVal === 'snow') {
+                        generateSpruce(this, x, z, height);
+                    } else {
+                        generateTree(this, x, z, height);
+                    }
                 }
             }
         }
@@ -97,6 +109,7 @@ function getTerrainType(x, z) {
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
     if (temp < -0.3) return 'sand';
+    if (temp > 0.4) return 'snow';
     return 'grass';
 }
 
@@ -125,7 +138,7 @@ function generateTree(chunk, x, z, height) {
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
     if (treeChance < 0.5) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    const trunkHeight = 5 + Math.floor(Math.random() * 4);
     const y = height;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
@@ -137,7 +150,7 @@ function generateTree(chunk, x, z, height) {
     }
 
     const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    const foliageRadius = 3 + Math.floor(Math.random() * 2);
 
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
         const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
@@ -152,6 +165,47 @@ function generateTree(chunk, x, z, height) {
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
                     if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
                         chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                    }
+                }
+            }
+        }
+    }
+}
+
+function generateSpruce(chunk, x, z, height) {
+    if (!perlinNoise) return;
+
+    const worldX = chunk.x * CHUNK_SIZE + x;
+    const worldZ = chunk.z * CHUNK_SIZE + z;
+    const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
+    if (treeChance < 0.4) return;
+
+    const trunkHeight = 8 + Math.floor(Math.random() * 6);
+    const y = height;
+
+    for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
+        if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
+            if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
+                chunk.setBlock(x, y + i, z, BLOCKS.SPRUCE_LOG);
+            }
+        }
+    }
+
+    const foliageStart = y + Math.floor(trunkHeight * 0.3);
+    const foliageEnd = y + trunkHeight;
+
+    for (let fy = foliageStart; fy < foliageEnd && fy < WORLD_HEIGHT; fy++) {
+        const radius = Math.max(1, Math.floor(4 * (1 - (fy - foliageStart) / (foliageEnd - foliageStart))));
+        for (let angle = 0; angle < Math.PI * 2; angle += 0.5) {
+            for (let dist = 0; dist <= radius; dist += 0.7) {
+                const dx = Math.round(Math.cos(angle) * dist);
+                const dz = Math.round(Math.sin(angle) * dist);
+                const fx = x + dx;
+                const fz = z + dz;
+
+                if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
+                    if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
+                        chunk.setBlock(fx, fy, fz, BLOCKS.SPRUCE_LEAVES);
                     }
                 }
             }
@@ -223,6 +277,3 @@ export class World {
         toDelete.forEach(key => this.chunks.delete(key));
     }
 }
-
-export const CHUNK_SIZE_EXPORT = CHUNK_SIZE;
-export const WORLD_HEIGHT_EXPORT = WORLD_HEIGHT;

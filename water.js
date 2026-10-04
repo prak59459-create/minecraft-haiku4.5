@@ -6,6 +6,8 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.waveAmplitude = 0.1;
+        this.waveFrequency = 2;
     }
 
     buildWaterMesh(chunk) {
@@ -13,6 +15,7 @@ export class WaterRenderer {
         const vertices = [];
         const colors = [];
         const indices = [];
+        const waterHeights = [];
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
@@ -48,11 +51,13 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const brightness = 0.8 + Math.random() * 0.2;
+                        const color = waterColor.clone().multiplyScalar(brightness);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
                             colors.push(color.r, color.g, color.b);
+                            waterHeights.push(wy);
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -72,11 +77,14 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.65,
+                side: THREE.DoubleSide,
+                shininess: 100,
+                flatShading: false
             });
 
             const mesh = new THREE.Mesh(geometry, material);
+            mesh.geometry.userData = { waterHeights };
             return mesh;
         }
 

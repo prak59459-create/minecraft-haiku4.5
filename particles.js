@@ -7,25 +7,29 @@ export class ParticleSystem {
             size: 0.2,
             sizeAttenuation: true,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.8,
+            vertexColors: true
         });
         this.points = new THREE.Points(this.geometry, this.material);
         this.scene.add(this.points);
+        this.maxParticles = 2000;
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
-        const particleCount = 8 + Math.floor(Math.random() * 8);
+        if (this.particles.length > this.maxParticles) return;
+
+        const particleCount = Math.min(16, 8 + Math.floor(Math.random() * 8));
 
         for (let i = 0; i < particleCount; i++) {
             const particle = {
                 position: { x, y, z },
                 velocity: {
-                    x: (Math.random() - 0.5) * 0.3,
-                    y: Math.random() * 0.3,
-                    z: (Math.random() - 0.5) * 0.3
+                    x: (Math.random() - 0.5) * 0.4,
+                    y: Math.random() * 0.4,
+                    z: (Math.random() - 0.5) * 0.4
                 },
                 life: 1,
-                maxLife: 0.8 + Math.random() * 0.4,
+                maxLife: 0.6 + Math.random() * 0.6,
                 color: blockColor
             };
             this.particles.push(particle);
@@ -33,7 +37,7 @@ export class ParticleSystem {
     }
 
     update() {
-        const gravity = 0.01;
+        const gravity = 0.015;
 
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
@@ -54,12 +58,12 @@ export class ParticleSystem {
     updateGeometry() {
         if (this.particles.length === 0) {
             this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([]), 3));
-            this.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array([]), 3));
+            this.geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array([]), 3, true));
             return;
         }
 
         const positions = new Float32Array(this.particles.length * 3);
-        const colors = new Float32Array(this.particles.length * 3);
+        const colors = new Uint8Array(this.particles.length * 3);
 
         for (let i = 0; i < this.particles.length; i++) {
             const p = this.particles[i];
@@ -69,13 +73,13 @@ export class ParticleSystem {
 
             const color = new THREE.Color(p.color);
             const alpha = p.life / p.maxLife;
-            colors[i * 3] = color.r;
-            colors[i * 3 + 1] = color.g;
-            colors[i * 3 + 2] = color.b;
+            colors[i * 3] = color.r * 255;
+            colors[i * 3 + 1] = color.g * 255;
+            colors[i * 3 + 2] = color.b * 255;
         }
 
         this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3, true));
         this.material.opacity = 0.8;
     }
 }
