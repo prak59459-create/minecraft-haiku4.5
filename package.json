@@ -1,0 +1,14 @@
+{
+  "name": "minecraft-haiku4.5",
+  "version": "1.0.0",
+  "description": "3D Minecraft clone built with Three.js",
+  "type": "module",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "dev": "python -m http.server 8000"
+  },
+  "keywords": ["minecraft", "3d", "game", "three.js"],
+  "author": "Claude",
+  "license": "MIT"
+}
