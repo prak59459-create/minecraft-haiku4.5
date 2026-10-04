@@ -11,7 +11,9 @@ const BLOCK_TYPES = {
     sand: 6,
     water: 7,
     coal: 8,
-    obsidian: 9
+    obsidian: 9,
+    gravel: 10,
+    ice: 11
 };
 
 const BLOCK_COLORS = {
@@ -23,13 +25,69 @@ const BLOCK_COLORS = {
     sand: 0xddd835,
     water: 0x0288d1,
     coal: 0x212121,
-    obsidian: 0x1a1a2e
+    obsidian: 0x1a1a2e,
+    gravel: 0x9e9e9e,
+    ice: 0xb3e5fc
 };
 
 const CHUNK_SIZE = 16;
 const CHUNK_HEIGHT = 128;
 const RENDER_DISTANCE = 8;
 const WORLD_SEED = Math.random() * 10000;
+
+class ParticleSystem {
+    constructor(scene) {
+        this.scene = scene;
+        this.particles = [];
+    }
+
+    addParticles(position, blockType, count = 5) {
+        const color = new THREE.Color(BLOCK_COLORS[Object.keys(BLOCK_TYPES)[blockType]] || BLOCK_COLORS.stone);
+
+        for (let i = 0; i < count; i++) {
+            const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+            const material = new THREE.MeshPhongMaterial({ color });
+            const particle = new THREE.Mesh(geometry, material);
+
+            particle.position.copy(position);
+            particle.position.x += (Math.random() - 0.5) * 0.5;
+            particle.position.y += (Math.random() - 0.5) * 0.5;
+            particle.position.z += (Math.random() - 0.5) * 0.5;
+
+            particle.velocity = new THREE.Vector3(
+                (Math.random() - 0.5) * 0.2,
+                Math.random() * 0.2,
+                (Math.random() - 0.5) * 0.2
+            );
+
+            particle.life = 0.5;
+            particle.maxLife = 0.5;
+
+            this.scene.add(particle);
+            this.particles.push(particle);
+        }
+    }
+
+    update(deltaTime = 0.016) {
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.life -= deltaTime;
+
+            if (p.life <= 0) {
+                this.scene.remove(p);
+                p.geometry.dispose();
+                p.material.dispose();
+                this.particles.splice(i, 1);
+            } else {
+                p.position.add(p.velocity);
+                p.velocity.y -= 0.01;
+
+                const alpha = p.life / p.maxLife;
+                p.material.opacity = alpha;
+            }
+        }
+    }
+}
 
 class Game {
     constructor() {
@@ -40,20 +98,27 @@ class Game {
         this.renderer.setClearColor(0x87ceeb);
         this.renderer.shadowMap.enabled = true;
 
+        const fogColor = 0x87ceeb;
+        this.scene.fog = new THREE.Fog(fogColor, RENDER_DISTANCE * CHUNK_SIZE * 2, RENDER_DISTANCE * CHUNK_SIZE * 5);
+
         this.noise = new SimplexNoise(() => WORLD_SEED);
         this.chunks = new Map();
         this.chunkQueue = [];
         this.lastChunkPos = { x: 0, z: 0 };
+        this.particleSystem = new ParticleSystem(this.scene);
 
         this.player = {
             position: new THREE.Vector3(0, 80, 0),
             velocity: new THREE.Vector3(0, 0, 0),
+            acceleration: new THREE.Vector3(0, 0, 0),
             rotation: new THREE.Euler(0, 0, 0, 'YXZ'),
             groundDetection: false,
-            speed: 0.2,
-            jumpForce: 0.5,
-            sprintSpeed: 0.3,
-            crouchSpeed: 0.1
+            speed: 0.15,
+            jumpForce: 0.6,
+            sprintSpeed: 0.25,
+            crouchSpeed: 0.08,
+            friction: 0.85,
+            gravity: -0.02
         };
 
         this.camera.position.copy(this.player.position);
@@ -244,15 +309,24 @@ class Game {
                 const worldX = chunkX * CHUNK_SIZE + x;
                 const worldZ = chunkZ * CHUNK_SIZE + z;
 
-                let height = Math.floor((this.noise.noise2D(worldX * 0.1, worldZ * 0.1) + 1) * 15 + 50);
+                const temperature = this.noise.noise2D(worldX * 0.05, worldZ * 0.05);
+                let height = Math.floor((this.noise.noise2D(worldX * 0.1, worldZ * 0.1) + 1) * 20 + 45);
 
                 for (let y = 0; y < height; y++) {
-                    if (y < height - 3) {
+                    if (y < height - 4) {
                         data[x][y][z] = BLOCK_TYPES.stone;
+                        if (Math.random() < 0.08) data[x][y][z] = BLOCK_TYPES.coal;
+                        if (y < 40 && Math.random() < 0.02) data[x][y][z] = BLOCK_TYPES.obsidian;
                     } else if (y < height - 1) {
                         data[x][y][z] = BLOCK_TYPES.dirt;
                     } else {
-                        data[x][y][z] = BLOCK_TYPES.grass;
+                        if (temperature < -0.3) {
+                            data[x][y][z] = BLOCK_TYPES.ice;
+                        } else if (height < 60) {
+                            data[x][y][z] = BLOCK_TYPES.sand;
+                        } else {
+                            data[x][y][z] = BLOCK_TYPES.grass;
+                        }
                     }
                 }
 
@@ -262,7 +336,7 @@ class Game {
                     }
                 }
 
-                if (Math.random() < 0.02 && height > 0) {
+                if (temperature > 0 && Math.random() < 0.025 && height > 65) {
                     this.generateTree(data, x, height, z);
                 }
             }
@@ -274,20 +348,34 @@ class Game {
     }
 
     generateTree(data, x, height, z) {
-        const treeHeight = 5 + Math.floor(Math.random() * 3);
+        const treeHeight = 6 + Math.floor(Math.random() * 4);
+        const trunkWidth = Math.random() > 0.7 ? 2 : 1;
 
         for (let y = height; y < height + treeHeight; y++) {
-            if (y < CHUNK_HEIGHT) data[x][y][z] = BLOCK_TYPES.wood;
+            if (y < CHUNK_HEIGHT) {
+                for (let tx = -trunkWidth + 1; tx <= 0; tx++) {
+                    for (let tz = -trunkWidth + 1; tz <= 0; tz++) {
+                        const fx = x + tx;
+                        const fz = z + tz;
+                        if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE) {
+                            data[fx][y][fz] = BLOCK_TYPES.wood;
+                        }
+                    }
+                }
+            }
         }
 
-        const foliageStart = height + treeHeight - 3;
-        for (let dx = -2; dx <= 2; dx++) {
-            for (let dz = -2; dz <= 2; dz++) {
-                if (Math.abs(dx) + Math.abs(dz) <= 2) {
+        const foliageStart = Math.max(height + treeHeight - 4, height + 2);
+        const foliageRadius = 3 + Math.floor(Math.random() * 2);
+
+        for (let dx = -foliageRadius; dx <= foliageRadius; dx++) {
+            for (let dz = -foliageRadius; dz <= foliageRadius; dz++) {
+                const distance = Math.sqrt(dx * dx + dz * dz);
+                if (distance <= foliageRadius) {
                     const fx = x + dx;
                     const fz = z + dz;
                     if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE) {
-                        for (let y = foliageStart; y < foliageStart + 3; y++) {
+                        for (let y = foliageStart; y < foliageStart + 4; y++) {
                             if (y < CHUNK_HEIGHT && data[fx][y][fz] !== BLOCK_TYPES.wood) {
                                 data[fx][y][fz] = BLOCK_TYPES.leaves;
                             }
@@ -333,7 +421,12 @@ class Game {
             geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
             geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
 
-            const material = new THREE.MeshPhongMaterial({ vertexColors: true, side: THREE.FrontSide });
+            const material = new THREE.MeshPhongMaterial({
+                vertexColors: true,
+                side: THREE.FrontSide,
+                transparent: true,
+                opacity: 0.9
+            });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
@@ -415,6 +508,8 @@ class Game {
         }
 
         if (targetBlock) {
+            const blockType = this.getBlockType(targetBlock.x, targetBlock.y, targetBlock.z);
+            this.particleSystem.addParticles(new THREE.Vector3(targetBlock.x + 0.5, targetBlock.y + 0.5, targetBlock.z + 0.5), blockType, 8);
             this.setBlockType(targetBlock.x, targetBlock.y, targetBlock.z, BLOCK_TYPES.air);
         }
     }
@@ -468,9 +563,6 @@ class Game {
     }
 
     updatePlayer() {
-        const speed = this.input.keys['shift'] ? this.player.crouchSpeed : (this.input.keys['w'] || this.input.keys['a'] || this.input.keys['s'] || this.input.keys['d'] ? this.player.speed : 0);
-        const actualSpeed = this.input.keys['control'] ? this.player.sprintSpeed : speed;
-
         const forward = new THREE.Vector3();
         const right = new THREE.Vector3();
 
@@ -481,17 +573,26 @@ class Game {
         right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
 
         let moveDir = new THREE.Vector3();
+        const speed = this.input.keys['shift'] ? this.player.crouchSpeed : (this.input.keys['w'] || this.input.keys['a'] || this.input.keys['s'] || this.input.keys['d'] ? this.player.speed : 0);
+        const actualSpeed = this.input.keys['control'] ? this.player.sprintSpeed : speed;
 
         if (this.input.keys['w']) moveDir.addScaledVector(forward, actualSpeed);
         if (this.input.keys['s']) moveDir.addScaledVector(forward, -actualSpeed);
         if (this.input.keys['d']) moveDir.addScaledVector(right, actualSpeed);
         if (this.input.keys['a']) moveDir.addScaledVector(right, -actualSpeed);
 
-        this.player.position.add(moveDir);
+        this.player.acceleration.copy(moveDir);
+        this.player.acceleration.y = 0;
 
-        this.player.velocity.y -= 0.016;
+        this.player.velocity.x += this.player.acceleration.x;
+        this.player.velocity.z += this.player.acceleration.z;
 
-        this.player.position.y += this.player.velocity.y;
+        this.player.velocity.x *= this.player.friction;
+        this.player.velocity.z *= this.player.friction;
+
+        this.player.velocity.y += this.player.gravity;
+
+        this.player.position.add(this.player.velocity);
 
         if (this.checkCollision()) {
             this.player.position.y -= this.player.velocity.y;
@@ -519,12 +620,17 @@ class Game {
 
     checkCollision() {
         const playerSize = 0.3;
+        const playerHeight = 1.7;
         const checkPoints = [
             { x: 0, y: -0.5, z: 0 },
             { x: playerSize, y: -0.5, z: 0 },
             { x: -playerSize, y: -0.5, z: 0 },
             { x: 0, y: -0.5, z: playerSize },
-            { x: 0, y: -0.5, z: -playerSize }
+            { x: 0, y: -0.5, z: -playerSize },
+            { x: playerSize, y: -0.5, z: playerSize },
+            { x: playerSize, y: -0.5, z: -playerSize },
+            { x: -playerSize, y: -0.5, z: playerSize },
+            { x: -playerSize, y: -0.5, z: -playerSize }
         ];
 
         for (const offset of checkPoints) {
@@ -532,7 +638,8 @@ class Game {
             const y = Math.floor(this.player.position.y + offset.y);
             const z = Math.floor(this.player.position.z + offset.z);
 
-            if (this.getBlockType(x, y, z) !== BLOCK_TYPES.air) {
+            const blockType = this.getBlockType(x, y, z);
+            if (blockType !== BLOCK_TYPES.air && blockType !== BLOCK_TYPES.water) {
                 return true;
             }
         }
@@ -609,6 +716,7 @@ class Game {
         requestAnimationFrame(() => this.animate());
 
         this.updatePlayer();
+        this.particleSystem.update();
         this.updateDayNightCycle(Date.now());
         this.updateStats();
 
