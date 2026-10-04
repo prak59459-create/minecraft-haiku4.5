@@ -5,13 +5,13 @@ class Game {
         this.player = new Player(this.world);
         this.renderer.camera = this.player.camera;
         this.audio = new AudioManager();
+        this.particleSystem = new ParticleSystem(this.renderer.scene);
 
         this.frameCount = 0;
         this.lastFrameTime = Date.now();
         this.fps = 0;
         this.gameTime = 0;
         this.loadedChunks = new Set();
-        this.particles = [];
 
         this.animate();
     }
@@ -58,17 +58,30 @@ class Game {
             }
         }
 
+        const keysToRemove = [];
         for (let key of this.loadedChunks) {
             if (!chunksToKeep.has(key)) {
-                const mesh = this.renderer.chunkMeshes.get(key);
-                if (mesh) {
-                    this.renderer.scene.remove(mesh);
-                    mesh.geometry.dispose();
-                    mesh.material.dispose();
-                }
-                this.renderer.chunkMeshes.delete(key);
-                this.loadedChunks.delete(key);
+                keysToRemove.push(key);
             }
+        }
+
+        for (let key of keysToRemove) {
+            const mesh = this.renderer.chunkMeshes.get(key);
+            if (mesh) {
+                this.renderer.scene.remove(mesh);
+                mesh.geometry.dispose();
+                mesh.material.dispose();
+            }
+            const waterKey = `${key}_water`;
+            const waterMesh = this.renderer.chunkMeshes.get(waterKey);
+            if (waterMesh) {
+                this.renderer.scene.remove(waterMesh);
+                waterMesh.geometry.dispose();
+                waterMesh.material.dispose();
+                this.renderer.chunkMeshes.delete(waterKey);
+            }
+            this.renderer.chunkMeshes.delete(key);
+            this.loadedChunks.delete(key);
         }
     }
 
@@ -101,32 +114,23 @@ class Game {
 
     createParticles(x, y, z, blockId) {
         const color = getBlockColor(blockId);
-        for (let i = 0; i < 8; i++) {
-            const particle = {
-                position: new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5),
-                velocity: new THREE.Vector3(
-                    (Math.random() - 0.5) * 0.3,
-                    Math.random() * 0.3,
-                    (Math.random() - 0.5) * 0.3
-                ),
-                life: 1.0,
-                color: color
-            };
-            this.particles.push(particle);
+        for (let i = 0; i < 12; i++) {
+            const velocity = new THREE.Vector3(
+                (Math.random() - 0.5) * 0.4,
+                Math.random() * 0.4,
+                (Math.random() - 0.5) * 0.4
+            );
+            this.particleSystem.addParticle(
+                new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5),
+                velocity,
+                0.8,
+                color
+            );
         }
     }
 
     updateParticles() {
-        for (let i = this.particles.length - 1; i >= 0; i--) {
-            const p = this.particles[i];
-            p.life -= 0.02;
-            p.velocity.y -= 0.01;
-            p.position.add(p.velocity);
-
-            if (p.life <= 0) {
-                this.particles.splice(i, 1);
-            }
-        }
+        this.particleSystem.update();
     }
 }
 

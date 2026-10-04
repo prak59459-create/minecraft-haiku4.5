@@ -139,3 +139,33 @@ canvas {
     background: rgba(150, 150, 100, 0.9);
     box-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
 }
+
+#help-panel {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    font-size: 11px;
+    padding: 15px;
+    border-radius: 5px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    font-family: 'Courier New', monospace;
+    line-height: 1.8;
+    max-width: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#help-panel h4 {
+    font-size: 12px;
+    margin-bottom: 8px;
+    color: #ffff00;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 5px;
+}
+
+#help-panel p {
+    margin: 4px 0;
+    font-size: 10px;
+}

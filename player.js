@@ -140,11 +140,24 @@ class Player {
             this.velocity.y = Math.max(0, this.velocity.y);
             this.onGround = true;
 
-            if (!this.isColliding(new THREE.Vector3(newPos.x, this.position.y, this.position.z))) {
+            const tryX = new THREE.Vector3(newPos.x, this.position.y, this.position.z);
+            const tryZ = new THREE.Vector3(this.position.x, this.position.y, newPos.z);
+            const tryXZ = new THREE.Vector3(newPos.x, this.position.y, newPos.z);
+
+            if (!this.isColliding(tryX)) {
                 this.position.x = newPos.x;
-            }
-            if (!this.isColliding(new THREE.Vector3(this.position.x, this.position.y, newPos.z))) {
+            } else if (!this.isColliding(tryXZ)) {
+                this.position.x = newPos.x;
                 this.position.z = newPos.z;
+            }
+
+            if (!this.isColliding(tryZ)) {
+                this.position.z = newPos.z;
+            }
+
+            const stepTestPos = new THREE.Vector3(this.position.x, this.position.y + 0.6, this.position.z);
+            if (!this.isColliding(stepTestPos) && (newPos.x !== this.position.x || newPos.z !== this.position.z)) {
+                this.position.copy(stepTestPos);
             }
         }
 
@@ -166,20 +179,30 @@ class Player {
         const hh = this.playerHeight / 2;
         const hd = this.playerDepth / 2;
 
-        const corners = [
-            [pos.x - hw, pos.y - hh, pos.z - hd],
-            [pos.x + hw, pos.y - hh, pos.z - hd],
-            [pos.x - hw, pos.y + hh, pos.z - hd],
-            [pos.x + hw, pos.y + hh, pos.z - hd],
-            [pos.x - hw, pos.y - hh, pos.z + hd],
-            [pos.x + hw, pos.y - hh, pos.z + hd],
-            [pos.x - hw, pos.y + hh, pos.z + hd],
-            [pos.x + hw, pos.y + hh, pos.z + hd],
-        ];
+        const testPoints = [];
+        for (let x = Math.floor(pos.x - hw); x <= Math.ceil(pos.x + hw); x++) {
+            for (let y = Math.floor(pos.y - hh); y <= Math.ceil(pos.y + hh); y++) {
+                for (let z = Math.floor(pos.z - hd); z <= Math.ceil(pos.z + hd); z++) {
+                    const blockId = this.world.getBlock(x, y, z);
+                    if (isBlockSolid(blockId)) {
+                        const dx = Math.max(0, Math.abs(pos.x - (x + 0.5)) - hw);
+                        const dy = Math.max(0, Math.abs(pos.y - (y + 0.5)) - hh);
+                        const dz = Math.max(0, Math.abs(pos.z - (z + 0.5)) - hd);
+                        if (dx === 0 && dy === 0 && dz === 0) return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
-        for (let corner of corners) {
-            const blockId = this.world.getBlock(Math.floor(corner[0]), Math.floor(corner[1]), Math.floor(corner[2]));
-            if (isBlockSolid(blockId)) return true;
+    checkStepUp() {
+        const stepHeight = 0.6;
+        const testPos = this.position.clone();
+        testPos.y += stepHeight;
+        if (!this.isColliding(testPos)) {
+            this.position.y = testPos.y;
+            return true;
         }
         return false;
     }
