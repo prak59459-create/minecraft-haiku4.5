@@ -1,0 +1,16 @@
+{
+  "name": "minecraft-clone",
+  "version": "1.0.0",
+  "description": "3D Minecraft clone with Three.js",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server -p 8080",
+    "dev": "http-server -p 8080"
+  },
+  "keywords": ["minecraft", "three.js", "webgl", "3d"],
+  "author": "Claude",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

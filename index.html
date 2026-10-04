@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Clone</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="hud">
+        <div id="hotbar">
+            <div class="hotbar-slot" data-block="1"></div>
+            <div class="hotbar-slot" data-block="2"></div>
+            <div class="hotbar-slot" data-block="3"></div>
+            <div class="hotbar-slot" data-block="4"></div>
+            <div class="hotbar-slot selected" data-block="5"></div>
+            <div class="hotbar-slot" data-block="6"></div>
+            <div class="hotbar-slot" data-block="7"></div>
+            <div class="hotbar-slot" data-block="8"></div>
+            <div class="hotbar-slot" data-block="9"></div>
+        </div>
+        <div id="crosshair">+</div>
+        <div id="info">
+            <p>FPS: <span id="fps">60</span></p>
+            <p>Pos: <span id="pos">0, 0, 0</span></p>
+            <p>Chunk: <span id="chunk">0, 0</span></p>
+            <p>Time: <span id="time">Day</span></p>
+            <p>Blocks: <span id="blocks">0</span></p>
+        </div>
+        <div id="help-text">
+            <p>WASD: Move | Mouse: Look | Space: Jump | Shift: Sprint<br>
+            Left-Click: Break | Right-Click: Place | 1-9/Wheel: Select Block</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/SimplexNoise.js"></script>
+    <script src="js/blocks.js"></script>
+    <script src="js/particles.js"></script>
+    <script src="js/world.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
