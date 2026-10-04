@@ -48,7 +48,9 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const baseColor = waterColor.clone().multiplyScalar(0.85 + Math.random() * 0.15);
+                        const shimmer = (Math.sin((wx + wz + this.time * 3) * 0.5) + 1) * 0.05;
+                        const color = baseColor.clone().multiplyScalar(1 + shimmer);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
@@ -72,11 +74,13 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.7,
+                side: THREE.FrontSide,
+                emissive: 0x1a3a52
             });
 
             const mesh = new THREE.Mesh(geometry, material);
+            mesh.frustumCulled = true;
             return mesh;
         }
 

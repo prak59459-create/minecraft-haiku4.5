@@ -2,6 +2,10 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.lastX = null;
+        this.lastY = null;
+        this.lastZ = null;
+        this.time = 0;
         this.createOutlineMaterial();
     }
 
@@ -10,7 +14,7 @@ export class BlockOutline {
             color: 0xFFFFFF,
             linewidth: 2,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9
         });
     }
 
@@ -53,10 +57,25 @@ export class BlockOutline {
     }
 
     update(raycastHit) {
+        this.time += 0.016;
+
         if (raycastHit && raycastHit.block !== 0) {
-            this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z);
+            if (this.lastX !== raycastHit.x || this.lastY !== raycastHit.y || this.lastZ !== raycastHit.z) {
+                this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z);
+                this.lastX = raycastHit.x;
+                this.lastY = raycastHit.y;
+                this.lastZ = raycastHit.z;
+            }
+
+            if (this.outline) {
+                const pulse = 0.5 + Math.sin(this.time * 3) * 0.3;
+                this.material.opacity = 0.6 + pulse * 0.3;
+            }
         } else {
             this.clear();
+            this.lastX = null;
+            this.lastY = null;
+            this.lastZ = null;
         }
     }
 }
