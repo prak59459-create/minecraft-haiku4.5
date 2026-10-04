@@ -103,10 +103,13 @@ function getTerrainType(x, z) {
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
     const humidity = perlinNoise.noise2D(x * 0.015, z * 0.015);
+    const elevation = perlinNoise.noise2D(x * 0.003, z * 0.003);
 
-    if (temp < -0.3) return 'sand';
-    if (humidity > 0.4) return 'mycelium';
-    if (humidity > 0.2 && temp < 0.2) return 'clay';
+    if (temp < -0.5) return 'sand';
+    if (temp < -0.2) return 'sand';
+    if (humidity > 0.5) return 'mycelium';
+    if (elevation < -0.2 && humidity > 0.3) return 'clay';
+    if (humidity > 0.2 && temp < 0.1) return 'clay';
     return 'grass';
 }
 
@@ -191,6 +194,8 @@ export class World {
     constructor(renderDistance = 8) {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
+        this.chunkLoadQueue = [];
+        this.maxChunksPerFrame = 1;
         initPerlinNoise();
     }
 
