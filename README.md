@@ -55,14 +55,39 @@ Then open `http://localhost:3000` in your browser.
 
 - Built with Three.js for 3D rendering
 - Simplex noise for procedural terrain generation
-- Efficient chunk-based world system
-- InstancedMesh for performance optimization
+- Efficient chunk-based world system (16x128x16 blocks per chunk)
 - Shadow mapping for realistic lighting
 - Raycasting for accurate block interaction
+- Particle system for block destruction effects
+- Fog rendering for performance and visual depth
+- Temperature-based biome generation
+
+## Advanced Features
+
+- **Terrain Generation**: 
+  - Procedural height maps using Simplex noise
+  - Temperature-based biomes (warm forests, cold tundra)
+  - Ore distribution in stone layers (coal, obsidian)
+  - Procedural tree generation with variable sizes
+  - Water level management and coastlines
+
+- **Physics System**:
+  - Gravity with acceleration
+  - Friction-based movement damping
+  - Accurate collision detection
+  - Jump mechanics with ground detection
+
+- **Rendering**:
+  - Face culling (only visible faces rendered)
+  - Chunk-based mesh batching
+  - Dynamic lighting with day/night cycle
+  - Fog for draw distance optimization
+  - Transparent material support
 
 ## Performance
 
 - Targets 60 FPS on modern hardware
 - Efficient memory management with chunk loading/unloading
 - Optimized mesh generation with face culling
-- Dynamic draw distance based on performance
+- Particle effects for visual feedback
+- Render distance: 8 chunks (128 blocks)

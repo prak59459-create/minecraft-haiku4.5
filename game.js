@@ -483,33 +483,30 @@ class Game {
     }
 
     destroyBlock() {
-        const direction = new THREE.Vector3(0, 0, -1);
-        direction.applyQuaternion(this.camera.quaternion);
-
         this.raycaster.setFromCamera({ x: 0, y: 0 }, this.camera);
-        let maxDist = 6;
+        const maxDist = 6;
         let targetBlock = null;
         let minDist = Infinity;
 
-        for (let dist = 0; dist < maxDist; dist += 0.5) {
+        for (let dist = 0; dist < maxDist; dist += 0.25) {
             const point = this.raycaster.ray.origin.clone().addScaledVector(this.raycaster.ray.direction, dist);
             const x = Math.floor(point.x);
             const y = Math.floor(point.y);
             const z = Math.floor(point.z);
 
-            if (this.getBlockType(x, y, z) !== BLOCK_TYPES.air) {
+            const blockType = this.getBlockType(x, y, z);
+            if (blockType !== BLOCK_TYPES.air) {
                 const distToBlock = this.raycaster.ray.origin.distanceTo(point);
                 if (distToBlock < minDist) {
                     minDist = distToBlock;
-                    targetBlock = { x, y, z };
+                    targetBlock = { x, y, z, type: blockType };
                 }
                 break;
             }
         }
 
         if (targetBlock) {
-            const blockType = this.getBlockType(targetBlock.x, targetBlock.y, targetBlock.z);
-            this.particleSystem.addParticles(new THREE.Vector3(targetBlock.x + 0.5, targetBlock.y + 0.5, targetBlock.z + 0.5), blockType, 8);
+            this.particleSystem.addParticles(new THREE.Vector3(targetBlock.x + 0.5, targetBlock.y + 0.5, targetBlock.z + 0.5), targetBlock.type, 10);
             this.setBlockType(targetBlock.x, targetBlock.y, targetBlock.z, BLOCK_TYPES.air);
         }
     }
@@ -524,7 +521,7 @@ class Game {
         let placementBlock = null;
         let minDist = Infinity;
 
-        for (let dist = 0; dist < maxDist; dist += 0.5) {
+        for (let dist = 0; dist < maxDist; dist += 0.25) {
             const point = this.raycaster.ray.origin.clone().addScaledVector(this.raycaster.ray.direction, dist);
             const x = Math.floor(point.x);
             const y = Math.floor(point.y);
