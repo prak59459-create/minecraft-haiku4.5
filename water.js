@@ -6,6 +6,7 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.cachedWaterBlocks = new Map();
     }
 
     buildWaterMesh(chunk) {
@@ -85,5 +86,25 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+    }
+
+    removeChunkWater(chunkKey) {
+        if (this.waterMeshes.has(chunkKey)) {
+            const mesh = this.waterMeshes.get(chunkKey);
+            this.scene.remove(mesh);
+            mesh.geometry.dispose();
+            mesh.material.dispose();
+            this.waterMeshes.delete(chunkKey);
+        }
+    }
+
+    clearAllWater() {
+        for (const [, mesh] of this.waterMeshes) {
+            this.scene.remove(mesh);
+            mesh.geometry.dispose();
+            mesh.material.dispose();
+        }
+        this.waterMeshes.clear();
+        this.cachedWaterBlocks.clear();
     }
 }

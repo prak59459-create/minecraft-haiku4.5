@@ -1,5 +1,8 @@
 import { BLOCKS, isBlockSolid } from './blocks.js';
 
+const WATER_FRICTION = 0.8;
+const WATER_SLOW_FACTOR = 0.6;
+
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
 const PLAYER_SPEED = 0.1;
@@ -47,6 +50,25 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        this.checkWaterInteraction();
+    }
+
+    checkWaterInteraction() {
+        const eyeBlock = this.world.getBlock(
+            Math.floor(this.position.x),
+            Math.floor(this.position.y + PLAYER_HEIGHT * 0.85),
+            Math.floor(this.position.z)
+        );
+
+        if (eyeBlock === BLOCKS.WATER) {
+            this.velocity.y *= WATER_FRICTION;
+            this.velocity.x *= WATER_SLOW_FACTOR;
+            this.velocity.z *= WATER_SLOW_FACTOR;
+
+            if (this.keys[' ']) {
+                this.velocity.y = 0.15;
+            }
+        }
     }
 
     handleMovement() {

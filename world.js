@@ -1,10 +1,13 @@
 import { BLOCKS } from './blocks.js';
+import { WorldSave } from './worldsave.js';
 
 const CHUNK_SIZE = 16;
 const CHUNK_HEIGHT = 256;
 const WORLD_HEIGHT = 256;
 
 let perlinNoise;
+let autoSaveInterval = null;
+let autoSaveEnabled = true;
 
 export function initPerlinNoise() {
     if (typeof SimplexNoise !== 'undefined') {
@@ -13,12 +16,21 @@ export function initPerlinNoise() {
 }
 
 export class Chunk {
-    constructor(x, z) {
+    constructor(x, z, loadFromSave = true) {
         this.x = x;
         this.z = z;
         this.blocks = new Uint8Array(CHUNK_SIZE * WORLD_HEIGHT * CHUNK_SIZE);
         this.generated = false;
         this.mesh = null;
+        this.dirty = false;
+
+        if (loadFromSave && autoSaveEnabled) {
+            const saved = WorldSave.loadChunk(x, z);
+            if (saved) {
+                this.blocks = saved;
+                this.generated = true;
+            }
+        }
     }
 
     getBlock(x, y, z) {
@@ -29,6 +41,14 @@ export class Chunk {
     setBlock(x, y, z, blockId) {
         const idx = x + y * CHUNK_SIZE + z * CHUNK_SIZE * WORLD_HEIGHT;
         this.blocks[idx] = blockId;
+        this.dirty = true;
+    }
+
+    save() {
+        if (this.dirty && autoSaveEnabled) {
+            WorldSave.saveChunk(this.x, this.z, this.blocks);
+            this.dirty = false;
+        }
     }
 
     generate() {
@@ -53,7 +73,11 @@ export class Chunk {
                         this.setBlock(x, y, z, block);
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
+                            if (y < 60) {
+                                this.setBlock(x, y, z, BLOCKS.CLAY);
+                            } else {
+                                this.setBlock(x, y, z, BLOCKS.SAND);
+                            }
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
@@ -100,8 +124,18 @@ function getTerrainType(x, z) {
     return 'grass';
 }
 
+function isCaveBlock(x, y, z) {
+    if (!perlinNoise || y < 10) return false;
+
+    const caveNoise = Math.abs(perlinNoise.noise3D ? perlinNoise.noise3D(x * 0.05, y * 0.05, z * 0.05) :
+        (perlinNoise.noise2D(x * 0.05, z * 0.05) + perlinNoise.noise2D(y * 0.05, x * 0.03)) / 2);
+    return caveNoise > 0.3;
+}
+
 function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
+
+    if (isCaveBlock(x, y, z)) return BLOCKS.AIR;
 
     let ore = BLOCKS.STONE;
     const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
@@ -164,16 +198,47 @@ export class World {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
         initPerlinNoise();
+        this.startAutoSave();
     }
 
     getChunk(cx, cz) {
         const key = `${cx},${cz}`;
         if (!this.chunks.has(key)) {
             const chunk = new Chunk(cx, cz);
-            chunk.generate();
+            if (!chunk.generated) {
+                chunk.generate();
+            }
             this.chunks.set(key, chunk);
         }
         return this.chunks.get(key);
+    }
+
+    startAutoSave() {
+        if (autoSaveInterval) clearInterval(autoSaveInterval);
+        if (!autoSaveEnabled || !WorldSave.canSave()) return;
+
+        autoSaveInterval = setInterval(() => {
+            for (const [, chunk] of this.chunks) {
+                chunk.save();
+            }
+        }, 5000);
+    }
+
+    stopAutoSave() {
+        if (autoSaveInterval) {
+            clearInterval(autoSaveInterval);
+            autoSaveInterval = null;
+        }
+    }
+
+    disableAutoSave() {
+        autoSaveEnabled = false;
+        this.stopAutoSave();
+    }
+
+    enableAutoSave() {
+        autoSaveEnabled = true;
+        this.startAutoSave();
     }
 
     getBlock(x, y, z) {
