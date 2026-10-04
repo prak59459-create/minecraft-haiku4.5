@@ -115,12 +115,16 @@ class MinecraftGame {
                 this.lastBreakSound = now;
             }
         } else if (event.button === 2) {
+            if (this.selectedBlockType === BLOCKS.AIR || this.selectedBlockType === BLOCKS.WATER) {
+                return;
+            }
+
             const norm = hit.normal;
             const nx = hit.x + norm.x;
             const ny = hit.y + norm.y;
             const nz = hit.z + norm.z;
 
-            if (!this.isPlayerOccupying(nx, ny, nz)) {
+            if (!this.isPlayerOccupying(nx, ny, nz) && ny >= 0 && ny < 256) {
                 this.world.setBlock(nx, ny, nz, this.selectedBlockType);
                 this.updateChunkMesh(nx, ny, nz);
                 this.audioManager.playBlockSound('place');
@@ -132,9 +136,18 @@ class MinecraftGame {
         const px = this.player.position.x;
         const py = this.player.position.y;
         const pz = this.player.position.z;
+        const playerRadius = 0.3;
 
-        return (Math.abs(px - x) < 0.6 && Math.abs(py - y) < 1.8 && Math.abs(pz - z) < 0.6) ||
-               (Math.abs(px - x) < 0.6 && Math.abs(py - y - 1) < 1.8 && Math.abs(pz - z) < 0.6);
+        const dx = Math.abs(px - (x + 0.5));
+        const dz = Math.abs(pz - (z + 0.5));
+        const horizDistance = Math.sqrt(dx * dx + dz * dz);
+
+        if (horizDistance < playerRadius + 0.3) {
+            if (Math.abs(py - y) < 1.8 || Math.abs(py - y - 1) < 1.8) {
+                return true;
+            }
+        }
+        return false;
     }
 
     raycastBlock() {
