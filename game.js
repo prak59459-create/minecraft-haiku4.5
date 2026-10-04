@@ -89,6 +89,16 @@ class MinecraftGame {
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
+            if (e.key === '+' || e.key === '=') {
+                e.preventDefault();
+                this.world.renderDistance = Math.min(16, this.world.renderDistance + 1);
+                this.ui.showMessage(`Render Distance: ${this.world.renderDistance}`);
+            }
+            if (e.key === '-' || e.key === '_') {
+                e.preventDefault();
+                this.world.renderDistance = Math.max(2, this.world.renderDistance - 1);
+                this.ui.showMessage(`Render Distance: ${this.world.renderDistance}`);
+            }
         });
     }
 
@@ -412,6 +422,8 @@ class MinecraftGame {
             );
             this.lastPlayerSave = now;
         }
+
+        this.audioManager.updatePlayerMovement(this.player.position);
 
         this.renderer.render(this.scene, this.camera);
     }
