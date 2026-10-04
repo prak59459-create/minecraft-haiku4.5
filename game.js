@@ -35,10 +35,12 @@ class Game {
         this.height = window.innerHeight;
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, this.width / this.height, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ antialias: false, stencil: false });
         this.renderer.setSize(this.width, this.height);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
         document.body.appendChild(this.renderer.domElement);
 
         this.setupScene();
@@ -131,7 +133,7 @@ class Game {
         document.addEventListener('wheel', (e) => {
             e.preventDefault();
             this.selectedBlockIndex += e.deltaY > 0 ? 1 : -1;
-            this.selectedBlockIndex = Math.max(0, Math.min(8, this.selectedBlockIndex));
+            this.selectedBlockIndex = Math.max(0, Math.min(7, this.selectedBlockIndex));
             this.selectBlock(this.selectedBlockIndex);
         }, { passive: false });
 
@@ -190,22 +192,31 @@ class Game {
             const now = this.audioContext.currentTime;
             const osc = this.audioContext.createOscillator();
             const gain = this.audioContext.createGain();
+            const filter = this.audioContext.createBiquadFilter();
 
-            osc.connect(gain);
+            osc.connect(filter);
+            filter.connect(gain);
             gain.connect(this.audioContext.destination);
 
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(4000, now);
+
             if (type === 'break') {
-                osc.frequency.setValueAtTime(200, now);
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(250, now);
                 osc.frequency.exponentialRampToValueAtTime(100, now + duration);
-                gain.gain.setValueAtTime(0.3, now);
-            } else if (type === 'place') {
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.exponentialRampToValueAtTime(300, now + duration);
-                gain.gain.setValueAtTime(0.3, now);
-            } else if (type === 'jump') {
-                osc.frequency.setValueAtTime(300, now);
-                osc.frequency.exponentialRampToValueAtTime(400, now + duration);
                 gain.gain.setValueAtTime(0.2, now);
+                filter.frequency.exponentialRampToValueAtTime(2000, now + duration);
+            } else if (type === 'place') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(350, now);
+                osc.frequency.exponentialRampToValueAtTime(280, now + duration);
+                gain.gain.setValueAtTime(0.25, now);
+            } else if (type === 'jump') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(250, now);
+                osc.frequency.exponentialRampToValueAtTime(380, now + duration * 0.8);
+                gain.gain.setValueAtTime(0.15, now);
             }
 
             gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
@@ -421,9 +432,17 @@ class Player {
         if (!this.isCollidingWithBlocks(nextPos)) {
             this.position.copy(nextPos);
         } else {
-            this.velocity.y = 0;
-            this.onGround = true;
-            this.isJumping = false;
+            const stepHeight = 0.6;
+            const stepPos = nextPos.clone();
+            stepPos.y += stepHeight;
+
+            if (!this.isCollidingWithBlocks(stepPos) && this.onGround) {
+                this.position.copy(stepPos);
+            } else {
+                this.velocity.y = 0;
+                this.onGround = true;
+                this.isJumping = false;
+            }
         }
 
         if (this.position.y < -50) {
@@ -435,10 +454,10 @@ class Player {
     isCollidingWithBlocks(pos) {
         const world = window.game.world;
         const checkPoints = [
-            [0, 0, 0],
-            [0.3, 0, 0.3], [0.3, 0, -0.3], [-0.3, 0, 0.3], [-0.3, 0, -0.3],
+            [0, 0.1, 0],
+            [0.3, 0.1, 0.3], [0.3, 0.1, -0.3], [-0.3, 0.1, 0.3], [-0.3, 0.1, -0.3],
             [0.3, 0.9, 0.3], [0.3, 0.9, -0.3], [-0.3, 0.9, 0.3], [-0.3, 0.9, -0.3],
-            [0.3, 1.8, 0.3], [0.3, 1.8, -0.3], [-0.3, 1.8, 0.3], [-0.3, 1.8, -0.3]
+            [0.3, 1.7, 0.3], [0.3, 1.7, -0.3], [-0.3, 1.7, 0.3], [-0.3, 1.7, -0.3]
         ];
 
         for (const [dx, dy, dz] of checkPoints) {
