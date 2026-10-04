@@ -31,6 +31,20 @@ export class Chunk {
         this.blocks[idx] = blockId;
     }
 
+    serialize() {
+        return {
+            x: this.x,
+            z: this.z,
+            blocks: Array.from(this.blocks),
+            generated: this.generated
+        };
+    }
+
+    deserialize(data) {
+        this.blocks = new Uint8Array(data.blocks);
+        this.generated = data.generated;
+    }
+
     generate() {
         if (this.generated) return;
 
@@ -54,19 +68,27 @@ export class Chunk {
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'clay') {
+                            this.setBlock(x, y, z, BLOCKS.CLAY);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
                     } else if (y < height) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.SNOW);
+                        } else if (terrainType === 'clay') {
+                            this.setBlock(x, y, z, BLOCKS.CLAY);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
                     } else if (y < 62) {
-                        this.setBlock(x, y, z, BLOCKS.WATER);
+                        if (terrainType === 'snow' && y >= 60) {
+                            this.setBlock(x, y, z, BLOCKS.ICE);
+                        } else {
+                            this.setBlock(x, y, z, BLOCKS.WATER);
+                        }
                     }
                 }
 
@@ -84,10 +106,10 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
+    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 35;
     height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 10;
+    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 5;
 
     return Math.max(20, Math.min(160, Math.floor(height)));
 }
@@ -95,8 +117,13 @@ function getTerrainHeight(x, z) {
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
-    const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const temp = perlinNoise.noise2D(x * 0.01, z * 0.01);
+    const humid = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
+    if (temp < -0.4) return 'snow';
+    if (temp < -0.2) return 'grass';
+    if (humid < -0.3) return 'sand';
+    if (humid < -0.1 && temp < 0) return 'clay';
     return 'grass';
 }
 
@@ -221,6 +248,13 @@ export class World {
         }
 
         toDelete.forEach(key => this.chunks.delete(key));
+    }
+
+    loadChunkData(cx, cz, chunkData) {
+        const key = `${cx},${cz}`;
+        const chunk = new Chunk(cx, cz);
+        chunk.deserialize(chunkData);
+        this.chunks.set(key, chunk);
     }
 }
 

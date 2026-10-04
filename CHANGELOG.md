@@ -1,5 +1,71 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Performance & Features Update (Session 3)
+
+### New Features
+
+#### World Persistence
+- **Save/Load System**: Press F5 to save world, worlds are restored on next session
+- **localStorage Integration**: Automatic chunk serialization with compression
+- **World Export/Import**: Ability to backup and restore worlds
+- **Storage Management**: 5MB storage limit with smart compression
+
+#### Enhanced Biome System
+- **Snow Biomes**: Cold regions with snow and ice blocks
+- **Clay Regions**: New clay block type for sandy areas
+- **Ice Blocks**: Frozen water in snow biomes
+- **Better Biome Transitions**: Smoother terrain variation between biomes
+
+#### New Block Types
+- Snow (15) - Alpine terrain
+- Ice (16) - Frozen water surfaces
+- Clay (17) - Sandy region variant
+- Lapis Ore (18) - Rare ore
+- Bookshelf (19) - Decorative block
+
+#### Improved User Interface
+- **In-game Messages**: Display notifications for save/load events
+- **Enhanced Help Panel**: Shows save/reset controls
+- **Better Visual Feedback**: Message display on screen center
+
+### Performance Improvements
+
+#### Rendering Optimization
+- **Mesh Caching System**: Reuse mesh geometry data
+- **Ambient Occlusion**: Simple AO calculation for better lighting
+- **Smart Chunk Updates**: Only rebuild affected chunks on block change
+- **Throttled Updates**: Chunk visibility checks every 3 frames instead of every frame
+- **Resource Cleanup**: Proper disposal of unused meshes and materials
+
+#### Memory Management
+- **Efficient Mesh Disposal**: Remove unused geometry and materials from GPU
+- **Cache Invalidation**: Proper cache clearing when chunks are modified
+- **Reduced Memory Footprint**: Optimized chunk loading/unloading
+
+#### Physics & Movement
+- **Improved Sprint Logic**: Only allow sprinting while on ground
+- **Better Air Control**: Smoother movement in air
+- **Enhanced Collision**: Refined collision detection with check points
+
+### Bug Fixes
+- Fixed mesh cache not being cleared when chunks are modified
+- Improved camera smooth follow behavior
+- Better lighting calculation with AO consideration
+- Fixed duplicate chunk mesh loading
+- Improved raycasting accuracy
+
+### Configuration Updates
+- Increased default render distance to 10 chunks
+- Added performance tuning options
+- Added ambient occlusion toggle
+- Shadow mapping improvements
+
+### Documentation
+- Updated README with new features
+- Enhanced controls documentation
+- Added storage information
+- Performance tips and tricks
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features
