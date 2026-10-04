@@ -120,6 +120,19 @@ function getOreBlock(x, y, z) {
     return ore;
 }
 
+function getTreeType(x, z) {
+    if (!perlinNoise) return { log: BLOCKS.OAK_LOG, leaves: BLOCKS.OAK_LEAVES };
+
+    const biomeNoise = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
+    if (biomeNoise > 0.3) {
+        return { log: BLOCKS.SPRUCE_LOG, leaves: BLOCKS.SPRUCE_LEAVES };
+    } else if (biomeNoise < -0.2) {
+        return { log: BLOCKS.BIRCH_LOG, leaves: BLOCKS.BIRCH_LEAVES };
+    }
+    return { log: BLOCKS.OAK_LOG, leaves: BLOCKS.OAK_LEAVES };
+}
+
 function generateTree(chunk, x, z, height) {
     if (!perlinNoise) return;
 
@@ -128,13 +141,14 @@ function generateTree(chunk, x, z, height) {
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
     if (treeChance < 0.45) return;
 
+    const treeType = getTreeType(worldX, worldZ);
     const trunkHeight = 5 + Math.floor(Math.random() * 5);
     const y = height;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
             if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
-                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
+                chunk.setBlock(x, y + i, z, treeType.log);
             }
         }
     }
@@ -154,7 +168,7 @@ function generateTree(chunk, x, z, height) {
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
                     if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
-                        chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                        chunk.setBlock(fx, fy, fz, treeType.leaves);
                     }
                 }
             }
