@@ -7,45 +7,61 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 ### Core Gameplay
 - **WASD Movement** - Move through the world naturally
 - **Mouse Look** - Free camera control with mouse
-- **Space Jump** - Jump and gravity physics
+- **Space Jump/Swim** - Jump and gravity physics, or swim upward in water
 - **Shift Sprint/Crouch** - Sprint for speed or crouch for stealth
 - **Block Destruction** - Left-click to destroy blocks
 - **Block Placement** - Right-click to place blocks
 - **Block Selection** - Use 1-9 or scroll wheel to switch between blocks
 - **Pick Block** - Press C to pick the block you're looking at
+- **Escape Key** - Unlock pointer lock for quick exit
 
 ### World & Terrain
-- **Procedural Generation** - Infinite world generation using Perlin noise
-- **Multiple Biomes** - Grass, sand, and varied terrain types
+- **Procedural Generation** - Infinite world generation using multi-octave Perlin noise
+- **Multiple Biomes** - Grass, sand, gravel, and varied terrain types with moisture-based variation
 - **Chunk System** - Dynamic chunk loading and unloading for performance
+- **Cave Systems** - Procedurally generated underground caves at depths 10-80
 - **Multiple Block Types**:
   - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
+  - Oak/Spruce/Birch Logs and Leaves
+  - Sand, Water, Gravel, Bedrock, Lava
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
-- **Ore Generation** - Procedural ore generation at various depths
-- **Tree Generation** - Natural tree placement in suitable terrain
+- **Ore Generation** - Procedural ore generation at various depths with improved distribution
+- **Tree Generation** - Multiple tree types (Oak, Spruce, Birch) with natural placement
+- **World Save/Load** - localStorage-based chunk persistence (experimental)
 
 ### Physics & Collision
 - **Gravity System** - Realistic falling and landing
 - **Collision Detection** - Precise player-block collision detection
-- **Raycasting** - Accurate block selection and targeting
+- **Raycasting** - Accurate block selection and targeting (optimized)
 - **Block Highlight** - Visual feedback for the block you're looking at
 
+### Survival & Health
+- **Health System** - 20-heart health with damage and regeneration
+- **Hunger System** - Hunger bar that depletes over time
+- **Fall Damage** - Realistic damage calculation based on fall height
+- **Health Regeneration** - Heals automatically when well-fed
+- **Death & Respawn** - Automatic respawn at spawn point when health depletes
+- **Visual HUD** - Real-time health and hunger bars with smooth animations
+
 ### Visual Features
-- **3D Voxel Rendering** - Full 3D block-based world
-- **Dynamic Lighting** - Sun and ambient lighting system
+- **3D Voxel Rendering** - Full 3D block-based world with face shading
+- **Dynamic Lighting** - Sun and ambient lighting system with proper shadows
 - **Day/Night Cycle** - Real-time sky color transitions
-- **Particle Effects** - Block destruction particles
-- **Water Rendering** - Semi-transparent water with proper face culling
+- **Cloud System** - 20 dynamic clouds that move and fade with time
+- **Per-Face Shading** - Top/bottom/side brightness variations for depth
+- **Particle Effects** - Block destruction particles with color feedback
+- **Water Rendering** - Semi-transparent water with proper face culling and wave effects
 
 ### Audio
 - **Procedural Sound Effects**:
-  - Block break sounds
-  - Block place sounds
-  - Jump sounds (prepared)
-  - Step sounds (prepared)
+  - Block break sounds with frequency variation
+  - Block place sounds with pitch modulation
+  - Jump sounds with rising tone
+  - Step sounds for ground and water movement
+  - Fall damage sounds with descending pitch
+  - Drown sounds for underwater damage
 - **Web Audio API** - Dynamic audio generation
+- **Contextual Audio** - Different sounds for different surfaces and actions
 
 ### User Interface
 - **HUD Display** - Real-time coordinates, FPS, and block info
@@ -67,9 +83,10 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 | **A** | Move Left |
 | **S** | Move Backward |
 | **D** | Move Right |
-| **Space** | Jump |
+| **Space** | Jump / Swim Upward |
 | **Shift** | Sprint / Crouch |
 | **Mouse** | Look Around (Click to enable) |
+| **Escape** | Unlock Pointer Lock |
 | **Left-Click** | Destroy Block |
 | **Right-Click** | Place Block |
 | **1-9** | Select Block Slot |
@@ -77,6 +94,23 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 | **C** | Pick Block (Pick the block you're looking at) |
 | **H** | Toggle Help |
 | **F3** | Toggle Debug Info |
+
+## Version
+
+**Current Version:** 1.1.0  
+**Last Updated:** October 4, 2026  
+**Status:** Actively developed
+
+### Recent Updates (v1.1.0)
+- Swimming mechanics and water physics
+- Health and hunger system with visual HUD
+- Cave generation and improved biomes
+- Multiple tree types (Oak, Spruce, Birch)
+- Dynamic sky with clouds
+- Per-face block shading for better depth
+- Enhanced audio with step sounds and fall damage feedback
+- World save/load system (experimental)
+- Performance optimizations and better rendering
 
 ## Getting Started
 
@@ -104,25 +138,39 @@ http://localhost:8000
 
 ## How to Play
 
-1. **Explore** - Walk around and explore the procedurally generated world
+1. **Explore** - Walk around and explore the procedurally generated world with diverse biomes
 2. **Gather Blocks** - Left-click to destroy blocks and collect them
 3. **Build** - Select a block from your inventory (1-9 keys) and right-click to place it
-4. **Navigate** - Use WASD to move and mouse to look around
-5. **Survive** - Manage gravity and avoid falling into water or off cliffs
+4. **Navigate** - Use WASD to move, mouse to look around, Space to jump or swim
+5. **Survive** - Manage your health and hunger, avoid falling damage, and stay safe
+6. **Discover** - Find caves, different ore types, and various tree species
+7. **Day/Night** - Experience dynamic day/night cycles with changing lighting and sky colors
 
 ## Technical Details
 
 ### Architecture
 
 ```
-game.js          - Main game loop and rendering
-world.js         - Terrain generation and chunk management
-player.js        - Player physics and controls
-blocks.js        - Block definitions and properties
-ui.js            - User interface management
-particles.js     - Particle effects system
-water.js         - Water rendering system
-audio.js         - Sound effects generation
+Core Game:
+  game.js          - Main game loop and rendering engine
+  world.js         - Terrain generation, caves, and chunk management
+  player.js        - Player physics, controls, and swimming
+  blocks.js        - Block definitions and properties
+
+Systems:
+  ui.js            - User interface and HUD management
+  particles.js     - Particle effects for block destruction
+  water.js         - Water rendering and interaction
+  audio.js         - Procedural sound effects generation
+  health.js        - Health, hunger, and survival system
+  sky.js           - Dynamic sky and cloud rendering
+  debug.js         - Performance monitoring and debug display
+  
+Utilities:
+  config.js        - Configuration management
+  config.json      - Game settings
+  storage.js       - World save/load system (localStorage)
+  blockoutline.js  - Block selection highlight
 ```
 
 ### Technologies Used

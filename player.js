@@ -19,8 +19,14 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.isSwimming = false;
+        this.inWater = false;
 
         this.keys = {};
+        this.lastStepPos = { x: 0, z: 0 };
+        this.stepDistance = 0.5;
+        this.lastYVelocity = 0;
+        this.fallDamageThreshold = 0.5;
         this.setupKeyboardControls();
     }
 
@@ -30,11 +36,15 @@ export class Player {
 
             if (e.key === ' ') {
                 e.preventDefault();
-                if (this.isOnGround) {
+                if (this.isOnGround && !this.isSwimming) {
                     this.velocity.y = JUMP_POWER;
                     this.isOnGround = false;
                     if (this.onJump) this.onJump();
                 }
+            }
+
+            if (e.key === 'Escape' && document.pointerLockElement) {
+                document.exitPointerLock();
             }
         });
 
@@ -44,9 +54,11 @@ export class Player {
     }
 
     update() {
+        this.checkWaterCollision();
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        this.checkFallDamage();
     }
 
     handleMovement() {
@@ -71,7 +83,11 @@ export class Player {
     }
 
     applyPhysics() {
-        if (!this.isOnGround) {
+        if (this.isSwimming) {
+            if (this.keys[' ']) {
+                this.velocity.y = 0.2;
+            }
+        } else if (!this.isOnGround) {
             this.velocity.y -= GRAVITY;
         }
 
@@ -148,6 +164,39 @@ export class Player {
             this.position.y = 100;
             this.velocity.y = 0;
         }
+    }
+
+    checkWaterCollision() {
+        const cx = Math.floor(this.position.x);
+        const cy = Math.floor(this.position.y + PLAYER_HEIGHT * 0.5);
+        const cz = Math.floor(this.position.z);
+
+        const block = this.world.getBlock(cx, cy, cz);
+        this.inWater = block === BLOCKS.WATER;
+
+        if (this.inWater) {
+            this.isSwimming = true;
+            this.velocity.y *= 0.95;
+            this.velocity.y = Math.max(-0.1, this.velocity.y - 0.01);
+        } else {
+            this.isSwimming = false;
+        }
+    }
+
+    triggerStepSound() {
+        if (this.onStepCallback) {
+            this.onStepCallback(this.isSwimming ? 'water' : 'ground');
+        }
+    }
+
+    checkFallDamage() {
+        if (this.isOnGround && this.lastYVelocity < -this.fallDamageThreshold) {
+            const damage = Math.max(0, Math.floor((Math.abs(this.lastYVelocity) - this.fallDamageThreshold) * 2));
+            if (damage > 0 && this.onFallDamage) {
+                this.onFallDamage(damage);
+            }
+        }
+        this.lastYVelocity = this.velocity.y;
     }
 
     getEyePosition() {
