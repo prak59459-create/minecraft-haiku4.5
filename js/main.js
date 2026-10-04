@@ -65,8 +65,9 @@ class MinecraftGame {
 
     setupLighting() {
         // Ambient light
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(ambientLight);
+        this.ambientLight = ambientLight;
 
         // Directional light (sun)
         const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -83,8 +84,41 @@ class MinecraftGame {
         this.sunLight = sunLight;
 
         // Hemisphere light for better color
-        const hemiLight = new THREE.HemisphereLight(0x87ceeb, 0x654321, 0.4);
+        const hemiLight = new THREE.HemisphereLight(0x87ceeb, 0x654321, 0.3);
         this.scene.add(hemiLight);
+        this.hemiLight = hemiLight;
+
+        // Create stars
+        this.createStars();
+    }
+
+    createStars() {
+        const starGeometry = new THREE.BufferGeometry();
+        const starPositions = [];
+        const starColors = [];
+
+        for (let i = 0; i < 1000; i++) {
+            const x = (Math.random() - 0.5) * 2000;
+            const y = 200 + Math.random() * 300;
+            const z = (Math.random() - 0.5) * 2000;
+
+            starPositions.push(x, y, z);
+
+            const brightness = 0.5 + Math.random() * 0.5;
+            starColors.push(brightness, brightness, brightness);
+        }
+
+        starGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starPositions), 3));
+        starGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(starColors), 3));
+
+        const starMaterial = new THREE.PointsMaterial({
+            size: 2,
+            vertexColors: true,
+            sizeAttenuation: true
+        });
+
+        this.stars = new THREE.Points(starGeometry, starMaterial);
+        this.scene.add(this.stars);
     }
 
     animate() {
@@ -131,7 +165,21 @@ class MinecraftGame {
         const currentColor = dayColor.clone().lerp(nightColor, 1 - brightness);
 
         this.sunLight.color.copy(currentColor);
-        this.sunLight.intensity = brightness * 0.8 + 0.2;
+        this.sunLight.intensity = Math.max(0.1, brightness * 0.8 + 0.2);
+
+        // Ambient light variation
+        this.ambientLight.intensity = 0.3 + brightness * 0.3;
+
+        // Hemisphere light color change
+        const hemiDayColor = new THREE.Color(0x87ceeb);
+        const hemiNightColor = new THREE.Color(0x1a1a3a);
+        this.hemiLight.skyColor.copy(hemiDayColor.clone().lerp(hemiNightColor, 1 - brightness));
+
+        // Stars visibility
+        if (this.stars) {
+            this.stars.material.opacity = Math.max(0, (0.3 - brightness) * 3);
+            this.stars.material.transparent = true;
+        }
 
         // Fog and background
         const skyColor = new THREE.Color(0x87ceeb).lerp(new THREE.Color(0x0a0a1f), 1 - brightness);

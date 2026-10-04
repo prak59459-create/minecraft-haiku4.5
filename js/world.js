@@ -107,33 +107,84 @@ class World {
     }
 
     generateTree(chunk, x, y, z) {
-        const height = 5 + Math.floor(Math.random() * 3);
+        const treeType = Math.random();
+        if (treeType < 0.7) {
+            this.generateNormalTree(chunk, x, y, z);
+        } else {
+            this.generateTallTree(chunk, x, y, z);
+        }
+    }
+
+    generateNormalTree(chunk, x, y, z) {
+        const height = 4 + Math.floor(Math.random() * 3);
         const offsetX = chunk.x * CHUNK_SIZE;
         const offsetZ = chunk.z * CHUNK_SIZE;
 
+        // Trunk
         for (let i = 0; i < height; i++) {
             const worldX = offsetX + x;
             const worldZ = offsetZ + z;
             const targetChunk = this.getOrCreateChunk(Math.floor(worldX / CHUNK_SIZE), Math.floor(worldZ / CHUNK_SIZE));
             const localX = worldX % CHUNK_SIZE;
             const localZ = worldZ % CHUNK_SIZE;
-            targetChunk.setBlock(localX, y + i, localZ, 4); // Log
+            targetChunk.setBlock(localX, y + i, localZ, 9); // Log
         }
 
-        // Leaves
-        const leafRadius = 3;
-        for (let dx = -leafRadius; dx <= leafRadius; dx++) {
-            for (let dz = -leafRadius; dz <= leafRadius; dz++) {
-                for (let dy = -2; dy <= 2; dy++) {
-                    const dist = Math.sqrt(dx * dx + dz * dz);
-                    if (dist < leafRadius && dy < 2) {
+        // Leaves - spherical crown
+        const leafRadius = 2.5;
+        for (let dx = -3; dx <= 3; dx++) {
+            for (let dz = -3; dz <= 3; dz++) {
+                for (let dy = -1; dy <= 2; dy++) {
+                    const dist = Math.sqrt(dx * dx + dz * dz + dy * dy * 0.5);
+                    if (dist < leafRadius && !(dx === 0 && dz === 0)) {
                         const worldX = offsetX + x + dx;
                         const worldZ = offsetZ + z + dz;
                         const targetChunk = this.getOrCreateChunk(Math.floor(worldX / CHUNK_SIZE), Math.floor(worldZ / CHUNK_SIZE));
                         const localX = ((worldX % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
                         const localZ = ((worldZ % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
-                        if (y + height + dy < CHUNK_HEIGHT) {
+                        if (y + height + dy >= 0 && y + height + dy < CHUNK_HEIGHT) {
                             targetChunk.setBlock(localX, y + height + dy, localZ, 5); // Leaves
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    generateTallTree(chunk, x, y, z) {
+        const height = 7 + Math.floor(Math.random() * 4);
+        const offsetX = chunk.x * CHUNK_SIZE;
+        const offsetZ = chunk.z * CHUNK_SIZE;
+
+        // Trunk
+        for (let i = 0; i < height; i++) {
+            const worldX = offsetX + x;
+            const worldZ = offsetZ + z;
+            const targetChunk = this.getOrCreateChunk(Math.floor(worldX / CHUNK_SIZE), Math.floor(worldZ / CHUNK_SIZE));
+            const localX = worldX % CHUNK_SIZE;
+            const localZ = worldZ % CHUNK_SIZE;
+            targetChunk.setBlock(localX, y + i, localZ, 9); // Log
+        }
+
+        // Leaves - multiple tiers
+        const tiers = [
+            { radius: 2.5, height: height + 1, count: 3 },
+            { radius: 2, height: height + 3, count: 2 },
+            { radius: 1.5, height: height + 5, count: 1 },
+        ];
+
+        for (const tier of tiers) {
+            for (let dx = -3; dx <= 3; dx++) {
+                for (let dz = -3; dz <= 3; dz++) {
+                    const dist = Math.sqrt(dx * dx + dz * dz);
+                    if (dist < tier.radius && !(dx === 0 && dz === 0)) {
+                        const worldX = offsetX + x + dx;
+                        const worldZ = offsetZ + z + dz;
+                        const targetChunk = this.getOrCreateChunk(Math.floor(worldX / CHUNK_SIZE), Math.floor(worldZ / CHUNK_SIZE));
+                        const localX = ((worldX % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+                        const localZ = ((worldZ % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+                        if (tier.height < CHUNK_HEIGHT) {
+                            targetChunk.setBlock(localX, tier.height, localZ, 5); // Leaves
                         }
                     }
                 }
