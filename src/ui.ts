@@ -1,17 +1,5 @@
 import * as THREE from 'three';
-import { BlockType, getBlockName, getBlockColor } from './blocks.js';
-
-const SELECTABLE_BLOCKS: BlockType[] = [
-    BlockType.GRASS,
-    BlockType.DIRT,
-    BlockType.STONE,
-    BlockType.WOOD,
-    BlockType.LEAVES,
-    BlockType.SAND,
-    BlockType.GRAVEL,
-    BlockType.COAL_ORE,
-    BlockType.IRON_ORE
-];
+import { BlockType, getBlockName } from './blocks.js';
 
 export class BlockSelector {
     selected: number = 0;
@@ -27,11 +15,10 @@ export class BlockSelector {
         if (!selector) return;
 
         selector.innerHTML = '';
-        for (let i = 0; i < this.blocks.length; i++) {
+        for (let i = 0; i < 9; i++) {
             const slot = document.createElement('div');
             slot.className = 'blockSlot' + (i === this.selected ? ' active' : '');
             slot.textContent = String(i + 1);
-            slot.title = getBlockName(this.blocks[i]);
             slot.addEventListener('click', () => this.selectBlock(i));
             selector.appendChild(slot);
         }
@@ -40,14 +27,10 @@ export class BlockSelector {
     }
 
     selectBlock(index: number): void {
-        if (index >= 0 && index < this.blocks.length) {
+        if (index >= 0 && index < 9) {
             this.selected = index;
             this.updateDisplay();
         }
-    }
-
-    getSelectedBlock(): BlockType {
-        return this.blocks[this.selected];
     }
 
     private setupKeyBindings(): void {
@@ -62,7 +45,11 @@ export class BlockSelector {
     private updateInfo(): void {
         const selected = document.getElementById('selectedBlock');
         if (selected) {
-            selected.textContent = getBlockName(this.blocks[this.selected]);
+            const inventory = (window as any).playerInventory;
+            if (inventory) {
+                const slot = inventory.slots[this.selected];
+                selected.textContent = slot.count > 0 ? `${getBlockName(slot.type)} x${slot.count}` : 'Empty';
+            }
         }
     }
 }

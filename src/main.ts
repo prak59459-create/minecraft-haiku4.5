@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { World } from './world.js';
 import { Player } from './player.js';
+import { ParticleSystem } from './particles.js';
 import { BlockSelector, HUD } from './ui.js';
 import { BlockType } from './blocks.js';
 
@@ -9,6 +10,7 @@ let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
 let world: World;
 let player: Player;
+let particles: ParticleSystem;
 let hud: HUD;
 let blockSelector: BlockSelector;
 let sun: THREE.Light;
@@ -32,13 +34,15 @@ function init(): void {
     scene.fog = new THREE.Fog(0x87ceeb, 200, 400);
 
     world = new World(scene);
+    particles = new ParticleSystem(scene);
 
     const startPos = new THREE.Vector3(0, 100, 0);
-    player = new Player(camera, world, startPos);
+    player = new Player(camera, world, startPos, particles);
     player.setupControls();
 
     blockSelector = new BlockSelector();
     (window as any).blockSelector = blockSelector;
+    (window as any).playerInventory = player.inventory;
 
     hud = new HUD();
 
@@ -110,14 +114,17 @@ function loadChunks(): void {
 }
 
 let lastChunkUpdate = 0;
+let lastFrameTime = performance.now();
 
 function animate(): void {
     requestAnimationFrame(animate);
 
     const now = performance.now();
-    const delta = Math.min(0.016, (now - (lastChunkUpdate || now)) / 1000);
+    const delta = Math.min(0.016, (now - lastFrameTime) / 1000);
+    lastFrameTime = now;
 
     player.update(delta);
+    particles.update(delta);
     hud.update(player, world);
 
     updateDayNightCycle();

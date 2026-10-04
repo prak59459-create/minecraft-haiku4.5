@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { World } from './world.js';
+import { ParticleSystem } from './particles.js';
+import { Inventory } from './inventory.js';
 import { BlockType, isSolid } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.7;
@@ -21,6 +23,8 @@ export class Player {
     velocity: THREE.Vector3 = new THREE.Vector3();
     keys: KeyState = {};
     world: World;
+    particles: ParticleSystem;
+    inventory: Inventory;
 
     pitch: number = 0;
     yaw: number = 0;
@@ -30,10 +34,12 @@ export class Player {
     isCrouching: boolean = false;
     jumpCooldown: number = 0;
 
-    constructor(camera: THREE.PerspectiveCamera, world: World, startPos: THREE.Vector3) {
+    constructor(camera: THREE.PerspectiveCamera, world: World, startPos: THREE.Vector3, particles: ParticleSystem) {
         this.camera = camera;
         this.world = world;
         this.position = startPos.clone();
+        this.particles = particles;
+        this.inventory = new Inventory();
         this.camera.position.copy(this.position);
     }
 
@@ -71,18 +77,27 @@ export class Player {
 
     private onScroll(e: WheelEvent): void {
         e.preventDefault();
+        this.inventory.selectSlot((this.inventory.selectedSlot + (e.deltaY > 0 ? 1 : -1) + 9) % 9);
+        this.updateInventoryDisplay();
+    }
+
+    private updateInventoryDisplay(): void {
         const selector = (window as any).blockSelector;
         if (selector) {
-            selector.selected = (selector.selected + (e.deltaY > 0 ? 1 : -1) + 9) % 9;
-            selector.updateDisplay();
+            selector.selectBlock(this.inventory.selectedSlot);
         }
     }
 
     private destroyBlock(): void {
         const hit = this.raycast();
         if (hit) {
-            this.world.setBlock(hit.x, hit.y, hit.z, BlockType.AIR);
-            this.updateNearbyChunks(hit.x, hit.y, hit.z);
+            const blockType = this.world.getBlock(hit.x, hit.y, hit.z);
+            if (blockType !== BlockType.AIR) {
+                this.world.setBlock(hit.x, hit.y, hit.z, BlockType.AIR);
+                this.particles.addDestructionParticles(hit.x, hit.y, hit.z, blockType);
+                this.inventory.addBlock(blockType, 1);
+                this.updateNearbyChunks(hit.x, hit.y, hit.z);
+            }
         }
     }
 
@@ -91,10 +106,12 @@ export class Player {
         if (hit) {
             const adj = this.getAdjacentBlock(hit);
             if (adj && !this.wouldCollide(adj.x, adj.y, adj.z)) {
-                const selector = (window as any).blockSelector;
-                const blockType = selector ? selector.getSelectedBlock() : BlockType.GRASS;
-                this.world.setBlock(adj.x, adj.y, adj.z, blockType);
-                this.updateNearbyChunks(adj.x, adj.y, adj.z);
+                const blockType = this.inventory.getSelected().type;
+                if (blockType !== BlockType.AIR && this.inventory.canUseSelected()) {
+                    this.world.setBlock(adj.x, adj.y, adj.z, blockType);
+                    this.inventory.useSelected();
+                    this.updateNearbyChunks(adj.x, adj.y, adj.z);
+                }
             }
         }
     }
@@ -286,6 +303,7 @@ export class Player {
     }
 
     selectBlock(index: number): void {
-        (window as any).blockSelector?.selectBlock(index);
+        this.inventory.selectSlot(index);
+        this.updateInventoryDisplay();
     }
 }
