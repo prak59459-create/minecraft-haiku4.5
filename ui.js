@@ -43,6 +43,15 @@ export class UI {
         slots[index].classList.add('selected');
 
         this.selectedBlock = index;
+
+        const selectedSlot = slots[index];
+        const blockId = parseInt(selectedSlot.dataset.block);
+        this.updateBlockDisplay(blockId);
+    }
+
+    updateBlockDisplay(blockId) {
+        const blockEl = document.getElementById('blockInfo');
+        blockEl.textContent = BLOCK_NAMES[blockId] || 'Unknown';
     }
 
     updateHUD(playerPos, selectedBlock, fps) {
