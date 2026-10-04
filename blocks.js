@@ -13,7 +13,12 @@ export const BLOCKS = {
     COAL_ORE: 11,
     IRON_ORE: 12,
     GOLD_ORE: 13,
-    DIAMOND_ORE: 14
+    DIAMOND_ORE: 14,
+    CONCRETE_WHITE: 15,
+    CONCRETE_RED: 16,
+    CONCRETE_BLUE: 17,
+    CONCRETE_GREEN: 18,
+    CONCRETE_BLACK: 19
 };
 
 export const BLOCK_NAMES = {
@@ -31,7 +36,12 @@ export const BLOCK_NAMES = {
     11: 'Coal Ore',
     12: 'Iron Ore',
     13: 'Gold Ore',
-    14: 'Diamond Ore'
+    14: 'Diamond Ore',
+    15: 'White Concrete',
+    16: 'Red Concrete',
+    17: 'Blue Concrete',
+    18: 'Green Concrete',
+    19: 'Black Concrete'
 };
 
 export const BLOCK_COLORS = {
@@ -49,7 +59,12 @@ export const BLOCK_COLORS = {
     11: 0x1A1A1A,
     12: 0xB8860B,
     13: 0xFFD700,
-    14: 0x00CED1
+    14: 0x00CED1,
+    15: 0xF0F0F0,
+    16: 0xCC3333,
+    17: 0x3366FF,
+    18: 0x33CC33,
+    19: 0x262626
 };
 
 export const SOLID_BLOCKS = new Set([
@@ -65,7 +80,12 @@ export const SOLID_BLOCKS = new Set([
     BLOCKS.COAL_ORE,
     BLOCKS.IRON_ORE,
     BLOCKS.GOLD_ORE,
-    BLOCKS.DIAMOND_ORE
+    BLOCKS.DIAMOND_ORE,
+    BLOCKS.CONCRETE_WHITE,
+    BLOCKS.CONCRETE_RED,
+    BLOCKS.CONCRETE_BLUE,
+    BLOCKS.CONCRETE_GREEN,
+    BLOCKS.CONCRETE_BLACK
 ]);
 
 export const TRANSPARENT_BLOCKS = new Set([
