@@ -1,9 +1,10 @@
-import { BLOCK_NAMES } from './blocks.js';
+import { BLOCK_NAMES, BLOCKS, BLOCK_COLORS } from './blocks.js';
 
 export class UI {
     constructor() {
-        this.selectedBlock = 1;
-        this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        this.selectedBlock = 0;
+        this.blocks = [BLOCKS.STONE, BLOCKS.GRASS, BLOCKS.DIRT, BLOCKS.COBBLESTONE, BLOCKS.OAK_LOG,
+                       BLOCKS.OAK_LEAVES, BLOCKS.SAND, BLOCKS.WATER, BLOCKS.GRAVEL];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
         this.setupInventoryUI();
@@ -45,14 +46,21 @@ export class UI {
         this.selectedBlock = index;
     }
 
-    updateHUD(playerPos, selectedBlock, fps) {
+    getSelectedBlockType() {
+        return this.blocks[this.selectedBlock];
+    }
+
+    updateHUD(playerPos, selectedBlockId, fps) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
 
-        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
+        const chunkX = Math.floor(playerPos.x / 16);
+        const chunkZ = Math.floor(playerPos.z / 16);
+
+        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)} (C: ${chunkX}, ${chunkZ})`;
         fpsEl.textContent = `FPS: ${fps}`;
-        blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+        blockEl.textContent = BLOCK_NAMES[selectedBlockId] || 'Air';
     }
 
     updateFPS() {
