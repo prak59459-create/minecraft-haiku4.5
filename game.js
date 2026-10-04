@@ -308,12 +308,20 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const renderDistance = 8;
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            const dx = Math.abs(cx - playerChunkX);
+            const dz = Math.abs(cz - playerChunkZ);
+
+            if (dx > renderDistance || dz > renderDistance) {
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
+                    const mesh = this.chunkMeshes.get(key);
+                    this.scene.remove(mesh);
+                    mesh.geometry.dispose();
+                    mesh.material.dispose();
                     this.chunkMeshes.delete(key);
                 }
                 continue;

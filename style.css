@@ -180,6 +180,7 @@ body {
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;
+        padding: 6px 10px;
     }
 
     .inventory-slot {
@@ -188,7 +189,21 @@ body {
         font-size: 12px;
     }
 
+    .inventory-slot .slot-block {
+        width: 18px;
+        height: 18px;
+    }
+
     #help {
         font-size: 9px;
+        padding: 10px 14px;
+        bottom: 60px;
+    }
+
+    #crosshair {
+        width: 16px;
+        height: 16px;
+        margin: -8px 0 0 -8px;
+        border-width: 1px;
     }
 }
