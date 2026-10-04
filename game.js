@@ -6,6 +6,7 @@ import { ParticleSystem } from './particles.js';
 import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
+import { BlockOutline } from './blockoutline.js';
 
 class MinecraftGame {
     constructor() {
@@ -24,6 +25,7 @@ class MinecraftGame {
         this.waterRenderer = new WaterRenderer(this.scene, this.world);
         this.audioManager = new AudioManager();
         this.debugDisplay = new DebugDisplay();
+        this.blockOutline = new BlockOutline(this.scene);
 
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
@@ -338,6 +340,9 @@ class MinecraftGame {
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
+
+        const hit = this.raycastBlock();
+        this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
         this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
