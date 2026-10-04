@@ -755,8 +755,15 @@ class World {
 
     unloadChunk(key) {
         const chunk = this.chunks.get(key);
-        if (chunk && chunk.mesh) {
-            this.scene.remove(chunk.mesh);
+        if (chunk) {
+            if (chunk.mesh) {
+                this.scene.remove(chunk.mesh);
+                chunk.mesh.geometry.dispose();
+            }
+            if (chunk.transparentMesh) {
+                this.scene.remove(chunk.transparentMesh);
+                chunk.transparentMesh.geometry.dispose();
+            }
         }
         this.chunks.delete(key);
     }
