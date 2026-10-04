@@ -49,19 +49,25 @@ export class Chunk {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
                     } else if (y < height - 4) {
-                        const block = getOreBlock(wx, y, wz);
-                        this.setBlock(x, y, z, block);
+                        if (isCaveBlock(wx, y, wz)) {
+                            this.setBlock(x, y, z, BLOCKS.AIR);
+                        } else {
+                            const block = getOreBlock(wx, y, wz);
+                            this.setBlock(x, y, z, block);
+                        }
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'dark_grass') {
+                            this.setBlock(x, y, z, BLOCKS.COARSE_DIRT);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
                     } else if (y < height) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
+                        } else if (terrainType === 'dark_grass') {
+                            this.setBlock(x, y, z, BLOCKS.DARK_GRASS);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
@@ -99,9 +105,21 @@ function getTerrainType(x, z) {
     const temp = perlinNoise.noise2D(x * 0.015, z * 0.015);
     const moisture = perlinNoise.noise2D(x * 0.01 + 1000, z * 0.01 + 1000);
 
-    if (temp < -0.2) return 'sand';
-    if (temp > 0.4 && moisture < -0.3) return 'grass';
+    if (temp < -0.25) return 'sand';
+    if (temp > 0.3 && moisture < -0.2) return 'dark_grass';
     return 'grass';
+}
+
+function isCaveBlock(x, y, z) {
+    if (!perlinNoise || y < 10) return false;
+
+    const caveNoise1 = perlinNoise.noise3D(x * 0.02, y * 0.02, z * 0.02);
+    const caveNoise2 = perlinNoise.noise3D(x * 0.05, y * 0.05, z * 0.05);
+    const caveValue = (caveNoise1 + caveNoise2) / 2;
+
+    if (y < 30) return caveValue > 0.5;
+    if (y < 60) return caveValue > 0.55;
+    return caveValue > 0.6;
 }
 
 function getOreBlock(x, y, z) {

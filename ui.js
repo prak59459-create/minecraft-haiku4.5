@@ -45,14 +45,23 @@ export class UI {
         this.selectedBlock = index;
     }
 
-    updateHUD(playerPos, selectedBlock, fps) {
+    updateHUD(playerPos, selectedBlock, fps, player) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
+        const statusEl = document.getElementById('status');
 
         coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
         fpsEl.textContent = `FPS: ${fps}`;
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+
+        let status = '';
+        if (player.isSprinting) {
+            status = '⚡ SPRINT';
+        } else if (player.isCrouching) {
+            status = '⬇ CROUCH';
+        }
+        statusEl.textContent = status;
     }
 
     updateFPS() {
