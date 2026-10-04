@@ -14,10 +14,18 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
+            powerPreference: 'high-performance',
+            stencil: false,
+            depth: true
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setClearColor(0x87CEEB);
         this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -37,11 +45,13 @@ class MinecraftGame {
 
         this.player.onJump = () => this.audioManager.playJumpSound();
         this.player.onFootstep = () => this.audioManager.playStepSound();
+        this.player.onRespawn = () => this.audioManager.playJumpSound();
 
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
         this.setupPointerLock();
+        this.optimizeForPerformance();
         this.animate();
     }
 
@@ -94,6 +104,7 @@ class MinecraftGame {
     setupEventListeners() {
         window.addEventListener('resize', () => this.onWindowResize());
         document.addEventListener('mousedown', (e) => this.onMouseClick(e));
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
     }
 
     setupPickBlock() {
@@ -393,6 +404,11 @@ class MinecraftGame {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    optimizeForPerformance() {
+        this.renderer.sortObjects = false;
+        this.renderer.outputEncoding = THREE.sRGBEncoding;
     }
 
     getDistanceToChunk(cx, cz) {
