@@ -1,5 +1,93 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Performance & Terrain Improvements (Session 3)
+
+### New Features
+
+#### Terrain & World
+- **Cave generation system** using 3D Perlin noise for underground exploration
+- **New block types**: Dark Grass and Coarse Dirt for terrain variety
+- **Biome-based terrain generation** with temperature/moisture parameters
+- **Terrain variation layers** with gravel distribution in subsurface
+- **Improved tree generation** with more diversity in height and shape
+- **Better ore distribution** with adjusted visibility thresholds
+
+#### Audio & Feedback
+- **Step sound effects** when player moves on ground
+- **Player status indicators** showing Sprint/Crouch states in HUD
+- **Enhanced audio feedback** for better game feel
+
+#### UI Improvements
+- **Inventory tooltips** showing block names
+- **Updated inventory slots** with new terrain block types
+- **Status display** in HUD for player movement state
+
+### Performance Optimizations
+
+1. **Rendering Quality**
+   - Switched to **MeshStandardMaterial** for better visuals and PBR rendering
+   - Added **fog rendering** for depth perception and render distance optimization
+   - Improved **lighting calculations** with face-based variations (top=1.0, bottom=0.7)
+   - Added **logarithmic depth buffer** for better depth precision
+   - Dynamic fog color matching day/night cycle
+
+2. **Memory Management**
+   - **Particle system limits** (max 2000) to prevent memory bloat
+   - Proper **geometry/material disposal** for removed meshes
+   - Better **chunk cleanup** on unload
+   - Improved **mesh object pooling** strategy
+
+3. **Chunk Management**
+   - **Batch chunk removal** for better performance
+   - **Distance-based chunk loading** with 3-chunk-per-frame limit
+   - **Improved LOD strategy** with distance calculations
+   - Better **render distance optimization** (8 chunks)
+
+4. **Physics & Raycasting**
+   - **Optimized raycasting** with normalized direction vectors
+   - Better **block tracking** to prevent redundant checks
+   - Improved **collision detection accuracy**
+   - Enhanced **crouch mechanic** implementation
+
+5. **Rendering Optimization**
+   - Added **renderer precision optimization** (highp)
+   - **Shadow map improvements** with better camera configuration
+   - **Frustum culling** enabled for chunk meshes
+   - Better **vertex normal calculations**
+
+### Visual Improvements
+
+1. **Lighting & Shading**
+   - **Face-based lighting variation** for depth perception
+   - Top faces brightest (1.0), side faces medium (0.9), bottom faces darkest (0.7)
+   - Better **ambient light intensity** (0.6 + dynamic)
+   - Improved **directional light intensity** (0.7 + dynamic)
+
+2. **Terrain Quality**
+   - More **varied Perlin noise octaves** for natural-looking landscapes
+   - Better **terrain type transitions** between biomes
+   - Improved **underground features** with cave integration
+   - More **realistic ore distribution**
+
+3. **Particle Effects**
+   - Enhanced **particle color rendering** with vertex colors
+   - Better **particle physics** with improved velocity calculations
+   - Added **fog support** for particles
+   - Improved **particle distribution** for more natural effects
+
+4. **Water Rendering**
+   - Upgraded to **MeshStandardMaterial** for better appearance
+   - Improved **transparency** and **metalness** values
+   - Better **face lighting** for water surfaces
+   - Dynamic **fog support** for water
+
+### Code Quality
+
+- Better **memory management** with proper resource cleanup
+- Improved **code organization** and efficiency
+- More **robust error handling** for edge cases
+- Better **optimization** of mesh generation algorithms
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features
