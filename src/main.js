@@ -5,6 +5,7 @@ import { Physics } from './physics.js';
 import { UI } from './ui.js';
 import { SoundManager } from './sounds.js';
 import { ParticleSystem } from './particles.js';
+import { CloudGenerator } from './environment.js';
 
 class Game {
     constructor() {
@@ -34,6 +35,8 @@ class Game {
         this.ui = new UI(this.player, this.world);
         this.soundManager = new SoundManager();
         this.particles = new ParticleSystem(this.scene);
+        this.clouds = new CloudGenerator(this.scene);
+        this.clouds.generateClouds();
 
         this.clock = new THREE.Clock();
         this.lastFrameTime = 0;
@@ -184,6 +187,7 @@ class Game {
         this.world.handleBlockOperations(this.player, this.particles, this.soundManager);
 
         this.particles.update(deltaTime);
+        this.clouds.update(deltaTime);
 
         this.camera.position.copy(this.player.position);
         this.camera.position.y += this.player.eyeHeight;

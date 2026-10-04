@@ -135,7 +135,8 @@ export class World {
                     if (y < 1) {
                         chunk.setBlock(x, y, z, BLOCK_TYPES.BEDROCK);
                     } else if (y < height - 6) {
-                        chunk.setBlock(x, y, z, BLOCK_TYPES.STONE);
+                        const blockType = this.generateOres(worldX, y, worldZ);
+                        chunk.setBlock(x, y, z, blockType);
                     } else if (y < height - 1) {
                         chunk.setBlock(x, y, z, BLOCK_TYPES.DIRT);
                     } else if (y === height) {
@@ -165,6 +166,20 @@ export class World {
         chunk.buildMesh();
         chunk.isGenerated = true;
         return chunk;
+    }
+
+    generateOres(x, y, z) {
+        const seed = x * 73856093 ^ y * 19349663 ^ z * 83492791;
+        const random = Math.sin(seed) * 10000 - Math.floor(Math.sin(seed) * 10000);
+
+        if (y < 20 && random < 0.08) {
+            return BLOCK_TYPES.COAL_ORE;
+        } else if (y < 30 && random < 0.05) {
+            return BLOCK_TYPES.IRON_ORE;
+        } else if (random < 0.02) {
+            return BLOCK_TYPES.GRAVEL;
+        }
+        return BLOCK_TYPES.STONE;
     }
 
     generateTree(chunk, x, baseY, z) {

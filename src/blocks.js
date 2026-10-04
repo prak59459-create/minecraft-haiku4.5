@@ -12,7 +12,13 @@ export const BLOCK_TYPES = {
     GRAVEL: 8,
     GLASS: 9,
     OAK_LOG: 10,
-    BEDROCK: 11
+    BEDROCK: 11,
+    COBBLESTONE: 12,
+    PLANKS: 13,
+    IRON_ORE: 14,
+    COAL_ORE: 15,
+    BRICK: 16,
+    CLAY: 17
 };
 
 export const BLOCK_COLORS = {
@@ -27,7 +33,13 @@ export const BLOCK_COLORS = {
     [BLOCK_TYPES.GRAVEL]: 0x9b9b9b,
     [BLOCK_TYPES.GLASS]: 0xccddff,
     [BLOCK_TYPES.OAK_LOG]: 0x5a4a3a,
-    [BLOCK_TYPES.BEDROCK]: 0x1a1a1a
+    [BLOCK_TYPES.BEDROCK]: 0x1a1a1a,
+    [BLOCK_TYPES.COBBLESTONE]: 0x757575,
+    [BLOCK_TYPES.PLANKS]: 0x8b6914,
+    [BLOCK_TYPES.IRON_ORE]: 0xb8a038,
+    [BLOCK_TYPES.COAL_ORE]: 0x353535,
+    [BLOCK_TYPES.BRICK]: 0xa8504a,
+    [BLOCK_TYPES.CLAY]: 0xc9aea5
 };
 
 export const BLOCK_NAMES = {
@@ -42,7 +54,13 @@ export const BLOCK_NAMES = {
     [BLOCK_TYPES.GRAVEL]: 'Gravel',
     [BLOCK_TYPES.GLASS]: 'Glass',
     [BLOCK_TYPES.OAK_LOG]: 'Oak Log',
-    [BLOCK_TYPES.BEDROCK]: 'Bedrock'
+    [BLOCK_TYPES.BEDROCK]: 'Bedrock',
+    [BLOCK_TYPES.COBBLESTONE]: 'Cobblestone',
+    [BLOCK_TYPES.PLANKS]: 'Planks',
+    [BLOCK_TYPES.IRON_ORE]: 'Iron Ore',
+    [BLOCK_TYPES.COAL_ORE]: 'Coal Ore',
+    [BLOCK_TYPES.BRICK]: 'Brick',
+    [BLOCK_TYPES.CLAY]: 'Clay'
 };
 
 export const TRANSPARENT_BLOCKS = new Set([

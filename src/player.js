@@ -33,12 +33,12 @@ export class Player {
             BLOCK_TYPES.GRASS,
             BLOCK_TYPES.DIRT,
             BLOCK_TYPES.STONE,
-            BLOCK_TYPES.WOOD,
-            BLOCK_TYPES.LEAVES,
-            BLOCK_TYPES.WATER,
+            BLOCK_TYPES.COBBLESTONE,
             BLOCK_TYPES.SAND,
-            BLOCK_TYPES.GRAVEL,
-            BLOCK_TYPES.GLASS
+            BLOCK_TYPES.GLASS,
+            BLOCK_TYPES.WOOD,
+            BLOCK_TYPES.PLANKS,
+            BLOCK_TYPES.BRICK
         ];
 
         this.isDestroyingBlock = false;
