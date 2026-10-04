@@ -151,3 +151,14 @@ body {
         font-size: 9px;
     }
 }
+
+#gameCanvas {
+    image-rendering: auto;
+    image-rendering: crisp-edges;
+}
+
+body {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
