@@ -173,15 +173,25 @@ export class Camera {
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.targetRotation.y -= e.movementX * this.mouseSensitivity;
-            this.targetRotation.x -= e.movementY * this.mouseSensitivity;
+            if (document.pointerLockElement === document.body) {
+                this.targetRotation.y -= e.movementX * this.mouseSensitivity;
+                this.targetRotation.x -= e.movementY * this.mouseSensitivity;
 
-            this.targetRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.targetRotation.x));
+                this.targetRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.targetRotation.x));
+            }
         });
 
         document.addEventListener('click', () => {
             if (document.pointerLockElement !== document.body) {
                 document.body.requestPointerLock();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (document.pointerLockElement === document.body) {
+                    document.exitPointerLock?.();
+                }
             }
         });
     }

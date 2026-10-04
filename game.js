@@ -40,6 +40,7 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.frameWarningCount = 0;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -357,6 +358,8 @@ class MinecraftGame {
     animate() {
         requestAnimationFrame(() => this.animate());
 
+        const startTime = performance.now();
+
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
 
@@ -390,6 +393,16 @@ class MinecraftGame {
         }
 
         this.renderer.render(this.scene, this.camera);
+
+        const frameTime = performance.now() - startTime;
+        if (frameTime > 33.33) {
+            this.frameWarningCount++;
+            if (this.frameWarningCount % 60 === 0) {
+                console.warn(`Slow frame: ${frameTime.toFixed(2)}ms (target: 33.33ms)`);
+            }
+        } else {
+            this.frameWarningCount = 0;
+        }
     }
 
     updateDayNightCycle() {
