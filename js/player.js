@@ -32,7 +32,27 @@ class Player {
         this.blockBreakCooldown = 0;
         this.breakDelay = 0.15;
 
+        this.highlightedBlock = null;
+        this.blockOutline = null;
+        this.createBlockOutline();
+
         this.setupControls();
+    }
+
+    createBlockOutline() {
+        const geometry = new THREE.BoxGeometry(1.01, 1.01, 1.01);
+        const material = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            emissive: 0x00ff00,
+            emissiveIntensity: 0.3,
+            wireframe: false,
+            transparent: true,
+            opacity: 0.2
+        });
+
+        this.blockOutline = new THREE.Mesh(geometry, material);
+        this.blockOutline.visible = false;
+        game.scene.add(this.blockOutline);
     }
 
     setupControls() {
@@ -174,6 +194,9 @@ class Player {
         // Check if in water
         this.isInWater = this.checkInWater();
 
+        // Update block highlight
+        this.updateBlockHighlight();
+
         // Movement
         const isSprinting = this.keys['shift'] && !this.isInWater;
         const moveSpeed = this.isInWater ? this.swimSpeed : (isSprinting ? this.sprintSpeed : this.speed);
@@ -228,6 +251,24 @@ class Player {
         if (this.position.y < 0) {
             this.position.y = 100;
             this.velocity.y = 0;
+        }
+    }
+
+    updateBlockHighlight() {
+        const hit = this.raycast();
+        if (hit && hit.distance < this.blockDistance) {
+            const pos = hit.point;
+            const normal = hit.normal;
+            const blockPos = new THREE.Vector3(
+                Math.round(pos.x - normal.x * 0.1),
+                Math.round(pos.y - normal.y * 0.1),
+                Math.round(pos.z - normal.z * 0.1)
+            );
+
+            this.blockOutline.position.copy(blockPos).add(new THREE.Vector3(0.5, 0.5, 0.5));
+            this.blockOutline.visible = true;
+        } else {
+            this.blockOutline.visible = false;
         }
     }
 

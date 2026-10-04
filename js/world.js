@@ -211,9 +211,11 @@ class World {
     }
 
     isCaveBlock(x, y, z) {
-        const scale = 0.1;
-        const caveNoise = this.noise.noise(x * scale, y * scale * 0.5, z * scale);
-        return caveNoise > 0.6 && y > 20 && y < 100;
+        const scale = 0.08;
+        const caveNoise1 = this.noise.noise(x * scale, y * scale * 0.4, z * scale);
+        const caveNoise2 = this.noise.noise(x * scale * 0.5, y * scale * 0.5, z * scale * 0.5);
+        const combined = (caveNoise1 + caveNoise2) / 2;
+        return combined > 0.5 && y > 15 && y < 110;
     }
 
     getBlock(x, y, z) {
