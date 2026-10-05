@@ -86,56 +86,53 @@ export class Player {
 
         this.isOnGround = false;
 
-        const checkPoints = [
-            { dy: 0.1, radius: radius * 0.9 },
-            { dy: height * 0.3, radius: radius * 0.9 },
-            { dy: height * 0.6, radius: radius * 0.9 },
-            { dy: height * 0.9, radius: radius * 0.7 }
+        const cos45 = 0.707;
+        const checkDirs = [
+            { x: 1, z: 0 }, { x: cos45, z: cos45 }, { x: 0, z: 1 }, { x: -cos45, z: cos45 },
+            { x: -1, z: 0 }, { x: -cos45, z: -cos45 }, { x: 0, z: -1 }, { x: cos45, z: -cos45 }
         ];
 
-        for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
-                const cx = this.position.x + Math.cos(angle) * point.radius;
-                const cy = this.position.y + point.dy;
-                const cz = this.position.z + Math.sin(angle) * point.radius;
+        if (this.velocity.x !== 0 || this.velocity.z !== 0) {
+            for (let h = 0.1; h < height; h += height * 0.4) {
+                for (const dir of checkDirs) {
+                    const cx = this.position.x + dir.x * radius * 0.9;
+                    const cy = this.position.y + h;
+                    const cz = this.position.z + dir.z * radius * 0.9;
 
-                const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
-                if (isBlockSolid(block)) {
-                    const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
-                    if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
-                        this.position.x -= this.velocity.x * scale;
-                        this.position.z -= this.velocity.z * scale;
+                    if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
+                        const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+                        if (moveLen > 0) {
+                            const scale = 1.5 / moveLen;
+                            this.position.x -= this.velocity.x * scale;
+                            this.position.z -= this.velocity.z * scale;
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
 
         if (this.velocity.y < 0) {
-            let onGround = false;
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.8;
+            const checkDirs2 = [{ x: 1, z: 0 }, { x: 0, z: 1 }, { x: -1, z: 0 }, { x: 0, z: -1 }];
+            for (const dir of checkDirs2) {
+                const cx = this.position.x + dir.x * radius * 0.8;
                 const cy = this.position.y - 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.8;
+                const cz = this.position.z + dir.z * radius * 0.8;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
-                    onGround = true;
+                    this.isOnGround = true;
+                    this.velocity.y = 0;
                     break;
                 }
-            }
-
-            if (onGround) {
-                this.isOnGround = true;
-                this.velocity.y = 0;
             }
         }
 
         if (this.velocity.y > 0) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.9;
+            const checkDirs2 = [{ x: 1, z: 0 }, { x: 0, z: 1 }, { x: -1, z: 0 }, { x: 0, z: -1 }];
+            for (const dir of checkDirs2) {
+                const cx = this.position.x + dir.x * radius * 0.9;
                 const cy = this.position.y + height + 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.9;
+                const cz = this.position.z + dir.z * radius * 0.9;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     this.velocity.y = 0;
