@@ -2,8 +2,12 @@ import { BLOCK_NAMES, BLOCKS } from './blocks.js';
 
 export class UI {
     constructor() {
-        this.selectedBlock = 1;
-        this.blocks = [BLOCKS.STONE, BLOCKS.GRASS, BLOCKS.DIRT, BLOCKS.COBBLESTONE, BLOCKS.OAK_LOG, BLOCKS.OAK_LEAVES, BLOCKS.SAND, BLOCKS.WATER, BLOCKS.GRAVEL];
+        this.selectedBlock = 0;
+        this.blocks = [
+            BLOCKS.STONE, BLOCKS.GRASS, BLOCKS.DIRT, BLOCKS.COBBLESTONE,
+            BLOCKS.OAK_LOG, BLOCKS.OAK_LEAVES, BLOCKS.SAND, BLOCKS.GRAVEL,
+            BLOCKS.BRICK
+        ];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
         this.setupInventoryUI();

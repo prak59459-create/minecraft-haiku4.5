@@ -12,7 +12,7 @@ const STEP_HEIGHT = 0.5;
 export class Player {
     constructor(world) {
         this.world = world;
-        this.position = { x: 0, y: 100, z: 0 };
+        this.position = { x: 8, y: 120, z: 8 };
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
 
