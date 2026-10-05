@@ -34,6 +34,11 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.meshUpdateQueue = new Set();
+        this.maxMeshUpdatesPerFrame = 2;
+
+        this.fpsHistory = [];
+        this.lastRenderDistance = this.world.renderDistance;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -186,7 +191,7 @@ class MinecraftGame {
         }
     }
 
-    buildChunkMesh(chunk) {
+    buildChunkMesh(chunk, distance = 0) {
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
         const colors = [];
@@ -195,7 +200,6 @@ class MinecraftGame {
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
 
-        let faceCount = 0;
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
@@ -212,7 +216,7 @@ class MinecraftGame {
                     const brightness = baseLight + heightLight;
                     color.multiplyScalar(brightness);
 
-                    faceCount += this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk) ? 1 : 0;
+                    this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
                 }
             }
         }
@@ -344,6 +348,14 @@ class MinecraftGame {
         );
 
         this.updateVisibleChunks();
+
+        let updateCount = 0;
+        for (const key of this.meshUpdateQueue) {
+            if (updateCount >= this.maxMeshUpdatesPerFrame) break;
+            this.meshUpdateQueue.delete(key);
+            updateCount++;
+        }
+
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
@@ -353,6 +365,7 @@ class MinecraftGame {
 
         const fps = this.ui.updateFPS();
         this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+        this.updatePerformanceMonitoring(fps);
 
         if (this.showDebug) {
             this.debugDisplay.update(this);
@@ -372,6 +385,32 @@ class MinecraftGame {
         const skyColor = new THREE.Color();
         skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
         this.scene.background = skyColor;
+    }
+
+    updatePerformanceMonitoring(fps) {
+        this.fpsHistory.push(fps);
+        if (this.fpsHistory.length > 60) {
+            this.fpsHistory.shift();
+        }
+
+        if (this.fpsHistory.length === 60) {
+            const avgFps = this.fpsHistory.reduce((a, b) => a + b, 0) / this.fpsHistory.length;
+
+            if (avgFps < 30 && this.world.renderDistance > 4) {
+                this.world.renderDistance = Math.max(4, this.world.renderDistance - 1);
+                this.clearAllChunkMeshes();
+            } else if (avgFps > 55 && this.world.renderDistance < 12) {
+                this.world.renderDistance = Math.min(12, this.world.renderDistance + 1);
+                this.clearAllChunkMeshes();
+            }
+        }
+    }
+
+    clearAllChunkMeshes() {
+        for (const mesh of this.chunkMeshes.values()) {
+            this.scene.remove(mesh);
+        }
+        this.chunkMeshes.clear();
     }
 }
 
