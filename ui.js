@@ -45,6 +45,16 @@ export class UI {
         this.selectedBlock = index;
     }
 
+    selectBlockByType(blockId) {
+        const slots = document.querySelectorAll('.inventory-slot');
+        for (let i = 0; i < slots.length; i++) {
+            if (parseInt(slots[i].dataset.block) === blockId) {
+                this.selectBlock(i);
+                break;
+            }
+        }
+    }
+
     updateHUD(playerPos, selectedBlock, fps) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');

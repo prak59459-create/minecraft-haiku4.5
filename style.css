@@ -147,7 +147,27 @@ body {
         font-size: 12px;
     }
 
+    .inventory-slot .slot-block {
+        width: 18px;
+        height: 18px;
+    }
+
     #help {
+        font-size: 9px;
+    }
+}
+
+@media (max-width: 480px) {
+    #inventory {
+        gap: 2px;
+    }
+
+    .inventory-slot {
+        width: 30px;
+        height: 30px;
+    }
+
+    #hud {
         font-size: 9px;
     }
 }
