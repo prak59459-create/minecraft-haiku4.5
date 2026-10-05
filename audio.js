@@ -77,4 +77,44 @@ export class AudioManager {
         osc.start(now);
         osc.stop(now + 0.05);
     }
+
+    playWaterSound() {
+        if (!this.audioContext) return;
+
+        const audioContext = this.audioContext;
+        const now = audioContext.currentTime;
+        const osc = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        osc.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        osc.frequency.setValueAtTime(350, now);
+        osc.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+        gainNode.gain.setValueAtTime(0.1, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+        osc.start(now);
+        osc.stop(now + 0.15);
+    }
+
+    playErrorSound() {
+        if (!this.audioContext) return;
+
+        const audioContext = this.audioContext;
+        const now = audioContext.currentTime;
+        const osc = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        osc.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.1);
+        gainNode.gain.setValueAtTime(0.1, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+
+        osc.start(now);
+        osc.stop(now + 0.1);
+    }
 }
