@@ -176,9 +176,11 @@ class MinecraftGame {
         for (let dx = -1; dx <= 1; dx++) {
             for (let dz = -1; dz <= 1; dz++) {
                 const key = `${cx + dx},${cz + dz}`;
-                if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
+                const mesh = this.chunkMeshes.get(key);
+                if (mesh) {
+                    this.scene.remove(mesh);
                     this.chunkMeshes.delete(key);
+                    this.meshesToRebuild.add(key);
                 }
             }
         }
@@ -330,11 +332,12 @@ class MinecraftGame {
         const eyePos = this.player.getEyePosition();
         this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
 
-        const direction = new THREE.Vector3(
-            Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
-            Math.sin(this.gameCamera.rotation.x),
-            Math.cos(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x)
-        );
+        const cosX = Math.cos(this.gameCamera.rotation.x);
+        const direction = {
+            x: Math.sin(this.gameCamera.rotation.y) * cosX,
+            y: Math.sin(this.gameCamera.rotation.x),
+            z: Math.cos(this.gameCamera.rotation.y) * cosX
+        };
         this.camera.lookAt(
             eyePos.x + direction.x,
             eyePos.y + direction.y,
@@ -342,6 +345,7 @@ class MinecraftGame {
         );
 
         this.updateVisibleChunks();
+        this.rebuildDeferredMeshes();
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
@@ -357,6 +361,25 @@ class MinecraftGame {
         }
 
         this.renderer.render(this.scene, this.camera);
+    }
+
+    rebuildDeferredMeshes() {
+        if (this.meshesToRebuild.size === 0) return;
+
+        const toProcess = Math.min(1, this.meshesToRebuild.size);
+        for (let i = 0; i < toProcess; i++) {
+            const key = this.meshesToRebuild.values().next().value;
+            this.meshesToRebuild.delete(key);
+
+            const [cx, cz] = key.split(',').map(Number);
+            const chunk = this.world.getChunk(cx, cz);
+
+            const mesh = this.buildChunkMesh(chunk);
+            if (mesh) {
+                this.scene.add(mesh);
+                this.chunkMeshes.set(key, mesh);
+            }
+        }
     }
 
     updateDayNightCycle() {
