@@ -13,9 +13,10 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -32,6 +33,8 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.lastHitBlock = null;
+        this.frameCounter = 0;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -134,8 +137,9 @@ class MinecraftGame {
         );
 
         let hit = null;
+        let lastBlockCoord = null;
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = 0.1; dist <= this.raycastDistance; dist += 0.1) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -144,9 +148,15 @@ class MinecraftGame {
             const by = Math.floor(y);
             const bz = Math.floor(z);
 
+            if (lastBlockCoord && lastBlockCoord[0] === bx && lastBlockCoord[1] === by && lastBlockCoord[2] === bz) {
+                continue;
+            }
+
+            lastBlockCoord = [bx, by, bz];
+
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
+                const prevDist = Math.max(0.1, dist - 0.1);
                 const prevX = eyePos.x + direction.x * prevDist;
                 const prevY = eyePos.y + direction.y * prevDist;
                 const prevZ = eyePos.z + direction.z * prevDist;
@@ -187,7 +197,7 @@ class MinecraftGame {
         }
     }
 
-    buildChunkMesh(chunk) {
+    buildChunkMesh(chunk, useLOD = false) {
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
         const colors = [];
@@ -195,10 +205,11 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
+        const step = useLOD ? 2 : 1;
 
-        for (let x = 0; x < CHUNK_SIZE; x++) {
-            for (let y = 1; y < WORLD_HEIGHT; y++) {
-                for (let z = 0; z < CHUNK_SIZE; z++) {
+        for (let x = 0; x < CHUNK_SIZE; x += step) {
+            for (let y = 1; y < WORLD_HEIGHT; y += (useLOD ? 4 : 1)) {
+                for (let z = 0; z < CHUNK_SIZE; z += step) {
                     const blockId = chunk.getBlock(x, y, z);
                     if (blockId === BLOCKS.AIR) continue;
 
@@ -237,8 +248,9 @@ class MinecraftGame {
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
-            mesh.receiveShadow = true;
+            mesh.receiveShadow = !useLOD;
             mesh.frustumCulled = true;
+            mesh.isLOD = useLOD;
             return mesh;
         }
 
@@ -292,8 +304,9 @@ class MinecraftGame {
 
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const dist = Math.max(Math.abs(cx - playerChunkX), Math.abs(cz - playerChunkZ));
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (dist > 12) {
                 if (this.chunkMeshes.has(key)) {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
@@ -302,7 +315,8 @@ class MinecraftGame {
             }
 
             if (!this.chunkMeshes.has(key)) {
-                const mesh = this.buildChunkMesh(chunk);
+                const useLOD = dist > 6;
+                const mesh = this.buildChunkMesh(chunk, useLOD);
                 if (mesh) {
                     this.scene.add(mesh);
                     this.chunkMeshes.set(key, mesh);
@@ -350,8 +364,13 @@ class MinecraftGame {
         this.particleSystem.update();
         this.waterRenderer.update();
 
-        const hit = this.raycastBlock();
-        this.blockOutline.update(hit);
+        if (this.frameCounter % 2 === 0) {
+            const hit = this.raycastBlock();
+            if (this.lastHitBlock !== hit) {
+                this.blockOutline.update(hit);
+                this.lastHitBlock = hit;
+            }
+        }
 
         const fps = this.ui.updateFPS();
         this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
@@ -361,6 +380,7 @@ class MinecraftGame {
         }
 
         this.renderer.render(this.scene, this.camera);
+        this.frameCounter++;
     }
 
     updateDayNightCycle() {

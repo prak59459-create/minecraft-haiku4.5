@@ -5,6 +5,8 @@ const CHUNK_HEIGHT = 256;
 const WORLD_HEIGHT = 256;
 
 let perlinNoise;
+const heightCache = new Map();
+const terrainTypeCache = new Map();
 
 export function initPerlinNoise() {
     if (typeof SimplexNoise !== 'undefined') {
@@ -83,21 +85,38 @@ export class Chunk {
 function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
+    const key = `${x},${z}`;
+    if (heightCache.has(key)) return heightCache.get(key);
+
     let height = 65;
     height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
     height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
     height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
     height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
 
-    return Math.max(20, Math.min(160, Math.floor(height)));
+    const result = Math.max(20, Math.min(160, Math.floor(height)));
+    heightCache.set(key, result);
+    if (heightCache.size > 4096) {
+        const firstKey = heightCache.keys().next().value;
+        heightCache.delete(firstKey);
+    }
+    return result;
 }
 
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
+    const key = `${x},${z}`;
+    if (terrainTypeCache.has(key)) return terrainTypeCache.get(key);
+
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
-    return 'grass';
+    const result = temp < -0.3 ? 'sand' : 'grass';
+    terrainTypeCache.set(key, result);
+    if (terrainTypeCache.size > 4096) {
+        const firstKey = terrainTypeCache.keys().next().value;
+        terrainTypeCache.delete(firstKey);
+    }
+    return result;
 }
 
 function getOreBlock(x, y, z) {
