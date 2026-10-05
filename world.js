@@ -52,15 +52,19 @@ export class Chunk {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
                     } else if (y < height - 1) {
-                        if (terrainType === 'sand') {
+                        if (terrainType === 'sand' || terrainType === 'desert') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
                     } else if (y < height) {
-                        if (terrainType === 'sand') {
+                        if (terrainType === 'sand' || terrainType === 'desert') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.SNOW_GRASS);
+                        } else if (terrainType === 'swamp') {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
@@ -70,7 +74,7 @@ export class Chunk {
                     }
                 }
 
-                if (height > 65) {
+                if ((height > 68 && terrainType !== 'snow') || (height > 75 && terrainType === 'snow')) {
                     generateTree(this, x, z, height);
                 }
             }
@@ -84,19 +88,25 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    height += perlinNoise.noise2D(x * 0.003, z * 0.003) * 40;
+    height += perlinNoise.noise2D(x * 0.01, z * 0.01) * 20;
+    height += perlinNoise.noise2D(x * 0.03, z * 0.03) * 12;
+    height += perlinNoise.noise2D(x * 0.08, z * 0.08) * 6;
+    height += perlinNoise.noise2D(x * 0.2, z * 0.2) * 2;
 
-    return Math.max(20, Math.min(160, Math.floor(height)));
+    return Math.max(15, Math.min(180, Math.floor(height)));
 }
 
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
-    const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const humidity = perlinNoise.noise2D(x * 0.015, z * 0.015);
+    const temp = perlinNoise.noise2D(x * 0.01, z * 0.01);
+
+    if (temp < -0.4) return 'snow';
+    if (temp > 0.4 && humidity < -0.2) return 'desert';
+    if (humidity > 0.4) return 'swamp';
+    if (humidity < -0.3) return 'sand';
     return 'grass';
 }
 
