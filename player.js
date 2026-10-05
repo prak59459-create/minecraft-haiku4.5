@@ -80,6 +80,9 @@ export class Player {
     applyPhysics() {
         if (!this.isOnGround) {
             this.velocity.y -= GRAVITY;
+        } else {
+            this.velocity.x *= 0.85;
+            this.velocity.z *= 0.85;
         }
 
         this.position.x += this.velocity.x;

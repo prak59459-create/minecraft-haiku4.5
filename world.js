@@ -51,9 +51,16 @@ export class Chunk {
                     } else if (y < height - 4) {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
-                    } else if (y < height - 1) {
+                    } else if (y < height - 2) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
+                        }
+                    } else if (y < height - 1) {
+                        if (terrainType === 'sand') {
+                            const nearWater = height < 64 && y < 63;
+                            this.setBlock(x, y, z, nearWater ? BLOCKS.CLAY : BLOCKS.SAND);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
