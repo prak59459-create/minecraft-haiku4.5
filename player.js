@@ -11,7 +11,7 @@ const JUMP_POWER = 0.5;
 export class Player {
     constructor(world) {
         this.world = world;
-        this.position = { x: 0, y: 100, z: 0 };
+        this.position = this.findSpawnPosition();
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
 
@@ -22,6 +22,16 @@ export class Player {
 
         this.keys = {};
         this.setupKeyboardControls();
+    }
+
+    findSpawnPosition() {
+        for (let y = 200; y > 50; y--) {
+            const blockAtY = this.world.getBlock(0, y, 0);
+            if (isBlockSolid(blockAtY)) {
+                return { x: 0.5, y: y + 2, z: 0.5 };
+            }
+        }
+        return { x: 0, y: 100, z: 0 };
     }
 
     setupKeyboardControls() {

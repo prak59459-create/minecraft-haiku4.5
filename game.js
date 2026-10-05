@@ -127,33 +127,31 @@ class MinecraftGame {
 
     raycastBlock() {
         const eyePos = this.player.getEyePosition();
-        const direction = new THREE.Vector3(
-            Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
-            Math.sin(this.gameCamera.rotation.x),
-            Math.cos(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x)
-        );
+        const cosX = Math.cos(this.gameCamera.rotation.x);
+        const sinX = Math.sin(this.gameCamera.rotation.x);
+        const cosY = Math.cos(this.gameCamera.rotation.y);
+        const sinY = Math.sin(this.gameCamera.rotation.y);
 
+        const direction = {
+            x: sinY * cosX,
+            y: sinX,
+            z: cosY * cosX
+        };
+
+        const stepSize = 0.05;
         let hit = null;
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
-            const x = eyePos.x + direction.x * dist;
-            const y = eyePos.y + direction.y * dist;
-            const z = eyePos.z + direction.z * dist;
-
-            const bx = Math.floor(x);
-            const by = Math.floor(y);
-            const bz = Math.floor(z);
+        for (let dist = stepSize; dist <= this.raycastDistance; dist += stepSize) {
+            const bx = Math.floor(eyePos.x + direction.x * dist);
+            const by = Math.floor(eyePos.y + direction.y * dist);
+            const bz = Math.floor(eyePos.z + direction.z * dist);
 
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
-                const prevX = eyePos.x + direction.x * prevDist;
-                const prevY = eyePos.y + direction.y * prevDist;
-                const prevZ = eyePos.z + direction.z * prevDist;
-
-                const prevBx = Math.floor(prevX);
-                const prevBy = Math.floor(prevY);
-                const prevBz = Math.floor(prevZ);
+                const prevDist = dist - stepSize;
+                const prevBx = Math.floor(eyePos.x + direction.x * prevDist);
+                const prevBy = Math.floor(eyePos.y + direction.y * prevDist);
+                const prevBz = Math.floor(eyePos.z + direction.z * prevDist);
 
                 let normal = { x: 0, y: 0, z: 0 };
                 if (prevBx !== bx) normal.x = prevBx < bx ? -1 : 1;
@@ -246,8 +244,6 @@ class MinecraftGame {
     }
 
     addBlockFaces(vertices, colors, indices, x, y, z, blockId, color, chunk) {
-        let faceCount = 0;
-
         const faces = [
             { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
             { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
@@ -263,11 +259,7 @@ class MinecraftGame {
 
         for (const face of faces) {
             const [dx, dy, dz] = face.dir;
-            const nx = x + dx;
-            const ny = y + dy;
-            const nz = z + dz;
-
-            const neighbor = this.world.getBlock(nx, ny, nz);
+            const neighbor = this.world.getBlock(x + dx, y + dy, z + dz);
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
@@ -278,10 +270,9 @@ class MinecraftGame {
 
             indices.push(startIndex, startIndex + 1, startIndex + 2);
             indices.push(startIndex, startIndex + 2, startIndex + 3);
-            faceCount++;
         }
 
-        return faceCount > 0;
+        return true;
     }
 
     updateVisibleChunks() {
@@ -290,14 +281,22 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const meshesToRemove = [];
+        for (const [key, mesh] of this.chunkMeshes) {
+            const [cx, cz] = key.split(',').map(Number);
+            if (Math.abs(cx - playerChunkX) > 9 || Math.abs(cz - playerChunkZ) > 9) {
+                this.scene.remove(mesh);
+                mesh.geometry.dispose();
+                mesh.material.dispose();
+                meshesToRemove.push(key);
+            }
+        }
+        meshesToRemove.forEach(key => this.chunkMeshes.delete(key));
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
             if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
-                if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
-                }
                 continue;
             }
 
@@ -366,13 +365,17 @@ class MinecraftGame {
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.4 + sunIntensity * 0.4;
+
+        const skyHue = Math.sin(time) > 0 ? 0.6 : 0.8;
+        const skySat = Math.sin(time) > 0 ? 0.5 : 0.1;
+        const skyLight = 0.4 + sunIntensity * 0.4;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        skyColor.setHSL(skyHue, skySat, skyLight);
         this.scene.background = skyColor;
     }
 }
