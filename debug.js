@@ -59,6 +59,10 @@ export class DebugDisplay {
         this.stats.fps = game.ui.fpsCounter;
         this.stats.chunks = game.world.chunks.size;
         this.stats.particles = game.particleSystem.particles.length;
+        this.stats.renderDistance = game.world.renderDistance;
+        this.stats.cameraX = game.player.position.x.toFixed(1);
+        this.stats.cameraY = game.player.position.y.toFixed(1);
+        this.stats.cameraZ = game.player.position.z.toFixed(1);
 
         let vertices = 0;
         let triangles = 0;
@@ -78,6 +82,7 @@ export class DebugDisplay {
         this.stats.vertices = vertices;
         this.stats.triangles = triangles;
         this.stats.drawCalls = game.chunkMeshes.size;
+        this.stats.colorCacheSize = game.colorCache.size;
 
         if (performance.memory) {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
@@ -90,11 +95,13 @@ export class DebugDisplay {
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
-            `Chunks: ${this.stats.chunks}`,
+            `Position: ${this.stats.cameraX}, ${this.stats.cameraY}, ${this.stats.cameraZ}`,
+            `Chunks: ${this.stats.chunks} (R: ${this.stats.renderDistance})`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
             `Draw Calls: ${this.stats.drawCalls}`,
             `Particles: ${this.stats.particles}`,
+            `Color Cache: ${this.stats.colorCacheSize}`,
             `Memory: ${this.stats.memory} MB`,
             '==================',
             'Press F3 to toggle',
