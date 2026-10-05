@@ -18,11 +18,14 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Procedural Generation** - Infinite world generation using Perlin noise
 - **Multiple Biomes** - Grass, sand, and varied terrain types
 - **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
+- **Multiple Block Types** (18 block types):
   - Stone, Grass, Dirt, Cobblestone
   - Oak Log, Oak Leaves
+  - Dark Oak Log, Dark Oak Leaves
+  - Spruce Log
   - Sand, Water, Gravel, Bedrock
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
+  - Grass Block
 - **Ore Generation** - Procedural ore generation at various depths
 - **Tree Generation** - Natural tree placement in suitable terrain
 
@@ -55,9 +58,13 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 ### Performance Optimization
 - **Chunk-based Rendering** - Only visible chunks are rendered
+- **Level of Detail (LOD)** - Distant chunks use reduced geometry
 - **Indexed Geometry** - Efficient mesh generation with indices
-- **Vertex Colors** - Per-vertex coloring for variations
-- **Memory Management** - Automatic chunk cleanup for distant areas
+- **Vertex Colors** - Per-vertex coloring with ambient occlusion
+- **Memory Management** - Automatic chunk cleanup and resource disposal
+- **Incremental Mesh Building** - Progressive chunk mesh generation
+- **Raycasting Optimization** - Cached and efficient block selection
+- **Terrain Generation Caching** - Height and biome cache for performance
 
 ## Controls
 
@@ -109,6 +116,18 @@ http://localhost:8000
 3. **Build** - Select a block from your inventory (1-9 keys) and right-click to place it
 4. **Navigate** - Use WASD to move and mouse to look around
 5. **Survive** - Manage gravity and avoid falling into water or off cliffs
+
+## Latest Improvements
+
+### Session 3 Optimizations
+- **Advanced Lighting** - Improved shadows, ambient occlusion, and depth perception
+- **Enhanced Sky System** - Smoother day/night cycle with realistic color transitions
+- **Better Particles** - Optimized particle system with improved physics
+- **Extended Block Types** - Added Dark Oak and Spruce wood variants
+- **UI Enhancements** - Better hotbar with tooltips and improved feedback
+- **Terrain Quality** - Multi-octave Perlin noise for more natural terrain
+- **Memory Efficiency** - Better resource disposal and incremental loading
+- **Performance Tuning** - LOD system, optimized raycasting, and mesh pooling
 
 ## Technical Details
 
