@@ -8,8 +8,13 @@ export class DebugDisplay {
             triangles: 0,
             drawCalls: 0,
             particles: 0,
-            memory: 0
+            memory: 0,
+            renderTime: 0,
+            frameTime: 0
         };
+        this.frameTimeArray = [];
+        this.maxFrameSamples = 60;
+        this.lastFrameTime = performance.now();
         this.createDisplay();
     }
 
@@ -56,9 +61,19 @@ export class DebugDisplay {
     update(game) {
         if (!this.visible) return;
 
+        const now = performance.now();
+        const frameTime = now - this.lastFrameTime;
+        this.lastFrameTime = now;
+
+        this.frameTimeArray.push(frameTime);
+        if (this.frameTimeArray.length > this.maxFrameSamples) {
+            this.frameTimeArray.shift();
+        }
+
         this.stats.fps = game.ui.fpsCounter;
         this.stats.chunks = game.world.chunks.size;
         this.stats.particles = game.particleSystem.particles.length;
+        this.stats.frameTime = frameTime.toFixed(2);
 
         let vertices = 0;
         let triangles = 0;
@@ -91,9 +106,14 @@ export class DebugDisplay {
         if (this.stats.memory > 300) memColor = '#FFFF00';
         if (this.stats.memory > 500) memColor = '#FF6600';
 
+        let frameColor = '#00FF00';
+        if (this.stats.frameTime > 16.67) frameColor = '#FFFF00';
+        if (this.stats.frameTime > 33.33) frameColor = '#FF6600';
+
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
+            `Frame: ${this.stats.frameTime}ms`,
             `Chunks: ${this.stats.chunks}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
@@ -111,7 +131,9 @@ export class DebugDisplay {
             if (parts.length === 2) {
                 const key = parts[0];
                 const value = parts[1];
-                const valColor = key === 'Memory' ? memColor : '#FFFF00';
+                let valColor = '#FFFF00';
+                if (key === 'Memory') valColor = memColor;
+                if (key === 'Frame') valColor = frameColor;
                 return `<div><span style="color: #00FF00;">${key}:</span> <span style="color: ${valColor};">${value}</span></div>`;
             }
             return `<div style="color: #888888; font-size: 10px;">${line}</div>`;
