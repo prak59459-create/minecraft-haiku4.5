@@ -48,23 +48,15 @@ export class Chunk {
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
-                    } else if (y < height - 4) {
+                    } else if (y < height - 5) {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
                     } else if (y < height - 1) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.DIRT);
-                        }
+                        const block = getSubSurfaceBlock(wx, y, wz, terrainType);
+                        this.setBlock(x, y, z, block);
                     } else if (y < height) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        }
+                        const block = getSurfaceBlock(wx, wz, terrainType);
+                        this.setBlock(x, y, z, block);
                     } else if (y < 62) {
                         this.setBlock(x, y, z, BLOCKS.WATER);
                     }
@@ -72,6 +64,9 @@ export class Chunk {
 
                 if (height > 65) {
                     generateTree(this, x, z, height);
+                }
+                if (height > 72 && Math.random() < 0.01) {
+                    generatePlant(this, x, z, height);
                 }
             }
         }
@@ -96,8 +91,46 @@ function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
+    const humidity = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
     if (temp < -0.3) return 'sand';
+    if (humidity > 0.4) return 'mycelium';
     return 'grass';
+}
+
+function getSurfaceBlock(x, z, terrainType) {
+    if (terrainType === 'sand') {
+        return BLOCKS.SAND;
+    } else if (terrainType === 'mycelium') {
+        return BLOCKS.MYCELIUM;
+    }
+    return BLOCKS.GRASS;
+}
+
+function getSubSurfaceBlock(x, y, z, terrainType) {
+    if (terrainType === 'sand') {
+        if (!perlinNoise) return BLOCKS.SAND;
+        const rand = perlinNoise.noise2D(x * 0.1, z * 0.1);
+        if (rand > 0.7) return BLOCKS.CLAY;
+        return BLOCKS.SAND;
+    } else if (terrainType === 'mycelium') {
+        return BLOCKS.DIRT;
+    }
+    return BLOCKS.DIRT;
+}
+
+function generatePlant(chunk, x, z, height) {
+    const y = height;
+    if (y >= WORLD_HEIGHT - 1) return;
+
+    if (chunk.getBlock(x, y, z) === BLOCKS.AIR) {
+        const plantHeight = 1 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < plantHeight && y + i < WORLD_HEIGHT; i++) {
+            if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
+                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LEAVES);
+            }
+        }
+    }
 }
 
 function getOreBlock(x, y, z) {

@@ -22,11 +22,14 @@ export class WaterRenderer {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
                     const blockId = chunk.getBlock(x, y, z);
-                    if (blockId !== BLOCKS.WATER) continue;
+                    if (blockId !== BLOCKS.WATER && blockId !== BLOCKS.LAVA) continue;
 
                     const wx = chunk.x * CHUNK_SIZE + x;
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
+
+                    const isLava = blockId === BLOCKS.LAVA;
+                    const baseColor = isLava ? new THREE.Color(0xFF6600) : waterColor;
 
                     const neighbor = (dx, dy, dz) => {
                         return this.world.getBlock(wx + dx, wy + dy, wz + dz);
@@ -45,10 +48,11 @@ export class WaterRenderer {
                         const [dx, dy, dz] = face.dir;
                         const neighborBlock = neighbor(dx, dy, dz);
 
-                        if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
+                        if ((neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER && neighborBlock !== BLOCKS.LAVA) ||
+                            (neighborBlock === blockId)) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const color = baseColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
@@ -72,8 +76,9 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.7,
+                side: THREE.FrontSide,
+                emissive: 0x000000
             });
 
             const mesh = new THREE.Mesh(geometry, material);
@@ -81,6 +86,31 @@ export class WaterRenderer {
         }
 
         return null;
+    }
+
+    updateVisibleChunks(world, playerChunkX, playerChunkZ) {
+        for (const [key, chunk] of world.chunks) {
+            const [cx, cz] = key.split(',').map(Number);
+
+            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+                if (this.waterMeshes.has(key)) {
+                    const mesh = this.waterMeshes.get(key);
+                    this.scene.remove(mesh);
+                    mesh.geometry.dispose();
+                    mesh.material.dispose();
+                    this.waterMeshes.delete(key);
+                }
+                continue;
+            }
+
+            if (!this.waterMeshes.has(key)) {
+                const mesh = this.buildWaterMesh(chunk);
+                if (mesh) {
+                    this.scene.add(mesh);
+                    this.waterMeshes.set(key, mesh);
+                }
+            }
+        }
     }
 
     update() {

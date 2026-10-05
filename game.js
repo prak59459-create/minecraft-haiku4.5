@@ -50,11 +50,17 @@ class MinecraftGame {
         this.scene.add(ambientLight);
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
-        directionalLight.position.set(150, sunY, 150);
+        directionalLight.position.set(200, sunY, 200);
         directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
-        directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.mapSize.width = 4096;
+        directionalLight.shadow.mapSize.height = 4096;
+        directionalLight.shadow.camera.left = -256;
+        directionalLight.shadow.camera.right = 256;
+        directionalLight.shadow.camera.top = 256;
+        directionalLight.shadow.camera.bottom = -256;
+        directionalLight.shadow.camera.near = 0.5;
+        directionalLight.shadow.camera.far = 1000;
+        directionalLight.shadow.bias = -0.0001;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -231,7 +237,12 @@ class MinecraftGame {
                 const baseLight = 0.7;
                 const heightLight = (wy / WORLD_HEIGHT) * 0.3;
                 const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                const brightness = baseLight + heightLight + varLight;
+                let brightness = baseLight + heightLight + varLight;
+
+                if (blockId === BLOCKS.LAVA) {
+                    brightness = Math.min(1, brightness + 0.4);
+                }
+
                 color.multiplyScalar(brightness);
                 colorCache.set(key, color);
             }
@@ -346,6 +357,8 @@ class MinecraftGame {
                 }
             }
         }
+
+        this.waterRenderer.updateVisibleChunks(this.world, playerChunkX, playerChunkZ);
     }
 
     onWindowResize() {
