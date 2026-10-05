@@ -1,5 +1,44 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Performance & Features Update (Current Session)
+
+### Performance Optimizations
+- **Optimized mesh building** - Removed redundant variable calculations
+- **Memory management** - Proper geometry/material disposal for distant chunks
+- **Raycast optimization** - Pre-computed trigonometric values reduce calculations
+- **Particle system improvements** - 2000 particle limit with efficient cleanup
+- **Chunk unloading** - Extended unload range to prevent pop-in
+- **Flat shading** - Better visual performance than smooth shading
+
+### New Features
+- **4 New block types**:
+  - Obsidian (dark, rare stone)
+  - Ice (semi-transparent, slippery surface)
+  - Snow (cold biome blocks)
+  - Clay (wet biome blocks)
+- **Configuration system** - Game settings loaded from config.json
+- **Biome diversity** - Snow and clay biomes added to terrain generation
+- **Enhanced tree generation** - Variable height trees with better foliage
+- **Better spawn detection** - Player starts above terrain safely
+
+### Visual Enhancements
+- **Improved sky transitions** - Smooth color lerping for sunrise/sunset
+- **Better day/night cycle** - Enhanced lighting and sky color changes
+- **Block outline improvements** - Cached rendering and proper disposal
+- **Enhanced lighting** - Better shadow camera configuration
+- **Visual polish** - Improved material properties and shading
+
+### Bug Fixes
+- **Inventory wheel scroll** - Fixed infinite loop with modulo arithmetic
+- **Player collision** - Better detection and resolution
+- **Block outline** - Proper caching to avoid redundant recreation
+
+### Code Quality
+- **Configuration integration** - All parameters configurable via config.json
+- **Player system refactoring** - Instance-based configuration for all physics
+- **Better error handling** - Async config loading with fallbacks
+- **Improved debug display** - Statistics tracking and visual feedback
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features
