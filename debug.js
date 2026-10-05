@@ -87,18 +87,20 @@ export class DebugDisplay {
     }
 
     render() {
+        const triPerFrame = this.stats.triangles > 0 ? (this.stats.triangles / this.stats.drawCalls).toFixed(0) : '0';
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
             `Chunks: ${this.stats.chunks}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
+            `Tri/Chunk: ${triPerFrame}`,
             `Draw Calls: ${this.stats.drawCalls}`,
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3: Toggle Debug',
+            'H: Toggle Help'
         ];
 
         this.container.innerHTML = lines.map(line => {
@@ -107,7 +109,7 @@ export class DebugDisplay {
             if (parts.length === 2) {
                 return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
             }
-            return `<div>${line}</div>`;
+            return `<div style="color: #FFFFFF;">${line}</div>`;
         }).join('');
     }
 }

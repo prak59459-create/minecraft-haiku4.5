@@ -16,6 +16,7 @@ class MinecraftGame {
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -28,9 +29,12 @@ class MinecraftGame {
         this.blockOutline = new BlockOutline(this.scene);
 
         this.chunkMeshes = new Map();
+        this.chunkLoadQueue = [];
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
+        this.lastChunkUpdateTime = 0;
+        this.chunkUpdateInterval = 100;
         this.showDebug = false;
 
         this.player.onJump = () => this.audioManager.playJumpSound();

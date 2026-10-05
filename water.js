@@ -65,5 +65,26 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+
+        for (const [key, mesh] of this.waterMeshes) {
+            if (mesh && mesh.material) {
+                const waveAmplitude = Math.sin(this.time * 2) * 0.05;
+                mesh.position.y = waveAmplitude * 0.1;
+            }
+        }
+    }
+
+    addWaterMesh(key, mesh) {
+        this.waterMeshes.set(key, mesh);
+    }
+
+    removeWaterMesh(key) {
+        if (this.waterMeshes.has(key)) {
+            const mesh = this.waterMeshes.get(key);
+            if (mesh && mesh.geometry) {
+                mesh.geometry.dispose();
+            }
+            this.waterMeshes.delete(key);
+        }
     }
 }
