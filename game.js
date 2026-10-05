@@ -64,14 +64,21 @@ class MinecraftGame {
     setupEventListeners() {
         window.addEventListener('resize', () => this.onWindowResize());
         document.addEventListener('mousedown', (e) => this.onMouseClick(e));
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
     }
 
     setupPickBlock() {
+        let lastKeyEvent = {};
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'c' || e.key === 'C') {
+            const key = e.key.toLowerCase();
+            if (lastKeyEvent[key]) return;
+            lastKeyEvent[key] = true;
+
+            if (key === 'c') {
                 const hit = this.raycastBlock();
                 if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
                     this.selectedBlockType = hit.block;
+                    this.audioManager.playBlockSound('place');
                 }
             }
             if (e.key === 'F3') {
@@ -79,9 +86,13 @@ class MinecraftGame {
                 this.showDebug = !this.showDebug;
                 this.debugDisplay.toggle();
             }
-            if (e.key === 'h' || e.key === 'H') {
+            if (key === 'h') {
                 this.ui.toggleHelp();
             }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            lastKeyEvent[e.key.toLowerCase()] = false;
         });
     }
 

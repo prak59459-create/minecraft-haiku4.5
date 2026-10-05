@@ -86,5 +86,10 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+
+        // Could add wave animation to water surfaces here in future
+        // For now, just track time for potential future features
     }
 }
+
+export const WATER_LEVEL = 62;

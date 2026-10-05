@@ -24,7 +24,9 @@
     "renderScale": 1.0,
     "shadowMapSize": 2048,
     "particleLimit": 2000,
-    "fpsTarget": 60
+    "fpsTarget": 60,
+    "quality": "high",
+    "antiAlias": true
   },
   "terrain": {
     "chunkSize": 16,
