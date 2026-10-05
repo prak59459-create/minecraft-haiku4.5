@@ -134,10 +134,11 @@ function generateTree(chunk, x, z, height) {
 
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
-    const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
-    if (treeChance < 0.5) return;
+    const treeChance = perlinNoise.noise2D(worldX * 0.015, worldZ * 0.015);
+    if (treeChance < 0.4) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    const trunkHeightRand = Math.random();
+    const trunkHeight = trunkHeightRand < 0.7 ? 4 + Math.floor(Math.random() * 3) : 7 + Math.floor(Math.random() * 3);
     const y = height;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
@@ -148,13 +149,14 @@ function generateTree(chunk, x, z, height) {
         }
     }
 
-    const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    const foliageStart = y + Math.max(trunkHeight - 4, trunkHeight - 2);
+    const baseRadius = trunkHeightRand < 0.7 ? 2 : 3;
+    const foliageRadius = baseRadius + Math.floor(Math.random() * 2);
 
-    for (let dy = 0; dy < foliageRadius + 2; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
-        for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
-            for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
+    for (let dy = 0; dy < foliageRadius + 3; dy++) {
+        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy * 0.8));
+        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 16) {
+            for (let dist = 0; dist <= radiusAtLevel; dist += 0.6) {
                 const dx = Math.round(Math.cos(angle) * dist);
                 const dz = Math.round(Math.sin(angle) * dist);
                 const fx = x + dx;
@@ -162,7 +164,8 @@ function generateTree(chunk, x, z, height) {
                 const fy = foliageStart + dy;
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
-                    if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
+                    const currentBlock = chunk.getBlock(fx, fy, fz);
+                    if (currentBlock === BLOCKS.AIR || currentBlock === BLOCKS.OAK_LEAVES) {
                         chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
                     }
                 }

@@ -7,19 +7,22 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { Config } from './config.js';
 
 class MinecraftGame {
-    constructor() {
+    constructor(config) {
+        this.config = config;
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
 
-        this.world = new World();
-        this.player = new Player(this.world);
-        this.gameCamera = new Camera();
+        this.world = new World(config.world?.renderDistance || 8);
+        this.player = new Player(this.world, config.player || {});
+        this.gameCamera = new Camera(config.player?.mouseSensitivity || 0.003);
         this.ui = new UI();
         this.particleSystem = new ParticleSystem(this.scene);
         this.waterRenderer = new WaterRenderer(this.scene, this.world);
@@ -29,7 +32,7 @@ class MinecraftGame {
 
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
-        this.raycastDistance = 6;
+        this.raycastDistance = config.raycast?.distance || 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
 
@@ -384,4 +387,12 @@ class MinecraftGame {
     }
 }
 
-const game = new MinecraftGame();
+async function initGame() {
+    const config = await Config.load();
+    const game = new MinecraftGame(config);
+    window.game = game;
+}
+
+initGame().catch(error => {
+    console.error('Failed to initialize game:', error);
+});
