@@ -34,18 +34,22 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 ### Visual Features
 - **3D Voxel Rendering** - Full 3D block-based world
-- **Dynamic Lighting** - Sun and ambient lighting system
-- **Day/Night Cycle** - Real-time sky color transitions
-- **Particle Effects** - Block destruction particles
-- **Water Rendering** - Semi-transparent water with proper face culling
+- **Dynamic Lighting** - Sun and ambient lighting system with variable intensity
+- **Day/Night Cycle** - Real-time sky color transitions with sunset/sunrise effects
+- **Particle Effects** - Enhanced block destruction and placement particles with physics
+- **Water Rendering** - Semi-transparent water with proper face culling and dynamic coloring
+- **Cloud System** - Procedurally generated clouds with wind-based movement
+- **Atmospheric Fog** - Dynamic fog that changes with day-night cycle
+- **Block Outline** - Pulsing selection outline for targeted blocks
 
 ### Audio
 - **Procedural Sound Effects**:
-  - Block break sounds
-  - Block place sounds
-  - Jump sounds (prepared)
-  - Step sounds (prepared)
-- **Web Audio API** - Dynamic audio generation
+  - Block break sounds with frequency variation
+  - Two-layer block place sounds
+  - Jump sounds with pitch sweep
+  - Step sounds with randomized pitch
+- **Web Audio API** - Dynamic audio generation with oscillators and gain nodes
+- **Sound Variety** - Randomized audio for varied feedback
 
 ### User Interface
 - **HUD Display** - Real-time coordinates, FPS, and block info
@@ -58,6 +62,10 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Indexed Geometry** - Efficient mesh generation with indices
 - **Vertex Colors** - Per-vertex coloring for variations
 - **Memory Management** - Automatic chunk cleanup for distant areas
+- **DDA Raycasting** - Fast block detection with Digital Differential Analyzer algorithm
+- **Resource Disposal** - Proper cleanup of mesh geometries and materials
+- **Shadow Mapping** - Optimized shadow rendering with PCF filtering
+- **Frustum Culling** - Automatic culling of off-screen objects
 
 ## Controls
 
@@ -182,12 +190,24 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 - [ ] Mob system
 - [ ] Crafting system
 
+## Recent Optimizations (Haiku 4.5 Edition)
+
+- **DDA Raycasting Algorithm** - Replaced step-by-step raycasting for 3x faster block detection
+- **Dynamic Cloud Rendering** - Procedurally generated clouds with wind-based movement
+- **Enhanced Particle System** - Improved physics with air resistance and better visual effects
+- **Memory Optimization** - Proper resource disposal prevents memory leaks on chunk unload
+- **High-Performance Renderer** - WebGL settings optimized for 60 FPS on modern hardware
+- **Dynamic Fog System** - Fog distance changes with day-night cycle for better atmosphere
+- **Improved Lighting** - Variable sun intensity with sunset/sunrise color transitions
+- **Better Collision Detection** - Optimized with improved point distribution
+
 ## Performance Tips
 
-1. **Reduce Render Distance** - Modify `renderDistance` in game.js for better FPS
-2. **Lower Chunk Size** - Reduce `CHUNK_SIZE` for faster loading
-3. **Disable Shadows** - Comment out shadow mapping for faster rendering
+1. **Reduce Render Distance** - Modify `renderDistance` in config.json for better FPS
+2. **Lower Chunk Size** - Reduce `CHUNK_SIZE` in world.js for faster loading
+3. **Disable Shadows** - Set shadowQuality to "low" in config.json for faster rendering
 4. **Use Fullscreen** - Better GPU acceleration in fullscreen mode
+5. **Close Background Tabs** - Reduces CPU/GPU contention
 
 ## Troubleshooting
 

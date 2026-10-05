@@ -146,6 +146,8 @@ body {
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;
+        top: 5px;
+        left: 5px;
     }
 
     .inventory-slot {
@@ -156,5 +158,26 @@ body {
 
     #help {
         font-size: 9px;
+        bottom: 65px;
+    }
+}
+
+@media (max-width: 480px) {
+    #hud {
+        font-size: 8px;
+    }
+
+    .inventory-slot {
+        width: 30px;
+        height: 30px;
+    }
+
+    .inventory-slot .slot-number {
+        font-size: 9px;
+    }
+
+    .inventory-slot .slot-block {
+        width: 16px;
+        height: 16px;
     }
 }
