@@ -97,6 +97,7 @@ body {
     border: 1px solid rgba(0, 0, 0, 0.4);
     border-radius: 2px;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    background-color: var(--block-color, #808080);
 }
 
 .inventory-slot:hover {

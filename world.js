@@ -79,10 +79,11 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    height += perlinNoise.noise2D(x * 0.004, z * 0.004) * 40;
+    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 20;
+    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 10;
+    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 5;
+    height += perlinNoise.noise2D(x * 0.2, z * 0.2) * 2;
 
     return Math.max(20, Math.min(160, Math.floor(height)));
 }
@@ -133,19 +134,39 @@ function generatePlant(chunk, x, z, height) {
     }
 }
 
+function isCaveBlock(x, y, z) {
+    if (!perlinNoise) return false;
+
+    const cave1 = perlinNoise.noise3D ?
+        Math.abs(perlinNoise.noise3D(x * 0.05, y * 0.05, z * 0.05)) :
+        Math.abs(perlinNoise.noise2D(x * 0.05 + y * 0.02, z * 0.05));
+
+    const cave2 = perlinNoise.noise2D(x * 0.08 + y * 0.02, z * 0.08);
+
+    const caveThreshold = Math.max(0.3, 0.35 - y / 1000);
+
+    return (cave1 < caveThreshold && cave2 > 0.3) || (cave1 < 0.2);
+}
+
 function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
+
+    if (isCaveBlock(x, y, z)) {
+        return BLOCKS.AIR;
+    }
 
     let ore = BLOCKS.STONE;
     const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
     const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
     const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
     const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
+    const lavaChance = perlinNoise.noise2D(x * 0.03 + y * 0.01, z * 0.03);
 
     if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
     if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
     if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
     if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    if (y < 30 && lavaChance > 0.8) ore = BLOCKS.LAVA;
 
     return ore;
 }
