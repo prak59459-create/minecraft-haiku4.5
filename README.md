@@ -16,15 +16,16 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 ### World & Terrain
 - **Procedural Generation** - Infinite world generation using Perlin noise
-- **Multiple Biomes** - Grass, sand, and varied terrain types
+- **Multi-Biome System** - Grass, forest, sand, and desert biomes with humidity-based distribution
 - **Chunk System** - Dynamic chunk loading and unloading for performance
 - **Multiple Block Types**:
   - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
+  - Oak Log, Oak Leaves, Dark Oak Log
+  - Sand, Water, Gravel, Bedrock, Clay
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
-- **Ore Generation** - Procedural ore generation at various depths
-- **Tree Generation** - Natural tree placement in suitable terrain
+- **Ore Generation** - Depth-based ore generation with realistic distribution
+- **Cave Generation** - Procedural underground caverns for exploration
+- **Tree Generation** - Natural tree placement in suitable terrain with varied sizes
 
 ### Physics & Collision
 - **Gravity System** - Realistic falling and landing
@@ -68,7 +69,8 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 | **S** | Move Backward |
 | **D** | Move Right |
 | **Space** | Jump |
-| **Shift** | Sprint / Crouch |
+| **Shift** | Sprint |
+| **Ctrl** | Crouch (Toggle) |
 | **Mouse** | Look Around (Click to enable) |
 | **Left-Click** | Destroy Block |
 | **Right-Click** | Place Block |
