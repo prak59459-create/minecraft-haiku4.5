@@ -35,12 +35,53 @@ class MinecraftGame {
         this.lastBreakSound = 0;
         this.showDebug = false;
 
+        this.initializeSpawn();
         this.player.onJump = () => this.audioManager.playJumpSound();
 
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
         this.animate();
+    }
+
+    initializeSpawn() {
+        this.world.ensureSpawnArea();
+
+        let spawnX = 0;
+        let spawnZ = 0;
+
+        for (let y = 120; y > 50; y--) {
+            const block = this.world.getBlock(spawnX, y, spawnZ);
+            if (isBlockSolid(block)) {
+                this.player.position.y = y + 1.5;
+                break;
+            }
+        }
+
+        if (this.player.position.y === 100) {
+            for (let radius = 1; radius < 50; radius++) {
+                let found = false;
+                for (let dx = -radius; dx <= radius; dx++) {
+                    for (let dz = -radius; dz <= radius; dz++) {
+                        if (Math.abs(dx) !== radius && Math.abs(dz) !== radius) continue;
+
+                        for (let y = 120; y > 30; y--) {
+                            const block = this.world.getBlock(dx, y, dz);
+                            if (isBlockSolid(block)) {
+                                this.player.position.x = dx;
+                                this.player.position.y = y + 1.5;
+                                this.player.position.z = dz;
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (found) break;
+                    }
+                    if (found) break;
+                }
+                if (found) break;
+            }
+        }
     }
 
     setupLighting() {

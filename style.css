@@ -136,6 +136,40 @@ body {
     margin: 3px 0;
 }
 
+#loading {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 30px;
+    border-radius: 8px;
+    z-index: 100;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+}
+
+#loading.hidden {
+    display: none;
+}
+
+#loading-bar {
+    width: 200px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    margin: 10px 0;
+    overflow: hidden;
+}
+
+#loading-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #00FF00, #00AA00);
+    width: 0%;
+    transition: width 0.2s ease;
+}
+
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;

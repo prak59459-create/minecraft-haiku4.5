@@ -183,7 +183,20 @@ export class World {
     constructor(renderDistance = 8) {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
+        this.spawnAreaGenerated = false;
         initPerlinNoise();
+    }
+
+    ensureSpawnArea() {
+        if (this.spawnAreaGenerated) return;
+
+        for (let x = -2; x <= 2; x++) {
+            for (let z = -2; z <= 2; z++) {
+                this.getChunk(x, z);
+            }
+        }
+
+        this.spawnAreaGenerated = true;
     }
 
     getChunk(cx, cz) {
