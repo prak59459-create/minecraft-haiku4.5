@@ -54,9 +54,14 @@ export class BlockOutline {
 
     update(raycastHit) {
         if (raycastHit && raycastHit.block !== 0) {
-            this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z);
+            const key = `${raycastHit.x},${raycastHit.y},${raycastHit.z}`;
+            if (this.lastKey !== key) {
+                this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z);
+                this.lastKey = key;
+            }
         } else {
             this.clear();
+            this.lastKey = null;
         }
     }
 }
