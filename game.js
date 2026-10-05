@@ -151,10 +151,12 @@ class MinecraftGame {
             this.updateChunkMesh(hit.x, hit.y, hit.z);
 
             const color = BLOCK_COLORS[hit.block] || 0x808080;
-            this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
+            for (let i = 0; i < 2; i++) {
+                this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
+            }
 
             const now = Date.now();
-            if (now - this.lastBreakSound > 50) {
+            if (now - this.lastBreakSound > 80) {
                 this.audioManager.playBlockSound('break');
                 this.lastBreakSound = now;
             }
@@ -169,7 +171,9 @@ class MinecraftGame {
                 this.updateChunkMesh(nx, ny, nz);
 
                 const color = BLOCK_COLORS[this.selectedBlockType] || 0x808080;
-                this.particleSystem.addBlockPlaceParticles(nx + 0.5, ny + 0.5, nz + 0.5, color);
+                for (let i = 0; i < 2; i++) {
+                    this.particleSystem.addBlockPlaceParticles(nx + 0.5, ny + 0.5, nz + 0.5, color);
+                }
 
                 this.audioManager.playBlockSound('place');
             }
@@ -455,22 +459,36 @@ class MinecraftGame {
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
+        const sunIntensity = Math.sin(time);
+        const brightness = Math.max(0.15, sunIntensity + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.45 + sunIntensity * 0.4;
+        this.directionalLight.intensity = 0.4 + brightness * 0.5;
 
-        const hue = 0.6 + Math.sin(time * 0.5) * 0.1;
-        const saturation = 0.5 + Math.cos(time * 0.3) * 0.2;
-        const lightness = 0.45 + sunIntensity * 0.35;
+        let hue = 0.6;
+        let saturation = 0.5;
+        let lightness = 0.4 + brightness * 0.35;
+
+        if (sunIntensity < 0.1) {
+            hue = 0.75 + Math.sin(time * 2) * 0.1;
+            saturation = 0.3;
+            lightness = 0.15 + sunIntensity * 0.15;
+        } else if (sunIntensity < 0.3) {
+            hue = 0.65 - (0.3 - sunIntensity) * 0.5;
+            saturation = 0.6;
+            lightness = 0.25 + sunIntensity * 0.3;
+        } else if (sunIntensity > 0.7) {
+            hue = 0.55 + (sunIntensity - 0.7) * 0.3;
+            saturation = 0.4;
+        }
 
         const skyColor = new THREE.Color();
         skyColor.setHSL(hue, saturation, lightness);
         this.scene.background = skyColor;
 
         this.scene.fog.color.copy(skyColor);
-        this.scene.fog.near = 100 + sunIntensity * 50;
-        this.scene.fog.far = 350 + sunIntensity * 100;
+        this.scene.fog.near = 80 + brightness * 70;
+        this.scene.fog.far = 300 + brightness * 150;
     }
 }
 
