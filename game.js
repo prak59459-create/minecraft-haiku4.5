@@ -12,10 +12,18 @@ class MinecraftGame {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
+        this.scene.fog = new THREE.Fog(0x87CEEB, 400, 1000);
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
+            powerPreference: 'high-performance'
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -32,6 +40,7 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.frameCounter = 0;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -380,6 +389,21 @@ class MinecraftGame {
 
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
+
+        if (this.player.isOnGround && !this.player.wasOnGround) {
+            this.audioManager.playBlockSound('place');
+        }
+        this.player.wasOnGround = this.player.isOnGround;
+
+        const moveSpeed = Math.sqrt(this.player.velocity.x ** 2 + this.player.velocity.z ** 2);
+        if (this.player.isOnGround && moveSpeed > 0.05) {
+            const now = Date.now();
+            const stepInterval = this.player.isSprinting ? 300 : 500;
+            if (now - this.player.lastStepSound > stepInterval) {
+                this.audioManager.playStepSound();
+                this.player.lastStepSound = now;
+            }
+        }
 
         const eyePos = this.player.getEyePosition();
         this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);

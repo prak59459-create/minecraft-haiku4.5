@@ -101,3 +101,22 @@ export function isBlockSolid(blockId) {
 export function isBlockTransparent(blockId) {
     return TRANSPARENT_BLOCKS.has(blockId);
 }
+
+export function getBlockBreakTime(blockId) {
+    const breakTimes = {
+        [BLOCKS.STONE]: 1.5,
+        [BLOCKS.GRASS]: 0.6,
+        [BLOCKS.DIRT]: 0.5,
+        [BLOCKS.SAND]: 0.5,
+        [BLOCKS.GRAVEL]: 0.6,
+        [BLOCKS.OAK_LOG]: 2,
+        [BLOCKS.OAK_LEAVES]: 0.2,
+        [BLOCKS.COAL_ORE]: 3,
+        [BLOCKS.IRON_ORE]: 5,
+        [BLOCKS.GOLD_ORE]: 7.5,
+        [BLOCKS.DIAMOND_ORE]: 5,
+        [BLOCKS.OBSIDIAN]: 50,
+        [BLOCKS.BEDROCK]: -1,
+    };
+    return breakTimes[blockId] || 0;
+}
