@@ -46,14 +46,14 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6 + sunIntensity * 0.1);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
-        directionalLight.position.set(150, sunY, 150);
-        directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5 + sunIntensity * 0.2);
+        directionalLight.position.set(200, sunY, 200);
+        directionalLight.castShadow = false;
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
         directionalLight.shadow.camera.far = 500;
         this.scene.add(directionalLight);
 
@@ -134,8 +134,9 @@ class MinecraftGame {
         );
 
         let hit = null;
+        let lastBx = null, lastBy = null, lastBz = null;
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = 0.1; dist <= this.raycastDistance; dist += 0.1) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -144,9 +145,12 @@ class MinecraftGame {
             const by = Math.floor(y);
             const bz = Math.floor(z);
 
+            if (bx === lastBx && by === lastBy && bz === lastBz) continue;
+            lastBx = bx; lastBy = by; lastBz = bz;
+
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
+                const prevDist = Math.max(0.1, dist - 0.1);
                 const prevX = eyePos.x + direction.x * prevDist;
                 const prevY = eyePos.y + direction.y * prevDist;
                 const prevZ = eyePos.z + direction.z * prevDist;
@@ -211,7 +215,7 @@ class MinecraftGame {
                     const baseLight = 0.7;
                     const heightLight = (wy / WORLD_HEIGHT) * 0.3;
                     const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const brightness = Math.max(0.2, baseLight + heightLight + varLight);
 
                     color.multiplyScalar(brightness);
 
@@ -231,12 +235,12 @@ class MinecraftGame {
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
+                flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 10
             });
             const mesh = new THREE.Mesh(geometry, material);
-            mesh.castShadow = true;
+            mesh.castShadow = false;
             mesh.receiveShadow = true;
             mesh.frustumCulled = true;
             return mesh;
@@ -246,8 +250,6 @@ class MinecraftGame {
     }
 
     addBlockFaces(vertices, colors, indices, x, y, z, blockId, color, chunk) {
-        let faceCount = 0;
-
         const faces = [
             { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
             { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
@@ -261,18 +263,16 @@ class MinecraftGame {
         const g = Math.floor(color.g * 255);
         const b = Math.floor(color.b * 255);
 
+        let faceCount = 0;
         for (const face of faces) {
             const [dx, dy, dz] = face.dir;
-            const nx = x + dx;
-            const ny = y + dy;
-            const nz = z + dz;
-
-            const neighbor = this.world.getBlock(nx, ny, nz);
+            const neighbor = this.world.getBlock(x + dx, y + dy, z + dz);
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
-            for (const [vx, vy, vz] of face.verts) {
-                vertices.push(x + vx, y + vy, z + vz);
+            const verts = face.verts;
+            for (let i = 0; i < 4; i++) {
+                vertices.push(x + verts[i][0], y + verts[i][1], z + verts[i][2]);
                 colors.push(r, g, b);
             }
 
@@ -290,16 +290,26 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const meshesToDelete = [];
+        for (const [key, mesh] of this.chunkMeshes) {
+            const [cx, cz] = key.split(',').map(Number);
+            const dist = Math.abs(cx - playerChunkX) + Math.abs(cz - playerChunkZ);
+
+            if (dist > 8) {
+                this.scene.remove(mesh);
+                meshesToDelete.push(key);
+            }
+        }
+
+        for (const key of meshesToDelete) {
+            this.chunkMeshes.delete(key);
+        }
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const dist = Math.abs(cx - playerChunkX) + Math.abs(cz - playerChunkZ);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
-                if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
-                }
-                continue;
-            }
+            if (dist > 8) continue;
 
             if (!this.chunkMeshes.has(key)) {
                 const mesh = this.buildChunkMesh(chunk);
@@ -334,15 +344,14 @@ class MinecraftGame {
         const eyePos = this.player.getEyePosition();
         this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
 
-        const direction = new THREE.Vector3(
-            Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
-            Math.sin(this.gameCamera.rotation.x),
-            Math.cos(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x)
-        );
+        const rotY = this.gameCamera.rotation.y;
+        const rotX = this.gameCamera.rotation.x;
+        const cosX = Math.cos(rotX);
+
         this.camera.lookAt(
-            eyePos.x + direction.x,
-            eyePos.y + direction.y,
-            eyePos.z + direction.z
+            eyePos.x + Math.sin(rotY) * cosX,
+            eyePos.y + Math.sin(rotX),
+            eyePos.z + Math.cos(rotY) * cosX
         );
 
         this.updateVisibleChunks();

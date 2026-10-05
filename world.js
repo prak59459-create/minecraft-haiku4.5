@@ -5,11 +5,24 @@ const CHUNK_HEIGHT = 256;
 const WORLD_HEIGHT = 256;
 
 let perlinNoise;
+const NOISE_CACHE = new Map();
 
 export function initPerlinNoise() {
     if (typeof SimplexNoise !== 'undefined') {
         perlinNoise = new SimplexNoise();
     }
+}
+
+function getCachedNoise2D(x, z, scale) {
+    const key = `${Math.floor(x)},${Math.floor(z)},${scale}`;
+    if (!NOISE_CACHE.has(key)) {
+        if (NOISE_CACHE.size > 10000) {
+            const firstKey = NOISE_CACHE.keys().next().value;
+            NOISE_CACHE.delete(firstKey);
+        }
+        NOISE_CACHE.set(key, perlinNoise.noise2D(x * scale, z * scale));
+    }
+    return NOISE_CACHE.get(key);
 }
 
 export class Chunk {
@@ -84,10 +97,10 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    height += getCachedNoise2D(x, z, 0.005) * 30;
+    height += getCachedNoise2D(x, z, 0.02) * 15;
+    height += getCachedNoise2D(x, z, 0.05) * 8;
+    height += getCachedNoise2D(x, z, 0.1) * 4;
 
     return Math.max(20, Math.min(160, Math.floor(height)));
 }
@@ -95,7 +108,7 @@ function getTerrainHeight(x, z) {
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
-    const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
+    const temp = getCachedNoise2D(x, z, 0.02);
     if (temp < -0.3) return 'sand';
     return 'grass';
 }
@@ -104,10 +117,11 @@ function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
     let ore = BLOCKS.STONE;
-    const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
-    const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
-    const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
-    const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
+    const keyBase = `${x},${z}`;
+    const coalChance = getCachedNoise2D(x + y * 0.5, z + y * 0.5, 0.1);
+    const ironChance = getCachedNoise2D(x + y * 0.3, z + y * 0.3, 0.08);
+    const goldChance = getCachedNoise2D(x + y * 0.2, z + y * 0.2, 0.06);
+    const diamondChance = getCachedNoise2D(x + y * 0.1, z + y * 0.1, 0.04);
 
     if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
     if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
@@ -163,17 +177,38 @@ export class World {
     constructor(renderDistance = 8) {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
+        this.chunkPool = [];
+        this.maxPoolSize = 32;
         initPerlinNoise();
     }
 
     getChunk(cx, cz) {
         const key = `${cx},${cz}`;
         if (!this.chunks.has(key)) {
-            const chunk = new Chunk(cx, cz);
+            let chunk;
+            if (this.chunkPool.length > 0) {
+                chunk = this.chunkPool.pop();
+                chunk.x = cx;
+                chunk.z = cz;
+                chunk.generated = false;
+            } else {
+                chunk = new Chunk(cx, cz);
+            }
             chunk.generate();
             this.chunks.set(key, chunk);
         }
         return this.chunks.get(key);
+    }
+
+    releaseChunk(cx, cz) {
+        const key = `${cx},${cz}`;
+        if (this.chunks.has(key)) {
+            const chunk = this.chunks.get(key);
+            this.chunks.delete(key);
+            if (this.chunkPool.length < this.maxPoolSize) {
+                this.chunkPool.push(chunk);
+            }
+        }
     }
 
     getBlock(x, y, z) {
@@ -213,14 +248,12 @@ export class World {
             }
         }
 
-        const toDelete = [];
         for (const [key] of this.chunks) {
             if (!chunksToKeep.has(key)) {
-                toDelete.push(key);
+                const [cx, cz] = key.split(',').map(Number);
+                this.releaseChunk(cx, cz);
             }
         }
-
-        toDelete.forEach(key => this.chunks.delete(key));
     }
 }
 
