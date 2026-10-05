@@ -216,6 +216,24 @@ function generateTree(chunk, x, z, height) {
     }
 }
 
+function generateRavine(chunk, x, z) {
+    if (!perlinNoise) return;
+
+    const worldX = chunk.x * CHUNK_SIZE + x;
+    const worldZ = chunk.z * CHUNK_SIZE + z;
+    const ravineChance = perlinNoise.noise2D(worldX * 0.01, worldZ * 0.01);
+
+    if (ravineChance < 0.3) {
+        const ravineNoise1 = perlinNoise.noise2D(worldX * 0.05, worldZ * 0.05);
+        const ravineNoise2 = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
+
+        if (Math.abs(ravineNoise1) < 0.3 && Math.abs(ravineNoise2) < 0.4) {
+            return true;
+        }
+    }
+    return false;
+}
+
 export class World {
     constructor(renderDistance = 8) {
         this.chunks = new Map();
