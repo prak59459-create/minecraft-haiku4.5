@@ -20,6 +20,8 @@ class MinecraftGame {
 
         this.world = new World();
         this.player = new Player(this.world);
+        const spawn = this.world.spawnPoint;
+        this.player.position = { x: spawn.x, y: spawn.y, z: spawn.z };
         this.gameCamera = new Camera();
         this.ui = new UI();
         this.particleSystem = new ParticleSystem(this.scene);

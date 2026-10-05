@@ -54,6 +54,8 @@ export class Chunk {
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
@@ -62,11 +64,15 @@ export class Chunk {
                             this.setBlock(x, y, z, BLOCKS.SAND);
                         } else if (terrainType === 'grass') {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.SNOW);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
                     } else if (y < 62) {
                         this.setBlock(x, y, z, BLOCKS.WATER);
+                    } else if (y > 120 && y < 130 && terrainType === 'snow') {
+                        this.setBlock(x, y, z, BLOCKS.ICE);
                     }
                 }
 
@@ -96,7 +102,11 @@ function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const humidity = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
+    if (temp < -0.5) return 'snow';
+    if (temp < -0.2) return 'sand';
+    if (humidity > 0.4) return 'grass';
     return 'grass';
 }
 
@@ -109,12 +119,14 @@ function getOreBlock(x, y, z) {
     const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
     const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
     const gravelChance = perlinNoise.noise2D(x * 0.07 + y * 0.04, z * 0.07 + y * 0.04);
+    const lavaChance = perlinNoise.noise2D(x * 0.03 + y * 0.02, z * 0.03 + y * 0.02);
 
     if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
     if (y < 120 && ironChance > 0.55) ore = BLOCKS.IRON_ORE;
     if (y < 80 && goldChance > 0.65) ore = BLOCKS.GOLD_ORE;
     if (y < 40 && diamondChance > 0.7) ore = BLOCKS.DIAMOND_ORE;
     if (y < 100 && y > 40 && gravelChance > 0.65) ore = BLOCKS.GRAVEL;
+    if (y < 30 && lavaChance > 0.7) ore = BLOCKS.LAVA;
 
     return ore;
 }
@@ -167,7 +179,31 @@ export class World {
     constructor(renderDistance = 8) {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
+        this.generatedChunks = new Set();
         initPerlinNoise();
+        this.spawnPoint = this.findSpawnPoint();
+    }
+
+    findSpawnPoint() {
+        let attempts = 0;
+        const maxAttempts = 20;
+
+        while (attempts < maxAttempts) {
+            const x = Math.floor(Math.random() * 200) - 100;
+            const z = Math.floor(Math.random() * 200) - 100;
+            const cx = Math.floor(x / CHUNK_SIZE);
+            const cz = Math.floor(z / CHUNK_SIZE);
+
+            const chunk = this.getChunk(cx, cz);
+            const height = getTerrainHeight(x, z);
+
+            if (height > 40 && height < 80) {
+                return { x: x + 0.5, y: height + 2, z: z + 0.5 };
+            }
+            attempts++;
+        }
+
+        return { x: 0, y: 100, z: 0 };
     }
 
     getChunk(cx, cz) {
@@ -176,6 +212,7 @@ export class World {
             const chunk = new Chunk(cx, cz);
             chunk.generate();
             this.chunks.set(key, chunk);
+            this.generatedChunks.add(key);
         }
         return this.chunks.get(key);
     }

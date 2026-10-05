@@ -77,7 +77,10 @@ export class UI {
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
 
-        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
+        const chunkX = Math.floor(playerPos.x / 16);
+        const chunkZ = Math.floor(playerPos.z / 16);
+
+        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)} | C: [${chunkX}, ${chunkZ}]`;
         fpsEl.textContent = `FPS: ${fps}`;
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
     }
