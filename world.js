@@ -5,11 +5,20 @@ const CHUNK_HEIGHT = 256;
 const WORLD_HEIGHT = 256;
 
 let perlinNoise;
+const noiseCache = new Map();
 
 export function initPerlinNoise() {
     if (typeof SimplexNoise !== 'undefined') {
         perlinNoise = new SimplexNoise();
     }
+}
+
+function cachedNoise2D(x, z, scale) {
+    const key = `${Math.floor(x * scale * 1000)},${Math.floor(z * scale * 1000)},${scale}`;
+    if (!noiseCache.has(key)) {
+        noiseCache.set(key, perlinNoise.noise2D(x * scale, z * scale));
+    }
+    return noiseCache.get(key);
 }
 
 export class Chunk {
@@ -84,10 +93,10 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    height += cachedNoise2D(x, z, 0.005) * 30;
+    height += cachedNoise2D(x, z, 0.02) * 15;
+    height += cachedNoise2D(x, z, 0.05) * 8;
+    height += cachedNoise2D(x, z, 0.1) * 4;
 
     return Math.max(20, Math.min(160, Math.floor(height)));
 }
@@ -95,7 +104,7 @@ function getTerrainHeight(x, z) {
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
-    const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
+    const temp = cachedNoise2D(x, z, 0.02);
     if (temp < -0.3) return 'sand';
     return 'grass';
 }
@@ -103,18 +112,15 @@ function getTerrainType(x, z) {
 function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
-    let ore = BLOCKS.STONE;
-    const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
-    const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
-    const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
-    const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
+    const depthFactor = y / 256;
+    const baseOre = perlinNoise.noise2D(x * 0.08, z * 0.08);
 
-    if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
-    if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
-    if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
-    if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    if (y < 40 && baseOre > 0.75) return BLOCKS.DIAMOND_ORE;
+    if (y < 80 && baseOre > 0.7) return BLOCKS.GOLD_ORE;
+    if (y < 120 && baseOre > 0.6) return BLOCKS.IRON_ORE;
+    if (y < 160 && baseOre > 0.5) return BLOCKS.COAL_ORE;
 
-    return ore;
+    return BLOCKS.STONE;
 }
 
 function generateTree(chunk, x, z, height) {
