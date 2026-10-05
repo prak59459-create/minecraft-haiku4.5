@@ -136,6 +136,17 @@ body {
     margin: 3px 0;
 }
 
+@media (max-width: 1024px) {
+    #hud {
+        font-size: 11px;
+    }
+
+    .inventory-slot {
+        width: 40px;
+        height: 40px;
+    }
+}
+
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;
@@ -149,5 +160,51 @@ body {
 
     #help {
         font-size: 9px;
+        bottom: 70px;
+    }
+
+    #inventory {
+        gap: 3px;
+    }
+}
+
+@media (max-width: 480px) {
+    #hud {
+        font-size: 9px;
+        left: 5px;
+        top: 5px;
+    }
+
+    .inventory-slot {
+        width: 30px;
+        height: 30px;
+        font-size: 10px;
+    }
+
+    .inventory-slot .slot-block {
+        width: 18px;
+        height: 18px;
+    }
+
+    #help {
+        font-size: 8px;
+        padding: 8px 10px;
+        bottom: 65px;
+    }
+
+    #crosshair {
+        width: 16px;
+        height: 16px;
+        margin: -8px 0 0 -8px;
+        border-width: 1px;
+    }
+}
+
+@supports (display: grid) {
+    #inventory {
+        display: grid;
+        grid-template-columns: repeat(9, 1fr);
+        gap: 5px;
+        max-width: 500px;
     }
 }

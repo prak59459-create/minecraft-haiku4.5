@@ -425,4 +425,10 @@ class MinecraftGame {
     }
 }
 
-const game = new MinecraftGame();
+let game;
+try {
+    game = new MinecraftGame();
+} catch (error) {
+    console.error('Failed to initialize game:', error);
+    document.body.innerHTML = '<div style="color: red; font-family: monospace; padding: 20px; white-space: pre-wrap;">Game initialization failed. Please check your browser console for details.\n\n' + error.toString() + '</div>';
+}
