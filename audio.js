@@ -47,15 +47,41 @@ export class AudioManager {
         }
     }
 
-    playBlockSound(type = 'break') {
+    playBlockSound(type = 'break', blockType = 1) {
         if (!this.initialized) return;
 
+        const isWood = [5, 18].includes(blockType);
+        const isSand = blockType === 7;
+        const isStone = [1, 4, 10, 11, 12, 13, 14, 15].includes(blockType);
+
         if (type === 'break') {
-            this.playSound(400, 0.12, 'sine', 0.15);
-            setTimeout(() => this.playSound(200, 0.08, 'sine', 0.1), 30);
+            if (isWood) {
+                this.playSound(300, 0.15, 'sine', 0.12);
+                setTimeout(() => this.playSound(150, 0.1, 'sine', 0.08), 40);
+            } else if (isSand) {
+                this.playSound(350, 0.12, 'sine', 0.1);
+                setTimeout(() => this.playSound(180, 0.08, 'sine', 0.06), 30);
+            } else if (isStone) {
+                this.playSound(450, 0.12, 'sine', 0.16);
+                setTimeout(() => this.playSound(250, 0.08, 'sine', 0.1), 30);
+            } else {
+                this.playSound(400, 0.12, 'sine', 0.15);
+                setTimeout(() => this.playSound(200, 0.08, 'sine', 0.1), 30);
+            }
         } else if (type === 'place') {
-            this.playSound(600, 0.1, 'sine', 0.12);
-            setTimeout(() => this.playSound(450, 0.08, 'sine', 0.08), 40);
+            if (isWood) {
+                this.playSound(500, 0.1, 'sine', 0.1);
+                setTimeout(() => this.playSound(350, 0.08, 'sine', 0.07), 40);
+            } else if (isSand) {
+                this.playSound(480, 0.1, 'sine', 0.09);
+                setTimeout(() => this.playSound(320, 0.08, 'sine', 0.06), 35);
+            } else if (isStone) {
+                this.playSound(650, 0.1, 'sine', 0.12);
+                setTimeout(() => this.playSound(480, 0.08, 'sine', 0.08), 40);
+            } else {
+                this.playSound(600, 0.1, 'sine', 0.12);
+                setTimeout(() => this.playSound(450, 0.08, 'sine', 0.08), 40);
+            }
         }
     }
 
