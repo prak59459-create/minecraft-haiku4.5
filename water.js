@@ -6,6 +6,7 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.updateQueue = [];
     }
 
     buildWaterMesh(chunk) {
@@ -16,7 +17,7 @@ export class WaterRenderer {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x4A90E2);
+        const baseWaterColor = new THREE.Color(0x4A90E2);
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -48,11 +49,15 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const depthFactor = Math.max(0.6, 1 - (wy / WORLD_HEIGHT) * 0.4);
+                        const color = baseWaterColor.clone().multiplyScalar(depthFactor);
 
                         for (const [vx, vy, vz] of face.verts) {
-                            vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
+                            const wave = Math.sin((wx + wy + wz + this.time * 2) * 0.5) * 0.05;
+                            vertices.push(wx + vx + (face.dir[0] !== 0 ? wave : 0),
+                                         wy + vy,
+                                         wz + vz + (face.dir[2] !== 0 ? wave : 0));
+                            colors.push(Math.floor(color.r * 255), Math.floor(color.g * 255), Math.floor(color.b * 255));
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -72,8 +77,9 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.65,
+                side: THREE.DoubleSide,
+                emissive: 0x2A5A92
             });
 
             const mesh = new THREE.Mesh(geometry, material);
