@@ -44,19 +44,26 @@ class MinecraftGame {
     setupLighting() {
         const time = Date.now() * 0.0001;
         const sunY = Math.sin(time) * 100 + 100;
-        const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const directionalLight = new THREE.DirectionalLight(0xFFEDD5, 0.5 + sunIntensity * 0.4);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.near = 0.1;
+        directionalLight.shadow.camera.left = -300;
+        directionalLight.shadow.camera.right = 300;
+        directionalLight.shadow.camera.top = 300;
+        directionalLight.shadow.camera.bottom = -300;
+        directionalLight.shadow.bias = -0.0005;
         this.scene.add(directionalLight);
 
+        this.ambientLight = ambientLight;
         this.directionalLight = directionalLight;
     }
 
@@ -425,20 +432,34 @@ class MinecraftGame {
         const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.4 + sunIntensity * 0.4;
+        this.directionalLight.intensity = 0.35 + sunIntensity * 0.45;
 
-        const skyLightness = 0.4 + sunIntensity * 0.4;
-        const ambientIntensity = 0.4 + sunIntensity * 0.2;
+        const sunColor = sunIntensity < 0.4 ? 0x4D5A8C : 0xFFEDD5;
+        this.directionalLight.color.setHex(sunColor);
 
+        const ambientIntensity = 0.3 + sunIntensity * 0.2;
+        this.ambientLight.intensity = ambientIntensity;
+
+        const skyLightness = 0.35 + sunIntensity * 0.45;
         const skyColor = new THREE.Color();
-        if (sunIntensity < 0.3) {
-            skyColor.setHSL(0.65, 0.3, 0.1 + sunIntensity * 0.5);
+        if (sunIntensity < 0.25) {
+            skyColor.setHSL(0.68, 0.5, 0.08 + sunIntensity * 0.3);
+        } else if (sunIntensity < 0.4) {
+            skyColor.setHSL(0.62, 0.6, 0.15 + sunIntensity * 0.4);
         } else {
             skyColor.setHSL(0.6, 0.4, skyLightness);
         }
         this.scene.background = skyColor;
 
-        this.scene.fog = new THREE.Fog(skyColor, 200, 400);
+        const fogFar = 150 + sunIntensity * 250;
+        const fogNear = 50 + sunIntensity * 100;
+        if (this.scene.fog) {
+            this.scene.fog.far = fogFar;
+            this.scene.fog.near = fogNear;
+            this.scene.fog.color.copy(skyColor);
+        } else {
+            this.scene.fog = new THREE.Fog(skyColor, fogFar, fogNear);
+        }
     }
 }
 
