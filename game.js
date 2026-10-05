@@ -39,6 +39,8 @@ class MinecraftGame {
         this.frameCounter = 0;
         this.meshPool = [];
         this.maxMeshesPerFrame = 2;
+        this.cameraShake = 0;
+        this.shakeAmount = 0.05;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -111,6 +113,8 @@ class MinecraftGame {
 
             const color = BLOCK_COLORS[hit.block] || 0x808080;
             this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
+
+            this.cameraShake = 0.1;
 
             const now = Date.now();
             if (now - this.lastBreakSound > 50) {
@@ -374,7 +378,16 @@ class MinecraftGame {
         this.gameCamera.updateFromPlayer(this.player);
 
         const eyePos = this.player.getEyePosition();
-        this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
+
+        let shakeX = 0, shakeY = 0, shakeZ = 0;
+        if (this.cameraShake > 0) {
+            shakeX = (Math.random() - 0.5) * this.shakeAmount * this.cameraShake;
+            shakeY = (Math.random() - 0.5) * this.shakeAmount * this.cameraShake;
+            shakeZ = (Math.random() - 0.5) * this.shakeAmount * this.cameraShake;
+            this.cameraShake -= 0.016 / 0.1;
+        }
+
+        this.camera.position.set(eyePos.x + shakeX, eyePos.y + shakeY, eyePos.z + shakeZ);
 
         const direction = new THREE.Vector3(
             Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
@@ -382,9 +395,9 @@ class MinecraftGame {
             Math.cos(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x)
         );
         this.camera.lookAt(
-            eyePos.x + direction.x,
-            eyePos.y + direction.y,
-            eyePos.z + direction.z
+            eyePos.x + direction.x + shakeX,
+            eyePos.y + direction.y + shakeY,
+            eyePos.z + direction.z + shakeZ
         );
 
         this.updateVisibleChunks();
