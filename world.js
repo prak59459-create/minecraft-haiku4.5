@@ -48,7 +48,9 @@ export class Chunk {
                 let terrainType = getTerrainType(wx, wz);
 
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
-                    if (y === 0) {
+                    if (isCaveBlock(wx, y, wz)) {
+                        this.setBlock(x, y, z, BLOCKS.AIR);
+                    } else if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
                     } else if (y < height - 4) {
                         const block = getOreBlock(wx, y, wz);
@@ -119,6 +121,18 @@ function getTerrainType(x, z) {
     if (humidity > 0.3) return 'forest';
     if (humidity > 0.0) return 'mixed';
     return 'grass';
+}
+
+function isCaveBlock(x, y, z) {
+    if (!perlinNoise) return false;
+    if (y < 15 || y > 120) return false;
+
+    const caveNoise1 = perlinNoise.noise2D(x * 0.08, z * 0.08);
+    const caveNoise2 = perlinNoise.noise2D(x * 0.03 + y * 0.05, z * 0.03 + y * 0.05);
+    const caveNoise3 = perlinNoise.noise2D(x * 0.15 - y * 0.03, z * 0.15 - y * 0.03);
+
+    const combined = Math.abs(caveNoise1) + Math.abs(caveNoise2) + Math.abs(caveNoise3);
+    return combined < 1.2;
 }
 
 function getOreBlock(x, y, z) {

@@ -18,6 +18,7 @@ class MinecraftGame {
         this.renderer.setClearColor(0x87CEEB);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+        this.renderer.fog = new THREE.Fog(0x87CEEB, 300, 500);
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -395,13 +396,34 @@ class MinecraftGame {
         this.directionalLight.position.set(sunX, sunY, 200);
         this.directionalLight.intensity = Math.max(0.4, 0.7 + sunIntensity * 0.4);
 
-        const skyHue = 0.58 + Math.sin(time) * 0.08;
-        const skySaturation = 0.5 + Math.cos(time * 2) * 0.2;
-        const skyLightness = 0.45 + sunIntensity * 0.35;
+        let skyColor = new THREE.Color();
+        const normalizedTime = (time % (Math.PI * 2)) / (Math.PI * 2);
 
-        const skyColor = new THREE.Color();
-        skyColor.setHSL(skyHue, skySaturation, skyLightness);
+        if (normalizedTime < 0.25) {
+            const t = normalizedTime / 0.25;
+            skyColor.setHSL(0.58, 0.6, 0.3 + t * 0.35);
+        } else if (normalizedTime < 0.35) {
+            const t = (normalizedTime - 0.25) / 0.1;
+            skyColor.lerpHSLs(
+                new THREE.Color().setHSL(0.58, 0.6, 0.65),
+                new THREE.Color().setHSL(0.08, 0.8, 0.5),
+                Math.sin(t * Math.PI) * 0.5 + 0.5
+            );
+        } else if (normalizedTime < 0.5) {
+            skyColor.setHSL(0.58, 0.5, 0.7);
+        } else if (normalizedTime < 0.65) {
+            const t = (normalizedTime - 0.5) / 0.15;
+            skyColor.lerpHSLs(
+                new THREE.Color().setHSL(0.58, 0.5, 0.7),
+                new THREE.Color().setHSL(0.05, 0.7, 0.4),
+                Math.sin(t * Math.PI) * 0.5 + 0.5
+            );
+        } else {
+            skyColor.setHSL(0.6, 0.3, 0.1 + Math.sin(normalizedTime * Math.PI * 2) * 0.1);
+        }
+
         this.scene.background = skyColor;
+        this.renderer.fog.color.copy(skyColor);
     }
 }
 
