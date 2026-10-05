@@ -2,6 +2,7 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.lastPos = null;
         this.createOutlineMaterial();
     }
 
@@ -15,10 +16,14 @@ export class BlockOutline {
     }
 
     setSelectedBlock(x, y, z) {
+        const key = `${x},${y},${z}`;
+        if (this.lastPos === key) return;
+
         if (this.outline) {
             this.scene.remove(this.outline);
         }
 
+        this.lastPos = key;
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
 
@@ -49,6 +54,7 @@ export class BlockOutline {
         if (this.outline) {
             this.scene.remove(this.outline);
             this.outline = null;
+            this.lastPos = null;
         }
     }
 

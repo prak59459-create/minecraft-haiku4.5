@@ -48,11 +48,15 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const brightness = 0.8 + ((wx + wz) % 10) * 0.02;
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
+                            colors.push(
+                                Math.min(255, Math.floor(74 * brightness)),
+                                Math.min(255, Math.floor(144 * brightness)),
+                                Math.min(255, Math.floor(226 * brightness))
+                            );
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -85,5 +89,9 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+    }
+
+    getMeshes() {
+        return Array.from(this.waterMeshes.values());
     }
 }

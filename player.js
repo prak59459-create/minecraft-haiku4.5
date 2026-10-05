@@ -83,18 +83,15 @@ export class Player {
     checkCollisions() {
         const radius = PLAYER_WIDTH / 2;
         const height = PLAYER_HEIGHT;
-
         this.isOnGround = false;
 
         const checkPoints = [
             { dy: 0.1, radius: radius * 0.9 },
-            { dy: height * 0.3, radius: radius * 0.9 },
-            { dy: height * 0.6, radius: radius * 0.9 },
-            { dy: height * 0.9, radius: radius * 0.7 }
+            { dy: height * 0.5, radius: radius * 0.9 }
         ];
 
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
                 const cz = this.position.z + Math.sin(angle) * point.radius;
@@ -114,7 +111,7 @@ export class Player {
 
         if (this.velocity.y < 0) {
             let onGround = false;
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.8;
                 const cy = this.position.y - 0.01;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.8;
@@ -132,7 +129,7 @@ export class Player {
         }
 
         if (this.velocity.y > 0) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.9;
                 const cy = this.position.y + height + 0.01;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.9;
