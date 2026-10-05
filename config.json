@@ -1,42 +1,46 @@
 {
   "world": {
-    "renderDistance": 8,
+    "renderDistance": 10,
     "seedOffset": 0,
     "waterLevel": 62,
     "bedrockLevel": 0
   },
   "player": {
-    "speed": 0.1,
-    "sprintSpeed": 0.15,
-    "crouchSpeed": 0.05,
-    "jumpPower": 0.5,
-    "gravity": 0.02,
-    "mouseSensitivity": 0.003,
+    "speed": 0.12,
+    "sprintSpeed": 0.2,
+    "crouchSpeed": 0.06,
+    "jumpPower": 0.55,
+    "gravity": 0.024,
+    "mouseSensitivity": 0.0025,
     "eyeHeight": 0.85,
     "height": 1.8,
     "width": 0.6
   },
   "raycast": {
     "distance": 6,
-    "stepSize": 0.05
+    "stepSize": 0.1
   },
   "graphics": {
     "renderScale": 1.0,
     "shadowMapSize": 2048,
     "particleLimit": 2000,
-    "fpsTarget": 60
+    "fpsTarget": 60,
+    "antialias": true,
+    "highPerformance": true
   },
   "terrain": {
     "chunkSize": 16,
     "maxHeight": 160,
     "minHeight": 20,
     "seaLevel": 62,
-    "treeFrequency": 0.5
+    "treeFrequency": 0.5,
+    "biomes": true
   },
   "audio": {
     "enabled": true,
     "masterVolume": 0.5,
     "soundFx": true,
+    "ambience": true,
     "music": false
   }
 }

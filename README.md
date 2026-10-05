@@ -19,12 +19,16 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Multiple Biomes** - Grass, sand, and varied terrain types
 - **Chunk System** - Dynamic chunk loading and unloading for performance
 - **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
+  - Stone, Grass, Dirt, Cobblestone, Gravel, Bedrock
+  - Oak, Birch, Spruce, and Dark Oak wood types with leaves
+  - Sand, Water
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
-- **Ore Generation** - Procedural ore generation at various depths
-- **Tree Generation** - Natural tree placement in suitable terrain
+- **Ore Generation** - Procedural ore generation at appropriate depths
+- **Biome-based Tree Generation**:
+  - Oak trees in mixed forests
+  - Spruce trees in dense forests (cone-shaped)
+  - Birch trees in grass biomes
+  - Large trees in mountainous areas
 
 ### Physics & Collision
 - **Gravity System** - Realistic falling and landing
@@ -41,11 +45,12 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 ### Audio
 - **Procedural Sound Effects**:
-  - Block break sounds
-  - Block place sounds
-  - Jump sounds (prepared)
-  - Step sounds (prepared)
-- **Web Audio API** - Dynamic audio generation
+  - Block break sounds with randomized pitch
+  - Block place sounds with frequency variation
+  - Jump sounds with dual-oscillator for richness
+  - Step sounds with walking rhythm
+- **Web Audio API** - Dynamic real-time audio generation
+- **Volume Control** - Adjustable master volume
 
 ### User Interface
 - **HUD Display** - Real-time coordinates, FPS, and block info
@@ -135,10 +140,12 @@ audio.js         - Sound effects generation
 
 ### Performance
 
-- Renders 8-chunk radius around player
+- Renders 10-chunk radius around player with Manhattan distance culling
 - Optimized mesh generation with indexed geometry
-- Dynamic lighting updates for day/night cycle
-- Particle system for visual effects
+- Dynamic lighting with shadow mapping
+- Efficient particle system with pooling (up to 2000 particles)
+- Step size optimization in raycasting
+- Automatic garbage collection for distant chunks
 - ~60 FPS on modern hardware
 
 ## Game Design
@@ -152,15 +159,17 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 
 ### Biomes
 
-- **Grass Biome** - Natural terrain with trees and water
-- **Sand Biome** - Desert-like areas with sand blocks
+- **Grass Biome** - Rolling plains with occasional birch trees
+- **Mixed Forest** - Terrain with oak and mixed trees
+- **Dense Forest** - Biome with tall spruce trees and varied oak
+- **Sand Biome** - Desert-like areas with sand blocks and sparse vegetation
 
 ### Ore Distribution
 
-- **Coal Ore** - Common, up to height 160
-- **Iron Ore** - Medium frequency, up to height 120
-- **Gold Ore** - Rare, up to height 80
-- **Diamond Ore** - Very rare, up to height 40
+- **Coal Ore** - Common, up to height 150
+- **Iron Ore** - Medium frequency, up to height 110
+- **Gold Ore** - Rare, up to height 70
+- **Diamond Ore** - Very rare, up to height 35
 
 ## Development
 
@@ -172,15 +181,19 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 
 ### Future Enhancements
 
-- [ ] Inventory UI with multiple stacks
+- [ ] Inventory UI with item stacking and counts
 - [ ] Creative mode with unlimited blocks
-- [ ] Survival mode with health/hunger
-- [ ] Multiplayer support
+- [ ] Survival mode with health/hunger system
+- [ ] Multiplayer support (WebSocket)
 - [ ] Texture mapping for blocks
-- [ ] Advanced weather systems
-- [ ] More biome types
-- [ ] Mob system
-- [ ] Crafting system
+- [ ] Advanced weather systems (rain, snow)
+- [ ] More biome types (mountains, jungle, nether)
+- [ ] Mob system with AI
+- [ ] Crafting system with recipes
+- [ ] Cave generation and underground systems
+- [ ] Underwater caves and lakes
+- [ ] Smooth terrain option
+- [ ] Settings menu for runtime configuration
 
 ## Performance Tips
 
