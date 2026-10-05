@@ -73,10 +73,29 @@ export class Chunk {
                 if (height > 65) {
                     generateTree(this, x, z, height);
                 }
+
+                generateCaves(this, x, z, height);
             }
         }
 
         this.generated = true;
+    }
+}
+
+function generateCaves(chunk, x, z, height) {
+    if (!perlinNoise) return;
+
+    const worldX = chunk.x * CHUNK_SIZE + x;
+    const worldZ = chunk.z * CHUNK_SIZE + z;
+
+    for (let y = 15; y < height - 5; y++) {
+        const caveNoise = perlinNoise.noise3D(worldX * 0.05, y * 0.05, worldZ * 0.05);
+        if (caveNoise > 0.4) {
+            const block = chunk.getBlock(x, y, z);
+            if (block !== BLOCKS.BEDROCK && block !== BLOCKS.WATER && y > 10) {
+                chunk.setBlock(x, y, z, BLOCKS.AIR);
+            }
+        }
     }
 }
 
