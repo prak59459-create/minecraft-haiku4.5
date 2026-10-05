@@ -48,9 +48,15 @@ export class Chunk {
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
-                    } else if (y < height - 4) {
+                    } else if (y < height - 5) {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
+                    } else if (y < height - 2) {
+                        if (terrainType === 'sand') {
+                            this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
+                        }
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
@@ -60,8 +66,6 @@ export class Chunk {
                     } else if (y < height) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
@@ -220,8 +224,10 @@ export class World {
         const playerChunkZ = Math.floor(playerZ / CHUNK_SIZE);
 
         const chunksToKeep = new Set();
-        for (let dx = -this.renderDistance; dx <= this.renderDistance; dx++) {
-            for (let dz = -this.renderDistance; dz <= this.renderDistance; dz++) {
+        const loadRadius = Math.floor(this.renderDistance * 1.2);
+
+        for (let dx = -loadRadius; dx <= loadRadius; dx++) {
+            for (let dz = -loadRadius; dz <= loadRadius; dz++) {
                 const key = `${playerChunkX + dx},${playerChunkZ + dz}`;
                 chunksToKeep.add(key);
                 this.getChunk(playerChunkX + dx, playerChunkZ + dz);

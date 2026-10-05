@@ -14,6 +14,7 @@ export class Player {
         this.position = { x: 0, y: 100, z: 0 };
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
+        this.lastStepPos = { x: 0, z: 0 };
 
         this.isOnGround = false;
         this.canJump = false;
@@ -87,14 +88,14 @@ export class Player {
         this.isOnGround = false;
 
         const checkPoints = [
-            { dy: 0.1, radius: radius * 0.9 },
-            { dy: height * 0.3, radius: radius * 0.9 },
-            { dy: height * 0.6, radius: radius * 0.9 },
-            { dy: height * 0.9, radius: radius * 0.7 }
+            { dy: 0.05, radius: radius * 0.95 },
+            { dy: height * 0.25, radius: radius * 0.9 },
+            { dy: height * 0.5, radius: radius * 0.9 },
+            { dy: height * 0.85, radius: radius * 0.75 }
         ];
 
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
                 const cz = this.position.z + Math.sin(angle) * point.radius;

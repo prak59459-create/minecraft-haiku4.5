@@ -50,9 +50,15 @@ export class UI {
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
 
-        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
+        const x = playerPos.x.toFixed(1);
+        const y = playerPos.y.toFixed(1);
+        const z = playerPos.z.toFixed(1);
+        const chunkX = Math.floor(playerPos.x / 16);
+        const chunkZ = Math.floor(playerPos.z / 16);
+
+        coordsEl.textContent = `Pos: ${x}, ${y}, ${z} | Chunk: ${chunkX}, ${chunkZ}`;
         fpsEl.textContent = `FPS: ${fps}`;
-        blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+        blockEl.textContent = `Selected: ${BLOCK_NAMES[selectedBlock] || 'Air'}`;
     }
 
     updateFPS() {
