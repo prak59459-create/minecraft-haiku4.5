@@ -377,14 +377,30 @@ class MinecraftGame {
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.6 + sunIntensity * 0.25;
+
+        let skyHue, skySaturation, skyLightness;
+
+        if (Math.sin(time) > 0) {
+            skyHue = 0.6;
+            skySaturation = 0.4 + sunIntensity * 0.2;
+            skyLightness = 0.5 + sunIntensity * 0.3;
+        } else {
+            const nightFactor = Math.abs(Math.sin(time));
+            skyHue = 0.7;
+            skySaturation = 0.2;
+            skyLightness = 0.1 + nightFactor * 0.15;
+        }
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        skyColor.setHSL(skyHue, skySaturation, skyLightness);
         this.scene.background = skyColor;
+
+        const fogDensity = 0.0002 * (1 - Math.abs(sunIntensity));
+        this.scene.fog = new THREE.FogExp2(skyColor, fogDensity);
     }
 
     updatePerformanceMonitoring(fps) {

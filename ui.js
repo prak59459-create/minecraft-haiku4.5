@@ -50,8 +50,18 @@ export class UI {
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
 
-        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
+        const chunkX = Math.floor(playerPos.x / 16);
+        const chunkZ = Math.floor(playerPos.z / 16);
+
+        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)} | Chunk: ${chunkX},${chunkZ}`;
+
+        let fpsColor = '#00FF00';
+        if (fps < 30) fpsColor = '#FF0000';
+        else if (fps < 50) fpsColor = '#FFFF00';
+
         fpsEl.textContent = `FPS: ${fps}`;
+        fpsEl.style.color = fpsColor;
+
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
     }
 

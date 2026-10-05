@@ -90,4 +90,8 @@ export class WaterRenderer {
     update() {
         this.time += 0.016;
     }
+
+    getMeshes() {
+        return Array.from(this.waterMeshes.values());
+    }
 }
