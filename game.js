@@ -13,10 +13,12 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance', precision: 'highp' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -35,6 +37,8 @@ class MinecraftGame {
         this.showDebug = false;
         this.lastHitBlock = null;
         this.frameCounter = 0;
+        this.meshPool = [];
+        this.maxMeshesPerFrame = 2;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -49,10 +53,10 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.35 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5 + sunIntensity * 0.3);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.45 + sunIntensity * 0.35);
         directionalLight.position.set(200, sunY, 200);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
@@ -62,9 +66,12 @@ class MinecraftGame {
         directionalLight.shadow.camera.right = 256;
         directionalLight.shadow.camera.top = 256;
         directionalLight.shadow.camera.bottom = -256;
+        directionalLight.shadow.bias = -0.0001;
+        directionalLight.shadow.mapSize.width = 4096;
+        directionalLight.shadow.mapSize.height = 4096;
         this.scene.add(directionalLight);
 
-        this.scene.fog = new THREE.Fog(0x87CEEB, 200, 400);
+        this.scene.fog = new THREE.Fog(0x87CEEB, 150, 350);
         this.directionalLight = directionalLight;
     }
 
@@ -195,7 +202,10 @@ class MinecraftGame {
             for (let dz = -1; dz <= 1; dz++) {
                 const key = `${cx + dx},${cz + dz}`;
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
+                    const mesh = this.chunkMeshes.get(key);
+                    this.scene.remove(mesh);
+                    mesh.geometry.dispose();
+                    mesh.material.dispose();
                     this.chunkMeshes.delete(key);
                 }
             }
@@ -309,26 +319,37 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        let meshesBuilt = 0;
+        const chunksToRemove = [];
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
             const dist = Math.max(Math.abs(cx - playerChunkX), Math.abs(cz - playerChunkZ));
 
             if (dist > 12) {
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
+                    chunksToRemove.push(key);
                 }
                 continue;
             }
 
-            if (!this.chunkMeshes.has(key)) {
+            if (!this.chunkMeshes.has(key) && meshesBuilt < this.maxMeshesPerFrame) {
                 const useLOD = dist > 6;
                 const mesh = this.buildChunkMesh(chunk, useLOD);
                 if (mesh) {
                     this.scene.add(mesh);
                     this.chunkMeshes.set(key, mesh);
+                    meshesBuilt++;
                 }
             }
+        }
+
+        for (const key of chunksToRemove) {
+            const mesh = this.chunkMeshes.get(key);
+            this.scene.remove(mesh);
+            mesh.geometry.dispose();
+            mesh.material.dispose();
+            this.chunkMeshes.delete(key);
         }
     }
 
