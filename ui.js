@@ -6,6 +6,10 @@ export class UI {
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.inventory = {};
+        for (const block of this.blocks) {
+            this.inventory[block] = 64;
+        }
         this.setupInventoryUI();
     }
 

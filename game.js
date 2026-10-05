@@ -18,6 +18,7 @@ class MinecraftGame {
         this.renderer.setClearColor(0x87CEEB);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowMap;
+        this.renderer.sortObjects = false;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -34,6 +35,8 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.frameCount = 0;
+        this.meshUpdateSchedule = 0;
 
         this.initializeSpawn();
         this.player.onJump = () => this.audioManager.playJumpSound();
@@ -242,6 +245,7 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
+        const COLOR_CACHE = {};
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -253,14 +257,16 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const color = new THREE.Color(BLOCK_COLORS[blockId]);
-
-                    const baseLight = 0.65;
-                    const heightLight = (Math.max(0, wy - 50) / WORLD_HEIGHT) * 0.35;
-                    const varLight = Math.sin(wx * 0.3 + wz * 0.3) * 0.08;
-                    const brightness = Math.max(0.35, baseLight + heightLight + varLight);
-
-                    color.multiplyScalar(brightness);
+                    let color = COLOR_CACHE[blockId];
+                    if (!color) {
+                        color = new THREE.Color(BLOCK_COLORS[blockId]);
+                        const baseLight = 0.65;
+                        const heightLight = (Math.max(0, wy - 50) / WORLD_HEIGHT) * 0.35;
+                        const varLight = Math.sin(wx * 0.3 + wz * 0.3) * 0.08;
+                        const brightness = Math.max(0.35, baseLight + heightLight + varLight);
+                        color.multiplyScalar(brightness);
+                        COLOR_CACHE[blockId] = color;
+                    }
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
                 }
@@ -273,14 +279,13 @@ class MinecraftGame {
             if (indices.length > 0) {
                 geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             }
-            geometry.computeVertexNormals();
 
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
+                flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 25,
+                shininess: 20,
                 emissive: 0x000000
             });
             const mesh = new THREE.Mesh(geometry, material);
@@ -350,14 +355,17 @@ class MinecraftGame {
     }
 
     updateVisibleChunks() {
+        this.frameCount++;
+        if (this.frameCount % 6 !== 0) return;
+
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
         const renderDistanceFar = 12;
-        const renderDistanceNear = 8;
 
+        const chunksToProcess = [];
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
             const dist = Math.max(Math.abs(cx - playerChunkX), Math.abs(cz - playerChunkZ));
@@ -367,16 +375,19 @@ class MinecraftGame {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
                 }
-                continue;
+            } else if (!this.chunkMeshes.has(key)) {
+                chunksToProcess.push([key, chunk]);
             }
+        }
 
-            if (!this.chunkMeshes.has(key)) {
-                const mesh = this.buildChunkMesh(chunk);
-                if (mesh) {
-                    mesh.frustumCulled = true;
-                    this.scene.add(mesh);
-                    this.chunkMeshes.set(key, mesh);
-                }
+        const buildCountPerFrame = 2;
+        for (let i = 0; i < Math.min(buildCountPerFrame, chunksToProcess.length); i++) {
+            const [key, chunk] = chunksToProcess[i];
+            const mesh = this.buildChunkMesh(chunk);
+            if (mesh) {
+                mesh.frustumCulled = true;
+                this.scene.add(mesh);
+                this.chunkMeshes.set(key, mesh);
             }
         }
     }
