@@ -39,6 +39,7 @@ export class ParticleSystem {
 
     update() {
         const gravity = 0.01;
+        const deltaLife = 1 / 60;
 
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
@@ -46,7 +47,7 @@ export class ParticleSystem {
             p.position.x += p.velocity.x;
             p.position.y += p.velocity.y;
             p.position.z += p.velocity.z;
-            p.life -= 1 / 60;
+            p.life -= deltaLife;
 
             if (p.life <= 0) {
                 this.particles.splice(i, 1);
