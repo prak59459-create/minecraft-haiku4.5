@@ -141,10 +141,13 @@ function generateTree(chunk, x, z, height) {
 
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
         const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
-        for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
-            for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
-                const dx = Math.round(Math.cos(angle) * dist);
-                const dz = Math.round(Math.sin(angle) * dist);
+        const angleStep = 0.6;
+        for (let angle = 0; angle < Math.PI * 2; angle += angleStep) {
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            for (let dist = 1; dist <= radiusAtLevel; dist++) {
+                const dx = Math.round(cos * dist);
+                const dz = Math.round(sin * dist);
                 const fx = x + dx;
                 const fz = z + dz;
                 const fy = foliageStart + dy;
