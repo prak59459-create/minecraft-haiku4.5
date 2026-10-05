@@ -16,7 +16,10 @@ export const BLOCKS = {
     DIAMOND_ORE: 14,
     MOSS_BLOCK: 15,
     DEEPSLATE: 16,
-    COPPER_ORE: 17
+    COPPER_ORE: 17,
+    OAK_PLANKS: 18,
+    SNOW: 19,
+    CLAY: 20
 };
 
 export const BLOCK_NAMES = {
@@ -37,7 +40,10 @@ export const BLOCK_NAMES = {
     14: 'Diamond Ore',
     15: 'Moss Block',
     16: 'Deepslate',
-    17: 'Copper Ore'
+    17: 'Copper Ore',
+    18: 'Oak Planks',
+    19: 'Snow',
+    20: 'Clay'
 };
 
 export const BLOCK_COLORS = {
@@ -58,7 +64,10 @@ export const BLOCK_COLORS = {
     14: 0x00CED1,
     15: 0x2E8B57,
     16: 0x4A5568,
-    17: 0xB87333
+    17: 0xB87333,
+    18: 0xC19A6B,
+    19: 0xF0F8FF,
+    20: 0xA9A9A9
 };
 
 export const SOLID_BLOCKS = new Set([
@@ -77,7 +86,10 @@ export const SOLID_BLOCKS = new Set([
     BLOCKS.DIAMOND_ORE,
     BLOCKS.MOSS_BLOCK,
     BLOCKS.DEEPSLATE,
-    BLOCKS.COPPER_ORE
+    BLOCKS.COPPER_ORE,
+    BLOCKS.OAK_PLANKS,
+    BLOCKS.SNOW,
+    BLOCKS.CLAY
 ]);
 
 export const TRANSPARENT_BLOCKS = new Set([

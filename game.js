@@ -96,15 +96,22 @@ class MinecraftGame {
                 const hit = this.raycastBlock();
                 if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
                     this.selectedBlockType = hit.block;
+                    const blockName = BLOCK_NAMES[hit.block] || 'Unknown';
+                    console.log(`Selected: ${blockName}`);
                 }
             }
-            if (e.key === 'F3') {
+            if (e.key === 'F3' || e.key === 'f3') {
                 e.preventDefault();
                 this.showDebug = !this.showDebug;
                 this.debugDisplay.toggle();
             }
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
+            }
+            if (e.key === 'Escape') {
+                if (document.pointerLockElement === document.body) {
+                    document.exitPointerLock();
+                }
             }
         });
     }

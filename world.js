@@ -109,6 +109,14 @@ function getOreBlock(x, y, z) {
 
     let ore = y < 30 ? BLOCKS.DEEPSLATE : BLOCKS.STONE;
 
+    const caveNoise = perlinNoise.noise3D ?
+        perlinNoise.noise3D(x * 0.05, y * 0.05, z * 0.05) :
+        perlinNoise.noise2D(x * 0.05, z * 0.05) * Math.sin(y * 0.1);
+
+    if (Math.abs(caveNoise) > 0.6 && y > 10 && y < 100) {
+        return BLOCKS.AIR;
+    }
+
     const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
     const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.04, z * 0.08 + y * 0.04);
     const copperChance = perlinNoise.noise2D(x * 0.07 + y * 0.035, z * 0.07 + y * 0.035);

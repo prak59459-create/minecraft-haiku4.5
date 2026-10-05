@@ -59,9 +59,22 @@ export class UI {
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
 
-        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
+        const px = Math.floor(playerPos.x * 10) / 10;
+        const py = Math.floor(playerPos.y * 10) / 10;
+        const pz = Math.floor(playerPos.z * 10) / 10;
+
+        coordsEl.textContent = `X: ${px} Y: ${py} Z: ${pz}`;
         fpsEl.textContent = `FPS: ${fps}`;
-        blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+        blockEl.textContent = `[${selectedBlock}] ${BLOCK_NAMES[selectedBlock] || 'Air'}`;
+
+        const slots = document.querySelectorAll('.inventory-slot');
+        slots.forEach((slot, i) => {
+            if (i === this.selectedBlock) {
+                slot.classList.add('selected');
+            } else {
+                slot.classList.remove('selected');
+            }
+        });
     }
 
     updateFPS() {

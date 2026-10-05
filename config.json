@@ -1,6 +1,6 @@
 {
   "world": {
-    "renderDistance": 8,
+    "renderDistance": 12,
     "seedOffset": 0,
     "waterLevel": 62,
     "bedrockLevel": 0
@@ -18,25 +18,39 @@
   },
   "raycast": {
     "distance": 6,
-    "stepSize": 0.05
+    "stepSize": 0.1
   },
   "graphics": {
     "renderScale": 1.0,
     "shadowMapSize": 2048,
+    "shadowQuality": "PCFShadowMap",
     "particleLimit": 2000,
-    "fpsTarget": 60
+    "fpsTarget": 60,
+    "enableFog": false,
+    "antialiasing": true
   },
   "terrain": {
     "chunkSize": 16,
     "maxHeight": 160,
     "minHeight": 20,
     "seaLevel": 62,
-    "treeFrequency": 0.5
+    "treeFrequency": 0.5,
+    "caveGeneration": true,
+    "caveThreshold": 0.6
   },
   "audio": {
     "enabled": true,
-    "masterVolume": 0.5,
+    "masterVolume": 0.3,
     "soundFx": true,
-    "music": false
+    "music": false,
+    "breakVolume": 0.2,
+    "placeVolume": 0.15,
+    "jumpVolume": 0.1
+  },
+  "debug": {
+    "showFPS": true,
+    "showChunkBorders": false,
+    "showColliders": false,
+    "logPerformance": false
   }
 }
