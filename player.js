@@ -95,7 +95,6 @@ export class Player {
     checkCollisions() {
         const radius = PLAYER_WIDTH / 2;
         const height = PLAYER_HEIGHT;
-
         this.isOnGround = false;
 
         const checkPoints = [
@@ -128,7 +127,7 @@ export class Player {
             let onGround = false;
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.8;
-                const cy = this.position.y - 0.01;
+                const cy = this.position.y - 0.1;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.8;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
@@ -139,14 +138,14 @@ export class Player {
 
             if (onGround) {
                 this.isOnGround = true;
-                this.velocity.y = 0;
+                this.velocity.y = Math.max(this.velocity.y, 0);
             }
         }
 
         if (this.velocity.y > 0) {
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.9;
-                const cy = this.position.y + height + 0.01;
+                const cy = this.position.y + height + 0.1;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.9;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
