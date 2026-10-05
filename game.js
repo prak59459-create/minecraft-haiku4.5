@@ -13,9 +13,11 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -31,6 +33,8 @@ class MinecraftGame {
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
+        this.lastStepSound = 0;
+        this.lastPlayerPos = { x: 0, y: 0, z: 0 };
         this.showDebug = false;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
@@ -134,8 +138,9 @@ class MinecraftGame {
         );
 
         let hit = null;
+        const step = 0.1;
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = 0.05; dist <= this.raycastDistance; dist += step) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -146,7 +151,7 @@ class MinecraftGame {
 
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
+                const prevDist = Math.max(0.05, dist - step);
                 const prevX = eyePos.x + direction.x * prevDist;
                 const prevY = eyePos.y + direction.y * prevDist;
                 const prevZ = eyePos.z + direction.z * prevDist;
@@ -206,12 +211,12 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const color = new THREE.Color(BLOCK_COLORS[blockId]);
+                    const colorValue = BLOCK_COLORS[blockId] || 0x808080;
+                    const color = new THREE.Color(colorValue);
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.6 + (wy / WORLD_HEIGHT) * 0.4;
+                    const varLight = 0.8 + (Math.sin(wx * 0.2 + wz * 0.2) * 0.1);
+                    const brightness = baseLight * varLight;
 
                     color.multiplyScalar(brightness);
 
@@ -223,17 +228,14 @@ class MinecraftGame {
         if (vertices.length > 0) {
             geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
-            if (indices.length > 0) {
-                geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
-            }
-            geometry.computeVertexNormals();
+            geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
 
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
                 flatShading: false,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 50
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -331,6 +333,8 @@ class MinecraftGame {
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
 
+        this.updateStepSounds();
+
         const eyePos = this.player.getEyePosition();
         this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
 
@@ -361,6 +365,23 @@ class MinecraftGame {
         }
 
         this.renderer.render(this.scene, this.camera);
+    }
+
+    updateStepSounds() {
+        const dx = this.player.position.x - this.lastPlayerPos.x;
+        const dy = this.player.position.y - this.lastPlayerPos.y;
+        const dz = this.player.position.z - this.lastPlayerPos.z;
+        const distMoved = Math.sqrt(dx * dx + dz * dz);
+
+        if (distMoved > 0.15 && this.player.isOnGround) {
+            const now = Date.now();
+            if (now - this.lastStepSound > 300) {
+                this.audioManager.playStepSound();
+                this.lastStepSound = now;
+            }
+        }
+
+        this.lastPlayerPos = { ...this.player.position };
     }
 
     updateDayNightCycle() {

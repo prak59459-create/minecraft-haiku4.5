@@ -16,7 +16,8 @@ export class WaterRenderer {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x4A90E2);
+        const baseWaterColor = new THREE.Color(0x3A7BD5);
+        const waterColorLight = new THREE.Color(0x5A9FE8);
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -48,11 +49,16 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const useLight = Math.random() > 0.5;
+                        const color = useLight ? waterColorLight : baseWaterColor;
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
+                            colors.push(
+                                Math.floor(color.r * 255),
+                                Math.floor(color.g * 255),
+                                Math.floor(color.b * 255)
+                            );
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -66,17 +72,18 @@ export class WaterRenderer {
             geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
             geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
-            geometry.computeVertexNormals();
 
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.7,
+                side: THREE.FrontSide,
+                shininess: 100
             });
 
             const mesh = new THREE.Mesh(geometry, material);
+            mesh.receiveShadow = true;
             return mesh;
         }
 

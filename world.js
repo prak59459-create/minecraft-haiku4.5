@@ -22,11 +22,13 @@ export class Chunk {
     }
 
     getBlock(x, y, z) {
+        if (x < 0 || x >= CHUNK_SIZE || y < 0 || y >= WORLD_HEIGHT || z < 0 || z >= CHUNK_SIZE) return 0;
         const idx = x + y * CHUNK_SIZE + z * CHUNK_SIZE * WORLD_HEIGHT;
         return this.blocks[idx] || 0;
     }
 
     setBlock(x, y, z, blockId) {
+        if (x < 0 || x >= CHUNK_SIZE || y < 0 || y >= WORLD_HEIGHT || z < 0 || z >= CHUNK_SIZE) return;
         const idx = x + y * CHUNK_SIZE + z * CHUNK_SIZE * WORLD_HEIGHT;
         this.blocks[idx] = blockId;
     }
@@ -70,8 +72,12 @@ export class Chunk {
                     }
                 }
 
-                if (height > 65) {
+                if (height > 65 && Math.random() < 0.15) {
                     generateTree(this, x, z, height);
+                }
+
+                if (height > 68 && Math.random() < 0.08) {
+                    generateLargeTree(this, x, z, height);
                 }
             }
         }
@@ -84,8 +90,9 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
+    height += perlinNoise.noise2D(x * 0.003, z * 0.003) * 40;
+    height += perlinNoise.noise2D(x * 0.008, z * 0.008) * 20;
+    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 12;
     height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
     height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
 
@@ -95,8 +102,8 @@ function getTerrainHeight(x, z) {
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
-    const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const temp = perlinNoise.noise2D(x * 0.015, z * 0.015);
+    if (temp < -0.2) return 'sand';
     return 'grass';
 }
 
@@ -143,6 +150,46 @@ function generateTree(chunk, x, z, height) {
         const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
         for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
             for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
+                const dx = Math.round(Math.cos(angle) * dist);
+                const dz = Math.round(Math.sin(angle) * dist);
+                const fx = x + dx;
+                const fz = z + dz;
+                const fy = foliageStart + dy;
+
+                if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
+                    if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
+                        chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                    }
+                }
+            }
+        }
+    }
+}
+
+function generateLargeTree(chunk, x, z, height) {
+    const trunkHeight = 8 + Math.floor(Math.random() * 4);
+    const y = height;
+
+    for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dz = -1; dz <= 1; dz++) {
+                if (Math.abs(dx) + Math.abs(dz) > 1) continue;
+                const fx = x + dx;
+                const fz = z + dz;
+                if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE) {
+                    if (chunk.getBlock(fx, y + i, fz) === BLOCKS.AIR) {
+                        chunk.setBlock(fx, y + i, fz, BLOCKS.OAK_LOG);
+                    }
+                }
+            }
+        }
+    }
+
+    const foliageStart = y + trunkHeight - 4;
+    for (let dy = 0; dy < 5; dy++) {
+        const radius = 4 - dy;
+        for (let angle = 0; angle < Math.PI * 2; angle += 0.25) {
+            for (let dist = 1; dist <= radius; dist++) {
                 const dx = Math.round(Math.cos(angle) * dist);
                 const dz = Math.round(Math.sin(angle) * dist);
                 const fx = x + dx;
