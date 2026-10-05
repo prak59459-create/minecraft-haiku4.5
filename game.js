@@ -13,9 +13,10 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.outputEncoding = THREE.sRGBEncoding;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -314,7 +315,12 @@ class MinecraftGame {
         }
 
         for (const key of meshesToRemove) {
-            this.scene.remove(this.chunkMeshes.get(key));
+            const mesh = this.chunkMeshes.get(key);
+            if (mesh) {
+                this.scene.remove(mesh);
+                if (mesh.geometry) mesh.geometry.dispose();
+                if (mesh.material) mesh.material.dispose();
+            }
             this.chunkMeshes.delete(key);
         }
 
