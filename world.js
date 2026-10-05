@@ -54,14 +54,20 @@ export class Chunk {
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'clay') {
+                            this.setBlock(x, y, z, BLOCKS.CLAY);
+                        } else if (terrainType === 'gravel') {
+                            this.setBlock(x, y, z, BLOCKS.GRAVEL);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
                     } else if (y < height) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
+                        } else if (terrainType === 'clay') {
+                            this.setBlock(x, y, z, BLOCKS.CLAY);
+                        } else if (terrainType === 'gravel') {
+                            this.setBlock(x, y, z, BLOCKS.GRAVEL);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
@@ -70,8 +76,8 @@ export class Chunk {
                     }
                 }
 
-                if (height > 65) {
-                    generateTree(this, x, z, height);
+                if (height > 65 && terrainType !== 'sand' && terrainType !== 'clay') {
+                    generateTree(this, x, z, height, terrainType);
                 }
             }
         }
@@ -96,7 +102,11 @@ function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const humidity = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
+    if (temp < -0.2) return 'sand';
+    if (humidity > 0.4) return 'clay';
+    if (temp < 0.1) return 'gravel';
     return 'grass';
 }
 
@@ -117,27 +127,33 @@ function getOreBlock(x, y, z) {
     return ore;
 }
 
-function generateTree(chunk, x, z, height) {
+function generateTree(chunk, x, z, height, terrainType) {
     if (!perlinNoise) return;
 
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
-    if (treeChance < 0.5) return;
+    if (treeChance < 0.4) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    const isOak = terrainType === 'grass';
+    const isBirch = terrainType === 'gravel' || (worldX + worldZ) % 3 === 0;
+
+    const trunkLog = isOak ? BLOCKS.OAK_LOG : (isBirch ? BLOCKS.BIRCH_LOG : BLOCKS.SPRUCE_LOG);
+    const foliageBlock = isOak ? BLOCKS.OAK_LEAVES : (isBirch ? BLOCKS.BIRCH_LEAVES : BLOCKS.SPRUCE_LEAVES);
+
+    const trunkHeight = isOak ? (4 + Math.floor(Math.random() * 4)) : (6 + Math.floor(Math.random() * 3));
     const y = height;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
             if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
-                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
+                chunk.setBlock(x, y + i, z, trunkLog);
             }
         }
     }
 
-    const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    const foliageStart = y + trunkHeight - (isOak ? 3 : 4);
+    const foliageRadius = isOak ? (2 + Math.floor(Math.random() * 2)) : (2 + Math.floor(Math.random() * 1));
 
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
         const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
@@ -151,7 +167,7 @@ function generateTree(chunk, x, z, height) {
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
                     if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
-                        chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                        chunk.setBlock(fx, fy, fz, foliageBlock);
                     }
                 }
             }

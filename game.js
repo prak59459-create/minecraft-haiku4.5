@@ -195,6 +195,7 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
+        const colorCache = new Map();
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -206,16 +207,23 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const color = new THREE.Color(BLOCK_COLORS[blockId]);
+                    const cacheKey = `${blockId},${wx},${wz}`;
+                    let rgb;
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    if (colorCache.has(cacheKey)) {
+                        rgb = colorCache.get(cacheKey);
+                    } else {
+                        const color = new THREE.Color(BLOCK_COLORS[blockId]);
+                        const baseLight = 0.7;
+                        const heightLight = (wy / WORLD_HEIGHT) * 0.3;
+                        const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
+                        const brightness = baseLight + heightLight + varLight;
+                        color.multiplyScalar(brightness);
+                        rgb = [Math.floor(color.r * 255), Math.floor(color.g * 255), Math.floor(color.b * 255)];
+                        colorCache.set(cacheKey, rgb);
+                    }
 
-                    color.multiplyScalar(brightness);
-
-                    this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
+                    this.addBlockFacesOptimized(vertices, colors, indices, wx, wy, wz, blockId, rgb, chunk);
                 }
             }
         }
@@ -231,9 +239,9 @@ class MinecraftGame {
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
+                flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 10
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -282,6 +290,33 @@ class MinecraftGame {
         }
 
         return faceCount > 0;
+    }
+
+    addBlockFacesOptimized(vertices, colors, indices, x, y, z, blockId, rgb, chunk) {
+        const [r, g, b] = rgb;
+        const faces = [
+            { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
+            { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
+            { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]] },
+            { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]] },
+            { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
+            { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
+        ];
+
+        for (const face of faces) {
+            const [dx, dy, dz] = face.dir;
+            const neighbor = this.world.getBlock(x + dx, y + dy, z + dz);
+            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+
+            const startIndex = vertices.length / 3;
+            for (const [vx, vy, vz] of face.verts) {
+                vertices.push(x + vx, y + vy, z + vz);
+                colors.push(r, g, b);
+            }
+
+            indices.push(startIndex, startIndex + 1, startIndex + 2);
+            indices.push(startIndex, startIndex + 2, startIndex + 3);
+        }
     }
 
     updateVisibleChunks() {
