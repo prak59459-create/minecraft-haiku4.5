@@ -192,6 +192,17 @@ class MinecraftGame {
     }
 
     buildChunkMesh(chunk) {
+        const playerChunkX = Math.floor(this.player.position.x / 16);
+        const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const distance = Math.max(
+            Math.abs(chunk.x - playerChunkX),
+            Math.abs(chunk.z - playerChunkZ)
+        );
+
+        if (distance > 6) {
+            return this.buildLODChunkMesh(chunk);
+        }
+
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
         const colors = [];
@@ -247,6 +258,82 @@ class MinecraftGame {
         }
 
         return null;
+    }
+
+    buildLODChunkMesh(chunk) {
+        const geometry = new THREE.BufferGeometry();
+        const vertices = [];
+        const colors = [];
+        const indices = [];
+
+        const CHUNK_SIZE = 16;
+        const WORLD_HEIGHT = 256;
+        const STEP = 4;
+
+        for (let x = 0; x < CHUNK_SIZE; x += STEP) {
+            for (let z = 0; z < CHUNK_SIZE; z += STEP) {
+                let highestY = 0;
+                let blockId = BLOCKS.AIR;
+
+                for (let y = WORLD_HEIGHT - 1; y >= 1; y--) {
+                    const bid = chunk.getBlock(x, y, z);
+                    if (bid !== BLOCKS.AIR && bid !== BLOCKS.WATER) {
+                        highestY = y;
+                        blockId = bid;
+                        break;
+                    }
+                }
+
+                if (blockId === BLOCKS.AIR) continue;
+
+                const wx = chunk.x * CHUNK_SIZE + x;
+                const wy = highestY;
+                const wz = chunk.z * CHUNK_SIZE + z;
+
+                const color = new THREE.Color(BLOCK_COLORS[blockId]);
+                const brightness = Math.max(0.2, 0.7 + (wy / WORLD_HEIGHT) * 0.3);
+                color.multiplyScalar(brightness);
+
+                this.addBlockTopFace(vertices, colors, indices, wx, wy, wz, color, STEP);
+            }
+        }
+
+        if (vertices.length > 0) {
+            geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
+            if (indices.length > 0) {
+                geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
+            }
+
+            const material = new THREE.MeshPhongMaterial({
+                vertexColors: true,
+                flatShading: true,
+                side: THREE.FrontSide
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.receiveShadow = false;
+            mesh.frustumCulled = true;
+            return mesh;
+        }
+
+        return null;
+    }
+
+    addBlockTopFace(vertices, colors, indices, x, y, z, color, size) {
+        const r = Math.floor(color.r * 255);
+        const g = Math.floor(color.g * 255);
+        const b = Math.floor(color.b * 255);
+
+        const startIndex = vertices.length / 3;
+        const verts = [[0, size, 0], [size, size, 0], [size, size, size], [0, size, size]];
+
+        for (const [vx, vy, vz] of verts) {
+            vertices.push(x + vx, y + vy, z + vz);
+            colors.push(r, g, b);
+        }
+
+        indices.push(startIndex, startIndex + 1, startIndex + 2);
+        indices.push(startIndex, startIndex + 2, startIndex + 3);
     }
 
     addBlockFaces(vertices, colors, indices, x, y, z, blockId, color, chunk) {
@@ -380,8 +467,13 @@ class MinecraftGame {
         this.directionalLight.position.set(200, sunY, 200);
         this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
 
-        const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        let skyColor = new THREE.Color();
+        if (sunIntensity > 0.4) {
+            skyColor.setHSL(0.6, 0.7, 0.5 + sunIntensity * 0.3);
+        } else {
+            const nightIntensity = 1 - Math.max(0.3, sunIntensity * 2);
+            skyColor.setHSL(0.65, 0.3, 0.1 * nightIntensity);
+        }
         this.scene.background = skyColor;
     }
 }
