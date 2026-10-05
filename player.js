@@ -88,6 +88,13 @@ export class Player {
         if (this.keys['a']) moveX -= speed;
         if (this.keys['d']) moveX += speed;
 
+        if (moveX !== 0 || moveZ !== 0) {
+            const len = Math.sqrt(moveX * moveX + moveZ * moveZ);
+            const normalizedSpeed = speed / len;
+            moveX *= normalizedSpeed;
+            moveZ *= normalizedSpeed;
+        }
+
         const cosY = Math.cos(this.rotation.y);
         const sinY = Math.sin(this.rotation.y);
 
