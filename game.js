@@ -225,14 +225,13 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const cacheKey = `${blockId}_${wy}`;
+                    const cacheKey = blockId;
                     let color = colorCache.get(cacheKey);
                     if (!color) {
                         color = new THREE.Color(BLOCK_COLORS[blockId]);
-                        const baseLight = 0.7;
-                        const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                        const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                        const brightness = baseLight + heightLight + varLight;
+                        const baseLight = 0.65;
+                        const heightLight = Math.min((wy / WORLD_HEIGHT) * 0.4, 0.4);
+                        const brightness = baseLight + heightLight;
                         color.multiplyScalar(brightness);
                         colorCache.set(cacheKey, color);
                     }
@@ -245,16 +244,13 @@ class MinecraftGame {
         if (vertices.length > 0) {
             geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
-            if (indices.length > 0) {
-                geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
-            }
+            geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
 
-            const material = new THREE.MeshPhongMaterial({
+            const material = new THREE.MeshLambertMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 0
+                flatShading: true
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
