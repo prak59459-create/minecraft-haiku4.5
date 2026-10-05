@@ -126,20 +126,21 @@ function generateTree(chunk, x, z, height) {
     if (treeChance < 0.5) return;
 
     const trunkHeight = 4 + Math.floor(Math.random() * 4);
-    const y = height;
+    const maxY = Math.min(height + trunkHeight, WORLD_HEIGHT - 1);
 
-    for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
-        if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
-            if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
-                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
-            }
-        }
+    // Generate trunk
+    for (let y = height; y < maxY; y++) {
+        chunk.setBlock(x, y, z, BLOCKS.OAK_LOG);
     }
 
-    const foliageStart = y + trunkHeight - 3;
+    const foliageStart = Math.max(height, height + trunkHeight - 3);
     const foliageRadius = 2 + Math.floor(Math.random() * 2);
 
+    // Generate foliage with improved boundary handling
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
+        const fy = foliageStart + dy;
+        if (fy >= WORLD_HEIGHT) break;
+
         const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
         for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
             for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
@@ -147,9 +148,8 @@ function generateTree(chunk, x, z, height) {
                 const dz = Math.round(Math.sin(angle) * dist);
                 const fx = x + dx;
                 const fz = z + dz;
-                const fy = foliageStart + dy;
 
-                if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
+                if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE) {
                     if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
                         chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
                     }
