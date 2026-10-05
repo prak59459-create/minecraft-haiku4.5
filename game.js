@@ -20,7 +20,7 @@ class MinecraftGame {
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-        this.world = new World();
+        this.world = new World(12);
         this.player = new Player(this.world);
         this.gameCamera = new Camera();
         this.ui = new UI();
@@ -35,6 +35,8 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.frameCounter = 0;
+        this.targetFPS = 60;
 
         this.lastRaycastResult = null;
         this.lastRaycastPlayerPos = null;
@@ -68,6 +70,19 @@ class MinecraftGame {
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
+
+        this.createSkyDome();
+    }
+
+    createSkyDome() {
+        const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
+        const skyMaterial = new THREE.MeshBasicMaterial({
+            side: THREE.BackSide,
+            fog: false
+        });
+        this.skyDome = new THREE.Mesh(skyGeometry, skyMaterial);
+        this.skyDome.position.y = 100;
+        this.scene.add(this.skyDome);
     }
 
     setupEventListeners() {
@@ -426,9 +441,8 @@ class MinecraftGame {
         this.directionalLight.position.set(250, sunY, 250);
         this.directionalLight.intensity = 0.4 + sunIntensity * 0.35;
 
-        const ambientLight = this.scene.children.find(c => c instanceof THREE.AmbientLight);
-        if (ambientLight) {
-            ambientLight.intensity = 0.45 + sunIntensity * 0.25;
+        if (this.ambientLight) {
+            this.ambientLight.intensity = 0.45 + sunIntensity * 0.25;
         }
 
         const skyBrightness = Math.max(0.2, sunIntensity);
@@ -445,6 +459,10 @@ class MinecraftGame {
         }
 
         this.scene.background = skyColor;
+        if (this.skyDome) {
+            this.skyDome.material.color.copy(skyColor);
+            this.skyDome.position.copy(this.camera.position);
+        }
     }
 }
 
