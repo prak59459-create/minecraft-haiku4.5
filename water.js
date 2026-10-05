@@ -6,6 +6,13 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.waterMaterial = new THREE.MeshPhongMaterial({
+            color: 0x4A90E2,
+            transparent: true,
+            opacity: 0.6,
+            side: THREE.FrontSide,
+            shininess: 100
+        });
     }
 
     buildWaterMesh(chunk) {

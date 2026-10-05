@@ -77,6 +77,8 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 | **C** | Pick Block (Pick the block you're looking at) |
 | **H** | Toggle Help |
 | **F3** | Toggle Debug Info |
+| **Ctrl+S** | Save Game |
+| **/** | Open Command Input |
 
 ## Getting Started
 

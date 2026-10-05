@@ -50,6 +50,8 @@ export const BLOCK_COLORS = {
     12: 0xB8860B,
     13: 0xFFD700,
     14: 0x00CED1
+    13: 0xFFD700,
+    14: 0x00CED1
 };
 
 export const SOLID_BLOCKS = new Set([

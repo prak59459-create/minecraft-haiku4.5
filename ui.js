@@ -2,10 +2,12 @@ import { BLOCK_NAMES } from './blocks.js';
 
 export class UI {
     constructor() {
-        this.selectedBlock = 1;
+        this.selectedBlock = 0;
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.frameCount = 0;
+        this.fpsUpdateInterval = 10;
         this.setupInventoryUI();
     }
 
@@ -60,8 +62,12 @@ export class UI {
         const delta = now - this.lastTime;
         this.lastTime = now;
 
-        if (delta > 0) {
-            this.fpsCounter = Math.round(1000 / delta);
+        this.frameCount++;
+        if (this.frameCount >= this.fpsUpdateInterval) {
+            if (delta > 0) {
+                this.fpsCounter = Math.round(1000 / (delta / this.frameCount));
+            }
+            this.frameCount = 0;
         }
 
         return this.fpsCounter;

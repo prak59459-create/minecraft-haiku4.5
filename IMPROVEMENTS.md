@@ -1,5 +1,121 @@
 # Minecraft Clone - Improvements and Optimizations
 
+## Latest Updates (Session 3)
+
+### Major Features Added
+
+#### 1. Save/Load System
+- IndexedDB-based persistent save system
+- Chunk data persistence
+- Player position and rotation tracking
+- Auto-save support (Ctrl+S)
+- Clear save data functionality
+
+#### 2. Command System
+- In-game command execution
+- Built-in commands: `/teleport`, `/clear`, `/gamemode`, `/help`, `/fps`, `/chunks`
+- Extensible command registration
+- Command error handling and feedback
+
+#### 3. Advanced Inventory System
+- Item stacking support (configurable max stack)
+- Item counting and management
+- Inventory persistence
+- InventoryUI with visual feedback
+- Metrics for inventory analysis
+
+#### 4. World Editor (Creative Mode)
+- Terrain manipulation tools
+- Fill area functionality with configurable brush size
+- Flatten terrain tool
+- Raise and lower terrain adjustments
+- Full undo/redo history (100 step limit)
+- Tool preview and area selection
+
+#### 5. Lighting System
+- Sky and block light tracking
+- Light propagation algorithm
+- Light emitter support
+- Configurable light intensity
+- Performance-optimized light calculation
+
+#### 6. Performance Monitoring
+- Frame time metrics
+- Chunk build time tracking
+- Mesh update timing
+- Raycasting performance analysis
+- Uptime tracking and reporting
+
+#### 7. Utility Systems
+- Vector3 math library with full operations
+- MathUtils for common calculations
+- Timer system for scheduled events
+- 3D line-box intersection detection
+- Smooth interpolation functions (lerp, smoothstep)
+
+#### 8. Network Foundation
+- WebSocket-based NetworkManager
+- Multiplayer message protocol
+- Automatic reconnection with exponential backoff
+- Event-based message handling
+- Player position synchronization hooks
+
+#### 9. Enhanced Biome System
+- Biome generator with temperature/humidity
+- Multiple biome types (grass, sand, forest, jungle, snow)
+- Biome-specific terrain height modulation
+- Biome-appropriate vegetation
+
+### Performance Optimizations
+
+1. **Chunk Mesh Caching**
+   - Eliminated unnecessary mesh rebuilds
+   - Efficient chunk cache validation
+   - Reduced draw calls per frame
+
+2. **Particle System Pooling**
+   - Object pooling for particles
+   - Configurable particle limits
+   - Reduced memory allocations
+
+3. **Audio Optimization**
+   - Sound cooldown system to prevent spam
+   - Per-sound-type timing controls
+   - Efficient oscillator scheduling
+
+4. **Color Caching**
+   - Cache block color calculations
+   - Reduce redundant Three.js Color operations
+   - Improved mesh generation speed
+
+5. **FPS Counter**
+   - Batch FPS calculations
+   - Reduce measurement overhead
+   - Configurable update frequency
+
+6. **Block Outline Optimization**
+   - Cache last selected block
+   - Skip redundant mesh updates
+   - Efficient outline management
+
+### Bug Fixes
+
+1. **Crouch Mechanics**
+   - Fixed crouch toggle bug
+   - Proper state management
+   - Correct speed application
+
+2. **Config System Integration**
+   - Config now properly loaded in game
+   - Raycast distance from config
+   - Render distance from config
+   - Consistent settings throughout
+
+3. **Water Renderer**
+   - Material reuse optimization
+   - Proper transparency handling
+   - Efficient face culling
+
 ## Latest Updates (Session 2)
 
 ### Core Improvements

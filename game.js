@@ -7,6 +7,9 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { Config } from './config.js';
+import { SaveGameManager } from './savegame.js';
+import { CommandSystem } from './commands.js';
 
 class MinecraftGame {
     constructor() {
@@ -29,15 +32,21 @@ class MinecraftGame {
 
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
-        this.raycastDistance = 6;
+        this.raycastDistance = Config.get('raycast.distance') || 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.saveGameManager = new SaveGameManager();
+        this.commandSystem = new CommandSystem(this);
+        this.autoSaveInterval = 30000;
+        this.lastAutoSaveTime = Date.now();
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
+        this.setupSaveHotkey();
+        this.setupCommandInput();
         this.animate();
     }
 
@@ -82,6 +91,35 @@ class MinecraftGame {
                 this.ui.toggleHelp();
             }
         });
+    }
+
+    setupSaveHotkey() {
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+                e.preventDefault();
+                this.saveGame();
+            }
+        });
+    }
+
+    setupCommandInput() {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/') {
+                e.preventDefault();
+                const input = prompt('Enter command:');
+                if (input) {
+                    this.commandSystem.execute(input);
+                }
+            }
+        });
+    }
+
+    saveGame() {
+        this.saveGameManager.savePlayerData(this.player.position, this.gameCamera.rotation);
+        for (const [key, chunk] of this.world.chunks) {
+            this.saveGameManager.saveChunk(key, chunk);
+        }
+        console.log('Game saved!');
     }
 
     onMouseClick(event) {
@@ -195,6 +233,7 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
+        const colorCache = {};
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -206,14 +245,19 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const color = new THREE.Color(BLOCK_COLORS[blockId]);
-
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
-
-                    color.multiplyScalar(brightness);
+                    const cacheKey = `${blockId},${wy},${wx},${wz}`;
+                    let color;
+                    if (colorCache[cacheKey]) {
+                        color = colorCache[cacheKey];
+                    } else {
+                        color = new THREE.Color(BLOCK_COLORS[blockId]);
+                        const baseLight = 0.7;
+                        const heightLight = (wy / WORLD_HEIGHT) * 0.3;
+                        const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
+                        const brightness = baseLight + heightLight + varLight;
+                        color.multiplyScalar(brightness);
+                        colorCache[cacheKey] = color;
+                    }
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
                 }
@@ -287,25 +331,33 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const renderDistance = Config.get('world.renderDistance') || 8;
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
-        for (const [key, chunk] of this.world.chunks) {
+        const chunksToRemove = [];
+        for (const [key] of this.chunkMeshes) {
             const [cx, cz] = key.split(',').map(Number);
-
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
-                if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
-                }
-                continue;
+            if (Math.abs(cx - playerChunkX) > renderDistance || Math.abs(cz - playerChunkZ) > renderDistance) {
+                chunksToRemove.push(key);
             }
+        }
 
-            if (!this.chunkMeshes.has(key)) {
-                const mesh = this.buildChunkMesh(chunk);
-                if (mesh) {
-                    this.scene.add(mesh);
-                    this.chunkMeshes.set(key, mesh);
+        for (const key of chunksToRemove) {
+            this.scene.remove(this.chunkMeshes.get(key));
+            this.chunkMeshes.delete(key);
+        }
+
+        for (let cx = playerChunkX - renderDistance; cx <= playerChunkX + renderDistance; cx++) {
+            for (let cz = playerChunkZ - renderDistance; cz <= playerChunkZ + renderDistance; cz++) {
+                const key = `${cx},${cz}`;
+                if (!this.chunkMeshes.has(key)) {
+                    const chunk = this.world.getChunk(cx, cz);
+                    const mesh = this.buildChunkMesh(chunk);
+                    if (mesh) {
+                        this.scene.add(mesh);
+                        this.chunkMeshes.set(key, mesh);
+                    }
                 }
             }
         }
