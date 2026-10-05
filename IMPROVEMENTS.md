@@ -1,6 +1,40 @@
 # Minecraft Clone - Improvements and Optimizations
 
-## Latest Updates (Session 2)
+## Latest Updates (Session 3)
+
+### Performance Optimizations
+- **Raycast Optimization**: Eliminated redundant position calculations in raycast function
+- **Particle System**: Added particle limit (2000) and improved memory management
+- **Water Renderer**: Reduced color allocations using direct RGB value caching
+- **Chunk Mesh Building**: Optimized lighting calculations with pre-computed scales
+- **Memory Management**: Proper resource disposal for distant chunks (geometry.dispose())
+- **Collision Detection**: Refined velocity handling and ground detection tolerance
+
+### Terrain & World Generation
+- **Multi-Biome System**: Added forest, desert, and grass biomes with humidity-based distribution
+- **Enhanced Terrain Height**: Improved Perlin noise scales for more varied mountains and valleys
+- **Cave Generation**: Added procedural underground caverns using 3D noise
+- **Ore Distribution**: Depth-based frequency bonuses for realistic progression (deeper = more rare ores)
+- **Tree Generation**: Improved tree variety, more trees in forests, better foliage shapes
+
+### Visual & Lighting Improvements
+- **Day/Night Cycle**: More realistic lighting transitions with better sky color gradients
+- **Shadow Mapping**: Improved shadow camera bounds for better quality
+- **Block Outline**: Added pulsing animation effect for better visual feedback
+- **Crosshair**: Enhanced with glow effects and better visual presence
+- **Ambient Lighting**: Dynamic ambient light that responds to day/night cycle
+
+### Gameplay Improvements
+- **Crouch System**: Fixed to use Ctrl toggle instead of Shift combo for better control scheme
+- **Sprint System**: Improved speed handling with separate crouch/sprint mechanics
+- **Block Outline**: Caching to avoid unnecessary recreations
+- **Help Text**: Updated to reflect correct control mappings
+
+### Audio Enhancements
+- **Sound Variety**: Added frequency variation to block break/place sounds
+- **Audio Quality**: Improved gain control and frequency modulation
+
+## Previous Updates (Session 2)
 
 ### Core Improvements
 

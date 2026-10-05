@@ -26,7 +26,8 @@ export class Player {
 
     setupKeyboardControls() {
         document.addEventListener('keydown', (e) => {
-            this.keys[e.key.toLowerCase()] = true;
+            const key = e.key.toLowerCase();
+            this.keys[key] = true;
 
             if (e.key === ' ') {
                 e.preventDefault();
@@ -35,6 +36,10 @@ export class Player {
                     this.isOnGround = false;
                     if (this.onJump) this.onJump();
                 }
+            }
+
+            if (key === 'control') {
+                this.isCrouching = !this.isCrouching;
             }
         });
 
@@ -53,7 +58,17 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        let speed = PLAYER_SPEED;
+
+        if (this.isCrouching) {
+            speed = PLAYER_CROUCH_SPEED;
+        } else if (this.keys['shift'] && isMoving) {
+            speed = PLAYER_SPRINT_SPEED;
+            this.isSprinting = true;
+        } else {
+            this.isSprinting = false;
+        }
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -65,9 +80,6 @@ export class Player {
 
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
-
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
     }
 
     applyPhysics() {
@@ -83,7 +95,6 @@ export class Player {
     checkCollisions() {
         const radius = PLAYER_WIDTH / 2;
         const height = PLAYER_HEIGHT;
-
         this.isOnGround = false;
 
         const checkPoints = [
@@ -116,7 +127,7 @@ export class Player {
             let onGround = false;
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.8;
-                const cy = this.position.y - 0.01;
+                const cy = this.position.y - 0.1;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.8;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
@@ -127,14 +138,14 @@ export class Player {
 
             if (onGround) {
                 this.isOnGround = true;
-                this.velocity.y = 0;
+                this.velocity.y = Math.max(this.velocity.y, 0);
             }
         }
 
         if (this.velocity.y > 0) {
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.9;
-                const cy = this.position.y + height + 0.01;
+                const cy = this.position.y + height + 0.1;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.9;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
