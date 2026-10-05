@@ -132,16 +132,19 @@ class MinecraftGame {
         if (hit.block === BLOCKS.AIR) return;
 
         if (event.button === 0) {
-            this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
-            this.updateChunkMesh(hit.x, hit.y, hit.z);
+            const blockType = hit.block;
+            if (blockType !== BLOCKS.BEDROCK) {
+                this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
+                this.updateChunkMesh(hit.x, hit.y, hit.z);
 
-            const color = BLOCK_COLORS[hit.block] || 0x808080;
-            this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
+                const color = BLOCK_COLORS[blockType] || 0x808080;
+                this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
 
-            const now = Date.now();
-            if (now - this.lastBreakSound > 50) {
-                this.audioManager.playBlockSound('break');
-                this.lastBreakSound = now;
+                const now = Date.now();
+                if (now - this.lastBreakSound > 50) {
+                    this.audioManager.playBlockSound('break');
+                    this.lastBreakSound = now;
+                }
             }
         } else if (event.button === 2) {
             const norm = hit.normal;
@@ -149,7 +152,7 @@ class MinecraftGame {
             const ny = hit.y + norm.y;
             const nz = hit.z + norm.z;
 
-            if (!this.isPlayerOccupying(nx, ny, nz)) {
+            if (!this.isPlayerOccupying(nx, ny, nz) && this.selectedBlockType !== BLOCKS.AIR) {
                 this.world.setBlock(nx, ny, nz, this.selectedBlockType);
                 this.updateChunkMesh(nx, ny, nz);
                 this.audioManager.playBlockSound('place');
@@ -428,6 +431,7 @@ class MinecraftGame {
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
+        const blockName = BLOCK_NAMES[this.selectedBlockType] || 'Air';
         this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
 
         if (this.showDebug) {
@@ -436,6 +440,7 @@ class MinecraftGame {
 
         this.renderer.render(this.scene, this.camera);
     }
+}
 
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
