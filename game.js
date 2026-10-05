@@ -281,6 +281,8 @@ class MinecraftGame {
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
+            const startColorIndex = colors.length;
+
             for (const [vx, vy, vz] of face.verts) {
                 vertices.push(x + vx, y + vy, z + vz);
                 colors.push(r, g, b);
