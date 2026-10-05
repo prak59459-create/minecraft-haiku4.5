@@ -1,4 +1,4 @@
-import { BLOCKS, isBlockSolid } from './blocks.js';
+import { BLOCKS, isBlockSolid, TRANSPARENT_BLOCKS } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
