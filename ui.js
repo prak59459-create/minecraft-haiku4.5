@@ -10,7 +10,7 @@ export class UI {
     }
 
     setupInventoryUI() {
-        const slots = document.querySelectorAll('.inventory-slot');
+        const slots = document.querySelectorAll('.hotbar-slot');
         slots.forEach((slot, index) => {
             const blockId = parseInt(slot.dataset.block);
             slot.addEventListener('click', () => {
@@ -38,7 +38,7 @@ export class UI {
     selectBlock(index) {
         if (index < 0 || index > 8) return;
 
-        const slots = document.querySelectorAll('.inventory-slot');
+        const slots = document.querySelectorAll('.hotbar-slot');
         slots.forEach(slot => slot.classList.remove('selected'));
         slots[index].classList.add('selected');
 

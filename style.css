@@ -55,15 +55,65 @@ body {
     margin-bottom: 5px;
 }
 
-#inventory {
+#hotbar {
     position: absolute;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 5px;
+    gap: 4px;
     pointer-events: auto;
     z-index: 10;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.hotbar-slot {
+    width: 50px;
+    height: 50px;
+    background: rgba(30, 30, 30, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+    gap: 3px;
+}
+
+.hotbar-slot .slot-number {
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: bold;
+    font-size: 10px;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+}
+
+.hotbar-slot .slot-block {
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(0, 0, 0, 0.5);
+    border-radius: 2px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.hotbar-slot:hover {
+    background: rgba(60, 60, 60, 0.9);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: translateY(-3px);
+}
+
+.hotbar-slot.selected {
+    background: rgba(255, 200, 50, 0.4);
+    border: 2px solid rgba(255, 200, 50, 1);
+    box-shadow: 0 0 15px rgba(255, 200, 50, 0.6), inset 0 0 8px rgba(255, 200, 50, 0.3);
+    transform: scale(1.05);
 }
 
 .inventory-slot {
@@ -139,6 +189,21 @@ body {
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;
+    }
+
+    #hotbar {
+        gap: 3px;
+        padding: 6px;
+    }
+
+    .hotbar-slot {
+        width: 40px;
+        height: 40px;
+    }
+
+    .hotbar-slot .slot-block {
+        width: 22px;
+        height: 22px;
     }
 
     .inventory-slot {
