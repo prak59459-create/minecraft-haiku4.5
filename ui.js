@@ -6,6 +6,7 @@ export class UI {
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.frameCount = 0;
         this.setupInventoryUI();
     }
 
@@ -61,7 +62,13 @@ export class UI {
         this.lastTime = now;
 
         if (delta > 0) {
-            this.fpsCounter = Math.round(1000 / delta);
+            const fps = Math.round(1000 / delta);
+            this.frameCount += fps;
+
+            // Smooth FPS over multiple frames
+            if (this.frameCount > 0) {
+                this.fpsCounter = Math.max(0, Math.min(999, Math.round(fps)));
+            }
         }
 
         return this.fpsCounter;
