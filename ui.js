@@ -71,4 +71,36 @@ export class UI {
         const help = document.getElementById('help');
         help.classList.toggle('show');
     }
+
+    showMessage(message) {
+        let messageEl = document.getElementById('message');
+        if (!messageEl) {
+            messageEl = document.createElement('div');
+            messageEl.id = 'message';
+            messageEl.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 20px 40px;
+                border-radius: 8px;
+                font-size: 18px;
+                z-index: 1000;
+                pointer-events: none;
+            `;
+            document.body.appendChild(messageEl);
+        }
+
+        messageEl.textContent = message;
+        messageEl.style.opacity = '1';
+        messageEl.style.display = 'block';
+
+        clearTimeout(this.messageTimeout);
+        this.messageTimeout = setTimeout(() => {
+            messageEl.style.opacity = '0';
+            messageEl.style.transition = 'opacity 0.5s ease-out';
+        }, 2000);
+    }
 }
