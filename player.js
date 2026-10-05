@@ -1,17 +1,19 @@
 import { BLOCKS, isBlockSolid } from './blocks.js';
 
-const PLAYER_HEIGHT = 1.8;
-const PLAYER_WIDTH = 0.6;
-const PLAYER_SPEED = 0.1;
-const PLAYER_SPRINT_SPEED = 0.15;
-const PLAYER_CROUCH_SPEED = 0.05;
-const GRAVITY = 0.02;
-const JUMP_POWER = 0.5;
-
 export class Player {
-    constructor(world) {
+    constructor(world, config = {}) {
         this.world = world;
-        this.position = { x: 0, y: 100, z: 0 };
+        this.config = config;
+
+        this.PLAYER_HEIGHT = config.height || 1.8;
+        this.PLAYER_WIDTH = config.width || 0.6;
+        this.PLAYER_SPEED = config.speed || 0.1;
+        this.PLAYER_SPRINT_SPEED = config.sprintSpeed || 0.15;
+        this.PLAYER_CROUCH_SPEED = config.crouchSpeed || 0.05;
+        this.GRAVITY = config.gravity || 0.02;
+        this.JUMP_POWER = config.jumpPower || 0.5;
+
+        this.position = this.findSpawnPosition();
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
 
@@ -24,6 +26,16 @@ export class Player {
         this.setupKeyboardControls();
     }
 
+    findSpawnPosition() {
+        for (let y = 200; y > 50; y--) {
+            const blockAtY = this.world.getBlock(0, y, 0);
+            if (isBlockSolid(blockAtY)) {
+                return { x: 0.5, y: y + 2, z: 0.5 };
+            }
+        }
+        return { x: 0, y: 100, z: 0 };
+    }
+
     setupKeyboardControls() {
         document.addEventListener('keydown', (e) => {
             this.keys[e.key.toLowerCase()] = true;
@@ -31,7 +43,7 @@ export class Player {
             if (e.key === ' ') {
                 e.preventDefault();
                 if (this.isOnGround) {
-                    this.velocity.y = JUMP_POWER;
+                    this.velocity.y = this.JUMP_POWER;
                     this.isOnGround = false;
                     if (this.onJump) this.onJump();
                 }
@@ -53,7 +65,7 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const speed = this.keys['shift'] ? (this.isCrouching ? this.PLAYER_CROUCH_SPEED : this.PLAYER_SPRINT_SPEED) : this.PLAYER_SPEED;
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -72,7 +84,7 @@ export class Player {
 
     applyPhysics() {
         if (!this.isOnGround) {
-            this.velocity.y -= GRAVITY;
+            this.velocity.y -= this.GRAVITY;
         }
 
         this.position.x += this.velocity.x;
@@ -81,34 +93,40 @@ export class Player {
     }
 
     checkCollisions() {
-        const radius = PLAYER_WIDTH / 2;
-        const height = PLAYER_HEIGHT;
+        const radius = this.PLAYER_WIDTH / 2;
+        const height = this.PLAYER_HEIGHT;
 
         this.isOnGround = false;
 
         const checkPoints = [
-            { dy: 0.1, radius: radius * 0.9 },
+            { dy: 0.1, radius: radius * 0.85 },
             { dy: height * 0.3, radius: radius * 0.9 },
-            { dy: height * 0.6, radius: radius * 0.9 },
-            { dy: height * 0.9, radius: radius * 0.7 }
+            { dy: height * 0.5, radius: radius * 0.9 },
+            { dy: height * 0.8, radius: radius * 0.75 }
         ];
 
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            let collided = false;
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
                 const cz = this.position.z + Math.sin(angle) * point.radius;
 
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
                 if (isBlockSolid(block)) {
-                    const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
-                    if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
-                        this.position.x -= this.velocity.x * scale;
-                        this.position.z -= this.velocity.z * scale;
-                    }
+                    collided = true;
                     break;
                 }
+            }
+
+            if (collided) {
+                const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+                if (moveLen > 0.01) {
+                    const scale = 1.2 / moveLen;
+                    this.position.x -= this.velocity.x * scale;
+                    this.position.z -= this.velocity.z * scale;
+                }
+                break;
             }
         }
 
@@ -153,16 +171,16 @@ export class Player {
     getEyePosition() {
         return {
             x: this.position.x,
-            y: this.position.y + PLAYER_HEIGHT * 0.85,
+            y: this.position.y + this.PLAYER_HEIGHT * 0.85,
             z: this.position.z
         };
     }
 }
 
 export class Camera {
-    constructor() {
+    constructor(mouseSensitivity = 0.003) {
         this.rotation = { x: 0, y: 0 };
-        this.mouseSensitivity = 0.003;
+        this.mouseSensitivity = mouseSensitivity;
         this.setupMouseControls();
     }
 

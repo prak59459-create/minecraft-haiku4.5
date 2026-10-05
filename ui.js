@@ -28,9 +28,7 @@ export class UI {
         document.addEventListener('wheel', (e) => {
             e.preventDefault();
             const direction = e.deltaY > 0 ? 1 : -1;
-            let newIndex = this.selectedBlock + direction;
-            if (newIndex < 0) newIndex = 8;
-            if (newIndex > 8) newIndex = 0;
+            let newIndex = (this.selectedBlock + direction + 9) % 9;
             this.selectBlock(newIndex);
         }, { passive: false });
     }
@@ -39,8 +37,13 @@ export class UI {
         if (index < 0 || index > 8) return;
 
         const slots = document.querySelectorAll('.inventory-slot');
-        slots.forEach(slot => slot.classList.remove('selected'));
-        slots[index].classList.add('selected');
+        slots.forEach((slot, i) => {
+            if (i === index) {
+                slot.classList.add('selected');
+            } else {
+                slot.classList.remove('selected');
+            }
+        });
 
         this.selectedBlock = index;
     }

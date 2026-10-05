@@ -15,16 +15,17 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Pick Block** - Press C to pick the block you're looking at
 
 ### World & Terrain
-- **Procedural Generation** - Infinite world generation using Perlin noise
-- **Multiple Biomes** - Grass, sand, and varied terrain types
+- **Procedural Generation** - Infinite world generation using multi-octave Perlin noise
+- **Multiple Biomes** - Grass, sand, snow, and clay biomes with diverse terrain
 - **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
+- **Extended Block Types** (18 types):
   - Stone, Grass, Dirt, Cobblestone
   - Oak Log, Oak Leaves
   - Sand, Water, Gravel, Bedrock
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
-- **Ore Generation** - Procedural ore generation at various depths
-- **Tree Generation** - Natural tree placement in suitable terrain
+  - Obsidian, Ice, Snow, Clay
+- **Advanced Ore Generation** - Height-based procedural ore distribution
+- **Natural Tree Generation** - Variable height trees with realistic foliage
 
 ### Physics & Collision
 - **Gravity System** - Realistic falling and landing
@@ -54,10 +55,13 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Help Panel** - In-game control instructions (Press H)
 
 ### Performance Optimization
-- **Chunk-based Rendering** - Only visible chunks are rendered
+- **Chunk-based Rendering** - Only visible chunks are rendered with frustum culling
 - **Indexed Geometry** - Efficient mesh generation with indices
 - **Vertex Colors** - Per-vertex coloring for variations
-- **Memory Management** - Automatic chunk cleanup for distant areas
+- **Memory Management** - Automatic geometry disposal for distant chunks
+- **Optimized Raycasting** - Pre-computed trigonometric values for ray queries
+- **Particle Pooling** - Efficient particle system with 2000 particle limit
+- **Flat Shading** - Better visual performance with face-normal rendering
 
 ## Controls
 
@@ -115,14 +119,18 @@ http://localhost:8000
 ### Architecture
 
 ```
-game.js          - Main game loop and rendering
+game.js          - Main game loop and rendering engine
 world.js         - Terrain generation and chunk management
-player.js        - Player physics and controls
-blocks.js        - Block definitions and properties
-ui.js            - User interface management
-particles.js     - Particle effects system
+player.js        - Player physics, controls, and camera
+blocks.js        - Block definitions, colors, and properties
+ui.js            - User interface and inventory management
+particles.js     - Particle effects system with lifecycle management
 water.js         - Water rendering system
-audio.js         - Sound effects generation
+audio.js         - Procedural sound effects generation
+debug.js         - Debug information display and statistics
+blockoutline.js  - Block selection outline visualization
+config.js        - Configuration system and settings management
+config.json      - Game configuration file (editable)
 ```
 
 ### Technologies Used
@@ -152,8 +160,10 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 
 ### Biomes
 
-- **Grass Biome** - Natural terrain with trees and water
-- **Sand Biome** - Desert-like areas with sand blocks
+- **Grass Biome** - Natural terrain with oak trees and varied vegetation
+- **Sand Biome** - Desert-like areas with sand blocks and sparse trees
+- **Snow Biome** - Cold regions with snow-covered terrain
+- **Clay Biome** - Wet areas with clay blocks near water sources
 
 ### Ore Distribution
 
@@ -182,12 +192,41 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 - [ ] Mob system
 - [ ] Crafting system
 
+## Configuration
+
+Edit `config.json` to customize the game:
+
+```json
+{
+  "world": {
+    "renderDistance": 8,        // Number of chunks to render around player
+    "waterLevel": 62,           // Sea level height
+    "bedrockLevel": 0           // Bottom bedrock layer
+  },
+  "player": {
+    "speed": 0.1,               // Walking speed
+    "sprintSpeed": 0.15,        // Sprint multiplier speed
+    "jumpPower": 0.5,           // Jump velocity
+    "mouseSensitivity": 0.003   // Look around sensitivity
+  },
+  "raycast": {
+    "distance": 6,              // Block interaction range
+    "stepSize": 0.05            // Raycast precision
+  },
+  "graphics": {
+    "particleLimit": 2000,      // Maximum particles
+    "fpsTarget": 60             // Target framerate
+  }
+}
+```
+
 ## Performance Tips
 
-1. **Reduce Render Distance** - Modify `renderDistance` in game.js for better FPS
-2. **Lower Chunk Size** - Reduce `CHUNK_SIZE` for faster loading
-3. **Disable Shadows** - Comment out shadow mapping for faster rendering
+1. **Reduce Render Distance** - Lower `world.renderDistance` in config.json for better FPS
+2. **Adjust Particle Limit** - Reduce `graphics.particleLimit` if experiencing lag
+3. **Lower Texture Quality** - Modify material settings in game.js
 4. **Use Fullscreen** - Better GPU acceleration in fullscreen mode
+5. **Close Other Tabs** - Free up system resources for the game
 
 ## Troubleshooting
 

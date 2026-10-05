@@ -2,21 +2,27 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.lastPos = null;
         this.createOutlineMaterial();
     }
 
     createOutlineMaterial() {
         this.material = new THREE.LineBasicMaterial({
             color: 0xFFFFFF,
-            linewidth: 2,
+            linewidth: 2.5,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9,
+            fog: false
         });
     }
 
     setSelectedBlock(x, y, z) {
+        const key = `${x},${y},${z}`;
+        if (this.lastPos === key && this.outline) return;
+
         if (this.outline) {
             this.scene.remove(this.outline);
+            this.outline.geometry.dispose();
         }
 
         const geometry = new THREE.BufferGeometry();
@@ -43,12 +49,15 @@ export class BlockOutline {
 
         this.outline = new THREE.LineSegments(geometry, this.material);
         this.scene.add(this.outline);
+        this.lastPos = key;
     }
 
     clear() {
         if (this.outline) {
             this.scene.remove(this.outline);
+            this.outline.geometry.dispose();
             this.outline = null;
+            this.lastPos = null;
         }
     }
 
