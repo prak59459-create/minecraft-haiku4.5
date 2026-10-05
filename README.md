@@ -15,15 +15,16 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Pick Block** - Press C to pick the block you're looking at
 
 ### World & Terrain
-- **Procedural Generation** - Infinite world generation using Perlin noise
-- **Multiple Biomes** - Grass, sand, and varied terrain types
+- **Procedural Generation** - Infinite world generation using multi-octave Perlin noise
+- **Multiple Biomes** - Grass, sand, gravel, and varied terrain types
+- **Procedural Caves** - 3D cave systems with realistic distribution
 - **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
+- **Enhanced Block Types**:
   - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
+  - Oak Log, Oak Leaves, Oak Planks
+  - Sand, Water, Gravel, Bedrock, Obsidian
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
-- **Ore Generation** - Procedural ore generation at various depths
+- **Ore Generation** - Depth-based ore distribution for realistic mining
 - **Tree Generation** - Natural tree placement in suitable terrain
 
 ### Physics & Collision
@@ -33,19 +34,21 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Block Highlight** - Visual feedback for the block you're looking at
 
 ### Visual Features
-- **3D Voxel Rendering** - Full 3D block-based world
-- **Dynamic Lighting** - Sun and ambient lighting system
-- **Day/Night Cycle** - Real-time sky color transitions
-- **Particle Effects** - Block destruction particles
-- **Water Rendering** - Semi-transparent water with proper face culling
+- **3D Voxel Rendering** - Full 3D block-based world with optimized meshes
+- **Advanced Lighting** - Dynamic sun position with improved shadow mapping (4K shadows)
+- **Realistic Day/Night Cycle** - Smooth transitions through sunrise, daytime, sunset, and night with dynamic sky colors
+- **Enhanced Particle Effects** - Block destruction particles with physics simulation, rotation, and air resistance
+- **Improved Water Rendering** - Depth-based coloring, transparency, and realistic materials
+- **Atmospheric Fog** - Distance-based fog for better depth perception
 
 ### Audio
 - **Procedural Sound Effects**:
-  - Block break sounds
-  - Block place sounds
-  - Jump sounds (prepared)
-  - Step sounds (prepared)
-- **Web Audio API** - Dynamic audio generation
+  - Block break sounds with frequency modulation
+  - Block place sounds with pitch variation
+  - Jump sounds with ascending tone
+  - Step sounds with frequency variation
+- **Web Audio API** - Dynamic audio generation with filters
+- **Master Volume Control** - Configurable audio levels
 
 ### User Interface
 - **HUD Display** - Real-time coordinates, FPS, and block info
@@ -152,8 +155,9 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 
 ### Biomes
 
-- **Grass Biome** - Natural terrain with trees and water
-- **Sand Biome** - Desert-like areas with sand blocks
+- **Grass Biome** - Natural terrain with trees, vegetation, and water
+- **Sand Biome** - Desert-like areas with sand blocks and sparse vegetation
+- **Gravel Biome** - Rocky terrain with gravel and stone formations
 
 ### Ore Distribution
 
@@ -172,15 +176,19 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 
 ### Future Enhancements
 
-- [ ] Inventory UI with multiple stacks
+- [ ] Inventory UI with item stacking and persistence
+- [ ] World save/load functionality
 - [ ] Creative mode with unlimited blocks
-- [ ] Survival mode with health/hunger
-- [ ] Multiplayer support
+- [ ] Survival mode with health/hunger mechanics
+- [ ] Advanced structure generation (villages, dungeons)
 - [ ] Texture mapping for blocks
-- [ ] Advanced weather systems
-- [ ] More biome types
-- [ ] Mob system
+- [ ] Advanced weather systems (rain, snow, storms)
+- [ ] More biome types (mountains, tundra, jungle)
+- [ ] Mob system with AI
 - [ ] Crafting system
+- [ ] Multiplayer support
+- [ ] Improved particle effects
+- [ ] More detailed terrain generation
 
 ## Performance Tips
 
