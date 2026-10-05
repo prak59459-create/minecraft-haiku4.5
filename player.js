@@ -14,6 +14,7 @@ export class Player {
         this.position = { x: 0, y: 100, z: 0 };
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
+        this.spawnPosition = { x: 0, y: 100, z: 0 };
 
         this.isOnGround = false;
         this.canJump = false;
@@ -22,6 +23,17 @@ export class Player {
 
         this.keys = {};
         this.setupKeyboardControls();
+    }
+
+    setSpawnPosition(x, y, z) {
+        this.spawnPosition = { x, y, z };
+        this.position = { x, y, z };
+        this.velocity = { x: 0, y: 0, z: 0 };
+    }
+
+    respawn() {
+        this.position = { x: this.spawnPosition.x, y: this.spawnPosition.y, z: this.spawnPosition.z };
+        this.velocity = { x: 0, y: 0, z: 0 };
     }
 
     setupKeyboardControls() {
@@ -94,16 +106,20 @@ export class Player {
         ];
 
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
-                const cx = this.position.x + Math.cos(angle) * point.radius;
+            const points = 8;
+            for (let i = 0; i < points; i++) {
+                const angle = (i / points) * Math.PI * 2;
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+                const cx = this.position.x + cos * point.radius;
                 const cy = this.position.y + point.dy;
-                const cz = this.position.z + Math.sin(angle) * point.radius;
+                const cz = this.position.z + sin * point.radius;
 
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
                 if (isBlockSolid(block)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
-                    if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
+                    if (moveLen > 0.001) {
+                        const scale = Math.min(1.5 / moveLen, 1);
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
@@ -114,7 +130,9 @@ export class Player {
 
         if (this.velocity.y < 0) {
             let onGround = false;
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+            const points = 6;
+            for (let i = 0; i < points; i++) {
+                const angle = (i / points) * Math.PI * 2;
                 const cx = this.position.x + Math.cos(angle) * radius * 0.8;
                 const cy = this.position.y - 0.01;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.8;
@@ -132,7 +150,9 @@ export class Player {
         }
 
         if (this.velocity.y > 0) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+            const points = 6;
+            for (let i = 0; i < points; i++) {
+                const angle = (i / points) * Math.PI * 2;
                 const cx = this.position.x + Math.cos(angle) * radius * 0.9;
                 const cy = this.position.y + height + 0.01;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.9;
@@ -145,8 +165,7 @@ export class Player {
         }
 
         if (this.position.y < -10) {
-            this.position.y = 100;
-            this.velocity.y = 0;
+            this.respawn();
         }
     }
 
@@ -163,21 +182,27 @@ export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
+        this.pointerLocked = false;
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
-
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            if (document.pointerLockElement === document.body) {
+                this.rotation.y -= e.movementX * this.mouseSensitivity;
+                this.rotation.x -= e.movementY * this.mouseSensitivity;
+                this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            }
         });
 
         document.addEventListener('click', () => {
             if (document.pointerLockElement !== document.body) {
                 document.body.requestPointerLock();
             }
+        });
+
+        document.addEventListener('pointerlockchange', () => {
+            this.pointerLocked = document.pointerLockElement === document.body;
         });
     }
 

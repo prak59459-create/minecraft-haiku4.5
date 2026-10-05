@@ -7,8 +7,15 @@ export class AudioManager {
     }
 
     initAudioContext() {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.audioContext = audioContext;
+        try {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextClass) {
+                this.audioContext = new AudioContextClass();
+                this.initialized = true;
+            }
+        } catch (error) {
+            console.warn('Audio context initialization failed:', error);
+        }
     }
 
     playBlockSound(type = 'break') {

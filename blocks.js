@@ -46,7 +46,7 @@ export const BLOCK_COLORS = {
     8: 0x4A90E2,
     9: 0x999999,
     10: 0x1A1A1A,
-    11: 0x1A1A1A,
+    11: 0x3A3A1A,
     12: 0xB8860B,
     13: 0xFFD700,
     14: 0x00CED1
