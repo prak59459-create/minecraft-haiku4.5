@@ -1,5 +1,54 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Performance & Features Update (Session 3)
+
+### New Features
+- **World Save/Load System** - Save worlds with Ctrl+S, load with Ctrl+L
+- **Creative Mode** - Toggle with Ctrl+G for unlimited building
+- **Performance Monitoring** - Track FPS, memory, and system metrics
+- **Inventory System** - Full inventory with stacking support
+- **Visual Hotbar** - 9-slot UI hotbar with item counts
+- **Block Damage System** - Framework for break animations
+
+### Performance Enhancements
+- Particle system memory pooling (eliminates GC pauses)
+- Optimized raycasting with early termination
+- Distance-based chunk culling
+- Config-based render distance for tuning
+- Better mesh memory management
+
+### Optimizations
+- Removed hardcoded values throughout codebase
+- Integrated configuration system fully
+- Optimized collision detection
+- Improved particle geometry updates
+- Better block visibility culling
+
+### New Modules
+- `worldsave.js` - World persistence
+- `creativemode.js` - Creative gameplay
+- `performance.js` - Performance monitoring
+- `inventory.js` - Inventory management
+- `hotbar.js` - Visual hotbar UI
+- `blockhighlight.js` - Block damage visualization
+
+### Configuration Updates
+- `world.renderDistance` - Tunable chunk radius
+- `graphics.particleLimit` - Configurable particle limit
+- `player.collisionCheckPoints` - Collision accuracy tuning
+- `graphics.shadowMapSize` - Shadow quality options
+
+### Bug Fixes
+- Fixed particle count display in debug info
+- Better memory cleanup on chunk unload
+- Improved raycasting accuracy
+
+### Documentation
+- Updated README with new controls
+- Expanded IMPROVEMENTS.md with architecture details
+- Added performance tuning guide
+- Documented new features and systems
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features

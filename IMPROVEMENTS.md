@@ -1,5 +1,127 @@
 # Minecraft Clone - Improvements and Optimizations
 
+## Latest Updates (Session 3 - Performance & Advanced Features)
+
+### Major Performance Optimizations
+
+#### Particle System Refactoring
+- Implemented **object pooling** to eliminate garbage collection pressure
+- Pre-allocated fixed particle pool (configurable limit)
+- Free list tracking for efficient memory reuse
+- Optimized geometry updates with draw range culling
+- Result: Reduced frame time stuttering during particle effects
+
+#### Rendering Pipeline
+- Config-based **render distance** for flexible performance tuning
+- **Distance-based chunk culling** with Chebyshev distance metric
+- **Optimized raycasting**:
+  - Early termination on block hit
+  - Block position caching to skip duplicate checks
+  - Configurable step size for accuracy vs performance tradeoff
+- Better mesh cleanup and memory management
+
+#### Configuration System Integration
+- Removed all hardcoded values from code
+- Full integration of `Config` class throughout codebase
+- Per-player physics configuration:
+  - Movement speed (base, sprint, crouch)
+  - Gravity and jump power
+  - Mouse sensitivity
+  - Collision detection parameters
+- Graphics options:
+  - Render distance
+  - Particle limits
+  - Shadow map resolution
+  - Frustum culling enable/disable
+
+### New Gameplay Features
+
+#### World Save/Load System (`worldsave.js`)
+- **Persistent world storage** using browser localStorage
+- Automatic data compression with base64 encoding
+- Version tracking for future compatibility
+- Keyboard shortcuts: **Ctrl+S** to save, **Ctrl+L** to load
+- Perfect for creative projects and world preservation
+
+#### Creative Mode (`creativemode.js`)
+- **Toggle with Ctrl+G**
+- Free flight with no gravity
+- **Space** for upward movement, **Shift** for downward
+- Unlimited block placement
+- Ideal for builders and explorers
+
+#### Advanced UI Systems
+- **Message notification system** with auto-dismiss
+- Visual feedback for operations
+- Non-intrusive overlay design
+- Extensible for future notifications
+
+### New Utility Systems
+
+#### Performance Monitoring (`performance.js`)
+- Real-time FPS and frame time tracking
+- Memory usage monitoring
+- Historical metrics collection
+- Useful for identifying performance bottlenecks
+
+#### Inventory System (`inventory.js`)
+- Full inventory with configurable slots (default 36)
+- Stack size limits (default 64 per stack)
+- Automatic stack consolidation
+- Quick slot management for hotbar
+
+#### Visual Hotbar (`hotbar.js`)
+- 9-slot quick access bar at bottom of screen
+- Color-coded block display
+- Item count indicators
+- Click-to-select functionality
+- Smooth selection transitions
+
+#### Block Damage Visualization (`blockhighlight.js`)
+- Framework for progressive block breaking
+- Break stage textures
+- Damage tracking per block
+- Ready for implementation of break animation
+
+### Architecture Improvements
+
+**Modular Design**
+- Each system now in dedicated module
+- Clean separation of concerns
+- Extensible for future features
+
+**Code Quality**
+- Removed hardcoded magic numbers
+- Consistent configuration access
+- Better error handling
+- Improved code documentation
+
+### Debug Display Enhancement
+- Updated particle count to show actual active particles
+- Better tracking of performance metrics
+- Now displays pooled particle statistics
+
+### Configuration Enhancements
+
+New `config.json` parameters:
+```json
+{
+  "world": {
+    "renderDistance": 8,      // Chunk radius
+    "maxChunksLoaded": 400    // Memory limit
+  },
+  "player": {
+    "collisionCheckPoints": 4,
+    "collisionAngles": 8
+  },
+  "graphics": {
+    "enableLOD": true,
+    "lodDistance": 12,
+    "enableFrustumCulling": true
+  }
+}
+```
+
 ## Latest Updates (Session 2)
 
 ### Core Improvements
