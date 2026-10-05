@@ -1,30 +1,34 @@
 # Minecraft Clone - Haiku 4.5
 
-A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaScript. Experience procedural terrain generation, block destruction and placement, and an immersive 3D environment.
+A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaScript. Experience procedural terrain generation, block destruction and placement, and an immersive 3D environment with optimized performance and enhanced visuals.
 
 ## Features
 
 ### Core Gameplay
-- **WASD Movement** - Move through the world naturally
+- **WASD Movement** - Move through the world naturally with head bobbing
 - **Mouse Look** - Free camera control with mouse
 - **Space Jump** - Jump and gravity physics
-- **Shift Sprint/Crouch** - Sprint for speed or crouch for stealth
-- **Block Destruction** - Left-click to destroy blocks
+- **Shift Sprint/Crouch** - Sprint for speed (with FOV change) or crouch for stealth
+- **Block Destruction** - Left-click to destroy blocks with particle effects
 - **Block Placement** - Right-click to place blocks
 - **Block Selection** - Use 1-9 or scroll wheel to switch between blocks
 - **Pick Block** - Press C to pick the block you're looking at
+- **Head Bobbing** - Immersive first-person camera bob when moving
 
 ### World & Terrain
 - **Procedural Generation** - Infinite world generation using Perlin noise
 - **Multiple Biomes** - Grass, sand, and varied terrain types
 - **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
+- **Multiple Block Types** (19 total):
+  - Stone, Grass, Dirt, Cobblestone, Gravel, Bedrock
+  - Oak Log, Oak Leaves, Clay
+  - Sand, Water, Lava
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
-- **Ore Generation** - Procedural ore generation at various depths
-- **Tree Generation** - Natural tree placement in suitable terrain
+  - Granite, Diorite, Andesite (decorative stone variants)
+- **Ore Generation** - Procedural ore generation at various depths with lava at lowest levels
+- **Tree Generation** - Natural tree placement with varied shapes and sizes
+- **Cave Generation** - Procedural cave systems using 3D Perlin noise
+- **Lava Pools** - Natural lava generation in deep underground areas
 
 ### Physics & Collision
 - **Gravity System** - Realistic falling and landing
@@ -33,11 +37,15 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Block Highlight** - Visual feedback for the block you're looking at
 
 ### Visual Features
-- **3D Voxel Rendering** - Full 3D block-based world
-- **Dynamic Lighting** - Sun and ambient lighting system
-- **Day/Night Cycle** - Real-time sky color transitions
-- **Particle Effects** - Block destruction particles
-- **Water Rendering** - Semi-transparent water with proper face culling
+- **3D Voxel Rendering** - Full 3D block-based world with optimized mesh generation
+- **Dynamic Lighting** - Sun and ambient lighting system with shadow mapping
+- **Day/Night Cycle** - Realistic sky transitions (dawn, day, dusk, night)
+- **Face-Based Shading** - Directional brightness variation for depth perception
+- **Particle Effects** - Block destruction particles with improved physics
+- **Water Rendering** - Semi-transparent water with animated wave effects
+- **Lava Rendering** - Glowing lava with special transparency
+- **Sprint FOV Effect** - Camera field-of-view increases when sprinting
+- **Loading Screen** - Professional loading indicator with progress bar
 
 ### Audio
 - **Procedural Sound Effects**:
@@ -54,10 +62,16 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Help Panel** - In-game control instructions (Press H)
 
 ### Performance Optimization
-- **Chunk-based Rendering** - Only visible chunks are rendered
+- **Chunk-based Rendering** - Only visible chunks are rendered (12-chunk radius)
 - **Indexed Geometry** - Efficient mesh generation with indices
-- **Vertex Colors** - Per-vertex coloring for variations
+- **Vertex Colors** - Per-vertex coloring and face-based brightness
 - **Memory Management** - Automatic chunk cleanup for distant areas
+- **Flat Shading** - Efficient rendering with flat shading
+- **Color Caching** - Block color pre-computation for mesh generation
+- **Distributed Mesh Building** - Gradual chunk mesh construction (2 per frame)
+- **Frame Throttling** - Chunk updates every 6 frames
+- **Optimized Raycasting** - Efficient block selection with larger step size
+- **Particle Pooling** - Object pool system for particles to reduce GC
 
 ## Controls
 

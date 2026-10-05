@@ -459,13 +459,23 @@ class MinecraftGame {
         this.ambientLight.intensity = 0.35 + sunIntensity * 0.2;
 
         const skyColor = new THREE.Color();
-        const nightiness = Math.max(0, -Math.sin(time));
-        const dayness = Math.max(0, Math.sin(time));
+        const cyclePhase = Math.sin(time);
 
-        if (nightiness > 0.1) {
-            skyColor.setHSL(0.65, 0.3, 0.1 + nightiness * 0.15);
+        if (cyclePhase < -0.7) {
+            const nightProgress = (-cyclePhase - 0.7) / 0.3;
+            skyColor.setHSL(0.65, 0.15, 0.05 + nightProgress * 0.1);
+        } else if (cyclePhase < -0.3) {
+            const duskProgress = (-cyclePhase - 0.3) / 0.4;
+            skyColor.setHSL(0.05, 0.3 + duskProgress * 0.2, 0.15 + duskProgress * 0.2);
+        } else if (cyclePhase < 0.3) {
+            const dayProgress = cyclePhase / 0.3;
+            skyColor.setHSL(0.6, 0.4 - dayProgress * 0.1, 0.45 + dayProgress * 0.35);
+        } else if (cyclePhase < 0.7) {
+            const sunsetProgress = (cyclePhase - 0.3) / 0.4;
+            skyColor.setHSL(0.05, 0.4 - sunsetProgress * 0.15, 0.75 - sunsetProgress * 0.3);
         } else {
-            skyColor.setHSL(0.6, 0.4, 0.45 + dayness * 0.35);
+            const nightProgress = (cyclePhase - 0.7) / 0.3;
+            skyColor.setHSL(0.65, 0.15, 0.15 - nightProgress * 0.1);
         }
         this.scene.background = skyColor;
     }
