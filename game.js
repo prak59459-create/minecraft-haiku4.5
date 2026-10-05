@@ -7,6 +7,7 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { Config } from './config.js';
 
 class MinecraftGame {
     constructor() {
@@ -47,15 +48,19 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.25);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -300;
+        directionalLight.shadow.camera.right = 300;
+        directionalLight.shadow.camera.top = 300;
+        directionalLight.shadow.camera.bottom = -300;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -388,12 +393,25 @@ class MinecraftGame {
         const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.5 + sunIntensity * 0.35;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        if (sunIntensity < 0.4) {
+            skyColor.setHSL(0.75, 0.3, 0.15 + sunIntensity * 0.4);
+        } else {
+            skyColor.setHSL(0.6, 0.5, 0.4 + sunIntensity * 0.4);
+        }
         this.scene.background = skyColor;
     }
 }
 
-const game = new MinecraftGame();
+async function initializeGame() {
+    try {
+        await Config.load();
+        const game = new MinecraftGame();
+    } catch (error) {
+        console.error('Failed to initialize game:', error);
+    }
+}
+
+initializeGame();
