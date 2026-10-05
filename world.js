@@ -89,10 +89,18 @@ function getTerrainHeight(x, z) {
     if (heightCache.has(key)) return heightCache.get(key);
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    let amplitude = 1;
+    let frequency = 0.005;
+    let maxAmplitude = 0;
+
+    for (let i = 0; i < 5; i++) {
+        height += perlinNoise.noise2D(x * frequency, z * frequency) * amplitude * 30;
+        maxAmplitude += amplitude;
+        amplitude *= 0.5;
+        frequency *= 2;
+    }
+
+    height = height / maxAmplitude * 65;
 
     const result = Math.max(20, Math.min(160, Math.floor(height)));
     heightCache.set(key, result);
@@ -110,7 +118,13 @@ function getTerrainType(x, z) {
     if (terrainTypeCache.has(key)) return terrainTypeCache.get(key);
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    const result = temp < -0.3 ? 'sand' : 'grass';
+    const humidity = perlinNoise.noise2D(x * 0.03, z * 0.03);
+
+    let result = 'grass';
+    if (temp < -0.4) result = 'sand';
+    else if (temp < -0.2 && humidity > 0.3) result = 'sand';
+    else result = 'grass';
+
     terrainTypeCache.set(key, result);
     if (terrainTypeCache.size > 4096) {
         const firstKey = terrainTypeCache.keys().next().value;
