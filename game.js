@@ -14,11 +14,14 @@ class MinecraftGame {
         this.config = config;
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
+        this.scene.fog = new THREE.Fog(0x87CEEB, 500, 1000);
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: false });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio || 1);
         this.renderer.setClearColor(0x87CEEB);
         this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World(config.world?.renderDistance || 8);
         this.player = new Player(this.world, config.player || {});
@@ -318,9 +321,13 @@ class MinecraftGame {
     }
 
     onWindowResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(width, height);
+        this.renderer.setPixelRatio(window.devicePixelRatio || 1);
     }
 
     getDistanceToChunk(cx, cz) {
