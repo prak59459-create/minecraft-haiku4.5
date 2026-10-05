@@ -40,6 +40,8 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.frameCount = 0;
+        this.lastFrameTime = performance.now();
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -54,10 +56,12 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
+        const ambientColor = sunIntensity > 0.5 ? 0xffffff : 0x4A6FA5;
+        const ambientLight = new THREE.AmbientLight(ambientColor, 0.35 + sunIntensity * 0.2);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5 + sunIntensity * 0.3);
+        const sunColor = sunIntensity > 0.5 ? 0xffffff : 0xFF9933;
+        const directionalLight = new THREE.DirectionalLight(sunColor, 0.4 + sunIntensity * 0.4);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
@@ -67,12 +71,14 @@ class MinecraftGame {
         directionalLight.shadow.camera.right = 300;
         directionalLight.shadow.camera.top = 300;
         directionalLight.shadow.camera.bottom = -300;
+        directionalLight.shadow.bias = -0.0001;
         this.scene.add(directionalLight);
 
-        const fog = new THREE.Fog(0x87CEEB, 300, 500);
+        const fog = new THREE.Fog(0x87CEEB, 250, 500);
         this.scene.fog = fog;
 
         this.directionalLight = directionalLight;
+        this.ambientLight = ambientLight;
     }
 
     setupEventListeners() {
@@ -312,17 +318,13 @@ class MinecraftGame {
         let faceCount = 0;
 
         const faces = [
-            { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
-            { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
-            { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]] },
-            { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]] },
-            { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
-            { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
+            { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]], light: 1.0 },
+            { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]], light: 1.0 },
+            { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]], light: 1.2 },
+            { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]], light: 0.8 },
+            { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]], light: 0.95 },
+            { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]], light: 0.95 }
         ];
-
-        const r = Math.floor(color.r * 255);
-        const g = Math.floor(color.g * 255);
-        const b = Math.floor(color.b * 255);
 
         for (const face of faces) {
             const [dx, dy, dz] = face.dir;
@@ -332,6 +334,11 @@ class MinecraftGame {
 
             const neighbor = this.world.getBlock(nx, ny, nz);
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+
+            const faceColor = color.clone().multiplyScalar(face.light);
+            const r = Math.floor(faceColor.r * 255);
+            const g = Math.floor(faceColor.g * 255);
+            const b = Math.floor(faceColor.b * 255);
 
             const startIndex = vertices.length / 3;
             for (const [vx, vy, vz] of face.verts) {
@@ -405,6 +412,10 @@ class MinecraftGame {
     animate() {
         requestAnimationFrame(() => this.animate());
 
+        const currentTime = performance.now();
+        const deltaTime = (currentTime - this.lastFrameTime) / 1000;
+        this.lastFrameTime = currentTime;
+
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
 
@@ -422,7 +433,11 @@ class MinecraftGame {
             eyePos.z + direction.z
         );
 
-        this.updateVisibleChunks();
+        this.frameCount++;
+        if (this.frameCount % 2 === 0) {
+            this.updateVisibleChunks();
+        }
+
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
@@ -446,17 +461,26 @@ class MinecraftGame {
         const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.4 + sunIntensity * 0.4;
+        this.directionalLight.intensity = 0.35 + sunIntensity * 0.5;
 
-        const skyHue = 0.55 + Math.sin(time) * 0.1;
-        const skySaturation = Math.max(0.3, 0.5 - (0.3 * (1 - sunIntensity)));
-        const skyLightness = 0.45 + sunIntensity * 0.35;
+        const sunColor = sunIntensity > 0.5 ? 0xffffff : 0xFF9933;
+        this.directionalLight.color.setHex(sunColor);
+
+        this.ambientLight.intensity = 0.3 + sunIntensity * 0.25;
+        const ambientColor = sunIntensity > 0.5 ? 0xffffff : 0x4A6FA5;
+        this.ambientLight.color.setHex(ambientColor);
+
+        const skyHue = sunIntensity > 0.5 ? (0.55 + Math.sin(time) * 0.05) : 0.65;
+        const skySaturation = Math.max(0.25, 0.4 - (0.25 * (1 - sunIntensity)));
+        const skyLightness = 0.4 + sunIntensity * 0.4;
 
         const skyColor = new THREE.Color();
         skyColor.setHSL(skyHue, skySaturation, skyLightness);
         this.scene.background = skyColor;
 
         this.scene.fog.color = skyColor;
+        this.scene.fog.near = 150 + (1 - sunIntensity) * 100;
+        this.scene.fog.far = 400 + (1 - sunIntensity) * 150;
     }
 }
 
