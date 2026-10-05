@@ -46,19 +46,19 @@ class MinecraftGame {
     }
 
     setupLighting() {
-        const time = Date.now() * 0.0001;
-        const sunY = Math.sin(time) * 100 + 100;
-        const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
-        directionalLight.position.set(150, sunY, 150);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(200, 150, 200);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
-        directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.far = 600;
+        directionalLight.shadow.camera.left = -200;
+        directionalLight.shadow.camera.right = 200;
+        directionalLight.shadow.camera.top = 200;
+        directionalLight.shadow.camera.bottom = -200;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -289,13 +289,15 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const renderDist = 10;
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const distance = Math.abs(cx - playerChunkX) + Math.abs(cz - playerChunkZ);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (distance > renderDist) {
                 if (this.chunkMeshes.has(key)) {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
@@ -385,15 +387,20 @@ class MinecraftGame {
     }
 
     updateDayNightCycle() {
-        const time = Date.now() * 0.00002;
-        const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const time = Date.now() * 0.00001;
+        const sunY = Math.sin(time) * 130 + 120;
+        const sunX = Math.cos(time) * 200;
+        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
 
-        this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.position.set(sunX, sunY, 200);
+        this.directionalLight.intensity = Math.max(0.4, 0.7 + sunIntensity * 0.4);
+
+        const skyHue = 0.58 + Math.sin(time) * 0.08;
+        const skySaturation = 0.5 + Math.cos(time * 2) * 0.2;
+        const skyLightness = 0.45 + sunIntensity * 0.35;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        skyColor.setHSL(skyHue, skySaturation, skyLightness);
         this.scene.background = skyColor;
     }
 }
