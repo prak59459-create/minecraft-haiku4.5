@@ -24,6 +24,10 @@ class MinecraftGame {
         this.player = new Player(this.world);
         this.gameCamera = new Camera();
         this.ui = new UI();
+        this.dynamicRenderDistance = true;
+        this.minRenderDistance = 4;
+        this.maxRenderDistance = 12;
+        this.targetFPS = 60;
         this.particleSystem = new ParticleSystem(this.scene);
         this.waterRenderer = new WaterRenderer(this.scene, this.world);
         this.audioManager = new AudioManager();
@@ -224,10 +228,10 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const step = useLOD ? 2 : 1;
+        const step = useLOD ? 3 : 1;
 
         for (let x = 0; x < CHUNK_SIZE; x += step) {
-            for (let y = 1; y < WORLD_HEIGHT; y += (useLOD ? 4 : 1)) {
+            for (let y = 1; y < WORLD_HEIGHT; y += (useLOD ? 6 : 1)) {
                 for (let z = 0; z < CHUNK_SIZE; z += step) {
                     const blockId = chunk.getBlock(x, y, z);
                     if (blockId === BLOCKS.AIR) continue;
@@ -363,6 +367,19 @@ class MinecraftGame {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    updateRenderDistance() {
+        if (!this.dynamicRenderDistance) return;
+
+        const fps = this.ui.fpsCounter;
+        const renderDist = this.world.renderDistance;
+
+        if (fps < this.targetFPS * 0.8 && renderDist > this.minRenderDistance) {
+            this.world.renderDistance = Math.max(this.minRenderDistance, renderDist - 1);
+        } else if (fps > this.targetFPS * 0.95 && renderDist < this.maxRenderDistance) {
+            this.world.renderDistance = Math.min(this.maxRenderDistance, renderDist + 1);
+        }
+    }
+
     getDistanceToChunk(cx, cz) {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
@@ -399,6 +416,10 @@ class MinecraftGame {
             eyePos.y + direction.y + shakeY,
             eyePos.z + direction.z + shakeZ
         );
+
+        if (this.frameCounter % 30 === 0) {
+            this.updateRenderDistance();
+        }
 
         this.updateVisibleChunks();
         this.updateDayNightCycle();
