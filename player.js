@@ -2,11 +2,11 @@ import { BLOCKS, isBlockSolid } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
-const PLAYER_SPEED = 0.1;
-const PLAYER_SPRINT_SPEED = 0.15;
-const PLAYER_CROUCH_SPEED = 0.05;
-const GRAVITY = 0.02;
-const JUMP_POWER = 0.5;
+const PLAYER_SPEED = 0.12;
+const PLAYER_SPRINT_SPEED = 0.2;
+const PLAYER_CROUCH_SPEED = 0.06;
+const GRAVITY = 0.024;
+const JUMP_POWER = 0.55;
 
 export class Player {
     constructor(world) {
@@ -87,14 +87,15 @@ export class Player {
         this.isOnGround = false;
 
         const checkPoints = [
-            { dy: 0.1, radius: radius * 0.9 },
-            { dy: height * 0.3, radius: radius * 0.9 },
-            { dy: height * 0.6, radius: radius * 0.9 },
-            { dy: height * 0.9, radius: radius * 0.7 }
+            { dy: 0.01, radius: radius * 0.8 },
+            { dy: height * 0.25, radius: radius * 0.9 },
+            { dy: height * 0.5, radius: radius * 0.9 },
+            { dy: height * 0.75, radius: radius * 0.8 },
+            { dy: height * 0.95, radius: radius * 0.7 }
         ];
 
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
                 const cz = this.position.z + Math.sin(angle) * point.radius;
@@ -162,7 +163,7 @@ export class Player {
 export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
-        this.mouseSensitivity = 0.003;
+        this.mouseSensitivity = 0.0025;
         this.setupMouseControls();
     }
 
