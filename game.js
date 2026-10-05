@@ -44,17 +44,21 @@ class MinecraftGame {
     setupLighting() {
         const time = Date.now() * 0.0001;
         const sunY = Math.sin(time) * 100 + 100;
-        const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5 + sunIntensity * 0.3);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -300;
+        directionalLight.shadow.camera.right = 300;
+        directionalLight.shadow.camera.top = 300;
+        directionalLight.shadow.camera.bottom = -300;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;

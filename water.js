@@ -6,6 +6,8 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.waveAmplitude = 0.05;
+        this.waveFrequency = 2.0;
     }
 
     buildWaterMesh(chunk) {
