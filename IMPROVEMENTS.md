@@ -1,243 +1,147 @@
-# Minecraft Clone - Improvements and Optimizations
+# Minecraft Clone - Improvements & Optimizations
 
-## Latest Updates (Session 2)
+## Performance Enhancements
 
-### Core Improvements
+### Rendering Pipeline
+- **Optimized Chunk Culling**: Implemented max distance limits (12 blocks) with focused meshing (6 blocks) to reduce draw calls
+- **Color Caching**: Added color cache in mesh generation to reduce allocations and improve performance
+- **Flat Shading**: Changed to flat shading mode to improve rendering speed
+- **Memory Management**: Proper disposal of geometries and materials when chunks are unloaded
+- **High-Performance GPU**: Enabled high-performance GPU preference in WebGL renderer
+- **Pixel Ratio Optimization**: Intelligent pixel ratio handling (max 2.0) for high-DPI displays
 
-#### 1. Terrain Generation Optimization
-- **Enhanced Perlin Noise**: Improved terrain height calculation with multi-octave noise
-- **Better Biome System**: More sophisticated terrain type detection
-- **Tree Generation**: Improved tree placement and foliage distribution
-- **Ore Distribution**: Complete ore generation system with depth-based distribution
-  - Coal Ore: Common at all depths
-  - Iron Ore: Mid-depth deposits
-  - Gold Ore: Deep deposits
-  - Diamond Ore: Very deep deposits
+### Physics & Collisions
+- **Improved Raycast**: Pre-computed direction vectors to reduce per-frame calculations
+- **Better Collision Detection**: Enhanced edge-case handling with proper zero-velocity management
+- **Smoother Movement**: Refactored movement logic for cleaner state handling
 
-#### 2. Physics Improvements
-- **Enhanced Collision Detection**: Multiple check points for better accuracy
-- **Better Player Movement**: Improved horizontal and vertical collision handling
-- **Refined Step Detection**: More accurate ground detection
-- **Jump Physics**: Better jump mechanics with proper momentum
+### Memory Optimization
+- **Chunk Cleanup**: Automatic disposal of meshes beyond render distance
+- **Particle Efficiency**: Use Uint8Array for particle colors instead of Float32Array
+- **Resource Tracking**: Proper cleanup on window unload
+- **Geometry Disposal**: Explicit disposal of Three.js resources to prevent memory leaks
 
-#### 3. Visual & Audio Systems
+## Graphics & Visual Quality
 
-**Particle Effects**
-- Dynamic block destruction particles
-- Color-matched particles based on block type
-- Smooth particle animation and fade-out
+### Water Rendering
+- **Wave Animation**: Smooth sine wave animation on water surface
+- **Dynamic Colors**: Water colors that respond to time and position
+- **Improved Opacity**: Better transparency settings for visual appeal
 
-**Water Rendering**
-- Transparent water blocks
-- Face culling for water surfaces
-- Semi-transparent water shader
+### Lava Rendering  
+- **Lava System**: Complete liquid rendering system supporting both water and lava
+- **Animated Lava**: Orange/red colors that animate with wave effects
+- **Proper Physics**: Lava blocks respect transparency and fluid dynamics
 
-**Audio System**
-- Procedural sound generation using Web Audio API
-- Block break and place sounds
-- Jump sound effects
-- Extensible audio manager for future sound additions
+### Lighting System
+- **Day/Night Cycle**: Dynamic sun position and intensity
+- **Ambient Light**: Better ambient light transitions through day/night cycle
+- **Shadow Optimization**: Reduced shadow map size from 2048 to 1024 for better performance
 
-#### 4. User Interface
+### Block Selection
+- **Block Outline**: Yellow outline with pulsing opacity effect
+- **Visual Feedback**: Selection outline updates in real-time
+- **Performance**: Caching of outline positions to prevent unnecessary recreations
 
-**Inventory System**
-- Visual block preview in inventory slots
-- Color-coded inventory display
-- Improved selection feedback
-- Smooth inventory transitions
+## Gameplay Features
 
-**HUD Display**
-- Real-time coordinate display
-- FPS counter
-- Current block information
-- Help panel (Press H)
+### Terrain Generation
+- **Biome System**: Temperature and humidity-based biome generation
+- **Snow Biomes**: Cold regions with snow blocks and ice formations
+- **Sand Biomes**: Warm desert areas with sand blocks
+- **Ore Distribution**: Varied ore placement with depth-based generation
+  - Coal: High levels (y < 160)
+  - Iron: Mid levels (y < 120)
+  - Gold: Lower levels (y < 80)
+  - Diamond: Deep levels (y < 40)
+  - Gravel: Medium depth (40-100)
+  - Lava: Very deep (y < 30)
 
-**Debug Display** (F3 key)
-- FPS monitoring
-- Chunk count tracking
-- Vertex and triangle count
-- Draw call statistics
-- Memory usage display
-- Performance metrics
+### Tree Generation
+- **Better Trees**: Larger foliage radius and height variation
+- **Natural Appearance**: Improved branch distribution
+- **Block Replacement**: Proper handling of block replacement during generation
 
-#### 5. Configuration System
-- `config.json` for game settings
-- Runtime configuration management
-- Easy parameter tweaking without code modifications
-- Organized settings structure
+### Spawn System
+- **Intelligent Spawning**: Automatic detection of safe spawn locations
+- **Height Detection**: Ensures spawn point is at reasonable altitude (40-80 blocks)
+- **Fallback Locations**: Multiple attempt system for finding good spawn points
 
-#### 6. Rendering Enhancements
-- **Improved Mesh Generation**: Indexed geometry for reduced draw calls
-- **Better Lighting**: Height-based brightness calculation
-- **Frustum Culling**: Automatic mesh culling for performance
-- **Dynamic Lighting**: Real-time day/night cycle
-- **Vertex Variations**: Color variation for visual depth
+### Block Types
+- Stone, Grass, Dirt, Cobblestone
+- Oak Log, Oak Leaves
+- Sand, Water, Gravel, Bedrock
+- Coal Ore, Iron Ore, Gold Ore, Diamond Ore
+- Lava, Snow, Ice
 
-### Performance Optimizations
+## UI/UX Improvements
 
-1. **Chunk-Based Rendering**
-   - Only visible chunks are rendered
-   - Automatic chunk loading/unloading
-   - Memory-efficient chunk storage
+### HUD Enhancements
+- **Color-Coded Info**: 
+  - Green FPS counter
+  - Blue coordinates
+  - Orange selected block
+- **Chunk Display**: Shows current chunk coordinates for navigation
+- **Enhanced Visibility**: Better text shadows and contrast
 
-2. **Mesh Optimization**
-   - Indexed BufferGeometry usage
-   - Vertex color efficiency
-   - Face culling to reduce geometry
+### Inventory System
+- **Tooltips**: Block name tooltips on hover
+- **Better Selection**: Visual feedback for selected blocks
+- **Responsive Interaction**: Smooth slot selection and keyboard shortcuts
 
-3. **Drawing Optimization**
-   - Frustum culling for meshes
-   - Dynamic material optimization
-   - Shadow mapping configuration
+### Help System
+- **Accessible Controls**: Toggle-able help menu with H key
+- **Clear Instructions**: Control remapping and feature descriptions
 
-### Bug Fixes
+## Audio System
 
-1. **Collision Detection**
-   - More robust player-block collision
-   - Better edge case handling
-   - Improved ground detection
+### Sound Implementation
+- **Master Volume Control**: Adjustable volume for all sounds
+- **Error Handling**: Graceful fallback if audio context unavailable
+- **Sound Types**:
+  - Block breaking: Frequency sweep from 400Hz to 100Hz
+  - Block placing: Higher frequency sweep
+  - Jump sound: Ascending tone feedback
 
-2. **Raycasting**
-   - More accurate block selection
-   - Better step size for precision
-   - Correct face normal calculation
+## Code Quality
 
-3. **Audio**
-   - Proper sound scheduling
-   - Better gain control
-   - Improved frequency modulation
+### Error Handling
+- **Try-Catch Blocks**: Wrapped audio operations in error handling
+- **Fallback Systems**: Graceful degradation when features unavailable
+- **Logging**: Console warnings for debugging without crashing
 
-### Documentation
+### Memory Management
+- **Resource Disposal**: Explicit cleanup of Three.js objects
+- **Event Management**: Proper event listener cleanup
+- **Garbage Collection**: Friendly memory patterns to aid GC
 
-- Comprehensive README with features and controls
-- Installation and setup instructions
-- Performance tips and troubleshooting
-- Future enhancement roadmap
-- Technical architecture overview
+### Performance Monitoring
+- **Debug Display (F3)**: Shows:
+  - FPS counter
+  - Chunk count
+  - Vertex/Triangle count
+  - Draw call count
+  - Particle count
+  - Heap memory usage
+- **FPS History**: Tracks frame rate over time
 
-## System Architecture
+## Controls
 
-### Module Organization
-```
-Core Game:
-├── game.js              - Main game loop and rendering
-├── world.js             - Terrain generation and chunks
-├── player.js            - Player physics and controls
-└── camera.js (in player.js) - Camera management
+- **Movement**: WASD keys
+- **Camera**: Mouse look (click to lock)
+- **Jump**: Space bar
+- **Sprint/Crouch**: Shift key
+- **Block Selection**: 1-9 keys or mouse wheel
+- **Destroy Block**: Left-click
+- **Place Block**: Right-click
+- **Pick Block**: C key
+- **Debug Toggle**: F3 key
+- **Help Toggle**: H key
 
-Systems:
-├── blocks.js            - Block definitions
-├── particles.js         - Particle effects
-├── water.js             - Water rendering
-├── audio.js             - Sound effects
-├── ui.js                - User interface
-├── debug.js             - Debug display
-└── config.js            - Configuration management
+## Performance Targets
 
-Assets:
-├── index.html           - HTML entry point
-├── style.css            - Styling
-├── config.json          - Game configuration
-└── package.json         - Package metadata
-```
-
-## Performance Metrics
-
-- **FPS**: Typically 60+ FPS on modern hardware
-- **Memory**: ~200-400 MB with 8-chunk radius
-- **Chunk Load Time**: <50ms per chunk
-- **Render Distance**: Configurable 4-16 chunks
-
-## Future Enhancement Roadmap
-
-### Tier 1 (High Priority)
-- [ ] Inventory UI with stacking
-- [ ] Save/Load world functionality
-- [ ] More block types and variants
-- [ ] Inventory hotbar visual improvement
-- [ ] Better terrain mesh generation with LOD
-
-### Tier 2 (Medium Priority)
-- [ ] Crafting system
-- [ ] Creative mode with infinite blocks
-- [ ] Mob system with simple AI
-- [ ] Lighting system improvements
-- [ ] Texture mapping for blocks
-
-### Tier 3 (Low Priority)
-- [ ] Multiplayer support
-- [ ] Advanced weather system
-- [ ] Cave generation
-- [ ] Dungeon structures
-- [ ] Advanced particle effects
-
-## Known Limitations
-
-1. **Performance**
-   - Heavy computing on initial chunk generation
-   - No LOD system yet (all chunk details rendered equally)
-   - No texture mapping (vertex colors only)
-
-2. **Gameplay**
-   - No inventory management (only 9 quick slots)
-   - No survival mechanics (health/hunger)
-   - No creative mode alternatives
-   - Simple terrain generation (no caves/structures)
-
-3. **Graphics**
-   - No advanced lighting (limited to ambient + directional)
-   - No shadow quality options
-   - Simplified water rendering
-   - No particle system optimization
-
-## Testing Recommendations
-
-1. **Performance Testing**
-   - Test with different render distances
-   - Monitor memory usage over time
-   - Check FPS consistency
-
-2. **Gameplay Testing**
-   - Test block placement/destruction in various situations
-   - Verify collision detection edge cases
-   - Test terrain generation edge cases
-   - Verify all 9 block types work correctly
-
-3. **Visual Testing**
-   - Check day/night cycle smoothness
-   - Verify particle effects
-   - Test water rendering
-   - Confirm UI visibility
-
-## Configuration Guide
-
-Edit `config.json` to customize:
-- Render distance (default: 8 chunks)
-- Player speed and movement (default: 0.1)
-- Jump power and gravity (default: 0.5, 0.02)
-- Terrain parameters (height range, water level, etc.)
-- Graphics settings (shadow map size, particle limit)
-- Audio settings (volume, effects on/off)
-
-## Debugging
-
-### Enable Debug Display
-Press F3 to toggle debug information overlay
-
-### Check Console
-Open browser DevTools (F12) console for error messages
-
-### Common Issues
-- Low FPS: Reduce render distance or check system resources
-- Chunks not loading: Check browser console for errors
-- No sound: Verify browser audio permissions
-- Visual glitches: Try different browser or update graphics drivers
-
-## Contributing
-
-When contributing improvements:
-1. Maintain modular structure
-2. Follow existing code style
-3. Add comments for complex logic
-4. Test performance impact
-5. Update documentation as needed
+- **Target FPS**: 60 FPS at 1080p
+- **Memory Usage**: < 500MB
+- **Chunk Render Distance**: 6-12 chunks
+- **Vertex Count**: Optimized to handle 1-2M vertices
+- **Draw Calls**: < 100 per frame
