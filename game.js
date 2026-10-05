@@ -134,8 +134,12 @@ class MinecraftGame {
         );
 
         let hit = null;
+        const step = 0.1;
+        let lastBx = Math.floor(eyePos.x);
+        let lastBy = Math.floor(eyePos.y);
+        let lastBz = Math.floor(eyePos.z);
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = step; dist <= this.raycastDistance; dist += step) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -144,25 +148,22 @@ class MinecraftGame {
             const by = Math.floor(y);
             const bz = Math.floor(z);
 
+            if (bx === lastBx && by === lastBy && bz === lastBz) continue;
+
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
-                const prevX = eyePos.x + direction.x * prevDist;
-                const prevY = eyePos.y + direction.y * prevDist;
-                const prevZ = eyePos.z + direction.z * prevDist;
-
-                const prevBx = Math.floor(prevX);
-                const prevBy = Math.floor(prevY);
-                const prevBz = Math.floor(prevZ);
-
                 let normal = { x: 0, y: 0, z: 0 };
-                if (prevBx !== bx) normal.x = prevBx < bx ? -1 : 1;
-                else if (prevBy !== by) normal.y = prevBy < by ? -1 : 1;
-                else if (prevBz !== bz) normal.z = prevBz < bz ? -1 : 1;
+                if (lastBx !== bx) normal.x = lastBx < bx ? -1 : 1;
+                else if (lastBy !== by) normal.y = lastBy < by ? -1 : 1;
+                else if (lastBz !== bz) normal.z = lastBz < bz ? -1 : 1;
 
                 hit = { x: bx, y: by, z: bz, block, normal, dist };
                 break;
             }
+
+            lastBx = bx;
+            lastBy = by;
+            lastBz = bz;
         }
 
         if (!hit) {
@@ -180,9 +181,22 @@ class MinecraftGame {
             for (let dz = -1; dz <= 1; dz++) {
                 const key = `${cx + dx},${cz + dz}`;
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
+                    const mesh = this.chunkMeshes.get(key);
+                    this.scene.remove(mesh);
+                    this.disposeMesh(mesh);
                     this.chunkMeshes.delete(key);
                 }
+            }
+        }
+    }
+
+    disposeMesh(mesh) {
+        if (mesh.geometry) mesh.geometry.dispose();
+        if (mesh.material) {
+            if (Array.isArray(mesh.material)) {
+                mesh.material.forEach(m => m.dispose());
+            } else {
+                mesh.material.dispose();
             }
         }
     }
@@ -287,17 +301,26 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const renderDistance = 8;
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
+
+        const keysToRemove = [];
+        for (const key of this.chunkMeshes.keys()) {
+            const [cx, cz] = key.split(',').map(Number);
+            if (Math.abs(cx - playerChunkX) > renderDistance || Math.abs(cz - playerChunkZ) > renderDistance) {
+                const mesh = this.chunkMeshes.get(key);
+                this.scene.remove(mesh);
+                this.disposeMesh(mesh);
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => this.chunkMeshes.delete(key));
 
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
-                if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
-                }
+            if (Math.abs(cx - playerChunkX) > renderDistance || Math.abs(cz - playerChunkZ) > renderDistance) {
                 continue;
             }
 
