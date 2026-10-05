@@ -80,7 +80,19 @@ class MinecraftGame {
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
+            if (e.key === 'F11') {
+                e.preventDefault();
+                this.toggleFullscreen();
+            }
         });
+    }
+
+    toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+            document.exitFullscreen().catch(() => {});
+        }
     }
 
     onMouseClick(event) {
