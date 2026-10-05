@@ -6,6 +6,8 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.waveAmplitude = 0.05;
+        this.waveFrequency = 2.0;
     }
 
     buildWaterMesh(chunk) {
@@ -85,5 +87,17 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+        this.updateWaveMaterial();
+    }
+
+    updateWaveMaterial() {
+        if (this.time % 10 === 0) {
+            for (const mesh of this.waterMeshes.values()) {
+                if (mesh && mesh.material) {
+                    const wave = Math.sin(this.time * this.waveFrequency) * this.waveAmplitude;
+                    mesh.material.opacity = 0.6 + wave * 0.1;
+                }
+            }
+        }
     }
 }
