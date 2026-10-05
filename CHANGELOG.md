@@ -1,5 +1,51 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.2.0 - Session 3 (Latest)
+
+### Added
+- **Save/Load System**: IndexedDB-based world persistence with Ctrl+S hotkey
+- **Command System**: In-game commands (/teleport, /clear, /gamemode, /fps, /chunks, /help)
+- **Advanced Inventory**: Item stacking (64 items max), inventory management, persistence
+- **World Editor**: Creative mode tools with undo/redo support
+  - Fill area with blocks
+  - Flatten terrain
+  - Raise terrain
+  - Lower terrain
+  - Configurable brush size
+- **Lighting System**: Sky and block light tracking with propagation
+- **Performance Monitoring**: Track frame times, chunk builds, raycasting metrics
+- **Network Foundation**: WebSocket-based multiplayer framework for future expansion
+- **Utility Systems**:
+  - Vector3 math library with complete operations
+  - MathUtils for common calculations (lerp, clamp, random, etc)
+  - Timer system for scheduled events
+  - 3D line-box intersection detection
+- **Enhanced Biome System**: Temperature/humidity-based biome generation
+- **Development Documentation**: DEVELOPMENT.md with architecture guide
+
+### Changed
+- **Chunk Rendering**: Optimized to prevent unnecessary mesh rebuilds
+- **Particle System**: Implemented object pooling for efficiency
+- **Audio System**: Added per-sound cooldown system
+- **Color Caching**: Cache block colors during mesh generation
+- **Config Integration**: Properly load and use config throughout game
+- **Block Outline**: Optimized to skip redundant mesh updates
+- **FPS Display**: Batch FPS calculations for lower overhead
+- **Performance**: Better memory management and draw call reduction
+
+### Fixed
+- **Crouch Mechanics**: Fixed toggle bug in player movement
+- **Water Rendering**: Improved material reuse and transparency
+- **Config Loading**: Config values now properly used in game
+
+### Optimizations
+- Particle pooling reduces memory allocation churn
+- Chunk mesh caching eliminates redundant builds
+- Color calculations cached during mesh generation
+- Audio cooldown prevents unnecessary oscillator creation
+- Block outline updates skipped when unnecessary
+- FPS counter calculations batched every 10 frames
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features
