@@ -29,7 +29,6 @@ class MinecraftGame {
 
         this.chunkMeshes = new Map();
         this.meshesToRebuild = new Set();
-        this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
@@ -69,12 +68,6 @@ class MinecraftGame {
 
     setupPickBlock() {
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'c' || e.key === 'C') {
-                const hit = this.raycastBlock();
-                if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
-                    this.selectedBlockType = hit.block;
-                }
-            }
             if (e.key === 'F3') {
                 e.preventDefault();
                 this.showDebug = !this.showDebug;
@@ -111,7 +104,8 @@ class MinecraftGame {
             const nz = hit.z + norm.z;
 
             if (!this.isPlayerOccupying(nx, ny, nz)) {
-                this.world.setBlock(nx, ny, nz, this.selectedBlockType);
+                const selectedBlock = this.ui.getSelectedBlock();
+                this.world.setBlock(nx, ny, nz, selectedBlock);
                 this.updateChunkMesh(nx, ny, nz);
                 this.audioManager.playBlockSound('place');
             }
@@ -356,7 +350,7 @@ class MinecraftGame {
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+        this.ui.updateHUD(this.player.position, this.ui.getSelectedBlock(), fps);
 
         if (this.showDebug) {
             this.debugDisplay.update(this);

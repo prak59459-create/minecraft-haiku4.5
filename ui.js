@@ -2,8 +2,8 @@ import { BLOCK_NAMES } from './blocks.js';
 
 export class UI {
     constructor() {
-        this.selectedBlock = 1;
-        this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        this.selectedIndex = 0;
+        this.blocks = [];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
         this.setupInventoryUI();
@@ -13,10 +13,15 @@ export class UI {
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach((slot, index) => {
             const blockId = parseInt(slot.dataset.block);
+            this.blocks.push(blockId);
             slot.addEventListener('click', () => {
                 this.selectBlock(index);
             });
         });
+
+        if (slots.length > 0) {
+            slots[0].classList.add('selected');
+        }
 
         document.addEventListener('keydown', (e) => {
             const num = parseInt(e.key);
@@ -28,21 +33,25 @@ export class UI {
         document.addEventListener('wheel', (e) => {
             e.preventDefault();
             const direction = e.deltaY > 0 ? 1 : -1;
-            let newIndex = this.selectedBlock + direction;
-            if (newIndex < 0) newIndex = 8;
-            if (newIndex > 8) newIndex = 0;
+            let newIndex = this.selectedIndex + direction;
+            if (newIndex < 0) newIndex = this.blocks.length - 1;
+            if (newIndex >= this.blocks.length) newIndex = 0;
             this.selectBlock(newIndex);
         }, { passive: false });
     }
 
     selectBlock(index) {
-        if (index < 0 || index > 8) return;
+        if (index < 0 || index >= this.blocks.length) return;
 
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach(slot => slot.classList.remove('selected'));
         slots[index].classList.add('selected');
 
-        this.selectedBlock = index;
+        this.selectedIndex = index;
+    }
+
+    getSelectedBlock() {
+        return this.blocks[this.selectedIndex] || 1;
     }
 
     updateHUD(playerPos, selectedBlock, fps) {
