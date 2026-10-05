@@ -13,9 +13,17 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
+            powerPreference: 'high-performance',
+            precision: 'highp'
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -90,27 +98,37 @@ class MinecraftGame {
             }
             const keyNum = parseInt(e.key);
             if (keyNum >= 1 && keyNum <= 9) {
-                const slot = keyNum - 1;
-                const blockTypes = [BLOCKS.STONE, BLOCKS.GRASS, BLOCKS.DIRT, BLOCKS.COBBLESTONE,
-                                   BLOCKS.OAK_LOG, BLOCKS.OAK_LEAVES, BLOCKS.SAND, BLOCKS.WATER, BLOCKS.GRAVEL];
-                if (slot < blockTypes.length) {
-                    this.selectedBlockType = blockTypes[slot];
-                    this.ui.selectInventorySlot(slot);
-                }
+                this.selectBlockBySlot(keyNum - 1);
             }
         });
 
         document.addEventListener('wheel', (e) => {
             if (document.pointerLockElement !== document.body) return;
             e.preventDefault();
-            const blockTypes = [BLOCKS.STONE, BLOCKS.GRASS, BLOCKS.DIRT, BLOCKS.COBBLESTONE,
-                               BLOCKS.OAK_LOG, BLOCKS.OAK_LEAVES, BLOCKS.SAND, BLOCKS.WATER, BLOCKS.GRAVEL];
-            const currentIndex = blockTypes.indexOf(this.selectedBlockType);
-            let newIndex = currentIndex >= 0 ? currentIndex : 0;
-            newIndex = (newIndex + (e.deltaY > 0 ? 1 : -1) + blockTypes.length) % blockTypes.length;
-            this.selectedBlockType = blockTypes[newIndex];
-            this.ui.selectInventorySlot(newIndex);
+            this.cycleBlockSelection(e.deltaY > 0 ? 1 : -1);
         }, { passive: false });
+    }
+
+    getBlockTypes() {
+        return [BLOCKS.STONE, BLOCKS.GRASS, BLOCKS.DIRT, BLOCKS.COBBLESTONE,
+                BLOCKS.OAK_LOG, BLOCKS.OAK_LEAVES, BLOCKS.SAND, BLOCKS.WATER, BLOCKS.GRAVEL];
+    }
+
+    selectBlockBySlot(slot) {
+        const blockTypes = this.getBlockTypes();
+        if (slot < blockTypes.length) {
+            this.selectedBlockType = blockTypes[slot];
+            this.ui.selectInventorySlot(slot);
+        }
+    }
+
+    cycleBlockSelection(direction) {
+        const blockTypes = this.getBlockTypes();
+        const currentIndex = blockTypes.indexOf(this.selectedBlockType);
+        let newIndex = currentIndex >= 0 ? currentIndex : 0;
+        newIndex = (newIndex + direction + blockTypes.length) % blockTypes.length;
+        this.selectedBlockType = blockTypes[newIndex];
+        this.ui.selectInventorySlot(newIndex);
     }
 
     onMouseClick(event) {
@@ -163,8 +181,9 @@ class MinecraftGame {
         );
 
         let hit = null;
+        const stepSize = 0.03;
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = stepSize; dist <= this.raycastDistance; dist += stepSize) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -175,7 +194,7 @@ class MinecraftGame {
 
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
+                const prevDist = Math.max(stepSize, dist - stepSize);
                 const prevX = eyePos.x + direction.x * prevDist;
                 const prevY = eyePos.y + direction.y * prevDist;
                 const prevZ = eyePos.z + direction.z * prevDist;
@@ -334,25 +353,37 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const chunksToLoad = [];
+        const chunksToUnload = [];
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const distance = Math.abs(cx - playerChunkX) + Math.abs(cz - playerChunkZ);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
-                if (this.chunkMeshes.has(key)) {
-                    const mesh = this.chunkMeshes.get(key);
-                    this.scene.remove(mesh);
-                    this.disposeMesh(mesh);
-                    this.chunkMeshes.delete(key);
-                }
-                continue;
+            if (distance > 10) {
+                chunksToUnload.push(key);
+            } else if (!this.chunkMeshes.has(key)) {
+                chunksToLoad.push({ key, distance });
             }
+        }
 
-            if (!this.chunkMeshes.has(key)) {
-                const mesh = this.buildChunkMesh(chunk);
-                if (mesh) {
-                    this.scene.add(mesh);
-                    this.chunkMeshes.set(key, mesh);
-                }
+        chunksToLoad.sort((a, b) => a.distance - b.distance);
+
+        for (const { key } of chunksToLoad) {
+            const chunk = this.world.chunks.get(key);
+            const mesh = this.buildChunkMesh(chunk);
+            if (mesh) {
+                this.scene.add(mesh);
+                this.chunkMeshes.set(key, mesh);
+            }
+        }
+
+        for (const key of chunksToUnload) {
+            if (this.chunkMeshes.has(key)) {
+                const mesh = this.chunkMeshes.get(key);
+                this.scene.remove(mesh);
+                this.disposeMesh(mesh);
+                this.chunkMeshes.delete(key);
             }
         }
     }
