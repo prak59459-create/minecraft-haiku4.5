@@ -48,23 +48,15 @@ export class Chunk {
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
-                    } else if (y < height - 4) {
+                    } else if (y < height - 5) {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
                     } else if (y < height - 1) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.DIRT);
-                        }
+                        const block = getSubSurfaceBlock(wx, y, wz, terrainType);
+                        this.setBlock(x, y, z, block);
                     } else if (y < height) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        }
+                        const block = getSurfaceBlock(wx, wz, terrainType);
+                        this.setBlock(x, y, z, block);
                     } else if (y < 62) {
                         this.setBlock(x, y, z, BLOCKS.WATER);
                     }
@@ -72,6 +64,9 @@ export class Chunk {
 
                 if (height > 65) {
                     generateTree(this, x, z, height);
+                }
+                if (height > 72 && Math.random() < 0.01) {
+                    generatePlant(this, x, z, height);
                 }
             }
         }
@@ -84,10 +79,11 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    height += perlinNoise.noise2D(x * 0.004, z * 0.004) * 40;
+    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 20;
+    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 10;
+    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 5;
+    height += perlinNoise.noise2D(x * 0.2, z * 0.2) * 2;
 
     return Math.max(20, Math.min(160, Math.floor(height)));
 }
@@ -96,23 +92,81 @@ function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
+    const humidity = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
     if (temp < -0.3) return 'sand';
+    if (humidity > 0.4) return 'mycelium';
     return 'grass';
+}
+
+function getSurfaceBlock(x, z, terrainType) {
+    if (terrainType === 'sand') {
+        return BLOCKS.SAND;
+    } else if (terrainType === 'mycelium') {
+        return BLOCKS.MYCELIUM;
+    }
+    return BLOCKS.GRASS;
+}
+
+function getSubSurfaceBlock(x, y, z, terrainType) {
+    if (terrainType === 'sand') {
+        if (!perlinNoise) return BLOCKS.SAND;
+        const rand = perlinNoise.noise2D(x * 0.1, z * 0.1);
+        if (rand > 0.7) return BLOCKS.CLAY;
+        return BLOCKS.SAND;
+    } else if (terrainType === 'mycelium') {
+        return BLOCKS.DIRT;
+    }
+    return BLOCKS.DIRT;
+}
+
+function generatePlant(chunk, x, z, height) {
+    const y = height;
+    if (y >= WORLD_HEIGHT - 1) return;
+
+    if (chunk.getBlock(x, y, z) === BLOCKS.AIR) {
+        const plantHeight = 1 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < plantHeight && y + i < WORLD_HEIGHT; i++) {
+            if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
+                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LEAVES);
+            }
+        }
+    }
+}
+
+function isCaveBlock(x, y, z) {
+    if (!perlinNoise) return false;
+
+    const cave1 = perlinNoise.noise3D ?
+        Math.abs(perlinNoise.noise3D(x * 0.05, y * 0.05, z * 0.05)) :
+        Math.abs(perlinNoise.noise2D(x * 0.05 + y * 0.02, z * 0.05));
+
+    const cave2 = perlinNoise.noise2D(x * 0.08 + y * 0.02, z * 0.08);
+
+    const caveThreshold = Math.max(0.3, 0.35 - y / 1000);
+
+    return (cave1 < caveThreshold && cave2 > 0.3) || (cave1 < 0.2);
 }
 
 function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
+
+    if (isCaveBlock(x, y, z)) {
+        return BLOCKS.AIR;
+    }
 
     let ore = BLOCKS.STONE;
     const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
     const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
     const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
     const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
+    const lavaChance = perlinNoise.noise2D(x * 0.03 + y * 0.01, z * 0.03);
 
     if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
     if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
     if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
     if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    if (y < 30 && lavaChance > 0.8) ore = BLOCKS.LAVA;
 
     return ore;
 }
@@ -141,10 +195,13 @@ function generateTree(chunk, x, z, height) {
 
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
         const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
-        for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
-            for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
-                const dx = Math.round(Math.cos(angle) * dist);
-                const dz = Math.round(Math.sin(angle) * dist);
+        const angleStep = 0.6;
+        for (let angle = 0; angle < Math.PI * 2; angle += angleStep) {
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            for (let dist = 1; dist <= radiusAtLevel; dist++) {
+                const dx = Math.round(cos * dist);
+                const dz = Math.round(sin * dist);
                 const fx = x + dx;
                 const fz = z + dz;
                 const fy = foliageStart + dy;
@@ -157,6 +214,24 @@ function generateTree(chunk, x, z, height) {
             }
         }
     }
+}
+
+function generateRavine(chunk, x, z) {
+    if (!perlinNoise) return;
+
+    const worldX = chunk.x * CHUNK_SIZE + x;
+    const worldZ = chunk.z * CHUNK_SIZE + z;
+    const ravineChance = perlinNoise.noise2D(worldX * 0.01, worldZ * 0.01);
+
+    if (ravineChance < 0.3) {
+        const ravineNoise1 = perlinNoise.noise2D(worldX * 0.05, worldZ * 0.05);
+        const ravineNoise2 = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
+
+        if (Math.abs(ravineNoise1) < 0.3 && Math.abs(ravineNoise2) < 0.4) {
+            return true;
+        }
+    }
+    return false;
 }
 
 export class World {

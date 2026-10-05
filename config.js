@@ -18,7 +18,9 @@ export class Config {
                 renderDistance: 8,
                 seedOffset: 0,
                 waterLevel: 62,
-                bedrockLevel: 0
+                bedrockLevel: 0,
+                caveFrequency: 0.35,
+                caveSize: 0.2
             },
             player: {
                 speed: 0.1,
@@ -29,30 +31,48 @@ export class Config {
                 mouseSensitivity: 0.003,
                 eyeHeight: 0.85,
                 height: 1.8,
-                width: 0.6
+                width: 0.6,
+                collisionSteps: 8
             },
             raycast: {
                 distance: 6,
-                stepSize: 0.05
+                stepSize: 0.1,
+                maxSteps: 100
             },
             graphics: {
                 renderScale: 1.0,
-                shadowMapSize: 2048,
-                particleLimit: 2000,
-                fpsTarget: 60
+                shadowMapSize: 4096,
+                shadowBias: -0.0001,
+                particleLimit: 1024,
+                fpsTarget: 60,
+                fogDistance: 400,
+                pixelRatioCap: 2
             },
             terrain: {
                 chunkSize: 16,
                 maxHeight: 160,
                 minHeight: 20,
                 seaLevel: 62,
-                treeFrequency: 0.5
+                treeFrequency: 0.5,
+                oreDistribution: {
+                    coal: { maxDepth: 160, frequency: 0.5 },
+                    iron: { maxDepth: 120, frequency: 0.6 },
+                    gold: { maxDepth: 80, frequency: 0.7 },
+                    diamond: { maxDepth: 40, frequency: 0.75 }
+                }
             },
             audio: {
                 enabled: true,
                 masterVolume: 0.5,
                 soundFx: true,
-                music: false
+                music: false,
+                stepSoundInterval: 500,
+                sprintStepInterval: 300
+            },
+            features: {
+                caves: true,
+                ravines: false,
+                structures: false
             }
         };
     }
