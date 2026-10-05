@@ -33,6 +33,7 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.lastFrameTime = performance.now();
 
         this.player.onJump = () => this.audioManager.playJumpSound();
         this.player.onStep = () => this.audioManager.playStepSound();
@@ -402,7 +403,10 @@ class MinecraftGame {
         this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        const hue = 0.6 + Math.sin(time) * 0.05;
+        const saturation = 0.4 + sunIntensity * 0.2;
+        const lightness = 0.5 + sunIntensity * 0.3;
+        skyColor.setHSL(hue, saturation, lightness);
         this.scene.background = skyColor;
     }
 }
