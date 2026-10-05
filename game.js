@@ -302,23 +302,37 @@ class MinecraftGame {
     }
 
     updateVisibleChunks() {
-        const playerChunkX = Math.floor(this.player.position.x / 16);
-        const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const playerChunkX = Math.floor(this.player.position.x / CHUNK_SIZE_EXPORT);
+        const playerChunkZ = Math.floor(this.player.position.z / CHUNK_SIZE_EXPORT);
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
-        for (const [key, chunk] of this.world.chunks) {
-            const [cx, cz] = key.split(',').map(Number);
+        const renderDistance = this.world.renderDistance;
+        const chunkMap = new Set();
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
-                if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
-                }
-                continue;
+        for (let dx = -renderDistance; dx <= renderDistance; dx++) {
+            for (let dz = -renderDistance; dz <= renderDistance; dz++) {
+                const key = `${playerChunkX + dx},${playerChunkZ + dz}`;
+                chunkMap.add(key);
             }
+        }
 
+        const meshesToRemove = [];
+        for (const key of this.chunkMeshes.keys()) {
+            if (!chunkMap.has(key)) {
+                const mesh = this.chunkMeshes.get(key);
+                this.scene.remove(mesh);
+                mesh.geometry.dispose();
+                mesh.material.dispose();
+                meshesToRemove.push(key);
+            }
+        }
+        meshesToRemove.forEach(key => this.chunkMeshes.delete(key));
+
+        for (const key of chunkMap) {
             if (!this.chunkMeshes.has(key)) {
+                const [cx, cz] = key.split(',').map(Number);
+                const chunk = this.world.getChunk(cx, cz);
                 const mesh = this.buildChunkMesh(chunk);
                 if (mesh) {
                     this.scene.add(mesh);
