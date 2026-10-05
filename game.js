@@ -21,7 +21,7 @@ class MinecraftGame {
         this.player = new Player(this.world);
         this.gameCamera = new Camera();
         this.ui = new UI();
-        this.particleSystem = new ParticleSystem(this.scene);
+        this.particleSystem = new ParticleSystem(this.scene, 2000);
         this.waterRenderer = new WaterRenderer(this.scene, this.world);
         this.audioManager = new AudioManager();
         this.debugDisplay = new DebugDisplay();
