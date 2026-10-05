@@ -290,9 +290,15 @@ class MinecraftGame {
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
+
+            const faceLight = dy === 1 ? 1.0 : (dy === -1 ? 0.7 : 0.85);
+            const fr = Math.floor(r * faceLight);
+            const fg = Math.floor(g * faceLight);
+            const fb = Math.floor(b * faceLight);
+
             for (const [vx, vy, vz] of face.verts) {
                 vertices.push(x + vx, y + vy, z + vz);
-                colors.push(r, g, b);
+                colors.push(fr, fg, fb);
             }
 
             indices.push(startIndex, startIndex + 1, startIndex + 2);

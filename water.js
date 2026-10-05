@@ -9,10 +9,12 @@ export class WaterRenderer {
         this.waterMaterial = new THREE.MeshPhongMaterial({
             color: 0x4A90E2,
             transparent: true,
-            opacity: 0.7,
+            opacity: 0.65,
             wireframe: false,
-            side: THREE.FrontSide,
-            flatShading: true
+            side: THREE.DoubleSide,
+            flatShading: true,
+            shininess: 50,
+            reflectivity: 0.3
         });
     }
 
