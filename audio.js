@@ -3,12 +3,25 @@ export class AudioManager {
         this.audioContext = null;
         this.initialized = false;
         this.soundCache = new Map();
+        this.lastStepTime = 0;
+        this.stepInterval = 200;
         this.initAudioContext();
     }
 
     initAudioContext() {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.audioContext = audioContext;
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.audioContext = audioContext;
+            if (this.audioContext.state === 'suspended') {
+                document.addEventListener('click', () => {
+                    if (this.audioContext.state === 'suspended') {
+                        this.audioContext.resume();
+                    }
+                }, { once: true });
+            }
+        } catch (e) {
+            console.log('Audio context not available');
+        }
     }
 
     playBlockSound(type = 'break') {
@@ -60,21 +73,24 @@ export class AudioManager {
     }
 
     playStepSound() {
+        const now = Date.now();
+        if (now - this.lastStepTime < this.stepInterval) return;
         if (!this.audioContext) return;
 
+        this.lastStepTime = now;
         const audioContext = this.audioContext;
-        const now = audioContext.currentTime;
+        const time = audioContext.currentTime;
         const osc = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
 
         osc.connect(gainNode);
         gainNode.connect(audioContext.destination);
 
-        osc.frequency.setValueAtTime(200 + Math.random() * 100, now);
-        gainNode.gain.setValueAtTime(0.05, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        osc.frequency.setValueAtTime(180 + Math.random() * 80, time);
+        gainNode.gain.setValueAtTime(0.04, time);
+        gainNode.gain.exponentialRampToValueAtTime(0.005, time + 0.06);
 
-        osc.start(now);
-        osc.stop(now + 0.05);
+        osc.start(time);
+        osc.stop(time + 0.06);
     }
 }

@@ -2,11 +2,12 @@ import { BLOCKS, isBlockSolid } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
-const PLAYER_SPEED = 0.1;
-const PLAYER_SPRINT_SPEED = 0.15;
-const PLAYER_CROUCH_SPEED = 0.05;
-const GRAVITY = 0.02;
-const JUMP_POWER = 0.5;
+const PLAYER_SPEED = 0.12;
+const PLAYER_SPRINT_SPEED = 0.18;
+const PLAYER_CROUCH_SPEED = 0.06;
+const GRAVITY = 0.025;
+const JUMP_POWER = 0.55;
+const STEP_HEIGHT = 0.5;
 
 export class Player {
     constructor(world) {
@@ -93,13 +94,13 @@ export class Player {
 
         for (const point of checkPoints) {
             const angleStep = Math.PI / 4;
-            const cos45 = Math.cos(angleStep);
-            const sin45 = Math.sin(angleStep);
             for (let i = 0; i < 8; i++) {
                 const angle = i * angleStep;
-                const cx = this.position.x + cos45 * point.radius;
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+                const cx = this.position.x + cos * point.radius;
                 const cy = this.position.y + point.dy;
-                const cz = this.position.z + sin45 * point.radius;
+                const cz = this.position.z + sin * point.radius;
 
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
                 if (isBlockSolid(block)) {

@@ -58,7 +58,7 @@ export class DebugDisplay {
 
         this.stats.fps = game.ui.fpsCounter;
         this.stats.chunks = game.world.chunks.size;
-        this.stats.particles = game.particleSystem.particles.length;
+        this.stats.particles = game.particleSystem.activeCount;
 
         let vertices = 0;
         let triangles = 0;
@@ -75,8 +75,8 @@ export class DebugDisplay {
             }
         }
 
-        this.stats.vertices = vertices;
-        this.stats.triangles = triangles;
+        this.stats.vertices = Math.round(vertices);
+        this.stats.triangles = Math.round(triangles);
         this.stats.drawCalls = game.chunkMeshes.size;
 
         if (performance.memory) {
