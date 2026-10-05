@@ -13,9 +13,11 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -276,9 +278,26 @@ class MinecraftGame {
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = indices.length / 6;
-            for (const [vx, vy, vz] of face.verts) {
+
+            for (let i = 0; i < face.verts.length; i++) {
+                const [vx, vy, vz] = face.verts[i];
                 vertices.push(x + vx, y + vy, z + vz);
-                colors.push(r, g, b);
+
+                let faceBrightness = 1.0;
+                if (dx !== 0) faceBrightness = 0.95;
+                else if (dy > 0) faceBrightness = 1.1;
+                else if (dy < 0) faceBrightness = 0.85;
+                else faceBrightness = 1.0;
+
+                const br = Math.floor(r * faceBrightness);
+                const bg = Math.floor(g * faceBrightness);
+                const bb = Math.floor(b * faceBrightness);
+
+                colors.push(
+                    Math.min(255, br),
+                    Math.min(255, bg),
+                    Math.min(255, bb)
+                );
             }
 
             indices.push(startIndex, startIndex + 1, startIndex + 2);
