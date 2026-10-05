@@ -2,6 +2,8 @@ export class ParticleSystem {
     constructor(scene) {
         this.scene = scene;
         this.particles = [];
+        this.particlePool = [];
+        this.maxParticles = 2000;
         this.geometry = new THREE.BufferGeometry();
         this.material = new THREE.PointsMaterial({
             size: 0.2,
@@ -14,20 +16,27 @@ export class ParticleSystem {
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
-        const particleCount = 8 + Math.floor(Math.random() * 8);
+        if (this.particles.length >= this.maxParticles) return;
+
+        const particleCount = Math.min(8 + Math.floor(Math.random() * 8), this.maxParticles - this.particles.length);
 
         for (let i = 0; i < particleCount; i++) {
-            const particle = {
-                position: { x, y, z },
-                velocity: {
-                    x: (Math.random() - 0.5) * 0.3,
-                    y: Math.random() * 0.3,
-                    z: (Math.random() - 0.5) * 0.3
-                },
-                life: 1,
-                maxLife: 0.8 + Math.random() * 0.4,
-                color: blockColor
-            };
+            let particle;
+            if (this.particlePool.length > 0) {
+                particle = this.particlePool.pop();
+                particle.position.x = x;
+                particle.position.y = y;
+                particle.position.z = z;
+            } else {
+                particle = { position: { x, y, z }, velocity: { x: 0, y: 0, z: 0 }, life: 1, maxLife: 1, color: blockColor };
+            }
+
+            particle.velocity.x = (Math.random() - 0.5) * 0.3;
+            particle.velocity.y = Math.random() * 0.3;
+            particle.velocity.z = (Math.random() - 0.5) * 0.3;
+            particle.life = 1;
+            particle.maxLife = 0.8 + Math.random() * 0.4;
+            particle.color = blockColor;
             this.particles.push(particle);
         }
     }
@@ -44,6 +53,7 @@ export class ParticleSystem {
             p.life -= 1 / 60;
 
             if (p.life <= 0) {
+                this.particlePool.push(this.particles[i]);
                 this.particles.splice(i, 1);
             }
         }

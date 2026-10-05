@@ -18,13 +18,17 @@
   },
   "raycast": {
     "distance": 6,
-    "stepSize": 0.05
+    "stepSize": 0.1
   },
   "graphics": {
     "renderScale": 1.0,
-    "shadowMapSize": 2048,
+    "shadowMapSize": 1024,
     "particleLimit": 2000,
-    "fpsTarget": 60
+    "fpsTarget": 60,
+    "enableShadows": false,
+    "enableVSync": true,
+    "flatShading": true,
+    "ambientLightIntensity": 0.6
   },
   "terrain": {
     "chunkSize": 16,
@@ -38,5 +42,11 @@
     "masterVolume": 0.5,
     "soundFx": true,
     "music": false
+  },
+  "performance": {
+    "enableNoiseCache": true,
+    "noiseCacheSize": 10000,
+    "chunkPoolSize": 32,
+    "meshOptimization": true
   }
 }
