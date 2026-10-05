@@ -19,6 +19,7 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.bobOffset = 0;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -47,6 +48,18 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        this.updateBob();
+    }
+
+    updateBob() {
+        const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+        if (moveLen > 0.01 && this.isOnGround) {
+            const bobSpeed = this.isSprinting ? 0.15 : 0.1;
+            const bobAmount = this.isSprinting ? 0.08 : 0.05;
+            this.bobOffset = Math.sin(Date.now() * bobSpeed * 0.001) * bobAmount;
+        } else {
+            this.bobOffset = this.bobOffset * 0.9;
+        }
     }
 
     handleMovement() {

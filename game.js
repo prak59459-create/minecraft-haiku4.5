@@ -108,6 +108,10 @@ class MinecraftGame {
                 this.lastBreakSound = now;
             }
         } else if (event.button === 2) {
+            if (hit.block === BLOCKS.WATER || hit.block === BLOCKS.LAVA) {
+                return;
+            }
+
             const norm = hit.normal;
             const nx = hit.x + norm.x;
             const ny = hit.y + norm.y;
@@ -208,10 +212,10 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.65;
+                    const heightLight = (Math.max(0, wy - 50) / WORLD_HEIGHT) * 0.35;
+                    const varLight = Math.sin(wx * 0.3 + wz * 0.3) * 0.08;
+                    const brightness = Math.max(0.35, baseLight + heightLight + varLight);
 
                     color.multiplyScalar(brightness);
 
@@ -233,7 +237,8 @@ class MinecraftGame {
                 wireframe: false,
                 flatShading: false,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 25,
+                emissive: 0x000000
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -337,7 +342,8 @@ class MinecraftGame {
         this.gameCamera.updateFromPlayer(this.player);
 
         const eyePos = this.player.getEyePosition();
-        this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
+        const bobY = eyePos.y + this.player.bobOffset;
+        this.camera.position.set(eyePos.x, bobY, eyePos.z);
 
         const targetFOV = this.player.isSprinting ? 85 : 75;
         this.camera.fov += (targetFOV - this.camera.fov) * 0.1;
