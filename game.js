@@ -11,11 +11,19 @@ import { BlockOutline } from './blockoutline.js';
 class MinecraftGame {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
+        if (!this.canvas) {
+            console.error('Canvas element not found');
+            return;
+        }
+
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, precision: 'highp' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+        this.renderer.sortObjects = true;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -32,6 +40,7 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.performance = { chunkBuilds: 0, meshUpdates: 0 };
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -132,16 +141,17 @@ class MinecraftGame {
 
     raycastBlock() {
         const eyePos = this.player.getEyePosition();
+        const cosX = Math.cos(this.gameCamera.rotation.x);
         const direction = new THREE.Vector3(
-            Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
+            Math.sin(this.gameCamera.rotation.y) * cosX,
             Math.sin(this.gameCamera.rotation.x),
-            Math.cos(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x)
+            Math.cos(this.gameCamera.rotation.y) * cosX
         );
 
         let hit = null;
         let lastBlockCoords = { x: Math.floor(eyePos.x), y: Math.floor(eyePos.y), z: Math.floor(eyePos.z) };
 
-        for (let dist = 0.1; dist <= this.raycastDistance; dist += 0.1) {
+        for (let dist = 0.1; dist <= this.raycastDistance; dist += 0.15) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -149,6 +159,8 @@ class MinecraftGame {
             const bx = Math.floor(x);
             const by = Math.floor(y);
             const bz = Math.floor(z);
+
+            if (bx === lastBlockCoords.x && by === lastBlockCoords.y && bz === lastBlockCoords.z) continue;
 
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
@@ -367,7 +379,7 @@ class MinecraftGame {
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps, this.player.isSprinting);
 
         if (this.showDebug) {
             this.debugDisplay.update(this);
