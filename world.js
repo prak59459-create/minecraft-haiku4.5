@@ -203,12 +203,17 @@ export class World {
     constructor(renderDistance = 8) {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
+        this.maxChunks = (renderDistance * 2 + 1) * (renderDistance * 2 + 1) + 100;
         initPerlinNoise();
     }
 
     getChunk(cx, cz) {
         const key = `${cx},${cz}`;
         if (!this.chunks.has(key)) {
+            if (this.chunks.size >= this.maxChunks) {
+                const firstKey = this.chunks.keys().next().value;
+                this.chunks.delete(firstKey);
+            }
             const chunk = new Chunk(cx, cz);
             chunk.generate();
             this.chunks.set(key, chunk);

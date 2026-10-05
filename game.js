@@ -32,6 +32,11 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.availableBlocks = [
+            BLOCKS.STONE, BLOCKS.GRASS, BLOCKS.DIRT, BLOCKS.OAK_LOG,
+            BLOCKS.OAK_LEAVES, BLOCKS.SAND, BLOCKS.GRAVEL, BLOCKS.WATER, BLOCKS.GLASS
+        ];
+        this.currentBlockIndex = 0;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -78,6 +83,10 @@ class MinecraftGame {
                 const hit = this.raycastBlock();
                 if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
                     this.selectedBlockType = hit.block;
+                    this.currentBlockIndex = this.availableBlocks.indexOf(hit.block);
+                    if (this.currentBlockIndex === -1) {
+                        this.currentBlockIndex = 0;
+                    }
                 }
             }
             if (e.key === 'F3') {
@@ -88,7 +97,23 @@ class MinecraftGame {
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
+
+            const num = parseInt(e.key);
+            if (num >= 1 && num <= this.availableBlocks.length) {
+                this.currentBlockIndex = num - 1;
+                this.selectedBlockType = this.availableBlocks[this.currentBlockIndex];
+            }
         });
+
+        document.addEventListener('wheel', (e) => {
+            if (document.pointerLockElement === document.body) {
+                e.preventDefault();
+                this.currentBlockIndex += e.deltaY > 0 ? 1 : -1;
+                if (this.currentBlockIndex < 0) this.currentBlockIndex = this.availableBlocks.length - 1;
+                if (this.currentBlockIndex >= this.availableBlocks.length) this.currentBlockIndex = 0;
+                this.selectedBlockType = this.availableBlocks[this.currentBlockIndex];
+            }
+        }, { passive: false });
     }
 
     onMouseClick(event) {
