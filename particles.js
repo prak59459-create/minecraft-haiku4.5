@@ -47,6 +47,34 @@ export class ParticleSystem {
         }
     }
 
+    addBlockPlaceParticles(x, y, z, blockColor) {
+        const particleCount = Math.min(8, 4 + Math.floor(Math.random() * 4));
+        const color = new THREE.Color(blockColor);
+
+        for (let i = 0; i < particleCount; i++) {
+            if (this.particles.length >= this.maxParticles) break;
+
+            let particle = this.particlePool.length > 0 ? this.particlePool.pop() : {};
+
+            particle.position = particle.position || {};
+            particle.velocity = particle.velocity || {};
+
+            particle.position.x = x + (Math.random() - 0.5) * 0.5;
+            particle.position.y = y + (Math.random() - 0.5) * 0.5;
+            particle.position.z = z + (Math.random() - 0.5) * 0.5;
+            particle.velocity.x = (Math.random() - 0.5) * 0.15;
+            particle.velocity.y = Math.random() * 0.15;
+            particle.velocity.z = (Math.random() - 0.5) * 0.15;
+            particle.life = 1;
+            particle.maxLife = 0.6 + Math.random() * 0.3;
+            particle.r = color.r;
+            particle.g = color.g;
+            particle.b = color.b;
+
+            this.particles.push(particle);
+        }
+    }
+
     update() {
         const gravity = 0.01;
         let activeCount = 0;

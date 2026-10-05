@@ -77,7 +77,20 @@ export class Player {
     }
 
     applyPhysics() {
-        if (!this.isOnGround) {
+        const isInWater = this.world.getBlock(
+            Math.floor(this.position.x),
+            Math.floor(this.position.y + 0.5),
+            Math.floor(this.position.z)
+        ) === BLOCKS.WATER;
+
+        if (isInWater) {
+            this.velocity.y *= 0.98;
+            this.velocity.y -= GRAVITY * 0.3;
+
+            if (this.keys[' ']) {
+                this.velocity.y = 0.15;
+            }
+        } else if (!this.isOnGround) {
             this.velocity.y -= GRAVITY;
         }
 

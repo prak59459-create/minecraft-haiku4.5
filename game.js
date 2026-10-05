@@ -126,8 +126,8 @@ class MinecraftGame {
             this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
             this.updateChunkMesh(hit.x, hit.y, hit.z);
 
-            const color = BLOCK_COLORS[hit.block] || 0x808080;
-            this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
+            const blockColor = BLOCK_COLORS[hit.block] || 0x808080;
+            this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, blockColor);
 
             const now = Date.now();
             if (now - this.lastBreakSound > 50) {
@@ -140,9 +140,13 @@ class MinecraftGame {
             const ny = hit.y + norm.y;
             const nz = hit.z + norm.z;
 
-            if (!this.isPlayerOccupying(nx, ny, nz)) {
+            if (!this.isPlayerOccupying(nx, ny, nz) && this.selectedBlockType !== BLOCKS.AIR) {
                 this.world.setBlock(nx, ny, nz, this.selectedBlockType);
                 this.updateChunkMesh(nx, ny, nz);
+
+                const placeColor = BLOCK_COLORS[this.selectedBlockType] || 0x808080;
+                this.particleSystem.addBlockPlaceParticles(nx + 0.5, ny + 0.5, nz + 0.5, placeColor);
+
                 this.audioManager.playBlockSound('place');
             }
         }
