@@ -62,8 +62,25 @@ export class DebugDisplay {
 
         let vertices = 0;
         let triangles = 0;
+        let meshCount = 0;
+
         for (const mesh of game.chunkMeshes.values()) {
             if (mesh && mesh.geometry) {
+                meshCount++;
+                const positions = mesh.geometry.getAttribute('position');
+                if (positions) {
+                    vertices += positions.count;
+                    const index = mesh.geometry.getIndex();
+                    if (index) {
+                        triangles += index.count / 3;
+                    }
+                }
+            }
+        }
+
+        for (const mesh of game.waterMeshes.values()) {
+            if (mesh && mesh.geometry) {
+                meshCount++;
                 const positions = mesh.geometry.getAttribute('position');
                 if (positions) {
                     vertices += positions.count;
@@ -77,7 +94,7 @@ export class DebugDisplay {
 
         this.stats.vertices = vertices;
         this.stats.triangles = triangles;
-        this.stats.drawCalls = game.chunkMeshes.size;
+        this.stats.drawCalls = meshCount;
 
         if (performance.memory) {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
@@ -93,12 +110,11 @@ export class DebugDisplay {
             `Chunks: ${this.stats.chunks}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
-            `Draw Calls: ${this.stats.drawCalls}`,
+            `Meshes: ${this.stats.drawCalls}`,
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3: Debug  H: Help'
         ];
 
         this.container.innerHTML = lines.map(line => {

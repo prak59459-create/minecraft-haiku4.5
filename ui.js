@@ -6,13 +6,14 @@ export class UI {
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.fpsHistory = [];
+        this.maxFpsHistory = 30;
         this.setupInventoryUI();
     }
 
     setupInventoryUI() {
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach((slot, index) => {
-            const blockId = parseInt(slot.dataset.block);
             slot.addEventListener('click', () => {
                 this.selectBlock(index);
             });
@@ -26,12 +27,14 @@ export class UI {
         });
 
         document.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const direction = e.deltaY > 0 ? 1 : -1;
-            let newIndex = this.selectedBlock + direction;
-            if (newIndex < 0) newIndex = 8;
-            if (newIndex > 8) newIndex = 0;
-            this.selectBlock(newIndex);
+            if (document.pointerLockElement === document.body) {
+                e.preventDefault();
+                const direction = e.deltaY > 0 ? 1 : -1;
+                let newIndex = this.selectedBlock + direction;
+                if (newIndex < 0) newIndex = 8;
+                if (newIndex > 8) newIndex = 0;
+                this.selectBlock(newIndex);
+            }
         }, { passive: false });
     }
 
@@ -40,9 +43,10 @@ export class UI {
 
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach(slot => slot.classList.remove('selected'));
-        slots[index].classList.add('selected');
-
-        this.selectedBlock = index;
+        if (slots[index]) {
+            slots[index].classList.add('selected');
+            this.selectedBlock = index;
+        }
     }
 
     updateHUD(playerPos, selectedBlock, fps) {
@@ -50,9 +54,15 @@ export class UI {
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
 
-        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
-        fpsEl.textContent = `FPS: ${fps}`;
-        blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+        if (coordsEl) {
+            coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
+        }
+        if (fpsEl) {
+            fpsEl.textContent = `FPS: ${fps}`;
+        }
+        if (blockEl) {
+            blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+        }
     }
 
     updateFPS() {
@@ -62,13 +72,25 @@ export class UI {
 
         if (delta > 0) {
             this.fpsCounter = Math.round(1000 / delta);
+            this.fpsHistory.push(this.fpsCounter);
+            if (this.fpsHistory.length > this.maxFpsHistory) {
+                this.fpsHistory.shift();
+            }
         }
 
         return this.fpsCounter;
     }
 
+    getAverageFPS() {
+        if (this.fpsHistory.length === 0) return 0;
+        const sum = this.fpsHistory.reduce((a, b) => a + b, 0);
+        return Math.round(sum / this.fpsHistory.length);
+    }
+
     toggleHelp() {
         const help = document.getElementById('help');
-        help.classList.toggle('show');
+        if (help) {
+            help.classList.toggle('show');
+        }
     }
 }
