@@ -14,11 +14,13 @@ export class Player {
         this.position = { x: 0, y: 100, z: 0 };
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
+        this.lastPosition = { x: 0, y: 100, z: 0 };
 
         this.isOnGround = false;
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.stepSoundCooldown = 0;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -47,6 +49,26 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        this.updateStepSounds();
+    }
+
+    updateStepSounds() {
+        if (this.stepSoundCooldown > 0) {
+            this.stepSoundCooldown--;
+        }
+
+        const dx = this.position.x - this.lastPosition.x;
+        const dz = this.position.z - this.lastPosition.z;
+        const distance = Math.sqrt(dx * dx + dz * dz);
+
+        if (this.isOnGround && distance > 0.3 && this.stepSoundCooldown === 0) {
+            if (this.onStep) this.onStep();
+            this.stepSoundCooldown = 8;
+        }
+
+        this.lastPosition.x = this.position.x;
+        this.lastPosition.y = this.position.y;
+        this.lastPosition.z = this.position.z;
     }
 
     handleMovement() {
