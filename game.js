@@ -379,10 +379,13 @@ class MinecraftGame {
         const eyePos = this.player.getEyePosition();
         this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
 
+        const rotX = this.gameCamera.rotation.x;
+        const rotY = this.gameCamera.rotation.y;
+        const cosX = Math.cos(rotX);
         const direction = new THREE.Vector3(
-            Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
-            Math.sin(this.gameCamera.rotation.x),
-            Math.cos(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x)
+            Math.sin(rotY) * cosX,
+            Math.sin(rotX),
+            Math.cos(rotY) * cosX
         );
         this.camera.lookAt(
             eyePos.x + direction.x,
