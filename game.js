@@ -13,15 +13,18 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
         this.gameCamera = new Camera();
         this.ui = new UI();
-        this.particleSystem = new ParticleSystem(this.scene);
+        this.particleSystem = new ParticleSystem(this.scene, 2000);
         this.waterRenderer = new WaterRenderer(this.scene, this.world);
         this.audioManager = new AudioManager();
         this.debugDisplay = new DebugDisplay();
@@ -38,7 +41,24 @@ class MinecraftGame {
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
+        this.findSpawnPoint();
         this.animate();
+    }
+
+    findSpawnPoint() {
+        const spawnX = 0;
+        const spawnZ = 0;
+        let spawnY = 100;
+
+        for (let y = 100; y >= 20; y--) {
+            const blockBelow = this.world.getBlock(spawnX, y - 1, spawnZ);
+            if (BLOCKS && typeof isBlockSolid === 'function' && isBlockSolid(blockBelow)) {
+                spawnY = y + 1;
+                break;
+            }
+        }
+
+        this.player.setSpawnPosition(spawnX, spawnY, spawnZ);
     }
 
     setupLighting() {
@@ -54,7 +74,12 @@ class MinecraftGame {
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
+        directionalLight.shadow.camera.left = -256;
+        directionalLight.shadow.camera.right = 256;
+        directionalLight.shadow.camera.top = 256;
+        directionalLight.shadow.camera.bottom = -256;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.bias = -0.0001;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -260,8 +285,6 @@ class MinecraftGame {
     }
 
     addBlockFaces(vertices, colors, indices, x, y, z, blockId, color, chunk) {
-        let faceCount = 0;
-
         const faces = [
             { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
             { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
@@ -275,20 +298,19 @@ class MinecraftGame {
         const g = Math.floor(color.g * 255);
         const b = Math.floor(color.b * 255);
 
+        let faceCount = 0;
         for (const face of faces) {
             const [dx, dy, dz] = face.dir;
-            const nx = x + dx;
-            const ny = y + dy;
-            const nz = z + dz;
-
-            const neighbor = this.world.getBlock(nx, ny, nz);
+            const neighbor = this.world.getBlock(x + dx, y + dy, z + dz);
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
-            for (const [vx, vy, vz] of face.verts) {
-                vertices.push(x + vx, y + vy, z + vz);
-                colors.push(r, g, b);
-            }
+            const verts = face.verts;
+            vertices.push(x + verts[0][0], y + verts[0][1], z + verts[0][2]);
+            vertices.push(x + verts[1][0], y + verts[1][1], z + verts[1][2]);
+            vertices.push(x + verts[2][0], y + verts[2][1], z + verts[2][2]);
+            vertices.push(x + verts[3][0], y + verts[3][1], z + verts[3][2]);
+            colors.push(r, g, b, r, g, b, r, g, b, r, g, b);
 
             indices.push(startIndex, startIndex + 1, startIndex + 2);
             indices.push(startIndex, startIndex + 2, startIndex + 3);
