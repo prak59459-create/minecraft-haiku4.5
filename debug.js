@@ -62,7 +62,10 @@ export class DebugDisplay {
 
         let vertices = 0;
         let triangles = 0;
+        let lodChunks = 0;
+
         for (const mesh of game.chunkMeshes.values()) {
+            if (mesh.isLOD) lodChunks++;
             if (mesh && mesh.geometry) {
                 const positions = mesh.geometry.getAttribute('position');
                 if (positions) {
@@ -78,6 +81,7 @@ export class DebugDisplay {
         this.stats.vertices = vertices;
         this.stats.triangles = triangles;
         this.stats.drawCalls = game.chunkMeshes.size;
+        this.lodChunks = lodChunks;
 
         if (performance.memory) {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
@@ -90,15 +94,16 @@ export class DebugDisplay {
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
-            `Chunks: ${this.stats.chunks}`,
+            `Chunks: ${this.stats.chunks} (LOD: ${this.lodChunks || 0})`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
             `Draw Calls: ${this.stats.drawCalls}`,
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3: Debug | H: Help',
+            'C: Pick | Left: Break',
+            'Right: Place | WASD: Move'
         ];
 
         this.container.innerHTML = lines.map(line => {
@@ -107,7 +112,7 @@ export class DebugDisplay {
             if (parts.length === 2) {
                 return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
             }
-            return `<div>${line}</div>`;
+            return `<div style="color: #88FF88;">${line}</div>`;
         }).join('');
     }
 }
