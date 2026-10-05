@@ -37,8 +37,13 @@ export class UI {
         if (index < 0 || index > 8) return;
 
         const slots = document.querySelectorAll('.inventory-slot');
-        slots.forEach(slot => slot.classList.remove('selected'));
-        slots[index].classList.add('selected');
+        slots.forEach((slot, i) => {
+            if (i === index) {
+                slot.classList.add('selected');
+            } else {
+                slot.classList.remove('selected');
+            }
+        });
 
         this.selectedBlock = index;
     }
