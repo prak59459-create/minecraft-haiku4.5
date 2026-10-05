@@ -46,16 +46,23 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5 + sunIntensity * 0.3);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -300;
+        directionalLight.shadow.camera.right = 300;
+        directionalLight.shadow.camera.top = 300;
+        directionalLight.shadow.camera.bottom = -300;
         this.scene.add(directionalLight);
+
+        const fog = new THREE.Fog(0x87CEEB, 300, 500);
+        this.scene.fog = fog;
 
         this.directionalLight = directionalLight;
     }
@@ -81,7 +88,29 @@ class MinecraftGame {
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
+            const keyNum = parseInt(e.key);
+            if (keyNum >= 1 && keyNum <= 9) {
+                const slot = keyNum - 1;
+                const blockTypes = [BLOCKS.STONE, BLOCKS.GRASS, BLOCKS.DIRT, BLOCKS.COBBLESTONE,
+                                   BLOCKS.OAK_LOG, BLOCKS.OAK_LEAVES, BLOCKS.SAND, BLOCKS.WATER, BLOCKS.GRAVEL];
+                if (slot < blockTypes.length) {
+                    this.selectedBlockType = blockTypes[slot];
+                    this.ui.selectInventorySlot(slot);
+                }
+            }
         });
+
+        document.addEventListener('wheel', (e) => {
+            if (document.pointerLockElement !== document.body) return;
+            e.preventDefault();
+            const blockTypes = [BLOCKS.STONE, BLOCKS.GRASS, BLOCKS.DIRT, BLOCKS.COBBLESTONE,
+                               BLOCKS.OAK_LOG, BLOCKS.OAK_LEAVES, BLOCKS.SAND, BLOCKS.WATER, BLOCKS.GRAVEL];
+            const currentIndex = blockTypes.indexOf(this.selectedBlockType);
+            let newIndex = currentIndex >= 0 ? currentIndex : 0;
+            newIndex = (newIndex + (e.deltaY > 0 ? 1 : -1) + blockTypes.length) % blockTypes.length;
+            this.selectedBlockType = blockTypes[newIndex];
+            this.ui.selectInventorySlot(newIndex);
+        }, { passive: false });
     }
 
     onMouseClick(event) {
@@ -180,9 +209,22 @@ class MinecraftGame {
             for (let dz = -1; dz <= 1; dz++) {
                 const key = `${cx + dx},${cz + dz}`;
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
+                    const mesh = this.chunkMeshes.get(key);
+                    this.scene.remove(mesh);
+                    this.disposeMesh(mesh);
                     this.chunkMeshes.delete(key);
                 }
+            }
+        }
+    }
+
+    disposeMesh(mesh) {
+        if (mesh.geometry) mesh.geometry.dispose();
+        if (mesh.material) {
+            if (Array.isArray(mesh.material)) {
+                mesh.material.forEach(mat => mat.dispose());
+            } else {
+                mesh.material.dispose();
             }
         }
     }
@@ -208,10 +250,11 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.5;
+                    const heightLight = Math.max(0, (wy - 62) / (WORLD_HEIGHT - 62)) * 0.4;
+                    const varLight = Math.sin(wx * 0.3 + wz * 0.3) * 0.15;
+                    const depthLight = 0.1 + (Math.random() * 0.05);
+                    const brightness = Math.min(1, baseLight + heightLight + varLight + depthLight);
 
                     color.multiplyScalar(brightness);
 
@@ -233,7 +276,8 @@ class MinecraftGame {
                 wireframe: false,
                 flatShading: false,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 25,
+                fog: true
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -295,7 +339,9 @@ class MinecraftGame {
 
             if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
+                    const mesh = this.chunkMeshes.get(key);
+                    this.scene.remove(mesh);
+                    this.disposeMesh(mesh);
                     this.chunkMeshes.delete(key);
                 }
                 continue;
@@ -366,14 +412,20 @@ class MinecraftGame {
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.4 + sunIntensity * 0.4;
+
+        const skyHue = 0.55 + Math.sin(time) * 0.1;
+        const skySaturation = Math.max(0.3, 0.5 - (0.3 * (1 - sunIntensity)));
+        const skyLightness = 0.45 + sunIntensity * 0.35;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        skyColor.setHSL(skyHue, skySaturation, skyLightness);
         this.scene.background = skyColor;
+
+        this.scene.fog.color = skyColor;
     }
 }
 

@@ -12,37 +12,24 @@ export class UI {
     setupInventoryUI() {
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach((slot, index) => {
-            const blockId = parseInt(slot.dataset.block);
             slot.addEventListener('click', () => {
-                this.selectBlock(index);
+                this.selectInventorySlot(index);
             });
         });
+    }
 
-        document.addEventListener('keydown', (e) => {
-            const num = parseInt(e.key);
-            if (num >= 1 && num <= 9) {
-                this.selectBlock(num - 1);
-            }
-        });
-
-        document.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const direction = e.deltaY > 0 ? 1 : -1;
-            let newIndex = this.selectedBlock + direction;
-            if (newIndex < 0) newIndex = 8;
-            if (newIndex > 8) newIndex = 0;
-            this.selectBlock(newIndex);
-        }, { passive: false });
+    selectInventorySlot(index) {
+        if (index < 0 || index > 8) return;
+        const slots = document.querySelectorAll('.inventory-slot');
+        slots.forEach(slot => slot.classList.remove('selected'));
+        if (slots[index]) {
+            slots[index].classList.add('selected');
+        }
+        this.selectedBlock = index;
     }
 
     selectBlock(index) {
-        if (index < 0 || index > 8) return;
-
-        const slots = document.querySelectorAll('.inventory-slot');
-        slots.forEach(slot => slot.classList.remove('selected'));
-        slots[index].classList.add('selected');
-
-        this.selectedBlock = index;
+        this.selectInventorySlot(index);
     }
 
     updateHUD(playerPos, selectedBlock, fps) {
