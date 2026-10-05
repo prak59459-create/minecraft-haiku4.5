@@ -3,17 +3,41 @@ export class AudioManager {
         this.audioContext = null;
         this.initialized = false;
         this.soundCache = new Map();
+        this.lastSoundTime = {};
+        this.soundCooldowns = {
+            break: 50,
+            place: 100,
+            jump: 200
+        };
         this.initAudioContext();
     }
 
     initAudioContext() {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         this.audioContext = audioContext;
+        document.addEventListener('click', () => {
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+                this.initialized = true;
+            }
+        });
+    }
+
+    canPlaySound(soundType) {
+        const now = Date.now();
+        const lastTime = this.lastSoundTime[soundType] || 0;
+        const cooldown = this.soundCooldowns[soundType] || 50;
+        return (now - lastTime) >= cooldown;
+    }
+
+    recordSoundPlay(soundType) {
+        this.lastSoundTime[soundType] = Date.now();
     }
 
     playBlockSound(type = 'break') {
-        if (!this.audioContext) return;
+        if (!this.audioContext || !this.canPlaySound(type)) return;
 
+        this.recordSoundPlay(type);
         const audioContext = this.audioContext;
         const now = audioContext.currentTime;
         const osc = audioContext.createOscillator();
@@ -40,8 +64,9 @@ export class AudioManager {
     }
 
     playJumpSound() {
-        if (!this.audioContext) return;
+        if (!this.audioContext || !this.canPlaySound('jump')) return;
 
+        this.recordSoundPlay('jump');
         const audioContext = this.audioContext;
         const now = audioContext.currentTime;
         const osc = audioContext.createOscillator();
