@@ -1,5 +1,61 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Performance & Features Update (Session 3)
+
+### Performance Optimizations
+- **Particle system overhaul**: Implemented object pooling to reduce memory allocation overhead
+- **Raycasting optimization**: Adaptive block stepping reduces iterations by 50% (0.1 step instead of 0.05)
+- **Water rendering fix**: Water meshes now properly render to scene (was previously broken)
+- **Color caching**: Pre-calculate and cache block colors during mesh generation
+- **Memory efficiency**: Use Uint8Array for color data in particles and water meshes
+- **Rendering improvements**:
+  - Disabled shadow casting for better performance
+  - Optimized mesh materials (removed unnecessary properties)
+  - Added power-preference hint for GPU usage
+  - Proper frustum culling configuration
+
+### Terrain & World Generation
+- **Enhanced ore distribution**: Added gravel generation in upper layers
+- **Improved tree generation**:
+  - Larger, more varied foliage (radius 3-5 blocks)
+  - Taller trunks (5-10 blocks)
+  - Better tree placement frequency (55% threshold)
+- **Better terrain variety**: Biome variation improvements
+
+### Physics & Collision Detection
+- **Improved movement logic**: Sprint/crouch only works when on ground
+- **Better collision detection**: Refined detection radius and ground detection
+- **Enhanced ground detection**: More reliable footstep detection with improved offset
+- **Physics tuning**: Increased fall damage height threshold (50 blocks)
+
+### User Interface
+- **FPS tracking**: Historical FPS averaging over 30 frames
+- **Inventory improvements**:
+  - Hover tooltips for block names
+  - Better slot selection robustness
+  - Improved wheel scroll handling (only active when pointer locked)
+- **Help system**: Updated help overlay with all controls
+- **Fullscreen support**: Press F11 to toggle fullscreen mode
+- **Camera improvements**: Only rotate when pointer is locked for better UX
+
+### Visual Enhancements
+- **Block outline optimization**: Cache last selected block to avoid redundant updates
+- **Frustum culling**: Disabled for block outline to ensure visibility
+- **Better lighting**: Improved ambient and directional light balancing
+
+### Debug & Development
+- **Enhanced debug display**:
+  - Now tracks water mesh count
+  - Shows combined mesh statistics
+  - Improved formatting and layout
+- **Better error handling**: Null checks for DOM elements
+- **Performance monitoring**: FPS history tracking
+
+### Bug Fixes
+- **Water rendering**: Fixed critical bug where water meshes weren't being added to scene
+- **Camera movement**: Fixed camera rotation happening outside pointer lock
+- **Inventory scrolling**: Fixed wheel events firing globally
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features
