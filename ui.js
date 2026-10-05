@@ -45,7 +45,7 @@ export class UI {
         this.selectedBlock = index;
     }
 
-    updateHUD(playerPos, selectedBlock, fps) {
+    updateHUD(playerPos, selectedBlock, fps, player) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
@@ -53,6 +53,29 @@ export class UI {
         coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
         fpsEl.textContent = `FPS: ${fps}`;
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+
+        if (player) {
+            const healthPercent = (player.health / player.maxHealth) * 100;
+            const staminaPercent = (player.stamina / player.maxStamina) * 100;
+
+            let healthBar = document.getElementById('healthBar');
+            if (!healthBar) {
+                healthBar = document.createElement('div');
+                healthBar.id = 'healthBar';
+                healthBar.style.cssText = 'position: absolute; bottom: 80px; left: 10px; width: 100px; height: 8px; background: rgba(0,0,0,0.5); border: 1px solid white;';
+                document.getElementById('ui').appendChild(healthBar);
+            }
+            healthBar.style.backgroundImage = `linear-gradient(to right, #ff4444 ${healthPercent}%, rgba(0,0,0,0.3) ${healthPercent}%)`;
+
+            let staminaBar = document.getElementById('staminaBar');
+            if (!staminaBar) {
+                staminaBar = document.createElement('div');
+                staminaBar.id = 'staminaBar';
+                staminaBar.style.cssText = 'position: absolute; bottom: 65px; left: 10px; width: 100px; height: 8px; background: rgba(0,0,0,0.5); border: 1px solid white;';
+                document.getElementById('ui').appendChild(staminaBar);
+            }
+            staminaBar.style.backgroundImage = `linear-gradient(to right, #44ff44 ${staminaPercent}%, rgba(0,0,0,0.3) ${staminaPercent}%)`;
+        }
     }
 
     updateFPS() {

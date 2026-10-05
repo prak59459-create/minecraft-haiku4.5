@@ -20,6 +20,14 @@ export class Player {
         this.isSprinting = false;
         this.isCrouching = false;
 
+        this.stamina = 100;
+        this.maxStamina = 100;
+        this.health = 20;
+        this.maxHealth = 20;
+
+        this.movementTicks = 0;
+        this.sprintCooldown = 0;
+
         this.keys = {};
         this.setupKeyboardControls();
     }
@@ -47,6 +55,26 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        this.updateStamina();
+    }
+
+    updateStamina() {
+        const moveSpeed = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+
+        if (this.isSprinting && moveSpeed > 0.05) {
+            this.stamina = Math.max(0, this.stamina - 0.3);
+        } else {
+            this.stamina = Math.min(this.maxStamina, this.stamina + 0.15);
+        }
+
+        if (this.stamina <= 0) {
+            this.isSprinting = false;
+            this.sprintCooldown = 30;
+        }
+
+        if (this.sprintCooldown > 0) {
+            this.sprintCooldown--;
+        }
     }
 
     handleMovement() {
@@ -165,6 +193,8 @@ export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
+        this.bobAmount = 0;
+        this.bobCycle = 0;
         this.setupMouseControls();
     }
 
@@ -186,5 +216,13 @@ export class Camera {
     updateFromPlayer(player) {
         player.rotation.x = this.rotation.x;
         player.rotation.y = this.rotation.y;
+
+        const moveSpeed = Math.sqrt(player.velocity.x ** 2 + player.velocity.z ** 2);
+        if (moveSpeed > 0.01 && player.isOnGround) {
+            this.bobCycle += (player.isSprinting ? 0.16 : 0.09);
+            this.bobAmount = Math.sin(this.bobCycle) * 0.06 * (player.isSprinting ? 1.5 : 1.0);
+        } else {
+            this.bobAmount *= 0.9;
+        }
     }
 }

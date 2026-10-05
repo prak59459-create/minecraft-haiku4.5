@@ -32,6 +32,9 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.viewDistance = 10;
+        this.minViewDistance = 4;
+        this.maxViewDistance = 16;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -88,6 +91,12 @@ class MinecraftGame {
             }
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
+            }
+            if (e.key === '+' || e.key === '=') {
+                this.viewDistance = Math.min(this.maxViewDistance, this.viewDistance + 1);
+            }
+            if (e.key === '-' || e.key === '_') {
+                this.viewDistance = Math.max(this.minViewDistance, this.viewDistance - 1);
             }
         });
 
@@ -228,12 +237,25 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.65;
+                    const heightLight = (wy / WORLD_HEIGHT) * 0.35;
+                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.08;
 
-                    color.multiplyScalar(brightness);
+                    let aoLight = 1.0;
+                    const neighbors = [
+                        this.world.getBlock(wx + 1, wy, wz),
+                        this.world.getBlock(wx - 1, wy, wz),
+                        this.world.getBlock(wx, wy + 1, wz),
+                        this.world.getBlock(wx, wy - 1, wz),
+                        this.world.getBlock(wx, wy, wz + 1),
+                        this.world.getBlock(wx, wy, wz - 1)
+                    ];
+                    const solidNeighbors = neighbors.filter(b => isBlockSolid(b)).length;
+                    aoLight = 1.0 - (solidNeighbors * 0.05);
+
+                    const brightness = (baseLight + heightLight + varLight) * aoLight;
+
+                    color.multiplyScalar(Math.max(0.3, brightness));
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
                 }
@@ -308,7 +330,6 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
-        const renderDist = 10;
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
@@ -316,7 +337,7 @@ class MinecraftGame {
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
-            if (Math.abs(cx - playerChunkX) > renderDist || Math.abs(cz - playerChunkZ) > renderDist) {
+            if (Math.abs(cx - playerChunkX) > this.viewDistance || Math.abs(cz - playerChunkZ) > this.viewDistance) {
                 if (this.chunkMeshes.has(key)) {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
@@ -361,7 +382,11 @@ class MinecraftGame {
         this.gameCamera.updateFromPlayer(this.player);
 
         const eyePos = this.player.getEyePosition();
-        this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
+        this.camera.position.set(
+            eyePos.x,
+            eyePos.y + this.gameCamera.bobAmount,
+            eyePos.z
+        );
 
         const direction = new THREE.Vector3(
             Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
@@ -387,7 +412,7 @@ class MinecraftGame {
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps, this.player);
 
         if (this.showDebug) {
             this.debugDisplay.update(this);
@@ -399,14 +424,20 @@ class MinecraftGame {
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.4 + sunIntensity * 0.4;
+
+        const skyHue = 0.58 + (1 - sunIntensity) * 0.05;
+        const skySaturation = 0.35 + sunIntensity * 0.2;
+        const skyLightness = 0.45 + sunIntensity * 0.35;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        skyColor.setHSL(skyHue, skySaturation, skyLightness);
         this.scene.background = skyColor;
+
+        this.scene.fog.color.copy(skyColor);
     }
 }
 
