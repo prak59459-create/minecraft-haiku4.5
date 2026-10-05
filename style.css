@@ -151,3 +151,16 @@ body {
         font-size: 9px;
     }
 }
+
+#fps {
+    color: #00ff00;
+    font-weight: bold;
+}
+
+#coords {
+    color: #aaaaff;
+}
+
+#blockInfo {
+    color: #ffaa00;
+}
