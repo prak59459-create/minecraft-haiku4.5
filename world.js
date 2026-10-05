@@ -108,12 +108,13 @@ function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
     const baseNoise = perlinNoise.noise2D(x * 0.08, z * 0.08);
-    const yFactor = y * 0.02;
+    const depthFactor = y / 256;
 
-    if (y < 40 && baseNoise + yFactor * 0.5 > 0.75) return BLOCKS.DIAMOND_ORE;
-    if (y < 80 && baseNoise + yFactor * 0.4 > 0.7) return BLOCKS.GOLD_ORE;
-    if (y < 120 && baseNoise + yFactor * 0.3 > 0.6) return BLOCKS.IRON_ORE;
-    if (y < 160 && baseNoise + yFactor * 0.2 > 0.5) return BLOCKS.COAL_ORE;
+    if (y < 30 && baseNoise > 0.7 + depthFactor * 0.2) return BLOCKS.DIAMOND_ORE;
+    if (y < 60 && baseNoise > 0.65 + depthFactor * 0.15) return BLOCKS.DIAMOND_ORE;
+    if (y < 100 && baseNoise > 0.6 + depthFactor * 0.1) return BLOCKS.GOLD_ORE;
+    if (y < 150 && baseNoise > 0.55) return BLOCKS.IRON_ORE;
+    if (y < 160 && baseNoise > 0.5) return BLOCKS.COAL_ORE;
 
     return BLOCKS.STONE;
 }
@@ -159,6 +160,7 @@ export class World {
     constructor(renderDistance = 8) {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
+        this.maxChunksInMemory = (renderDistance * 2 + 1) ** 2 + 50;
         initPerlinNoise();
     }
 
@@ -210,9 +212,11 @@ export class World {
         }
 
         const toDelete = [];
-        for (const [key] of this.chunks) {
-            if (!chunksToKeep.has(key)) {
-                toDelete.push(key);
+        if (this.chunks.size > this.maxChunksInMemory) {
+            for (const [key] of this.chunks) {
+                if (!chunksToKeep.has(key)) {
+                    toDelete.push(key);
+                }
             }
         }
 
