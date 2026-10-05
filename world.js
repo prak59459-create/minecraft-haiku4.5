@@ -52,14 +52,28 @@ export class Chunk {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
                     } else if (y < height - 2) {
-                        this.setBlock(x, y, z, terrainType === 'sand' ? BLOCKS.SAND : BLOCKS.DIRT);
+                        if (terrainType === 'sand') {
+                            this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'mountain') {
+                            this.setBlock(x, y, z, BLOCKS.STONE);
+                        } else {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
+                        }
                     } else if (y < height - 1) {
-                        this.setBlock(x, y, z, terrainType === 'sand' ? BLOCKS.SAND : BLOCKS.DIRT);
+                        if (terrainType === 'sand') {
+                            this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'mountain' && height > 130) {
+                            this.setBlock(x, y, z, BLOCKS.STONE);
+                        } else {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
+                        }
                     } else if (y < height) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
                         } else if (terrainType === 'mountain') {
-                            this.setBlock(x, y, z, height > 120 ? BLOCKS.STONE : BLOCKS.GRASS);
+                            this.setBlock(x, y, z, height > 130 ? BLOCKS.STONE : BLOCKS.GRASS);
+                        } else if (terrainType === 'forest') {
+                            this.setBlock(x, y, z, BLOCKS.GRASS);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
@@ -131,25 +145,29 @@ function generateTree(chunk, x, z, height, terrainType) {
     const worldZ = chunk.z * CHUNK_SIZE + z;
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
 
-    const baseChance = terrainType === 'forest' ? 0.3 : 0.5;
+    const baseChance = terrainType === 'forest' ? 0.25 : (terrainType === 'mountain' ? 0.7 : 0.5);
     if (treeChance < baseChance) return;
 
-    const trunkHeight = terrainType === 'mountain' ? 3 + Math.floor(Math.random() * 2) : 4 + Math.floor(Math.random() * 4);
+    const isSpruceTree = terrainType === 'mountain' || (terrainType === 'forest' && Math.random() > 0.5);
+    const trunkHeight = isSpruceTree ? (3 + Math.floor(Math.random() * 3)) : (4 + Math.floor(Math.random() * 4));
+    const trunkBlock = isSpruceTree ? BLOCKS.SPRUCE_LOG : BLOCKS.OAK_LOG;
+    const leavesBlock = isSpruceTree ? BLOCKS.SPRUCE_LEAVES : BLOCKS.OAK_LEAVES;
+
     const y = height;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
             if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
-                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
+                chunk.setBlock(x, y + i, z, trunkBlock);
             }
         }
     }
 
     const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = terrainType === 'forest' ? 2 + Math.floor(Math.random() * 2) : 2 + Math.floor(Math.random() * 1);
+    const foliageRadius = isSpruceTree ? (1 + Math.floor(Math.random() * 2)) : (2 + Math.floor(Math.random() * 2));
 
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
+        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / (isSpruceTree ? 1.2 : 1.5)));
         for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
             for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
                 const dx = Math.round(Math.cos(angle) * dist);
@@ -160,7 +178,7 @@ function generateTree(chunk, x, z, height, terrainType) {
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
                     if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
-                        chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                        chunk.setBlock(fx, fy, fz, leavesBlock);
                     }
                 }
             }
