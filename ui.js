@@ -12,26 +12,35 @@ export class UI {
     setupInventoryUI() {
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach((slot, index) => {
-            const blockId = parseInt(slot.dataset.block);
             slot.addEventListener('click', () => {
                 this.selectBlock(index);
+            });
+            slot.addEventListener('pointerenter', () => {
+                if (document.pointerLockElement === document.body) {
+                    slot.style.opacity = '0.7';
+                }
+            });
+            slot.addEventListener('pointerleave', () => {
+                slot.style.opacity = '1';
             });
         });
 
         document.addEventListener('keydown', (e) => {
             const num = parseInt(e.key);
-            if (num >= 1 && num <= 9) {
+            if (num >= 1 && num <= 9 && document.pointerLockElement === document.body) {
                 this.selectBlock(num - 1);
             }
         });
 
         document.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const direction = e.deltaY > 0 ? 1 : -1;
-            let newIndex = this.selectedBlock + direction;
-            if (newIndex < 0) newIndex = 8;
-            if (newIndex > 8) newIndex = 0;
-            this.selectBlock(newIndex);
+            if (document.pointerLockElement === document.body) {
+                e.preventDefault();
+                const direction = e.deltaY > 0 ? 1 : -1;
+                let newIndex = this.selectedBlock + direction;
+                if (newIndex < 0) newIndex = 8;
+                if (newIndex > 8) newIndex = 0;
+                this.selectBlock(newIndex);
+            }
         }, { passive: false });
     }
 
