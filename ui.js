@@ -62,6 +62,21 @@ export class UI {
         }
     }
 
+    showNotification(message, duration = 3000) {
+        const notification = document.getElementById('notification');
+        if (notification) {
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, duration);
+        }
+    }
+
+    showLoadingMessage() {
+        this.showNotification('Generating world...', 2000);
+    }
+
     selectBlock(index) {
         if (index < 0 || index > 8) return;
 

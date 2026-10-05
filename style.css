@@ -164,3 +164,24 @@ body {
 #blockInfo {
     color: #ffaa00;
 }
+
+#notification {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px 30px;
+    border-radius: 8px;
+    font-size: 18px;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 100;
+}
+
+#notification.show {
+    opacity: 1;
+}
