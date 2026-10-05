@@ -7,29 +7,37 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { Config } from './config.js';
+import { WorldSave } from './worldsave.js';
+import { CreativeMode } from './creativemode.js';
 
 class MinecraftGame {
-    constructor() {
+    constructor(config) {
+        this.config = config || {};
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
 
         this.world = new World();
-        this.player = new Player(this.world);
-        this.gameCamera = new Camera();
+        this.player = new Player(this.world, this.config);
+        this.gameCamera = new Camera(this.config);
         this.ui = new UI();
-        this.particleSystem = new ParticleSystem(this.scene);
+        this.particleSystem = new ParticleSystem(this.scene, this.config.graphics || {});
         this.waterRenderer = new WaterRenderer(this.scene, this.world);
         this.audioManager = new AudioManager();
         this.debugDisplay = new DebugDisplay();
         this.blockOutline = new BlockOutline(this.scene);
+        this.creativeMode = new CreativeMode(this.player);
 
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
-        this.raycastDistance = 6;
+        this.raycastDistance = this.config.raycast?.distance || 6;
+        this.raycastStep = this.config.raycast?.stepSize || 0.05;
+        this.renderDistance = this.config.world?.renderDistance || 8;
         this.lastBreakSound = 0;
         this.showDebug = false;
 
@@ -81,7 +89,41 @@ class MinecraftGame {
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
+            if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+                e.preventDefault();
+                this.saveWorld();
+            }
+            if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) {
+                e.preventDefault();
+                this.loadWorld();
+            }
         });
+    }
+
+    saveWorld() {
+        if (WorldSave.saveWorld(this.world)) {
+            console.log('World saved successfully');
+            this.ui.showMessage('World saved!');
+        } else {
+            console.error('Failed to save world');
+            this.ui.showMessage('Failed to save world');
+        }
+    }
+
+    loadWorld() {
+        if (WorldSave.loadWorld(this.world)) {
+            console.log('World loaded successfully');
+            this.chunkMeshes.clear();
+            this.scene.children = this.scene.children.filter(obj =>
+                obj !== this.blockOutline.mesh &&
+                obj !== this.waterRenderer.mesh &&
+                obj !== this.particleSystem.points
+            );
+            this.ui.showMessage('World loaded!');
+        } else {
+            console.error('Failed to load world');
+            this.ui.showMessage('No saved world found');
+        }
     }
 
     onMouseClick(event) {
@@ -134,8 +176,9 @@ class MinecraftGame {
         );
 
         let hit = null;
+        let prevBx = Math.floor(eyePos.x), prevBy = Math.floor(eyePos.y), prevBz = Math.floor(eyePos.z);
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = this.raycastStep; dist <= this.raycastDistance; dist += this.raycastStep) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -144,32 +187,24 @@ class MinecraftGame {
             const by = Math.floor(y);
             const bz = Math.floor(z);
 
+            if (bx === prevBx && by === prevBy && bz === prevBz) continue;
+
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
-                const prevX = eyePos.x + direction.x * prevDist;
-                const prevY = eyePos.y + direction.y * prevDist;
-                const prevZ = eyePos.z + direction.z * prevDist;
-
-                const prevBx = Math.floor(prevX);
-                const prevBy = Math.floor(prevY);
-                const prevBz = Math.floor(prevZ);
-
                 let normal = { x: 0, y: 0, z: 0 };
                 if (prevBx !== bx) normal.x = prevBx < bx ? -1 : 1;
                 else if (prevBy !== by) normal.y = prevBy < by ? -1 : 1;
                 else if (prevBz !== bz) normal.z = prevBz < bz ? -1 : 1;
 
-                hit = { x: bx, y: by, z: bz, block, normal, dist };
-                break;
+                return { x: bx, y: by, z: bz, block, normal, dist };
             }
+
+            prevBx = bx;
+            prevBy = by;
+            prevBz = bz;
         }
 
-        if (!hit) {
-            hit = { x: 0, y: 0, z: 0, block: BLOCKS.AIR, normal: { x: 0, y: 1, z: 0 }, dist: this.raycastDistance };
-        }
-
-        return hit;
+        return { x: 0, y: 0, z: 0, block: BLOCKS.AIR, normal: { x: 0, y: 1, z: 0 }, dist: this.raycastDistance };
     }
 
     updateChunkMesh(x, y, z) {
@@ -290,16 +325,24 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const meshesToRemove = [];
+        for (const [key, mesh] of this.chunkMeshes) {
+            const [cx, cz] = key.split(',').map(Number);
+            const distance = Math.abs(cx - playerChunkX) + Math.abs(cz - playerChunkZ);
+
+            if (distance > this.renderDistance) {
+                this.scene.remove(mesh);
+                meshesToRemove.push(key);
+            }
+        }
+
+        meshesToRemove.forEach(key => this.chunkMeshes.delete(key));
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const distance = Math.abs(cx - playerChunkX) + Math.abs(cz - playerChunkZ);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
-                if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
-                }
-                continue;
-            }
+            if (distance > this.renderDistance) continue;
 
             if (!this.chunkMeshes.has(key)) {
                 const mesh = this.buildChunkMesh(chunk);
@@ -328,6 +371,7 @@ class MinecraftGame {
     animate() {
         requestAnimationFrame(() => this.animate());
 
+        this.creativeMode.update();
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
 
@@ -377,4 +421,9 @@ class MinecraftGame {
     }
 }
 
-const game = new MinecraftGame();
+async function initGame() {
+    await Config.load();
+    const game = new MinecraftGame(Config.data);
+}
+
+initGame().catch(e => console.error('Failed to initialize game:', e));
