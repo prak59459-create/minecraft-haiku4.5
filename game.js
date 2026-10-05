@@ -28,7 +28,6 @@ class MinecraftGame {
         this.blockOutline = new BlockOutline(this.scene);
 
         this.chunkMeshes = new Map();
-        this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
@@ -46,17 +45,22 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6 + sunIntensity * 0.1);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7 + sunIntensity * 0.2);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
+        directionalLight.shadow.mapSize.width = 4096;
+        directionalLight.shadow.mapSize.height = 4096;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -256;
+        directionalLight.shadow.camera.right = 256;
+        directionalLight.shadow.camera.top = 256;
+        directionalLight.shadow.camera.bottom = -256;
         this.scene.add(directionalLight);
 
+        this.scene.fog = new THREE.Fog(0x87CEEB, 200, 1000);
         this.directionalLight = directionalLight;
     }
 
@@ -70,7 +74,13 @@ class MinecraftGame {
             if (e.key === 'c' || e.key === 'C') {
                 const hit = this.raycastBlock();
                 if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
-                    this.selectedBlockType = hit.block;
+                    for (let i = 0; i < 9; i++) {
+                        const slots = document.querySelectorAll('.inventory-slot');
+                        if (parseInt(slots[i].dataset.block) === hit.block) {
+                            this.ui.selectBlock(i);
+                            break;
+                        }
+                    }
                 }
             }
             if (e.key === 'F3') {
@@ -109,7 +119,8 @@ class MinecraftGame {
             const nz = hit.z + norm.z;
 
             if (!this.isPlayerOccupying(nx, ny, nz)) {
-                this.world.setBlock(nx, ny, nz, this.selectedBlockType);
+                const blockToPlace = this.ui.getSelectedBlockId();
+                this.world.setBlock(nx, ny, nz, blockToPlace);
                 this.updateChunkMesh(nx, ny, nz);
                 this.audioManager.playBlockSound('place');
             }
@@ -195,6 +206,7 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
+        const colorCache = new Map();
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -206,16 +218,22 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const color = new THREE.Color(BLOCK_COLORS[blockId]);
+                    const cacheKey = `${blockId}:${wx}:${wz}`;
+                    let rgb;
+                    if (colorCache.has(cacheKey)) {
+                        rgb = colorCache.get(cacheKey);
+                    } else {
+                        const color = new THREE.Color(BLOCK_COLORS[blockId]);
+                        const baseLight = 0.7;
+                        const heightLight = Math.min(0.3, (wy / WORLD_HEIGHT) * 0.3);
+                        const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
+                        const brightness = Math.min(1.0, baseLight + heightLight + varLight);
+                        color.multiplyScalar(brightness);
+                        rgb = [Math.floor(color.r * 255), Math.floor(color.g * 255), Math.floor(color.b * 255)];
+                        colorCache.set(cacheKey, rgb);
+                    }
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
-
-                    color.multiplyScalar(brightness);
-
-                    this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
+                    this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, rgb, chunk);
                 }
             }
         }
@@ -231,9 +249,10 @@ class MinecraftGame {
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
+                flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 10,
+                fog: true
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -245,7 +264,7 @@ class MinecraftGame {
         return null;
     }
 
-    addBlockFaces(vertices, colors, indices, x, y, z, blockId, color, chunk) {
+    addBlockFaces(vertices, colors, indices, x, y, z, blockId, rgb, chunk) {
         let faceCount = 0;
 
         const faces = [
@@ -257,9 +276,7 @@ class MinecraftGame {
             { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
         ];
 
-        const r = Math.floor(color.r * 255);
-        const g = Math.floor(color.g * 255);
-        const b = Math.floor(color.b * 255);
+        const [r, g, b] = rgb;
 
         for (const face of faces) {
             const [dx, dy, dz] = face.dir;
@@ -354,7 +371,8 @@ class MinecraftGame {
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+        const selectedBlockId = this.ui.getSelectedBlockId();
+        this.ui.updateHUD(this.player.position, selectedBlockId, fps);
 
         if (this.showDebug) {
             this.debugDisplay.update(this);
@@ -366,14 +384,40 @@ class MinecraftGame {
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.1, Math.sin(time) + 0.5);
+        const timeOfDay = ((time % (Math.PI * 2)) / (Math.PI * 2)) * 24;
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.4 + sunIntensity * 0.4;
 
-        const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        let skyColor = new THREE.Color();
+        let fogColor = 0x87CEEB;
+
+        if (timeOfDay < 6 || timeOfDay > 21) {
+            skyColor.setHSL(0.65, 0.2, 0.1);
+            fogColor = 0x1a1a2e;
+        } else if (timeOfDay < 7) {
+            const t = (timeOfDay - 6);
+            skyColor.lerpColors(new THREE.Color(0x1a1a2e), new THREE.Color(0xff9b5c), t);
+            fogColor = 0xff9b5c;
+        } else if (timeOfDay < 9) {
+            skyColor.setHSL(0.6, 0.5, 0.5 + sunIntensity * 0.25);
+            fogColor = 0x87CEEB;
+        } else if (timeOfDay < 17) {
+            skyColor.setHSL(0.6, 0.6, 0.55 + sunIntensity * 0.2);
+            fogColor = 0x87CEEB;
+        } else if (timeOfDay < 19) {
+            const t = (timeOfDay - 17) / 2;
+            skyColor.lerpColors(new THREE.Color(0x87CEEB), new THREE.Color(0xf68a38), t);
+            fogColor = 0xf68a38;
+        } else if (timeOfDay < 21) {
+            const t = (timeOfDay - 19) / 2;
+            skyColor.lerpColors(new THREE.Color(0xf68a38), new THREE.Color(0x1a1a2e), t);
+            fogColor = 0x2d3561;
+        }
+
         this.scene.background = skyColor;
+        this.scene.fog.color.setHex(fogColor);
     }
 }
 

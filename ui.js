@@ -13,6 +13,7 @@ export class UI {
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach((slot, index) => {
             const blockId = parseInt(slot.dataset.block);
+            this.blocks[index] = blockId;
             slot.addEventListener('click', () => {
                 this.selectBlock(index);
             });
@@ -43,6 +44,10 @@ export class UI {
         slots[index].classList.add('selected');
 
         this.selectedBlock = index;
+    }
+
+    getSelectedBlockId() {
+        return this.blocks[this.selectedBlock];
     }
 
     updateHUD(playerPos, selectedBlock, fps) {
