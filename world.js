@@ -89,11 +89,14 @@ export class Chunk {
 function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
-    let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 35;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 18;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 10;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 5;
+    let height = 62;
+
+    const scale1 = perlinNoise.noise2D(x * 0.002, z * 0.002) * 40;
+    const scale2 = perlinNoise.noise2D(x * 0.015, z * 0.015) * 20;
+    const scale3 = perlinNoise.noise2D(x * 0.045, z * 0.045) * 12;
+    const scale4 = perlinNoise.noise2D(x * 0.12, z * 0.12) * 6;
+
+    height += scale1 + scale2 + scale3 + scale4;
 
     return Math.max(20, Math.min(160, Math.floor(height)));
 }
@@ -114,17 +117,21 @@ function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
     let ore = BLOCKS.STONE;
-    const height = y / 256;
 
-    const coalChance = perlinNoise.noise2D(x * 0.12 + y * 0.08, z * 0.12 + y * 0.08);
-    const ironChance = perlinNoise.noise2D(x * 0.1 + y * 0.06, z * 0.1 + y * 0.06);
+    const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.08, z * 0.1 + y * 0.08);
+    const ironChance = perlinNoise.noise2D(x * 0.09 + y * 0.06, z * 0.09 + y * 0.06);
     const goldChance = perlinNoise.noise2D(x * 0.08 + y * 0.04, z * 0.08 + y * 0.04);
-    const diamondChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
+    const diamondChance = perlinNoise.noise2D(x * 0.07 + y * 0.02, z * 0.07 + y * 0.02);
 
-    if (y < 160 && coalChance > 0.45) ore = BLOCKS.COAL_ORE;
-    else if (y < 120 && ironChance > 0.55) ore = BLOCKS.IRON_ORE;
-    else if (y < 80 && goldChance > 0.65) ore = BLOCKS.GOLD_ORE;
-    else if (y < 40 && diamondChance > 0.7) ore = BLOCKS.DIAMOND_ORE;
+    if (y < 160 && coalChance > 0.4) {
+        ore = BLOCKS.COAL_ORE;
+    } else if (y < 120 && ironChance > 0.5) {
+        ore = BLOCKS.IRON_ORE;
+    } else if (y < 80 && goldChance > 0.62) {
+        ore = BLOCKS.GOLD_ORE;
+    } else if (y < 40 && diamondChance > 0.68) {
+        ore = BLOCKS.DIAMOND_ORE;
+    }
 
     return ore;
 }

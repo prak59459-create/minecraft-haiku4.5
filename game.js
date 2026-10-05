@@ -371,18 +371,24 @@ class MinecraftGame {
 
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
-        const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
+        const sinTime = Math.sin(time);
+        const sunY = sinTime * 120 + 100;
+        const sunIntensity = Math.max(0.15, sinTime + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
         this.directionalLight.intensity = 0.4 + sunIntensity * 0.4;
 
-        const skyHue = Math.sin(time) > 0 ? 0.6 : 0.8;
-        const skySat = Math.sin(time) > 0 ? 0.5 : 0.1;
-        const skyLight = 0.4 + sunIntensity * 0.4;
+        let skyColor;
+        if (sinTime > 0.3) {
+            skyColor = new THREE.Color(0x87CEEB);
+            skyColor.lerp(new THREE.Color(0xE0FFFF), Math.max(0, Math.min(1, sunIntensity)));
+        } else if (sinTime > -0.3) {
+            skyColor = new THREE.Color(0xFF8C3B);
+            skyColor.lerp(new THREE.Color(0x1a1a2e), Math.abs(sinTime) * 0.5);
+        } else {
+            skyColor = new THREE.Color(0x0a0a15);
+        }
 
-        const skyColor = new THREE.Color();
-        skyColor.setHSL(skyHue, skySat, skyLight);
         this.scene.background = skyColor;
     }
 }
