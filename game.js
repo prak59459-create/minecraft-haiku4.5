@@ -42,6 +42,7 @@ class MinecraftGame {
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
+        this.lastChunkUpdateTime = 0;
         this.showDebug = false;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
@@ -57,15 +58,17 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
+        this.ambientLight = ambientLight;
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.25);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.bias = -0.001;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -308,6 +311,8 @@ class MinecraftGame {
 
         const RENDER_DISTANCE = 8;
         const UNLOAD_DISTANCE = 10;
+        let meshesUpdated = 0;
+        const maxUpdatesPerFrame = 4;
 
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
@@ -318,26 +323,25 @@ class MinecraftGame {
                 if (this.chunkMeshes.has(key)) {
                     const mesh = this.chunkMeshes.get(key);
                     this.scene.remove(mesh);
-                    mesh.geometry.dispose();
-                    mesh.material.dispose();
+                    if (mesh.geometry) mesh.geometry.dispose();
                     this.chunkMeshes.delete(key);
                 }
                 continue;
             }
 
             if (dx <= RENDER_DISTANCE && dz <= RENDER_DISTANCE) {
-                if (!this.chunkMeshes.has(key)) {
+                if (!this.chunkMeshes.has(key) && meshesUpdated < maxUpdatesPerFrame) {
                     const mesh = this.buildChunkMesh(chunk);
                     if (mesh) {
                         this.scene.add(mesh);
                         this.chunkMeshes.set(key, mesh);
+                        meshesUpdated++;
                     }
                 }
             } else if (this.chunkMeshes.has(key)) {
                 const mesh = this.chunkMeshes.get(key);
                 this.scene.remove(mesh);
-                mesh.geometry.dispose();
-                mesh.material.dispose();
+                if (mesh.geometry) mesh.geometry.dispose();
                 this.chunkMeshes.delete(key);
             }
         }
@@ -411,13 +415,25 @@ class MinecraftGame {
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
+        const cycleFraction = (time % (Math.PI * 2)) / (Math.PI * 2);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.5 + sunIntensity * 0.35;
 
-        const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        const ambientIntensity = 0.35 + sunIntensity * 0.2;
+        this.ambientLight.intensity = ambientIntensity;
+
+        let skyColor = new THREE.Color();
+        if (cycleFraction < 0.25) {
+            skyColor.setHSL(0.6, 0.6, 0.3 + sunIntensity * 0.2);
+        } else if (cycleFraction < 0.5) {
+            skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        } else if (cycleFraction < 0.75) {
+            skyColor.setHSL(0.58, 0.5, 0.35 + sunIntensity * 0.2);
+        } else {
+            skyColor.setHSL(0.6, 0.2, 0.15 + sunIntensity * 0.1);
+        }
         this.scene.background = skyColor;
     }
 }
