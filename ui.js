@@ -3,7 +3,7 @@ import { BLOCK_NAMES } from './blocks.js';
 export class UI {
     constructor() {
         this.selectedBlock = 1;
-        this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        this.blocks = [1, 2, 3, 7, 4, 5, 15, 16, 11];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
         this.setupInventoryUI();
@@ -42,7 +42,7 @@ export class UI {
         slots.forEach(slot => slot.classList.remove('selected'));
         slots[index].classList.add('selected');
 
-        this.selectedBlock = index;
+        this.selectedBlock = this.blocks[index];
     }
 
     updateHUD(playerPos, selectedBlock, fps) {
