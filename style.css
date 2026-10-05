@@ -37,7 +37,30 @@ body {
     margin: -10px 0 0 -10px;
     border: 2px solid rgba(255, 255, 255, 0.8);
     border-radius: 50%;
-    box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+    transition: all 0.1s ease;
+}
+
+#crosshair::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    width: 1px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.6);
+    margin-left: -0.5px;
+}
+
+#crosshair::after {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 50%;
+    width: 4px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.6);
+    margin-top: -0.5px;
 }
 
 #hud {
