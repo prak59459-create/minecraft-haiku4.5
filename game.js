@@ -98,6 +98,15 @@ class MinecraftGame {
             if (e.key === '-' || e.key === '_') {
                 this.viewDistance = Math.max(this.minViewDistance, this.viewDistance - 1);
             }
+            if (e.key === 'g' || e.key === 'G') {
+                this.player.creativeMode = !this.player.creativeMode;
+                if (this.player.creativeMode) {
+                    this.player.velocity.y = 0;
+                    this.player.isFlying = true;
+                } else {
+                    this.player.isFlying = false;
+                }
+            }
         });
 
         document.addEventListener('wheel', (e) => {

@@ -28,6 +28,10 @@ export class Player {
         this.movementTicks = 0;
         this.sprintCooldown = 0;
 
+        this.isFlying = false;
+        this.creativeMode = false;
+        this.isInWater = false;
+
         this.keys = {};
         this.setupKeyboardControls();
     }
@@ -52,10 +56,19 @@ export class Player {
     }
 
     update() {
+        this.checkWaterStatus();
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
         this.updateStamina();
+    }
+
+    checkWaterStatus() {
+        const px = Math.floor(this.position.x);
+        const py = Math.floor(this.position.y + PLAYER_HEIGHT * 0.5);
+        const pz = Math.floor(this.position.z);
+        const block = this.world.getBlock(px, py, pz);
+        this.isInWater = block === BLOCKS.WATER;
     }
 
     updateStamina() {
@@ -81,7 +94,13 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        let speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+
+        if (this.isInWater) {
+            speed *= 0.5;
+        } else if (this.creativeMode && this.isFlying) {
+            speed *= 1.5;
+        }
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -94,13 +113,28 @@ export class Player {
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
 
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']) && !this.isInWater;
+        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']) && !this.isInWater;
     }
 
     applyPhysics() {
-        if (!this.isOnGround) {
-            this.velocity.y -= GRAVITY;
+        if (this.creativeMode && this.isFlying) {
+            if (this.keys[' ']) {
+                this.velocity.y = 0.15;
+            } else if (this.keys['shift']) {
+                this.velocity.y = -0.15;
+            } else {
+                this.velocity.y = 0;
+            }
+        } else if (this.isInWater) {
+            this.velocity.y -= GRAVITY * 0.3;
+            if (this.keys[' ']) {
+                this.velocity.y = Math.min(this.velocity.y + 0.15, 0.1);
+            }
+        } else {
+            if (!this.isOnGround) {
+                this.velocity.y -= GRAVITY;
+            }
         }
 
         this.position.x += this.velocity.x;
@@ -109,6 +143,11 @@ export class Player {
     }
 
     checkCollisions() {
+        if (this.creativeMode && this.isFlying) {
+            this.isOnGround = false;
+            return;
+        }
+
         const radius = PLAYER_WIDTH / 2;
         const height = PLAYER_HEIGHT;
 
