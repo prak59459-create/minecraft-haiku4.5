@@ -5,10 +5,11 @@ export class WaterRenderer {
         this.scene = scene;
         this.world = world;
         this.waterMeshes = new Map();
+        this.lavaMeshes = new Map();
         this.time = 0;
     }
 
-    buildWaterMesh(chunk) {
+    buildLiquidMesh(chunk, liquidType) {
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
         const colors = [];
@@ -21,7 +22,7 @@ export class WaterRenderer {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
                     const blockId = chunk.getBlock(x, y, z);
-                    if (blockId !== BLOCKS.WATER) continue;
+                    if (blockId !== liquidType) continue;
 
                     const wx = chunk.x * CHUNK_SIZE + x;
                     const wy = y;
@@ -44,14 +45,23 @@ export class WaterRenderer {
                         const [dx, dy, dz] = face.dir;
                         const neighborBlock = neighbor(dx, dy, dz);
 
-                        if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
+                        if (neighborBlock !== BLOCKS.AIR && neighborBlock !== liquidType) continue;
 
                         const startIndex = vertices.length / 3;
                         const wave = Math.sin(this.time + wx * 0.3 + wz * 0.3) * 0.1;
-                        const colorBright = 70 + Math.floor(wave * 20);
-                        const r = Math.max(0, Math.min(255, colorBright - 20));
-                        const g = Math.max(0, Math.min(255, colorBright + 10));
-                        const b = Math.max(0, Math.min(255, colorBright + 30));
+
+                        let r, g, b;
+                        if (liquidType === BLOCKS.WATER) {
+                            const colorBright = 70 + Math.floor(wave * 20);
+                            r = Math.max(0, Math.min(255, colorBright - 20));
+                            g = Math.max(0, Math.min(255, colorBright + 10));
+                            b = Math.max(0, Math.min(255, colorBright + 30));
+                        } else if (liquidType === BLOCKS.LAVA) {
+                            const colorBright = 200 + Math.floor(wave * 30);
+                            r = Math.max(0, Math.min(255, colorBright));
+                            g = Math.max(0, Math.min(255, colorBright - 100));
+                            b = Math.max(0, Math.min(255, colorBright - 150));
+                        }
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy + (face.dir[1] > 0 ? wave : 0), wz + vz);
@@ -74,9 +84,9 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.7,
+                opacity: liquidType === BLOCKS.LAVA ? 0.85 : 0.7,
                 side: THREE.FrontSide,
-                shininess: 100
+                shininess: liquidType === BLOCKS.LAVA ? 50 : 100
             });
 
             const mesh = new THREE.Mesh(geometry, material);
@@ -84,6 +94,14 @@ export class WaterRenderer {
         }
 
         return null;
+    }
+
+    buildWaterMesh(chunk) {
+        return this.buildLiquidMesh(chunk, BLOCKS.WATER);
+    }
+
+    buildLavaMesh(chunk) {
+        return this.buildLiquidMesh(chunk, BLOCKS.LAVA);
     }
 
     update() {
