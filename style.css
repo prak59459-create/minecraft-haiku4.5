@@ -35,9 +35,12 @@ body {
     width: 20px;
     height: 20px;
     margin: -10px 0 0 -10px;
-    border: 2px solid rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.6);
     border-radius: 50%;
-    box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+    box-shadow:
+        0 0 2px rgba(255, 255, 255, 0.4),
+        inset 0 0 2px rgba(255, 255, 255, 0.3);
+    pointer-events: none;
 }
 
 #hud {
@@ -147,7 +150,27 @@ body {
         font-size: 12px;
     }
 
+    .inventory-slot .slot-block {
+        width: 18px;
+        height: 18px;
+    }
+
     #help {
+        font-size: 9px;
+    }
+}
+
+@media (max-width: 480px) {
+    #inventory {
+        gap: 2px;
+    }
+
+    .inventory-slot {
+        width: 30px;
+        height: 30px;
+    }
+
+    #hud {
         font-size: 9px;
     }
 }

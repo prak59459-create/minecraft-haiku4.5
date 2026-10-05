@@ -2,8 +2,8 @@ import { BLOCK_NAMES } from './blocks.js';
 
 export class UI {
     constructor() {
-        this.selectedBlock = 1;
-        this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        this.selectedBlock = 0;
+        this.blocks = [1, 2, 3, 5, 7, 9, 4, 15, 11];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
         this.setupInventoryUI();
@@ -43,6 +43,16 @@ export class UI {
         slots[index].classList.add('selected');
 
         this.selectedBlock = index;
+    }
+
+    selectBlockByType(blockId) {
+        const slots = document.querySelectorAll('.inventory-slot');
+        for (let i = 0; i < slots.length; i++) {
+            if (parseInt(slots[i].dataset.block) === blockId) {
+                this.selectBlock(i);
+                break;
+            }
+        }
     }
 
     updateHUD(playerPos, selectedBlock, fps) {

@@ -87,6 +87,10 @@ export class DebugDisplay {
     }
 
     render() {
+        let memColor = '#00FF00';
+        if (this.stats.memory > 300) memColor = '#FFFF00';
+        if (this.stats.memory > 500) memColor = '#FF6600';
+
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
@@ -97,17 +101,20 @@ export class DebugDisplay {
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3/F4: Toggle Debug',
+            'H: Help | C: Pick Block'
         ];
 
         this.container.innerHTML = lines.map(line => {
             if (line.startsWith('=')) return `<div>${line}</div>`;
             const parts = line.split(': ');
             if (parts.length === 2) {
-                return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
+                const key = parts[0];
+                const value = parts[1];
+                const valColor = key === 'Memory' ? memColor : '#FFFF00';
+                return `<div><span style="color: #00FF00;">${key}:</span> <span style="color: ${valColor};">${value}</span></div>`;
             }
-            return `<div>${line}</div>`;
+            return `<div style="color: #888888; font-size: 10px;">${line}</div>`;
         }).join('');
     }
 }
