@@ -52,15 +52,17 @@ export class Chunk {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
                     } else if (y < height - 1) {
-                        if (terrainType === 'sand') {
+                        if (terrainType === 'sand' || terrainType === 'desert') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'savanna') {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
                     } else if (y < height) {
-                        if (terrainType === 'sand') {
+                        if (terrainType === 'sand' || terrainType === 'desert') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
+                        } else if (terrainType === 'savanna') {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
@@ -84,7 +86,8 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
+    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 35;
+    height += perlinNoise.noise2D(x * 0.01, z * 0.01) * 20;
     height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
     height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
     height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
@@ -96,7 +99,14 @@ function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const humidity = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
+    if (temp < -0.3) {
+        return humidity < -0.2 ? 'desert' : 'sand';
+    }
+    if (temp > 0.4) {
+        return humidity > 0.3 ? 'savanna' : 'grassland';
+    }
     return 'grass';
 }
 

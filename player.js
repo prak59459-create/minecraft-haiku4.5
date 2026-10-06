@@ -7,6 +7,7 @@ const PLAYER_SPRINT_SPEED = 0.15;
 const PLAYER_CROUCH_SPEED = 0.05;
 const GRAVITY = 0.02;
 const JUMP_POWER = 0.5;
+const STEP_HEIGHT = 0.5;
 
 export class Player {
     constructor(world) {
@@ -121,6 +122,9 @@ export class Player {
             { dy: height * 0.9, radius: radius * 0.7 }
         ];
 
+        const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+        let collision = false;
+
         for (const point of checkPoints) {
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
@@ -129,11 +133,14 @@ export class Player {
 
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
                 if (isBlockSolid(block)) {
-                    const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
-                    if (moveLen > 0) {
+                    if (moveLen > 0 && !collision) {
+                        if (this.tryStepUp(radius)) {
+                            return;
+                        }
                         const scale = 1.5 / moveLen;
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
+                        collision = true;
                     }
                     break;
                 }
@@ -176,6 +183,37 @@ export class Player {
             this.position.y = 100;
             this.velocity.y = 0;
         }
+    }
+
+    tryStepUp(radius) {
+        const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+        if (moveLen === 0 || this.velocity.y > 0) return false;
+
+        for (let step = 0.1; step < STEP_HEIGHT; step += 0.1) {
+            const testY = this.position.y + step;
+            let blocked = false;
+
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+                const cx = this.position.x + Math.cos(angle) * radius;
+                const cz = this.position.z + Math.sin(angle) * radius;
+
+                const block = this.world.getBlock(Math.floor(cx), Math.floor(testY), Math.floor(cz));
+                if (isBlockSolid(block)) {
+                    blocked = true;
+                    break;
+                }
+            }
+
+            if (!blocked) {
+                const scale = moveLen > 0 ? 0.5 / moveLen : 0;
+                this.position.x += this.velocity.x * scale;
+                this.position.z += this.velocity.z * scale;
+                this.position.y = testY;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     getEyePosition() {
