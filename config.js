@@ -18,7 +18,8 @@ export class Config {
                 renderDistance: 8,
                 seedOffset: 0,
                 waterLevel: 62,
-                bedrockLevel: 0
+                bedrockLevel: 0,
+                chunkUnloadDistance: 10
             },
             player: {
                 speed: 0.1,
@@ -33,20 +34,23 @@ export class Config {
             },
             raycast: {
                 distance: 6,
-                stepSize: 0.05
+                stepSize: 0.025
             },
             graphics: {
                 renderScale: 1.0,
                 shadowMapSize: 2048,
                 particleLimit: 2000,
-                fpsTarget: 60
+                fpsTarget: 60,
+                enableShadows: true,
+                enableAntialias: true
             },
             terrain: {
                 chunkSize: 16,
-                maxHeight: 160,
-                minHeight: 20,
+                maxHeight: 180,
+                minHeight: 30,
                 seaLevel: 62,
-                treeFrequency: 0.5
+                treeFrequency: 0.45,
+                biomeSeed: 0
             },
             audio: {
                 enabled: true,
