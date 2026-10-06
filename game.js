@@ -34,9 +34,11 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.chunksToRebuild = new Set();
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
+        this.findSpawnLocation();
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
@@ -85,6 +87,36 @@ class MinecraftGame {
                 this.ui.toggleHelp();
             }
         });
+    }
+
+    findSpawnLocation() {
+        let x = 0, z = 0;
+        let found = false;
+
+        for (let attempts = 0; attempts < 10 && !found; attempts++) {
+            for (let y = 150; y > 50; y--) {
+                const block = this.world.getBlock(Math.floor(x), y, Math.floor(z));
+                const blockAbove = this.world.getBlock(Math.floor(x), y + 1, Math.floor(z));
+                const blockBelow = this.world.getBlock(Math.floor(x), y - 1, Math.floor(z));
+
+                if (isBlockSolid(blockBelow) && !isBlockSolid(block) && !isBlockSolid(blockAbove)) {
+                    this.player.position.x = x + 0.5;
+                    this.player.position.y = y + 1;
+                    this.player.position.z = z + 0.5;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                x += Math.random() * 20 - 10;
+                z += Math.random() * 20 - 10;
+            }
+        }
+
+        if (!found) {
+            this.player.position.y = 100;
+        }
     }
 
     onMouseClick(event) {
