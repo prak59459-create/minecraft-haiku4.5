@@ -2,7 +2,11 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.geometry = null;
+        this.currentBlock = null;
         this.createOutlineMaterial();
+        this.createOutlineGeometry();
+        this.createOutlineObject();
     }
 
     createOutlineMaterial() {
@@ -10,21 +14,16 @@ export class BlockOutline {
             color: 0xFFFFFF,
             linewidth: 2,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9,
+            fog: false
         });
     }
 
-    setSelectedBlock(x, y, z) {
-        if (this.outline) {
-            this.scene.remove(this.outline);
-        }
-
-        const geometry = new THREE.BufferGeometry();
-        const vertices = [];
-
+    createOutlineGeometry() {
+        this.geometry = new THREE.BufferGeometry();
         const positions = [
-            [x, y, z], [x + 1, y, z], [x + 1, y + 1, z], [x, y + 1, z],
-            [x, y, z + 1], [x + 1, y, z + 1], [x + 1, y + 1, z + 1], [x, y + 1, z + 1]
+            [0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0],
+            [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]
         ];
 
         const edges = [
@@ -33,30 +32,33 @@ export class BlockOutline {
             [0, 4], [1, 5], [2, 6], [3, 7]
         ];
 
+        const vertices = [];
         for (const [start, end] of edges) {
             const [x1, y1, z1] = positions[start];
             const [x2, y2, z2] = positions[end];
             vertices.push(x1, y1, z1, x2, y2, z2);
         }
 
-        geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
-
-        this.outline = new THREE.LineSegments(geometry, this.material);
-        this.scene.add(this.outline);
+        this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
     }
 
-    clear() {
-        if (this.outline) {
-            this.scene.remove(this.outline);
-            this.outline = null;
-        }
+    createOutlineObject() {
+        this.outline = new THREE.LineSegments(this.geometry, this.material);
+        this.outline.visible = false;
+        this.scene.add(this.outline);
     }
 
     update(raycastHit) {
         if (raycastHit && raycastHit.block !== 0) {
-            this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z);
+            const blockKey = `${raycastHit.x},${raycastHit.y},${raycastHit.z}`;
+            if (this.currentBlock !== blockKey) {
+                this.outline.position.set(raycastHit.x, raycastHit.y, raycastHit.z);
+                this.currentBlock = blockKey;
+            }
+            this.outline.visible = true;
         } else {
-            this.clear();
+            this.outline.visible = false;
+            this.currentBlock = null;
         }
     }
 }

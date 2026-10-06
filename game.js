@@ -179,16 +179,21 @@ class MinecraftGame {
     updateChunkMesh(x, y, z) {
         const cx = Math.floor(x / 16);
         const cz = Math.floor(z / 16);
+        const meshesToRebuild = new Set();
 
         for (let dx = -1; dx <= 1; dx++) {
             for (let dz = -1; dz <= 1; dz++) {
                 const key = `${cx + dx},${cz + dz}`;
+                meshesToRebuild.add(key);
                 if (this.chunkMeshes.has(key)) {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
                 }
             }
         }
+
+        this.chunksToRebuild = this.chunksToRebuild || new Set();
+        meshesToRebuild.forEach(key => this.chunksToRebuild.add(key));
     }
 
     buildChunkMesh(chunk) {

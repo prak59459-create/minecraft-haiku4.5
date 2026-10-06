@@ -1,18 +1,25 @@
 export class AudioManager {
-    constructor() {
+    constructor(enabled = true, masterVolume = 0.5) {
         this.audioContext = null;
         this.initialized = false;
+        this.enabled = enabled;
+        this.masterVolume = masterVolume;
         this.soundCache = new Map();
         this.initAudioContext();
     }
 
     initAudioContext() {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.audioContext = audioContext;
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.audioContext = audioContext;
+        } catch (e) {
+            console.warn('Web Audio API not supported');
+            this.enabled = false;
+        }
     }
 
     playBlockSound(type = 'break') {
-        if (!this.audioContext) return;
+        if (!this.enabled || !this.audioContext) return;
 
         const audioContext = this.audioContext;
         const now = audioContext.currentTime;
@@ -22,25 +29,29 @@ export class AudioManager {
         osc.connect(gainNode);
         gainNode.connect(audioContext.destination);
 
+        const volume = this.masterVolume;
+
         if (type === 'break') {
-            osc.frequency.setValueAtTime(400, now);
-            osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-            gainNode.gain.setValueAtTime(0.2, now);
+            const baseFreq = 300 + Math.random() * 200;
+            osc.frequency.setValueAtTime(baseFreq, now);
+            osc.frequency.exponentialRampToValueAtTime(80, now + 0.12);
+            gainNode.gain.setValueAtTime(0.2 * volume, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+            osc.start(now);
+            osc.stop(now + 0.12);
+        } else if (type === 'place') {
+            const baseFreq = 500 + Math.random() * 200;
+            osc.frequency.setValueAtTime(baseFreq, now);
+            osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+            gainNode.gain.setValueAtTime(0.15 * volume, now);
             gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
             osc.start(now);
             osc.stop(now + 0.1);
-        } else if (type === 'place') {
-            osc.frequency.setValueAtTime(600, now);
-            osc.frequency.exponentialRampToValueAtTime(200, now + 0.08);
-            gainNode.gain.setValueAtTime(0.15, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-            osc.start(now);
-            osc.stop(now + 0.08);
         }
     }
 
     playJumpSound() {
-        if (!this.audioContext) return;
+        if (!this.enabled || !this.audioContext) return;
 
         const audioContext = this.audioContext;
         const now = audioContext.currentTime;
@@ -50,31 +61,20 @@ export class AudioManager {
         osc.connect(gainNode);
         gainNode.connect(audioContext.destination);
 
-        osc.frequency.setValueAtTime(300, now);
-        osc.frequency.exponentialRampToValueAtTime(500, now + 0.1);
-        gainNode.gain.setValueAtTime(0.1, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.frequency.setValueAtTime(250, now);
+        osc.frequency.exponentialRampToValueAtTime(450, now + 0.12);
+        gainNode.gain.setValueAtTime(0.1 * this.masterVolume, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
 
         osc.start(now);
-        osc.stop(now + 0.1);
+        osc.stop(now + 0.12);
     }
 
-    playStepSound() {
-        if (!this.audioContext) return;
+    setVolume(volume) {
+        this.masterVolume = Math.max(0, Math.min(1, volume));
+    }
 
-        const audioContext = this.audioContext;
-        const now = audioContext.currentTime;
-        const osc = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-
-        osc.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        osc.frequency.setValueAtTime(200 + Math.random() * 100, now);
-        gainNode.gain.setValueAtTime(0.05, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-
-        osc.start(now);
-        osc.stop(now + 0.05);
+    setEnabled(enabled) {
+        this.enabled = enabled;
     }
 }
