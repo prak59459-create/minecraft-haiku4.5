@@ -8,6 +8,35 @@ export class WaterRenderer {
         this.time = 0;
     }
 
+    updateVisibleWater(playerX, playerZ) {
+        const playerChunkX = Math.floor(playerX / 16);
+        const playerChunkZ = Math.floor(playerZ / 16);
+
+        const visibleKeys = new Set();
+        for (let dx = -8; dx <= 8; dx++) {
+            for (let dz = -8; dz <= 8; dz++) {
+                const key = `${playerChunkX + dx},${playerChunkZ + dz}`;
+                visibleKeys.add(key);
+
+                if (!this.waterMeshes.has(key)) {
+                    const chunk = this.world.getChunk(playerChunkX + dx, playerChunkZ + dz);
+                    const mesh = this.buildWaterMesh(chunk);
+                    if (mesh) {
+                        this.scene.add(mesh);
+                        this.waterMeshes.set(key, mesh);
+                    }
+                }
+            }
+        }
+
+        for (const [key, mesh] of this.waterMeshes) {
+            if (!visibleKeys.has(key)) {
+                this.scene.remove(mesh);
+                this.waterMeshes.delete(key);
+            }
+        }
+    }
+
     buildWaterMesh(chunk) {
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
@@ -16,43 +45,42 @@ export class WaterRenderer {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x4A90E2);
+        const baseColor = { r: 74/255, g: 144/255, b: 226/255 };
+
+        const faces = [
+            { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
+            { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
+            { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]] },
+            { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]] },
+            { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
+            { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
+        ];
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
-                    const blockId = chunk.getBlock(x, y, z);
-                    if (blockId !== BLOCKS.WATER) continue;
+                    if (chunk.getBlock(x, y, z) !== BLOCKS.WATER) continue;
 
                     const wx = chunk.x * CHUNK_SIZE + x;
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const neighbor = (dx, dy, dz) => {
-                        return this.world.getBlock(wx + dx, wy + dy, wz + dz);
-                    };
-
-                    const faces = [
-                        { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
-                        { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
-                        { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]] },
-                        { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]] },
-                        { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
-                        { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
-                    ];
-
                     for (const face of faces) {
                         const [dx, dy, dz] = face.dir;
-                        const neighborBlock = neighbor(dx, dy, dz);
+                        const neighborBlock = this.world.getBlock(wx + dx, wy + dy, wz + dz);
 
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const brightness = 0.8 + Math.random() * 0.2;
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
+                            colors.push(
+                                Math.floor(baseColor.r * brightness * 255),
+                                Math.floor(baseColor.g * brightness * 255),
+                                Math.floor(baseColor.b * brightness * 255)
+                            );
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);

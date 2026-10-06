@@ -19,14 +19,17 @@ export class Chunk {
         this.blocks = new Uint8Array(CHUNK_SIZE * WORLD_HEIGHT * CHUNK_SIZE);
         this.generated = false;
         this.mesh = null;
+        this.heightCache = null;
     }
 
     getBlock(x, y, z) {
+        if (x < 0 || x >= CHUNK_SIZE || z < 0 || z >= CHUNK_SIZE || y < 0 || y >= WORLD_HEIGHT) return 0;
         const idx = x + y * CHUNK_SIZE + z * CHUNK_SIZE * WORLD_HEIGHT;
-        return this.blocks[idx] || 0;
+        return this.blocks[idx];
     }
 
     setBlock(x, y, z, blockId) {
+        if (x < 0 || x >= CHUNK_SIZE || z < 0 || z >= CHUNK_SIZE || y < 0 || y >= WORLD_HEIGHT) return;
         const idx = x + y * CHUNK_SIZE + z * CHUNK_SIZE * WORLD_HEIGHT;
         this.blocks[idx] = blockId;
     }
@@ -36,38 +39,32 @@ export class Chunk {
 
         const worldX = this.x * CHUNK_SIZE;
         const worldZ = this.z * CHUNK_SIZE;
+        const WATER_LEVEL = 62;
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let z = 0; z < CHUNK_SIZE; z++) {
                 const wx = worldX + x;
                 const wz = worldZ + z;
 
-                let height = getTerrainHeight(wx, wz);
-                let terrainType = getTerrainType(wx, wz);
+                const height = getTerrainHeight(wx, wz);
+                const terrainType = getTerrainType(wx, wz);
 
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
+                    let blockId = BLOCKS.AIR;
+
                     if (y === 0) {
-                        this.setBlock(x, y, z, BLOCKS.BEDROCK);
+                        blockId = BLOCKS.BEDROCK;
                     } else if (y < height - 4) {
-                        const block = getOreBlock(wx, y, wz);
-                        this.setBlock(x, y, z, block);
+                        blockId = getOreBlock(wx, y, wz);
                     } else if (y < height - 1) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.DIRT);
-                        }
+                        blockId = terrainType === 'sand' ? BLOCKS.SAND : BLOCKS.DIRT;
                     } else if (y < height) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        }
-                    } else if (y < 62) {
-                        this.setBlock(x, y, z, BLOCKS.WATER);
+                        blockId = terrainType === 'sand' ? BLOCKS.SAND : BLOCKS.GRASS;
+                    } else if (y < WATER_LEVEL) {
+                        blockId = BLOCKS.WATER;
                     }
+
+                    this.blocks[x + y * CHUNK_SIZE + z * CHUNK_SIZE * WORLD_HEIGHT] = blockId;
                 }
 
                 if (height > 65) {
@@ -130,8 +127,9 @@ function generateTree(chunk, x, z, height) {
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
-            if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
-                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
+            const idx = x + (y + i) * CHUNK_SIZE + z * CHUNK_SIZE * WORLD_HEIGHT;
+            if (idx >= 0 && idx < chunk.blocks.length && chunk.blocks[idx] === BLOCKS.AIR) {
+                chunk.blocks[idx] = BLOCKS.OAK_LOG;
             }
         }
     }
@@ -141,17 +139,20 @@ function generateTree(chunk, x, z, height) {
 
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
         const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
-        for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
-            for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
-                const dx = Math.round(Math.cos(angle) * dist);
-                const dz = Math.round(Math.sin(angle) * dist);
+        const radiusSquared = radiusAtLevel * radiusAtLevel;
+
+        for (let dx = -radiusAtLevel; dx <= radiusAtLevel; dx++) {
+            for (let dz = -radiusAtLevel; dz <= radiusAtLevel; dz++) {
+                if (dx * dx + dz * dz > radiusSquared) continue;
+
                 const fx = x + dx;
                 const fz = z + dz;
                 const fy = foliageStart + dy;
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
-                    if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
-                        chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                    const idx = fx + fy * CHUNK_SIZE + fz * CHUNK_SIZE * WORLD_HEIGHT;
+                    if (idx >= 0 && idx < chunk.blocks.length && chunk.blocks[idx] === BLOCKS.AIR) {
+                        chunk.blocks[idx] = BLOCKS.OAK_LEAVES;
                     }
                 }
             }

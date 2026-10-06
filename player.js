@@ -83,6 +83,7 @@ export class Player {
     checkCollisions() {
         const radius = PLAYER_WIDTH / 2;
         const height = PLAYER_HEIGHT;
+        const radiusSquared = radius * radius * 0.64;
 
         this.isOnGround = false;
 
@@ -94,40 +95,37 @@ export class Player {
         ];
 
         for (const point of checkPoints) {
+            let collided = false;
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
                 const cz = this.position.z + Math.sin(angle) * point.radius;
 
-                const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
-                if (isBlockSolid(block)) {
+                if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
                     if (moveLen > 0) {
                         const scale = 1.5 / moveLen;
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
+                    collided = true;
                     break;
                 }
             }
+            if (collided) break;
         }
 
         if (this.velocity.y < 0) {
-            let onGround = false;
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.8;
                 const cy = this.position.y - 0.01;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.8;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
-                    onGround = true;
+                    this.isOnGround = true;
+                    this.velocity.y = 0;
                     break;
                 }
-            }
-
-            if (onGround) {
-                this.isOnGround = true;
-                this.velocity.y = 0;
             }
         }
 
