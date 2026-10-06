@@ -58,12 +58,15 @@ export class DebugDisplay {
 
         this.stats.fps = game.ui.fpsCounter;
         this.stats.chunks = game.world.chunks.size;
-        this.stats.particles = game.particleSystem.particles.length;
+        this.stats.particles = game.particleSystem.activeParticles || game.particleSystem.particles.length;
 
         let vertices = 0;
         let triangles = 0;
+        let meshCount = 0;
+
         for (const mesh of game.chunkMeshes.values()) {
             if (mesh && mesh.geometry) {
+                meshCount++;
                 const positions = mesh.geometry.getAttribute('position');
                 if (positions) {
                     vertices += positions.count;
@@ -77,7 +80,7 @@ export class DebugDisplay {
 
         this.stats.vertices = vertices;
         this.stats.triangles = triangles;
-        this.stats.drawCalls = game.chunkMeshes.size;
+        this.stats.drawCalls = meshCount;
 
         if (performance.memory) {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
