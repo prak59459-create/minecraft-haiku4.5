@@ -123,9 +123,12 @@ class MinecraftGame {
         const px = this.player.position.x;
         const py = this.player.position.y;
         const pz = this.player.position.z;
+        const PLAYER_WIDTH = 0.6;
+        const PLAYER_HEIGHT = 1.8;
 
-        return (Math.abs(px - x) < 0.6 && Math.abs(py - y) < 1.8 && Math.abs(pz - z) < 0.6) ||
-               (Math.abs(px - x) < 0.6 && Math.abs(py - y - 1) < 1.8 && Math.abs(pz - z) < 0.6);
+        return (Math.abs(px - x - 0.5) < PLAYER_WIDTH &&
+                Math.abs(py - y - 0.9) < PLAYER_HEIGHT &&
+                Math.abs(pz - z - 0.5) < PLAYER_WIDTH);
     }
 
     raycastBlock() {
@@ -382,13 +385,20 @@ class MinecraftGame {
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
+
+        const sunHeight = (sunY - 100) / 120;
+        const isDay = sunHeight > 0.1;
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.4 + sunIntensity * 0.4;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        if (isDay) {
+            skyColor.setHSL(0.58, 0.6, 0.5 + sunIntensity * 0.35);
+        } else {
+            skyColor.setHSL(0.66, 0.2, Math.max(0.1, sunIntensity * 0.2));
+        }
         this.scene.background = skyColor;
     }
 }

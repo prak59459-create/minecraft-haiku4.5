@@ -1,6 +1,7 @@
 export class DebugDisplay {
     constructor() {
         this.visible = false;
+        this.playerPos = '0, 0, 0';
         this.stats = {
             fps: 0,
             chunks: 0,
@@ -83,6 +84,11 @@ export class DebugDisplay {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
         }
 
+        const px = Math.floor(game.player.position.x);
+        const py = Math.floor(game.player.position.y);
+        const pz = Math.floor(game.player.position.z);
+        this.playerPos = `${px}, ${py}, ${pz}`;
+
         this.render();
     }
 
@@ -90,6 +96,7 @@ export class DebugDisplay {
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
+            `Pos: ${this.playerPos || 'N/A'}`,
             `Chunks: ${this.stats.chunks}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
