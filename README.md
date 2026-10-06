@@ -48,16 +48,21 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Web Audio API** - Dynamic audio generation
 
 ### User Interface
-- **HUD Display** - Real-time coordinates, FPS, and block info
+- **HUD Display** - Real-time coordinates, FPS, playtime, and block info
 - **Block Inventory** - Visual block selector with 9 slots
 - **Crosshair** - Center screen targeting reticle
 - **Help Panel** - In-game control instructions (Press H)
+- **Debug Display** - Performance metrics (Press F3)
 
 ### Performance Optimization
 - **Chunk-based Rendering** - Only visible chunks are rendered
 - **Indexed Geometry** - Efficient mesh generation with indices
 - **Vertex Colors** - Per-vertex coloring for variations
 - **Memory Management** - Automatic chunk cleanup for distant areas
+- **Progressive Loading** - Max 2 chunks built per frame (smooth performance)
+- **Optimized Raycasting** - Fast block targeting with caching
+- **Flat Shading** - Reduced geometry calculations
+- **Shadow Optimization** - Balanced quality and performance
 
 ## Controls
 
@@ -77,6 +82,13 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 | **C** | Pick Block (Pick the block you're looking at) |
 | **H** | Toggle Help |
 | **F3** | Toggle Debug Info |
+
+## Documentation
+
+- **[FEATURES.md](FEATURES.md)** - Comprehensive feature list and game mechanics
+- **[PERFORMANCE.md](PERFORMANCE.md)** - Performance optimization guide and hardware requirements
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and improvements
+- **[IMPROVEMENTS.md](IMPROVEMENTS.md)** - Technical improvements documentation
 
 ## Getting Started
 

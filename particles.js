@@ -14,19 +14,22 @@ export class ParticleSystem {
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
-        const particleCount = 8 + Math.floor(Math.random() * 8);
+        const particleCount = 6 + Math.floor(Math.random() * 6);
+        const color = new THREE.Color(blockColor);
 
         for (let i = 0; i < particleCount; i++) {
             const particle = {
                 position: { x, y, z },
                 velocity: {
-                    x: (Math.random() - 0.5) * 0.3,
-                    y: Math.random() * 0.3,
-                    z: (Math.random() - 0.5) * 0.3
+                    x: (Math.random() - 0.5) * 0.25,
+                    y: Math.random() * 0.25 + 0.1,
+                    z: (Math.random() - 0.5) * 0.25
                 },
                 life: 1,
-                maxLife: 0.8 + Math.random() * 0.4,
-                color: blockColor
+                maxLife: 0.6 + Math.random() * 0.3,
+                r: color.r,
+                g: color.g,
+                b: color.b
             };
             this.particles.push(particle);
         }
@@ -67,15 +70,12 @@ export class ParticleSystem {
             positions[i * 3 + 1] = p.position.y;
             positions[i * 3 + 2] = p.position.z;
 
-            const color = new THREE.Color(p.color);
-            const alpha = p.life / p.maxLife;
-            colors[i * 3] = color.r;
-            colors[i * 3 + 1] = color.g;
-            colors[i * 3 + 2] = color.b;
+            colors[i * 3] = p.r;
+            colors[i * 3 + 1] = p.g;
+            colors[i * 3 + 2] = p.b;
         }
 
         this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        this.material.opacity = 0.8;
     }
 }

@@ -6,6 +6,7 @@ export class UI {
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.gameTime = 0;
         this.setupInventoryUI();
     }
 
@@ -51,7 +52,7 @@ export class UI {
         const blockEl = document.getElementById('blockInfo');
 
         coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
-        fpsEl.textContent = `FPS: ${fps}`;
+        fpsEl.textContent = `FPS: ${fps} | Time: ${this.getFormattedTime()}`;
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
     }
 
@@ -64,7 +65,19 @@ export class UI {
             this.fpsCounter = Math.round(1000 / delta);
         }
 
+        this.gameTime += delta / 1000;
         return this.fpsCounter;
+    }
+
+    getFormattedTime() {
+        const hours = Math.floor(this.gameTime / 3600);
+        const minutes = Math.floor((this.gameTime % 3600) / 60);
+        const seconds = Math.floor(this.gameTime % 60);
+
+        if (hours > 0) {
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
 
     toggleHelp() {
