@@ -53,21 +53,29 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
 
-        if (this.keys['w']) moveZ -= speed;
-        if (this.keys['s']) moveZ += speed;
-        if (this.keys['a']) moveX -= speed;
-        if (this.keys['d']) moveX += speed;
+        if (this.keys['w']) moveZ -= 1;
+        if (this.keys['s']) moveZ += 1;
+        if (this.keys['a']) moveX -= 1;
+        if (this.keys['d']) moveX += 1;
+
+        const len = Math.sqrt(moveX * moveX + moveZ * moveZ);
+        if (len > 0) {
+            moveX /= len;
+            moveZ /= len;
+        }
+
+        this.isSprinting = this.keys['shift'] && isMoving && !this.isCrouching;
+        this.isCrouching = this.keys['shift'] && isMoving;
+
+        const speed = this.isSprinting ? PLAYER_SPRINT_SPEED : (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPEED);
 
         const cosY = Math.cos(this.rotation.y);
         const sinY = Math.sin(this.rotation.y);
 
-        this.velocity.x = moveX * cosY - moveZ * sinY;
-        this.velocity.z = moveX * sinY + moveZ * cosY;
-
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+        this.velocity.x = (moveX * cosY - moveZ * sinY) * speed;
+        this.velocity.z = (moveX * sinY + moveZ * cosY) * speed;
     }
 
     applyPhysics() {
@@ -159,21 +167,31 @@ export class Player {
 export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
-        this.mouseSensitivity = 0.003;
+        this.mouseSensitivity = 0.0025;
+        this.fov = 75;
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+            if (document.pointerLockElement === document.body) {
+                this.rotation.y -= e.movementX * this.mouseSensitivity;
+                this.rotation.x -= e.movementY * this.mouseSensitivity;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+                const maxAngle = Math.PI / 2 - 0.001;
+                this.rotation.x = Math.max(-maxAngle, Math.min(maxAngle, this.rotation.x));
+            }
         });
 
         document.addEventListener('click', () => {
             if (document.pointerLockElement !== document.body) {
                 document.body.requestPointerLock();
+            }
+        });
+
+        document.addEventListener('pointerlockchange', () => {
+            if (document.pointerLockElement === null) {
+                console.log('Pointer lock released');
             }
         });
     }

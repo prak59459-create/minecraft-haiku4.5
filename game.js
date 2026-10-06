@@ -314,7 +314,7 @@ class MinecraftGame {
         for (const [key] of this.chunkMeshes) {
             const [cx, cz] = key.split(',').map(Number);
             const dist = Math.abs(cx - playerChunkX) + Math.abs(cz - playerChunkZ);
-            if (dist > renderDist + 1) {
+            if (dist > renderDist + 2) {
                 chunksToRemove.push(key);
             }
         }
@@ -327,6 +327,7 @@ class MinecraftGame {
             }
         }
 
+        const chunksToLoad = [];
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
             const dist = Math.abs(cx - playerChunkX) + Math.abs(cz - playerChunkZ);
@@ -334,11 +335,17 @@ class MinecraftGame {
             if (dist > renderDist) continue;
 
             if (!this.chunkMeshes.has(key)) {
-                const mesh = this.buildChunkMesh(chunk);
-                if (mesh) {
-                    this.scene.add(mesh);
-                    this.chunkMeshes.set(key, mesh);
-                }
+                chunksToLoad.push({ key, chunk, dist });
+            }
+        }
+
+        chunksToLoad.sort((a, b) => a.dist - b.dist);
+
+        for (const { key, chunk } of chunksToLoad.slice(0, 4)) {
+            const mesh = this.buildChunkMesh(chunk);
+            if (mesh) {
+                this.scene.add(mesh);
+                this.chunkMeshes.set(key, mesh);
             }
         }
     }
