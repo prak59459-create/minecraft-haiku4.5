@@ -224,11 +224,12 @@ class MinecraftGame {
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
                     const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const heightLight = (wy / WORLD_HEIGHT) * 0.25;
+                    const varLight = Math.sin(wx * 0.3 + wz * 0.3) * 0.15;
+                    const depthShading = Math.sin(wy * 0.01) * 0.08;
+                    const brightness = baseLight + heightLight + varLight + depthShading;
 
-                    color.multiplyScalar(brightness);
+                    color.multiplyScalar(Math.max(0.4, brightness));
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
                 }
@@ -370,7 +371,8 @@ class MinecraftGame {
         this.gameCamera.updateFromPlayer(this.player);
 
         const eyePos = this.player.getEyePosition();
-        this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
+        const bobOffset = this.gameCamera.getHeadBobOffset();
+        this.camera.position.set(eyePos.x, eyePos.y + bobOffset, eyePos.z);
 
         const direction = new THREE.Vector3(
             Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),

@@ -216,15 +216,19 @@ export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
+        this.bobbingAmount = 0;
+        this.bobbingSpeed = 0;
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+            if (document.pointerLockElement === document.body) {
+                this.rotation.y -= e.movementX * this.mouseSensitivity;
+                this.rotation.x -= e.movementY * this.mouseSensitivity;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+                this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            }
         });
 
         document.addEventListener('click', () => {
@@ -237,5 +241,19 @@ export class Camera {
     updateFromPlayer(player) {
         player.rotation.x = this.rotation.x;
         player.rotation.y = this.rotation.y;
+
+        if (player.isSprinting && player.isOnGround) {
+            this.bobbingSpeed = 0.12;
+        } else if (player.isOnGround) {
+            this.bobbingSpeed = 0.06;
+        } else {
+            this.bobbingSpeed = 0;
+        }
+
+        this.bobbingAmount += this.bobbingSpeed;
+    }
+
+    getHeadBobOffset() {
+        return Math.sin(this.bobbingAmount) * 0.05;
     }
 }
