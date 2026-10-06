@@ -6,13 +6,16 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 ### Core Gameplay
 - **WASD Movement** - Move through the world naturally
-- **Mouse Look** - Free camera control with mouse
-- **Space Jump** - Jump and gravity physics
-- **Shift Sprint/Crouch** - Sprint for speed or crouch for stealth
-- **Block Destruction** - Left-click to destroy blocks
-- **Block Placement** - Right-click to place blocks
+- **Mouse Look** - Free camera control with mouse pointer lock
+- **Space Jump** - Jump with realistic gravity physics
+- **Ctrl Crouch** - Toggle crouch mode for stealth and reduced height
+- **Shift Sprint** - Sprint for increased movement speed
+- **Block Destruction** - Left-click to destroy blocks with particles
+- **Block Placement** - Right-click to place blocks (with collision detection)
 - **Block Selection** - Use 1-9 or scroll wheel to switch between blocks
 - **Pick Block** - Press C to pick the block you're looking at
+- **Swimming** - Full water physics with buoyancy and drag
+- **Fall Damage** - Respawn system on excessive falling
 
 ### World & Terrain
 - **Procedural Generation** - Infinite world generation using Perlin noise
@@ -41,11 +44,13 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 ### Audio
 - **Procedural Sound Effects**:
-  - Block break sounds
-  - Block place sounds
-  - Jump sounds (prepared)
-  - Step sounds (prepared)
-- **Web Audio API** - Dynamic audio generation
+  - Block break sounds with frequency variation
+  - Block place sounds with pitch modulation
+  - Jump sounds with smooth pitch progression
+  - Step sounds during movement
+  - Water splash sounds
+- **Web Audio API** - Dynamic sound generation with master volume control
+- **Master Volume Control** - Adjust audio levels globally
 
 ### User Interface
 - **HUD Display** - Real-time coordinates, FPS, and block info
@@ -58,6 +63,21 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Indexed Geometry** - Efficient mesh generation with indices
 - **Vertex Colors** - Per-vertex coloring for variations
 - **Memory Management** - Automatic chunk cleanup for distant areas
+- **Frustum Culling** - Skip rendering off-screen chunks
+- **Raycasting Optimization** - Cached results with larger step size (0.1 units)
+- **Priority-based Chunk Loading** - Closest chunks render first
+- **Geometry Disposal** - Proper cleanup of removed chunk meshes
+- **Head Bobbing** - Smooth camera animation for immersion
+
+### Recent Enhancements (Session 3)
+- **Improved Water Physics** - Proper drag and buoyancy in water
+- **Better Terrain Variety** - Enhanced biome generation with mountain support
+- **Dynamic Block Outline** - Yellow glow effect for targeted blocks
+- **Enhanced Particle Effects** - Better spread and visual impact
+- **Crouch Mechanics** - Toggle-based with proper height adjustment
+- **Improved Lighting** - Better shadow mapping and color depth variation
+- **Spawn System** - Intelligent spawn point selection at suitable terrain
+- **Camera Bobbing** - Head movement animation during walking/sprinting
 
 ## Controls
 
@@ -67,14 +87,15 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 | **A** | Move Left |
 | **S** | Move Backward |
 | **D** | Move Right |
-| **Space** | Jump |
-| **Shift** | Sprint / Crouch |
-| **Mouse** | Look Around (Click to enable) |
+| **Space** | Jump / Swim Up |
+| **Ctrl** | Toggle Crouch Mode |
+| **Shift** | Sprint (while moving) |
+| **Mouse** | Look Around (Requires pointer lock) |
 | **Left-Click** | Destroy Block |
 | **Right-Click** | Place Block |
 | **1-9** | Select Block Slot |
 | **Scroll Wheel** | Change Selected Block |
-| **C** | Pick Block (Pick the block you're looking at) |
+| **C** | Pick Block (Copy targeted block) |
 | **H** | Toggle Help |
 | **F3** | Toggle Debug Info |
 

@@ -62,14 +62,18 @@ export class DebugDisplay {
 
         let vertices = 0;
         let triangles = 0;
+        let totalGeometrySize = 0;
+
         for (const mesh of game.chunkMeshes.values()) {
             if (mesh && mesh.geometry) {
                 const positions = mesh.geometry.getAttribute('position');
                 if (positions) {
                     vertices += positions.count;
+                    totalGeometrySize += positions.array.byteLength;
                     const index = mesh.geometry.getIndex();
                     if (index) {
                         triangles += index.count / 3;
+                        totalGeometrySize += index.array.byteLength;
                     }
                 }
             }
@@ -78,27 +82,36 @@ export class DebugDisplay {
         this.stats.vertices = vertices;
         this.stats.triangles = triangles;
         this.stats.drawCalls = game.chunkMeshes.size;
+        this.stats.geometrySize = (totalGeometrySize / 1048576).toFixed(1);
 
         if (performance.memory) {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
         }
 
-        this.render();
+        this.render(game);
     }
 
-    render() {
+    render(game) {
+        const playerPos = game.player.position;
+        const playerChunk = {
+            x: Math.floor(playerPos.x / 16),
+            z: Math.floor(playerPos.z / 16)
+        };
+
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
-            `Chunks: ${this.stats.chunks}`,
+            `Pos: ${playerPos.x.toFixed(1)}, ${playerPos.y.toFixed(1)}, ${playerPos.z.toFixed(1)}`,
+            `Chunk: ${playerChunk.x}, ${playerChunk.z}`,
+            `Chunks Loaded: ${this.stats.chunks}`,
+            `Visible Chunks: ${this.stats.drawCalls}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
-            `Draw Calls: ${this.stats.drawCalls}`,
             `Particles: ${this.stats.particles}`,
-            `Memory: ${this.stats.memory} MB`,
+            `Geometry: ${this.stats.geometrySize} MB`,
+            `Heap: ${this.stats.memory} MB`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3: Toggle | H: Help'
         ];
 
         this.container.innerHTML = lines.map(line => {

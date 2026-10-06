@@ -1,17 +1,21 @@
-import { BLOCKS, isBlockSolid } from './blocks.js';
+import { BLOCKS, isBlockSolid, BLOCK_COLORS } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
+const PLAYER_CROUCH_HEIGHT = 0.9;
 const PLAYER_WIDTH = 0.6;
 const PLAYER_SPEED = 0.1;
 const PLAYER_SPRINT_SPEED = 0.15;
 const PLAYER_CROUCH_SPEED = 0.05;
 const GRAVITY = 0.02;
 const JUMP_POWER = 0.5;
+const WATER_DRAG = 0.05;
+const WATER_BUOYANCY = 0.01;
 
 export class Player {
     constructor(world) {
         this.world = world;
-        this.position = { x: 0, y: 100, z: 0 };
+        this.spawnPoint = { x: 0, y: 100, z: 0 };
+        this.position = { x: this.spawnPoint.x, y: this.spawnPoint.y, z: this.spawnPoint.z };
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
 
@@ -19,9 +23,18 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.isInWater = false;
+        this.currentHeight = PLAYER_HEIGHT;
+        this.fallDistance = 0;
 
         this.keys = {};
         this.setupKeyboardControls();
+    }
+
+    respawn() {
+        this.position = { x: this.spawnPoint.x, y: this.spawnPoint.y, z: this.spawnPoint.z };
+        this.velocity = { x: 0, y: 0, z: 0 };
+        this.fallDistance = 0;
     }
 
     setupKeyboardControls() {
@@ -34,13 +47,23 @@ export class Player {
                     this.velocity.y = JUMP_POWER;
                     this.isOnGround = false;
                     if (this.onJump) this.onJump();
+                } else if (this.isInWater) {
+                    this.velocity.y = 0.2;
                 }
+            } else if (e.key === 'Control') {
+                e.preventDefault();
+                this.toggleCrouch();
             }
         });
 
         document.addEventListener('keyup', (e) => {
             this.keys[e.key.toLowerCase()] = false;
         });
+    }
+
+    toggleCrouch() {
+        this.isCrouching = !this.isCrouching;
+        this.currentHeight = this.isCrouching ? PLAYER_CROUCH_HEIGHT : PLAYER_HEIGHT;
     }
 
     update() {
@@ -53,7 +76,8 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const baseSpeed = this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPEED;
+        const speed = this.keys['shift'] && !this.isCrouching ? PLAYER_SPRINT_SPEED : baseSpeed;
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -63,16 +87,28 @@ export class Player {
         const cosY = Math.cos(this.rotation.y);
         const sinY = Math.sin(this.rotation.y);
 
-        this.velocity.x = moveX * cosY - moveZ * sinY;
-        this.velocity.z = moveX * sinY + moveZ * cosY;
+        let velX = moveX * cosY - moveZ * sinY;
+        let velZ = moveX * sinY + moveZ * cosY;
 
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+        if (this.isInWater) {
+            velX *= 0.5;
+            velZ *= 0.5;
+        }
+
+        this.velocity.x = velX;
+        this.velocity.z = velZ;
+
+        this.isSprinting = this.keys['shift'] && !this.isCrouching && this.isOnGround && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
     }
 
     applyPhysics() {
-        if (!this.isOnGround) {
+        this.checkWaterLevel();
+
+        if (!this.isOnGround && !this.isInWater) {
             this.velocity.y -= GRAVITY;
+        } else if (this.isInWater) {
+            this.velocity.y -= GRAVITY * 0.3;
+            this.velocity.y *= 0.9;
         }
 
         this.position.x += this.velocity.x;
@@ -80,9 +116,17 @@ export class Player {
         this.position.z += this.velocity.z;
     }
 
+    checkWaterLevel() {
+        const eyeX = Math.floor(this.position.x);
+        const eyeY = Math.floor(this.position.y + this.currentHeight * 0.5);
+        const eyeZ = Math.floor(this.position.z);
+        const block = this.world.getBlock(eyeX, eyeY, eyeZ);
+        this.isInWater = block === BLOCKS.WATER;
+    }
+
     checkCollisions() {
         const radius = PLAYER_WIDTH / 2;
-        const height = PLAYER_HEIGHT;
+        const height = this.currentHeight;
 
         this.isOnGround = false;
 
@@ -145,15 +189,24 @@ export class Player {
         }
 
         if (this.position.y < -10) {
-            this.position.y = 100;
-            this.velocity.y = 0;
+            this.respawn();
+        }
+
+        if (this.velocity.y < 0) {
+            this.fallDistance += -this.velocity.y;
+            if (this.fallDistance > 20) {
+                this.respawn();
+            }
+        } else if (this.isOnGround) {
+            this.fallDistance = 0;
         }
     }
 
     getEyePosition() {
+        const eyeHeightRatio = this.isCrouching ? 0.75 : 0.85;
         return {
             x: this.position.x,
-            y: this.position.y + PLAYER_HEIGHT * 0.85,
+            y: this.position.y + this.currentHeight * eyeHeightRatio,
             z: this.position.z
         };
     }
@@ -163,15 +216,19 @@ export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
+        this.bobbingAmount = 0;
+        this.bobbingSpeed = 0;
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+            if (document.pointerLockElement === document.body) {
+                this.rotation.y -= e.movementX * this.mouseSensitivity;
+                this.rotation.x -= e.movementY * this.mouseSensitivity;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+                this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            }
         });
 
         document.addEventListener('click', () => {
@@ -184,5 +241,19 @@ export class Camera {
     updateFromPlayer(player) {
         player.rotation.x = this.rotation.x;
         player.rotation.y = this.rotation.y;
+
+        if (player.isSprinting && player.isOnGround) {
+            this.bobbingSpeed = 0.12;
+        } else if (player.isOnGround) {
+            this.bobbingSpeed = 0.06;
+        } else {
+            this.bobbingSpeed = 0;
+        }
+
+        this.bobbingAmount += this.bobbingSpeed;
+    }
+
+    getHeadBobOffset() {
+        return Math.sin(this.bobbingAmount) * 0.05;
     }
 }

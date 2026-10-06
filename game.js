@@ -13,12 +13,20 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, preserveDrawingBuffer: false });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+        this.renderer.shadowMap.autoUpdate = true;
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
         this.world = new World();
         this.player = new Player(this.world);
+        if (this.world.spawnPoint) {
+            this.player.spawnPoint = this.world.spawnPoint;
+            this.player.position = { ...this.world.spawnPoint };
+        }
         this.gameCamera = new Camera();
         this.ui = new UI();
         this.particleSystem = new ParticleSystem(this.scene);
@@ -32,6 +40,8 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.lastRaycastHit = null;
+        this.raycastFrameCounter = 0;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -46,18 +56,23 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7 + sunIntensity * 0.25);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -200;
+        directionalLight.shadow.camera.right = 200;
+        directionalLight.shadow.camera.top = 200;
+        directionalLight.shadow.camera.bottom = -200;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
+        this.frustum = new THREE.Frustum();
     }
 
     setupEventListeners() {
@@ -120,9 +135,9 @@ class MinecraftGame {
         const px = this.player.position.x;
         const py = this.player.position.y;
         const pz = this.player.position.z;
+        const height = this.player.currentHeight || 1.8;
 
-        return (Math.abs(px - x) < 0.6 && Math.abs(py - y) < 1.8 && Math.abs(pz - z) < 0.6) ||
-               (Math.abs(px - x) < 0.6 && Math.abs(py - y - 1) < 1.8 && Math.abs(pz - z) < 0.6);
+        return (Math.abs(px - x) < 0.6 && Math.abs(py - y) < height && Math.abs(pz - z) < 0.6);
     }
 
     raycastBlock() {
@@ -135,7 +150,7 @@ class MinecraftGame {
 
         let hit = null;
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = 0.1; dist <= this.raycastDistance; dist += 0.1) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -146,7 +161,7 @@ class MinecraftGame {
 
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
+                const prevDist = dist - 0.1;
                 const prevX = eyePos.x + direction.x * prevDist;
                 const prevY = eyePos.y + direction.y * prevDist;
                 const prevZ = eyePos.z + direction.z * prevDist;
@@ -209,11 +224,12 @@ class MinecraftGame {
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
                     const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const heightLight = (wy / WORLD_HEIGHT) * 0.25;
+                    const varLight = Math.sin(wx * 0.3 + wz * 0.3) * 0.15;
+                    const depthShading = Math.sin(wy * 0.01) * 0.08;
+                    const brightness = baseLight + heightLight + varLight + depthShading;
 
-                    color.multiplyScalar(brightness);
+                    color.multiplyScalar(Math.max(0.4, brightness));
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
                 }
@@ -231,9 +247,9 @@ class MinecraftGame {
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
+                flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 20
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -287,27 +303,50 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const renderDistance = 8;
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const chunksToProcess = [];
+        const meshesToRemove = [];
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const dx = cx - playerChunkX;
+            const dz = cz - playerChunkZ;
+            const dist = dx * dx + dz * dz;
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (dist > renderDistance * renderDistance) {
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
+                    meshesToRemove.push(key);
                 }
                 continue;
             }
 
             if (!this.chunkMeshes.has(key)) {
-                const mesh = this.buildChunkMesh(chunk);
-                if (mesh) {
-                    this.scene.add(mesh);
-                    this.chunkMeshes.set(key, mesh);
-                }
+                chunksToProcess.push({ key, chunk, dist });
             }
+        }
+
+        chunksToProcess.sort((a, b) => a.dist - b.dist);
+
+        const maxChunksPerFrame = 3;
+        for (const { key, chunk } of chunksToProcess.slice(0, maxChunksPerFrame)) {
+            const mesh = this.buildChunkMesh(chunk);
+            if (mesh) {
+                this.scene.add(mesh);
+                this.chunkMeshes.set(key, mesh);
+            }
+        }
+
+        for (const key of meshesToRemove) {
+            const mesh = this.chunkMeshes.get(key);
+            if (mesh) {
+                this.scene.remove(mesh);
+                if (mesh.geometry) mesh.geometry.dispose();
+                if (mesh.material) mesh.material.dispose();
+            }
+            this.chunkMeshes.delete(key);
         }
     }
 
@@ -332,7 +371,8 @@ class MinecraftGame {
         this.gameCamera.updateFromPlayer(this.player);
 
         const eyePos = this.player.getEyePosition();
-        this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
+        const bobOffset = this.gameCamera.getHeadBobOffset();
+        this.camera.position.set(eyePos.x, eyePos.y + bobOffset, eyePos.z);
 
         const direction = new THREE.Vector3(
             Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
@@ -350,7 +390,11 @@ class MinecraftGame {
         this.particleSystem.update();
         this.waterRenderer.update();
 
-        const hit = this.raycastBlock();
+        this.raycastFrameCounter = (this.raycastFrameCounter + 1) % 2;
+        if (this.raycastFrameCounter === 0) {
+            this.lastRaycastHit = this.raycastBlock();
+        }
+        const hit = this.lastRaycastHit || this.raycastBlock();
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
@@ -358,6 +402,11 @@ class MinecraftGame {
 
         if (this.showDebug) {
             this.debugDisplay.update(this);
+        }
+
+        this.frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
+        for (const mesh of this.chunkMeshes.values()) {
+            mesh.frustumCulled = true;
         }
 
         this.renderer.render(this.scene, this.camera);

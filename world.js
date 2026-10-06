@@ -83,20 +83,33 @@ export class Chunk {
 function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
-    let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    let height = 64;
 
-    return Math.max(20, Math.min(160, Math.floor(height)));
+    const landMass = perlinNoise.noise2D(x * 0.003, z * 0.003);
+    if (landMass < -0.2) return 25;
+
+    height += perlinNoise.noise2D(x * 0.004, z * 0.004) * 40;
+    height += perlinNoise.noise2D(x * 0.015, z * 0.015) * 20;
+    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 12;
+    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 6;
+
+    const mountainFactor = Math.max(0, perlinNoise.noise2D(x * 0.008, z * 0.008));
+    if (mountainFactor > 0.4) {
+        height += mountainFactor * 50;
+    }
+
+    return Math.max(20, Math.min(180, Math.floor(height)));
 }
 
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const humidity = perlinNoise.noise2D(x * 0.025, z * 0.025);
+
+    if (temp < -0.2) return 'sand';
+    if (temp > 0.5 && humidity < -0.3) return 'sand';
+    if (humidity > 0.4) return 'grass';
     return 'grass';
 }
 
@@ -104,15 +117,17 @@ function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
     let ore = BLOCKS.STONE;
-    const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
-    const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
-    const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
-    const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
 
-    if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
-    if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
-    if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
-    if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    const depthFactor = Math.max(0, (200 - y) / 200);
+    const coalChance = perlinNoise.noise2D(x * 0.12 + y * 0.08, z * 0.12 + y * 0.08);
+    const ironChance = perlinNoise.noise2D(x * 0.1 + y * 0.06, z * 0.1 + y * 0.06);
+    const goldChance = perlinNoise.noise2D(x * 0.08 + y * 0.04, z * 0.08 + y * 0.04);
+    const diamondChance = perlinNoise.noise2D(x * 0.06 + y * 0.03, z * 0.06 + y * 0.03);
+
+    if (y < 160 && coalChance > 0.4) ore = BLOCKS.COAL_ORE;
+    if (y < 120 && y > 10 && ironChance > 0.45 + depthFactor * 0.2) ore = BLOCKS.IRON_ORE;
+    if (y < 80 && y > 5 && goldChance > 0.55 + depthFactor * 0.3) ore = BLOCKS.GOLD_ORE;
+    if (y < 40 && y > 2 && diamondChance > 0.6 + depthFactor * 0.35) ore = BLOCKS.DIAMOND_ORE;
 
     return ore;
 }
@@ -122,10 +137,15 @@ function generateTree(chunk, x, z, height) {
 
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
-    const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
-    if (treeChance < 0.5) return;
+    const treeChance = perlinNoise.noise2D(worldX * 0.025, worldZ * 0.025);
+    if (treeChance < 0.55) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    if (height < 66 || height > 175) return;
+
+    const treeType = perlinNoise.noise2D(worldX * 0.05, worldZ * 0.05);
+    const trunkHeight = treeType > 0.3 ?
+        (6 + Math.floor(Math.random() * 6)) :
+        (4 + Math.floor(Math.random() * 3));
     const y = height;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
@@ -136,13 +156,13 @@ function generateTree(chunk, x, z, height) {
         }
     }
 
-    const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    const foliageStart = y + Math.max(3, trunkHeight - 4);
+    const foliageRadius = treeType > 0.3 ? (3 + Math.floor(Math.random() * 2)) : (2 + Math.floor(Math.random() * 1));
 
-    for (let dy = 0; dy < foliageRadius + 2; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
-        for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
-            for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
+    for (let dy = 0; dy < foliageRadius + 3; dy++) {
+        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.3));
+        for (let angle = 0; angle < Math.PI * 2; angle += 0.3) {
+            for (let dist = 0.5; dist <= radiusAtLevel; dist += 0.6) {
                 const dx = Math.round(Math.cos(angle) * dist);
                 const dz = Math.round(Math.sin(angle) * dist);
                 const fx = x + dx;
@@ -163,7 +183,24 @@ export class World {
     constructor(renderDistance = 8) {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
+        this.spawnPoint = null;
         initPerlinNoise();
+        this.findSpawnPoint();
+    }
+
+    findSpawnPoint() {
+        let x = 0, z = 0;
+        let height = getTerrainHeight(x, z);
+        let attempts = 0;
+
+        while ((height < 65 || height > 140) && attempts < 20) {
+            x += Math.random() * 100 - 50;
+            z += Math.random() * 100 - 50;
+            height = getTerrainHeight(Math.floor(x), Math.floor(z));
+            attempts++;
+        }
+
+        this.spawnPoint = { x, y: height + 2, z };
     }
 
     getChunk(cx, cz) {
