@@ -13,16 +13,19 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Block Placement** - Right-click to place blocks
 - **Block Selection** - Use 1-9 or scroll wheel to switch between blocks
 - **Pick Block** - Press C to pick the block you're looking at
+- **Auto Step Climbing** - Automatically climb 0.5-block heights
+- **Water Physics** - Reduced falling speed and movement drag in water
+- **Creative Mode** - Toggle with G for unlimited blocks and flight
 
 ### World & Terrain
 - **Procedural Generation** - Infinite world generation using Perlin noise
 - **Multiple Biomes** - Grass, sand, and varied terrain types
 - **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
-  - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
+- **Multiple Block Types** (20 types):
+  - Terrain: Stone, Grass, Dirt, Cobblestone, Sand, Gravel, Bedrock, Clay, Mossy Stone
+  - Vegetation: Oak Log, Oak Leaves, Spruce Log, Dark Oak Log, Birch Log
+  - Liquids: Water, Lava
+  - Ores: Coal Ore, Iron Ore, Gold Ore, Diamond Ore
 - **Ore Generation** - Procedural ore generation at various depths
 - **Tree Generation** - Natural tree placement in suitable terrain
 
@@ -34,10 +37,12 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 ### Visual Features
 - **3D Voxel Rendering** - Full 3D block-based world
-- **Dynamic Lighting** - Sun and ambient lighting system
-- **Day/Night Cycle** - Real-time sky color transitions
-- **Particle Effects** - Block destruction particles
+- **Dynamic Lighting** - Sun and ambient lighting system with circular orbit
+- **Day/Night Cycle** - Real-time sky color transitions with dynamic ambient lighting
+- **Particle Effects** - Block destruction particles with color matching
 - **Water Rendering** - Semi-transparent water with proper face culling
+- **Lava Rendering** - Lava blocks with emissive glow effect
+- **Block Outline** - Glowing white outline around targeted blocks with coordinates
 
 ### Audio
 - **Procedural Sound Effects**:
@@ -63,20 +68,21 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 | Key | Action |
 |-----|--------|
-| **W** | Move Forward |
-| **A** | Move Left |
-| **S** | Move Backward |
-| **D** | Move Right |
-| **Space** | Jump |
-| **Shift** | Sprint / Crouch |
+| **W/A/S/D** | Move (Forward/Left/Backward/Right) |
+| **Space** | Jump / Ascend (in Creative mode) |
+| **Shift** | Sprint / Crouch / Descend (in Creative mode) |
 | **Mouse** | Look Around (Click to enable) |
 | **Left-Click** | Destroy Block |
 | **Right-Click** | Place Block |
 | **1-9** | Select Block Slot |
 | **Scroll Wheel** | Change Selected Block |
-| **C** | Pick Block (Pick the block you're looking at) |
+| **C** | Pick Block |
+| **E** | Toggle Inventory |
+| **G** | Toggle Game Mode (Creative/Survival) |
 | **H** | Toggle Help |
 | **F3** | Toggle Debug Info |
+| **F5** | Save Player Position |
+| **F9** | Load Player Position |
 
 ## Getting Started
 
@@ -122,7 +128,13 @@ blocks.js        - Block definitions and properties
 ui.js            - User interface management
 particles.js     - Particle effects system
 water.js         - Water rendering system
+lava.js          - Lava rendering system
 audio.js         - Sound effects generation
+gamemode.js      - Creative/Survival mode system
+saves.js         - Save/load game state
+blockoutline.js  - Block selection outline
+debug.js         - Debug information display
+config.js        - Configuration management
 ```
 
 ### Technologies Used
@@ -170,17 +182,31 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 - **Clean Separation** - Game logic, rendering, and physics separate
 - **Extensible** - Easy to add new block types or biomes
 
+### Completed Features
+
+- [x] Creative mode with unlimited blocks and flight
+- [x] Survival mode with physics
+- [x] Save/load player position
+- [x] Step climbing for better navigation
+- [x] Water physics with drag and reduced falling
+- [x] Lava rendering with glow effect
+- [x] Multiple tree types (Oak, Spruce, Birch)
+- [x] Cave and lava generation
+- [x] Multiple biome types
+- [x] Block coordinate display in HUD
+
 ### Future Enhancements
 
 - [ ] Inventory UI with multiple stacks
-- [ ] Creative mode with unlimited blocks
-- [ ] Survival mode with health/hunger
+- [ ] Health/hunger system in Survival mode
 - [ ] Multiplayer support
 - [ ] Texture mapping for blocks
 - [ ] Advanced weather systems
-- [ ] More biome types
-- [ ] Mob system
+- [ ] Mob system with simple AI
 - [ ] Crafting system
+- [ ] Tools and equipment system
+- [ ] Enchantments
+- [ ] End/Nether dimensions
 
 ## Performance Tips
 

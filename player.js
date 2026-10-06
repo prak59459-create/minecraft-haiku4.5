@@ -1,4 +1,4 @@
-import { BLOCKS, isBlockSolid } from './blocks.js';
+import { BLOCKS, isBlockSolid, LIQUID_BLOCKS } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
@@ -7,6 +7,7 @@ const PLAYER_SPRINT_SPEED = 0.15;
 const PLAYER_CROUCH_SPEED = 0.05;
 const GRAVITY = 0.02;
 const JUMP_POWER = 0.5;
+const STEP_HEIGHT = 0.5;
 
 export class Player {
     constructor(world) {
@@ -19,9 +20,18 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.isFlying = false;
+        this.flySpeed = 0.2;
 
         this.keys = {};
         this.setupKeyboardControls();
+    }
+
+    setFlying(flying) {
+        this.isFlying = flying;
+        if (flying) {
+            this.velocity.y = 0;
+        }
     }
 
     setupKeyboardControls() {
@@ -52,32 +62,65 @@ export class Player {
     handleMovement() {
         let moveX = 0;
         let moveZ = 0;
+        let moveY = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        if (this.isFlying) {
+            const speed = this.keys['shift'] ? this.flySpeed * 2 : this.flySpeed;
 
-        if (this.keys['w']) moveZ -= speed;
-        if (this.keys['s']) moveZ += speed;
-        if (this.keys['a']) moveX -= speed;
-        if (this.keys['d']) moveX += speed;
+            if (this.keys['w']) moveZ -= speed;
+            if (this.keys['s']) moveZ += speed;
+            if (this.keys['a']) moveX -= speed;
+            if (this.keys['d']) moveX += speed;
+            if (this.keys[' ']) moveY += speed;
+            if (this.keys['shift']) moveY -= speed;
 
-        const cosY = Math.cos(this.rotation.y);
-        const sinY = Math.sin(this.rotation.y);
+            const cosY = Math.cos(this.rotation.y);
+            const sinY = Math.sin(this.rotation.y);
 
-        this.velocity.x = moveX * cosY - moveZ * sinY;
-        this.velocity.z = moveX * sinY + moveZ * cosY;
+            this.velocity.x = moveX * cosY - moveZ * sinY;
+            this.velocity.y = moveY;
+            this.velocity.z = moveX * sinY + moveZ * cosY;
+        } else {
+            const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
 
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+            if (this.keys['w']) moveZ -= speed;
+            if (this.keys['s']) moveZ += speed;
+            if (this.keys['a']) moveX -= speed;
+            if (this.keys['d']) moveX += speed;
+
+            const cosY = Math.cos(this.rotation.y);
+            const sinY = Math.sin(this.rotation.y);
+
+            this.velocity.x = moveX * cosY - moveZ * sinY;
+            this.velocity.z = moveX * sinY + moveZ * cosY;
+
+            this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+            this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+        }
     }
 
     applyPhysics() {
-        if (!this.isOnGround) {
+        const eyeBlock = this.world.getBlock(
+            Math.floor(this.position.x),
+            Math.floor(this.position.y + PLAYER_HEIGHT * 0.85),
+            Math.floor(this.position.z)
+        );
+
+        const isInWater = eyeBlock === BLOCKS.WATER;
+        const isInLava = eyeBlock === BLOCKS.LAVA;
+        const liquidDrag = isInWater ? 0.8 : (isInLava ? 0.5 : 1.0);
+
+        if (!this.isOnGround && !isInWater && !isInLava) {
             this.velocity.y -= GRAVITY;
+        } else if (isInWater) {
+            this.velocity.y = Math.max(this.velocity.y - GRAVITY * 0.1, -0.2);
+        } else if (isInLava) {
+            this.velocity.y = Math.max(this.velocity.y - GRAVITY * 0.15, -0.1);
         }
 
-        this.position.x += this.velocity.x;
+        this.position.x += this.velocity.x * liquidDrag;
         this.position.y += this.velocity.y;
-        this.position.z += this.velocity.z;
+        this.position.z += this.velocity.z * liquidDrag;
     }
 
     checkCollisions() {
@@ -93,6 +136,9 @@ export class Player {
             { dy: height * 0.9, radius: radius * 0.7 }
         ];
 
+        const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+        let collision = false;
+
         for (const point of checkPoints) {
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
@@ -101,11 +147,14 @@ export class Player {
 
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
                 if (isBlockSolid(block)) {
-                    const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
-                    if (moveLen > 0) {
+                    if (moveLen > 0 && !collision) {
+                        if (this.tryStepUp(radius)) {
+                            return;
+                        }
                         const scale = 1.5 / moveLen;
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
+                        collision = true;
                     }
                     break;
                 }
@@ -148,6 +197,37 @@ export class Player {
             this.position.y = 100;
             this.velocity.y = 0;
         }
+    }
+
+    tryStepUp(radius) {
+        const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+        if (moveLen === 0 || this.velocity.y > 0) return false;
+
+        for (let step = 0.1; step < STEP_HEIGHT; step += 0.1) {
+            const testY = this.position.y + step;
+            let blocked = false;
+
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+                const cx = this.position.x + Math.cos(angle) * radius;
+                const cz = this.position.z + Math.sin(angle) * radius;
+
+                const block = this.world.getBlock(Math.floor(cx), Math.floor(testY), Math.floor(cz));
+                if (isBlockSolid(block)) {
+                    blocked = true;
+                    break;
+                }
+            }
+
+            if (!blocked) {
+                const scale = moveLen > 0 ? 0.5 / moveLen : 0;
+                this.position.x += this.velocity.x * scale;
+                this.position.z += this.velocity.z * scale;
+                this.position.y = testY;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     getEyePosition() {

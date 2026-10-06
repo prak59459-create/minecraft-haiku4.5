@@ -136,6 +136,30 @@ body {
     margin: 3px 0;
 }
 
+#gameMode {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: white;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    z-index: 10;
+    padding: 5px 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+}
+
+#gameMode.creative {
+    color: #FFD700;
+    border-left: 3px solid #FFD700;
+}
+
+#gameMode.survival {
+    color: #90EE90;
+    border-left: 3px solid #90EE90;
+}
+
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;

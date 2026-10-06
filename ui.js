@@ -23,16 +23,27 @@ export class UI {
             if (num >= 1 && num <= 9) {
                 this.selectBlock(num - 1);
             }
+            if (e.key === 'e' || e.key === 'E') {
+                this.toggleInventory();
+            }
         });
 
         document.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const direction = e.deltaY > 0 ? 1 : -1;
-            let newIndex = this.selectedBlock + direction;
-            if (newIndex < 0) newIndex = 8;
-            if (newIndex > 8) newIndex = 0;
-            this.selectBlock(newIndex);
+            const inventoryPanel = document.getElementById('inventory');
+            if (!inventoryPanel.classList.contains('show')) {
+                e.preventDefault();
+                const direction = e.deltaY > 0 ? 1 : -1;
+                let newIndex = this.selectedBlock + direction;
+                if (newIndex < 0) newIndex = 8;
+                if (newIndex > 8) newIndex = 0;
+                this.selectBlock(newIndex);
+            }
         }, { passive: false });
+    }
+
+    toggleInventory() {
+        const inventoryPanel = document.getElementById('inventory');
+        inventoryPanel.classList.toggle('show');
     }
 
     selectBlock(index) {
@@ -45,14 +56,20 @@ export class UI {
         this.selectedBlock = index;
     }
 
-    updateHUD(playerPos, selectedBlock, fps) {
+    updateHUD(playerPos, selectedBlock, fps, raycastHit) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
 
         coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
         fpsEl.textContent = `FPS: ${fps}`;
-        blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+
+        let blockText = BLOCK_NAMES[selectedBlock] || 'Air';
+        if (raycastHit && raycastHit.block !== 0) {
+            const targetBlockName = BLOCK_NAMES[raycastHit.block] || 'Unknown';
+            blockText = `${targetBlockName} [${raycastHit.x}, ${raycastHit.y}, ${raycastHit.z}]`;
+        }
+        blockEl.textContent = blockText;
     }
 
     updateFPS() {
