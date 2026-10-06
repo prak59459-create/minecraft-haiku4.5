@@ -1,5 +1,54 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Optimization & Polish (Session 3)
+
+### Performance Enhancements
+- Implemented particle object pooling (max 2000 particles) to reduce memory allocations
+- Optimized raycast direction normalization and reduced step size (0.025 units)
+- Enhanced chunk LOD management with improved distance calculations
+- Added GPU high-performance mode with SRGBColorSpace color output
+- Improved chunk rendering with better culling at distance thresholds
+
+### Visual Improvements
+- Completely redesigned day/night cycle with smooth color transitions
+- Enhanced block outline with pulsing yellow highlight and visibility caching
+- Added procedural variation to water rendering using seeded noise
+- Improved terrain mesh generation with better lighting calculations
+- Added per-vertex color variation for more natural block appearance
+
+### Camera & Gameplay
+- Added dynamic FOV adjustment (30-120 degrees) with +/- keys
+- Improved FOV synchronization with camera projection matrix updates
+- Refined player movement logic with cleaner sprint/crouch state management
+- Better separation of movement handling concerns
+
+### Configuration & System Updates
+- Extended configuration system with graphics options (shadows, antialias)
+- Added configurable chunk unload distance (default: 10)
+- Updated terrain generation parameters (max height: 180, min height: 30)
+- Added biome seed configuration for future deterministic generation
+- Improved raycast configuration with optimized step size
+
+### Terrain Generation Improvements
+- Enhanced height generation with better Perlin noise octave distribution
+- Improved biome system with moisture-based terrain type selection
+- Larger, more natural-looking trees with improved foliage distribution
+- Better ore distribution with adjusted thresholds and frequencies
+- Extended water generation for more diverse coastal areas
+
+### Code Quality
+- Added block outline mesh caching to prevent redundant rebuilds
+- Improved water material properties with shininess and shadow receiving
+- Optimized particle fade-out with alpha-based color multiplication
+- Better material properties for improved visual hierarchy
+- Cleaner chunk rendering pipeline
+
+### Bug Fixes
+- Fixed particle update order to prevent lifecycle inconsistencies
+- Improved raycast accuracy with normalized direction vectors
+- Better chunk culling logic with clearer distance thresholds
+- Fixed FOV update timing in camera projection
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features

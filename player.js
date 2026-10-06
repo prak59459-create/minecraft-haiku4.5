@@ -53,7 +53,11 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        this.isSprinting = this.keys['shift'] && !this.isCrouching && isMoving;
+        this.isCrouching = this.keys['shift'] && isMoving;
+
+        const speed = this.isSprinting ? PLAYER_SPRINT_SPEED : (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPEED);
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -65,9 +69,6 @@ export class Player {
 
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
-
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
     }
 
     applyPhysics() {
@@ -163,7 +164,9 @@ export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
+        this.fov = 75;
         this.setupMouseControls();
+        this.setupKeyboardControls();
     }
 
     setupMouseControls() {
@@ -177,6 +180,16 @@ export class Camera {
         document.addEventListener('click', () => {
             if (document.pointerLockElement !== document.body) {
                 document.body.requestPointerLock();
+            }
+        });
+    }
+
+    setupKeyboardControls() {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '+' || e.key === '=') {
+                this.fov = Math.max(30, this.fov - 5);
+            } else if (e.key === '-') {
+                this.fov = Math.min(120, this.fov + 5);
             }
         });
     }
