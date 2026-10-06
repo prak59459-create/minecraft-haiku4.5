@@ -422,14 +422,27 @@ class MinecraftGame {
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.1, Math.sin(time) + 0.5);
+        const sunAngle = (time % (Math.PI * 2));
 
-        this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.position.set(
+            Math.cos(sunAngle) * 200,
+            sunY,
+            Math.sin(sunAngle) * 200
+        );
+        this.directionalLight.intensity = 0.4 + sunIntensity * 0.4;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        const hue = 0.6 - sunIntensity * 0.1;
+        const saturation = 0.5 - sunIntensity * 0.15;
+        const lightness = 0.4 + sunIntensity * 0.35;
+        skyColor.setHSL(Math.max(0, hue), Math.max(0, saturation), Math.max(0.2, lightness));
         this.scene.background = skyColor;
+
+        const ambientLight = this.scene.children.find(c => c instanceof THREE.AmbientLight);
+        if (ambientLight) {
+            ambientLight.intensity = 0.4 + sunIntensity * 0.15;
+        }
     }
 
     updateGameModeDisplay() {
