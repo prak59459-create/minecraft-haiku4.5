@@ -62,8 +62,10 @@ export class DebugDisplay {
 
         let vertices = 0;
         let triangles = 0;
+        let meshCount = 0;
         for (const mesh of game.chunkMeshes.values()) {
             if (mesh && mesh.geometry) {
+                meshCount++;
                 const positions = mesh.geometry.getAttribute('position');
                 if (positions) {
                     vertices += positions.count;
@@ -75,9 +77,9 @@ export class DebugDisplay {
             }
         }
 
-        this.stats.vertices = vertices;
-        this.stats.triangles = triangles;
-        this.stats.drawCalls = game.chunkMeshes.size;
+        this.stats.vertices = Math.round(vertices);
+        this.stats.triangles = Math.round(triangles);
+        this.stats.drawCalls = meshCount;
 
         if (performance.memory) {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
