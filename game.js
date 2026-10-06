@@ -13,9 +13,13 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, preserveDrawingBuffer: false });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+        this.renderer.shadowMap.autoUpdate = true;
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -48,18 +52,23 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7 + sunIntensity * 0.25);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -200;
+        directionalLight.shadow.camera.right = 200;
+        directionalLight.shadow.camera.top = 200;
+        directionalLight.shadow.camera.bottom = -200;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
+        this.frustum = new THREE.Frustum();
     }
 
     setupEventListeners() {
@@ -233,9 +242,9 @@ class MinecraftGame {
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
+                flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 20
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -294,6 +303,8 @@ class MinecraftGame {
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
         const chunksToProcess = [];
+        const meshesToRemove = [];
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
             const dx = cx - playerChunkX;
@@ -302,8 +313,7 @@ class MinecraftGame {
 
             if (dist > renderDistance * renderDistance) {
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
+                    meshesToRemove.push(key);
                 }
                 continue;
             }
@@ -314,12 +324,24 @@ class MinecraftGame {
         }
 
         chunksToProcess.sort((a, b) => a.dist - b.dist);
-        for (const { key, chunk } of chunksToProcess.slice(0, 4)) {
+
+        const maxChunksPerFrame = 3;
+        for (const { key, chunk } of chunksToProcess.slice(0, maxChunksPerFrame)) {
             const mesh = this.buildChunkMesh(chunk);
             if (mesh) {
                 this.scene.add(mesh);
                 this.chunkMeshes.set(key, mesh);
             }
+        }
+
+        for (const key of meshesToRemove) {
+            const mesh = this.chunkMeshes.get(key);
+            if (mesh) {
+                this.scene.remove(mesh);
+                if (mesh.geometry) mesh.geometry.dispose();
+                if (mesh.material) mesh.material.dispose();
+            }
+            this.chunkMeshes.delete(key);
         }
     }
 
@@ -374,6 +396,11 @@ class MinecraftGame {
 
         if (this.showDebug) {
             this.debugDisplay.update(this);
+        }
+
+        this.frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
+        for (const mesh of this.chunkMeshes.values()) {
+            mesh.frustumCulled = true;
         }
 
         this.renderer.render(this.scene, this.camera);
