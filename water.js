@@ -88,5 +88,29 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+        this.updateWaveAnimation();
+    }
+
+    updateWaveAnimation() {
+        for (const [key, mesh] of this.waterMeshes) {
+            if (!mesh || !mesh.geometry) continue;
+
+            const positions = mesh.geometry.getAttribute('position');
+            if (!positions) continue;
+
+            const positionArray = positions.array;
+            const time = this.time;
+
+            for (let i = 0; i < positionArray.length; i += 3) {
+                const x = positionArray[i];
+                const y = positionArray[i + 1];
+                const z = positionArray[i + 2];
+
+                const wave = Math.sin(x * 0.5 + time * this.waveSpeed) * this.waveAmplitude;
+                positionArray[i + 1] = y + wave;
+            }
+
+            positions.needsUpdate = true;
+        }
     }
 }

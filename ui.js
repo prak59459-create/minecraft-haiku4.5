@@ -6,6 +6,8 @@ export class UI {
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.fpsHistory = [];
+        this.maxHistoryLength = 60;
         this.setupInventoryUI();
     }
 
@@ -87,9 +89,29 @@ export class UI {
 
         if (delta > 0) {
             this.fpsCounter = Math.round(1000 / delta);
+            this.fpsHistory.push(this.fpsCounter);
+            if (this.fpsHistory.length > this.maxHistoryLength) {
+                this.fpsHistory.shift();
+            }
         }
 
         return this.fpsCounter;
+    }
+
+    getAverageFPS() {
+        if (this.fpsHistory.length === 0) return 0;
+        const sum = this.fpsHistory.reduce((a, b) => a + b, 0);
+        return Math.round(sum / this.fpsHistory.length);
+    }
+
+    getMinFPS() {
+        if (this.fpsHistory.length === 0) return 0;
+        return Math.min(...this.fpsHistory);
+    }
+
+    getMaxFPS() {
+        if (this.fpsHistory.length === 0) return 0;
+        return Math.max(...this.fpsHistory);
     }
 
     toggleHelp() {

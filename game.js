@@ -270,6 +270,8 @@ class MinecraftGame {
             { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
         ];
 
+        const textureVariation = this.getBlockTextureVariation(blockId, x, y, z);
+
         for (const face of faces) {
             const [dx, dy, dz] = face.dir;
             const nx = x + dx;
@@ -280,9 +282,16 @@ class MinecraftGame {
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
-            for (const [vx, vy, vz] of face.verts) {
+            for (let i = 0; i < face.verts.length; i++) {
+                const [vx, vy, vz] = face.verts[i];
                 vertices.push(x + vx, y + vy, z + vz);
-                colors.push(r, g, b);
+
+                const variation = (i % 2 === 0) ? textureVariation : 1.0;
+                colors.push(
+                    Math.floor(r * variation),
+                    Math.floor(g * variation),
+                    Math.floor(b * variation)
+                );
             }
 
             indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -291,6 +300,23 @@ class MinecraftGame {
         }
 
         return faceCount > 0;
+    }
+
+    getBlockTextureVariation(blockId, x, y, z) {
+        const seed = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791);
+        const variation = 0.85 + ((seed % 31) / 31) * 0.3;
+
+        if (blockId === BLOCKS.STONE || blockId === BLOCKS.COBBLESTONE) {
+            return 0.9 + ((seed % 11) / 11) * 0.1;
+        }
+        if (blockId === BLOCKS.SAND) {
+            return 0.92 + ((seed % 9) / 9) * 0.08;
+        }
+        if (blockId === BLOCKS.GRASS) {
+            return 0.88 + ((seed % 13) / 13) * 0.12;
+        }
+
+        return variation;
     }
 
     updateVisibleChunks() {
