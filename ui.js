@@ -23,16 +23,27 @@ export class UI {
             if (num >= 1 && num <= 9) {
                 this.selectBlock(num - 1);
             }
+            if (e.key === 'e' || e.key === 'E') {
+                this.toggleInventory();
+            }
         });
 
         document.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const direction = e.deltaY > 0 ? 1 : -1;
-            let newIndex = this.selectedBlock + direction;
-            if (newIndex < 0) newIndex = 8;
-            if (newIndex > 8) newIndex = 0;
-            this.selectBlock(newIndex);
+            const inventoryPanel = document.getElementById('inventory');
+            if (!inventoryPanel.classList.contains('show')) {
+                e.preventDefault();
+                const direction = e.deltaY > 0 ? 1 : -1;
+                let newIndex = this.selectedBlock + direction;
+                if (newIndex < 0) newIndex = 8;
+                if (newIndex > 8) newIndex = 0;
+                this.selectBlock(newIndex);
+            }
         }, { passive: false });
+    }
+
+    toggleInventory() {
+        const inventoryPanel = document.getElementById('inventory');
+        inventoryPanel.classList.toggle('show');
     }
 
     selectBlock(index) {

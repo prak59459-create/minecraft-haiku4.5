@@ -4,6 +4,7 @@ import { BLOCKS, BLOCK_COLORS, isBlockSolid } from './blocks.js';
 import { UI } from './ui.js';
 import { ParticleSystem } from './particles.js';
 import { WaterRenderer } from './water.js';
+import { LavaRenderer } from './lava.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
@@ -25,6 +26,7 @@ class MinecraftGame {
         this.ui = new UI();
         this.particleSystem = new ParticleSystem(this.scene);
         this.waterRenderer = new WaterRenderer(this.scene, this.world);
+        this.lavaRenderer = new LavaRenderer(this.scene, this.world);
         this.audioManager = new AudioManager();
         this.debugDisplay = new DebugDisplay();
         this.blockOutline = new BlockOutline(this.scene);
@@ -92,6 +94,7 @@ class MinecraftGame {
                 } else {
                     this.player.setFlying(false);
                 }
+                this.updateGameModeDisplay();
                 console.log(`Mode: ${this.gameMode.mode}`);
             }
             if (e.key === 'F5') {
@@ -305,7 +308,7 @@ class MinecraftGame {
             const nz = z + dz;
 
             const neighbor = this.world.getBlock(nx, ny, nz);
-            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER && neighbor !== BLOCKS.LAVA) continue;
 
             const startIndex = vertices.length / 3;
             for (const [vx, vy, vz] of face.verts) {
@@ -401,6 +404,7 @@ class MinecraftGame {
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
+        this.lavaRenderer.update();
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);
@@ -426,6 +430,17 @@ class MinecraftGame {
         const skyColor = new THREE.Color();
         skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
         this.scene.background = skyColor;
+    }
+
+    updateGameModeDisplay() {
+        const modeEl = document.getElementById('gameMode');
+        if (this.gameMode.isCreative()) {
+            modeEl.textContent = 'Creative Mode';
+            modeEl.className = 'creative';
+        } else {
+            modeEl.textContent = 'Survival Mode';
+            modeEl.className = 'survival';
+        }
     }
 }
 
