@@ -1,5 +1,37 @@
 # Minecraft Clone - Improvements and Optimizations
 
+## Latest Updates (Session 3 - Optimization & Polish)
+
+### Performance Optimizations
+- **Particle Object Pooling**: Implemented object pooling in particle system to reduce memory allocations
+- **Raycast Optimization**: Normalized direction vectors and optimized step sizes for faster raycasting
+- **Chunk Rendering**: Enhanced LOD management with improved distance calculations
+- **GPU Acceleration**: Enabled high-performance rendering mode with SRGBColorSpace output
+
+### Visual Enhancements
+- **Day/Night Cycle**: Realistic color transitions (night → dusk → day → dusk → night)
+- **Block Outline**: Enhanced selection outline with pulsing yellow highlight and visibility caching
+- **Water Rendering**: Added procedural variation using seeded noise for natural appearance
+- **Mesh Lighting**: Improved terrain lighting with better altitude-based brightness
+
+### Camera & Controls
+- **FOV Control**: Dynamic field of view adjustment (+/- keys, range 30-120°)
+- **Mouse Sensitivity**: Maintained smooth mouse look controls
+- **Movement Refinement**: Cleaner sprint/crouch state management
+
+### Terrain Generation
+- **Height Variation**: Refined Perlin noise octave distribution for diverse terrain
+- **Biome System**: Enhanced with moisture-based biome selection
+- **Tree Generation**: Larger, more natural-looking trees with improved foliage
+- **Ore Distribution**: Better ore frequency and depth-based distribution
+- **Water Level**: Extended water generation for more diverse coastlines
+
+### Configuration System Updates
+- Added graphics configuration options (shadows, antialias support)
+- Configurable chunk unload distance for memory management
+- Updated terrain parameters to match new generation
+- Added biome seed configuration for future deterministic generation
+
 ## Latest Updates (Session 2)
 
 ### Core Improvements
