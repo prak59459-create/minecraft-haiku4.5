@@ -12,10 +12,14 @@ class MinecraftGame {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
+        this.scene.fog = new THREE.Fog(0x87CEEB, 300, 1000);
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -32,12 +36,14 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.frameCounter = 0;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
+        this.addClouds();
         this.animate();
     }
 
@@ -46,15 +52,19 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.1);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7 + sunIntensity * 0.2);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -256;
+        directionalLight.shadow.camera.right = 256;
+        directionalLight.shadow.camera.top = 256;
+        directionalLight.shadow.camera.bottom = -256;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -82,6 +92,30 @@ class MinecraftGame {
                 this.ui.toggleHelp();
             }
         });
+    }
+
+    addClouds() {
+        const cloudGeometry = new THREE.PlaneGeometry(20, 20);
+        const cloudMaterial = new THREE.MeshPhongMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.7,
+            emissive: 0xffffff,
+            emissiveIntensity: 0.1
+        });
+
+        for (let i = 0; i < 8; i++) {
+            const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
+            cloud.position.set(
+                Math.random() * 400 - 200,
+                150 + Math.random() * 50,
+                Math.random() * 400 - 200
+            );
+            cloud.rotation.x = -Math.PI / 2.5;
+            cloud.receiveShadow = false;
+            cloud.castShadow = false;
+            this.scene.add(cloud);
+        }
     }
 
     onMouseClick(event) {
@@ -208,10 +242,10 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.75;
+                    const heightLight = Math.pow((wy / WORLD_HEIGHT), 1.2) * 0.25;
+                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.08;
+                    const brightness = Math.min(1.0, baseLight + heightLight + varLight);
 
                     color.multiplyScalar(brightness);
 
@@ -231,9 +265,9 @@ class MinecraftGame {
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
+                flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 0
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -345,7 +379,11 @@ class MinecraftGame {
             eyePos.z + direction.z
         );
 
-        this.updateVisibleChunks();
+        this.frameCounter++;
+        if (this.frameCounter % 10 === 0) {
+            this.updateVisibleChunks();
+        }
+
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
@@ -366,14 +404,24 @@ class MinecraftGame {
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.6 + sunIntensity * 0.35;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        if (sunIntensity < 0.3) {
+            skyColor.setHSL(0.65, 0.3, 0.15);
+        } else if (sunIntensity < 0.5) {
+            const t = (sunIntensity - 0.3) / 0.2;
+            const nightColor = new THREE.Color(0x1a3a52);
+            const dayColor = new THREE.Color(0x87CEEB);
+            skyColor.lerpColors(nightColor, dayColor, t);
+        } else {
+            skyColor.setHSL(0.58, 0.5, 0.5 + sunIntensity * 0.25);
+        }
         this.scene.background = skyColor;
+        this.scene.fog.color.copy(skyColor);
     }
 }
 

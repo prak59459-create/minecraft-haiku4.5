@@ -2,11 +2,11 @@ import { BLOCKS, isBlockSolid } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
-const PLAYER_SPEED = 0.1;
-const PLAYER_SPRINT_SPEED = 0.15;
-const PLAYER_CROUCH_SPEED = 0.05;
-const GRAVITY = 0.02;
-const JUMP_POWER = 0.5;
+const PLAYER_SPEED = 0.12;
+const PLAYER_SPRINT_SPEED = 0.18;
+const PLAYER_CROUCH_SPEED = 0.06;
+const GRAVITY = 0.025;
+const JUMP_POWER = 0.55;
 
 export class Player {
     constructor(world) {
@@ -19,6 +19,7 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.collisionCache = {};
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -162,12 +163,14 @@ export class Player {
 export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
-        this.mouseSensitivity = 0.003;
+        this.mouseSensitivity = 0.0025;
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
+            if (document.pointerLockElement !== document.body) return;
+
             this.rotation.y -= e.movementX * this.mouseSensitivity;
             this.rotation.x -= e.movementY * this.mouseSensitivity;
 
