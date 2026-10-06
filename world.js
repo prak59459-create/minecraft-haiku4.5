@@ -83,11 +83,11 @@ export class Chunk {
 function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
-    let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    let height = 62;
+    height += perlinNoise.noise2D(x * 0.003, z * 0.003) * 35;
+    height += perlinNoise.noise2D(x * 0.015, z * 0.015) * 20;
+    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 10;
+    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 5;
 
     return Math.max(20, Math.min(160, Math.floor(height)));
 }
@@ -95,8 +95,11 @@ function getTerrainHeight(x, z) {
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
-    const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const moisture = perlinNoise.noise2D(x * 0.015, z * 0.015);
+    const temp = perlinNoise.noise2D(x * 0.025, z * 0.025);
+
+    if (moisture > 0.3 && temp < 0.2) return 'sand';
+    if (moisture < -0.2 && temp > 0.4) return 'sand';
     return 'grass';
 }
 
