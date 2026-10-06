@@ -14,7 +14,8 @@ const WATER_BUOYANCY = 0.01;
 export class Player {
     constructor(world) {
         this.world = world;
-        this.position = { x: 0, y: 100, z: 0 };
+        this.spawnPoint = { x: 0, y: 100, z: 0 };
+        this.position = { x: this.spawnPoint.x, y: this.spawnPoint.y, z: this.spawnPoint.z };
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
 
@@ -24,9 +25,16 @@ export class Player {
         this.isCrouching = false;
         this.isInWater = false;
         this.currentHeight = PLAYER_HEIGHT;
+        this.fallDistance = 0;
 
         this.keys = {};
         this.setupKeyboardControls();
+    }
+
+    respawn() {
+        this.position = { x: this.spawnPoint.x, y: this.spawnPoint.y, z: this.spawnPoint.z };
+        this.velocity = { x: 0, y: 0, z: 0 };
+        this.fallDistance = 0;
     }
 
     setupKeyboardControls() {
@@ -181,8 +189,16 @@ export class Player {
         }
 
         if (this.position.y < -10) {
-            this.position.y = 100;
-            this.velocity.y = 0;
+            this.respawn();
+        }
+
+        if (this.velocity.y < 0) {
+            this.fallDistance += -this.velocity.y;
+            if (this.fallDistance > 20) {
+                this.respawn();
+            }
+        } else if (this.isOnGround) {
+            this.fallDistance = 0;
         }
     }
 

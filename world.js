@@ -183,7 +183,24 @@ export class World {
     constructor(renderDistance = 8) {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
+        this.spawnPoint = null;
         initPerlinNoise();
+        this.findSpawnPoint();
+    }
+
+    findSpawnPoint() {
+        let x = 0, z = 0;
+        let height = getTerrainHeight(x, z);
+        let attempts = 0;
+
+        while ((height < 65 || height > 140) && attempts < 20) {
+            x += Math.random() * 100 - 50;
+            z += Math.random() * 100 - 50;
+            height = getTerrainHeight(Math.floor(x), Math.floor(z));
+            attempts++;
+        }
+
+        this.spawnPoint = { x, y: height + 2, z };
     }
 
     getChunk(cx, cz) {

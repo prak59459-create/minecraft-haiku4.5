@@ -23,6 +23,10 @@ class MinecraftGame {
 
         this.world = new World();
         this.player = new Player(this.world);
+        if (this.world.spawnPoint) {
+            this.player.spawnPoint = this.world.spawnPoint;
+            this.player.position = { ...this.world.spawnPoint };
+        }
         this.gameCamera = new Camera();
         this.ui = new UI();
         this.particleSystem = new ParticleSystem(this.scene);
