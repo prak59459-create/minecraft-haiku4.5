@@ -45,12 +45,13 @@ export class UI {
         this.selectedBlock = index;
     }
 
-    updateHUD(playerPos, selectedBlock, fps) {
+    updateHUD(playerPos, selectedBlock, fps, creativeMode = false) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
 
-        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
+        const mode = creativeMode ? ' [Creative]' : '';
+        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}${mode}`;
         fpsEl.textContent = `FPS: ${fps}`;
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
     }

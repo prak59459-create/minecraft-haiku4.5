@@ -1,4 +1,5 @@
 import { BLOCKS } from './blocks.js';
+import { WorldStorage } from './worldstorage.js';
 
 const CHUNK_SIZE = 16;
 const CHUNK_HEIGHT = 256;
@@ -13,12 +14,21 @@ export function initPerlinNoise() {
 }
 
 export class Chunk {
-    constructor(x, z) {
+    constructor(x, z, loadSaved = true) {
         this.x = x;
         this.z = z;
         this.blocks = new Uint8Array(CHUNK_SIZE * WORLD_HEIGHT * CHUNK_SIZE);
         this.generated = false;
         this.mesh = null;
+        this.modified = false;
+
+        if (loadSaved && WorldStorage.hasChunk(x, z)) {
+            const saved = WorldStorage.loadChunk(x, z);
+            if (saved) {
+                this.blocks = saved;
+                this.generated = true;
+            }
+        }
     }
 
     getBlock(x, y, z) {
@@ -29,6 +39,7 @@ export class Chunk {
     setBlock(x, y, z, blockId) {
         const idx = x + y * CHUNK_SIZE + z * CHUNK_SIZE * WORLD_HEIGHT;
         this.blocks[idx] = blockId;
+        this.modified = true;
     }
 
     generate() {
@@ -77,6 +88,15 @@ export class Chunk {
         }
 
         this.generated = true;
+        this.modified = false;
+        this.save();
+    }
+
+    save() {
+        if (this.generated && this.modified) {
+            WorldStorage.saveChunk(this.x, this.z, this.blocks);
+            this.modified = false;
+        }
     }
 }
 
@@ -108,11 +128,13 @@ function getOreBlock(x, y, z) {
     const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
     const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
     const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
+    const limestoneChance = perlinNoise.noise2D(x * 0.05, z * 0.05);
 
-    if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
-    if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
-    if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
-    if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    if (y < 100 && limestoneChance > 0.6 && limestoneChance < 0.75) ore = BLOCKS.LIMESTONE;
+    else if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
+    else if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
+    else if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
+    else if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
 
     return ore;
 }
@@ -125,19 +147,23 @@ function generateTree(chunk, x, z, height) {
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
     if (treeChance < 0.5) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    const treeType = perlinNoise.noise2D(worldX * 0.005, worldZ * 0.005) > 0 ? 'oak' : 'spruce';
+    const trunkHeight = treeType === 'spruce' ? 6 + Math.floor(Math.random() * 4) : 4 + Math.floor(Math.random() * 4);
     const y = height;
+
+    const logBlock = treeType === 'spruce' ? BLOCKS.SPRUCE_LOG : BLOCKS.OAK_LOG;
+    const leafBlock = treeType === 'spruce' ? BLOCKS.SPRUCE_LEAVES : BLOCKS.OAK_LEAVES;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
             if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
-                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
+                chunk.setBlock(x, y + i, z, logBlock);
             }
         }
     }
 
     const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    const foliageRadius = treeType === 'spruce' ? 2 + Math.floor(Math.random() * 3) : 2 + Math.floor(Math.random() * 2);
 
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
         const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
@@ -151,7 +177,7 @@ function generateTree(chunk, x, z, height) {
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
                     if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
-                        chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                        chunk.setBlock(fx, fy, fz, leafBlock);
                     }
                 }
             }

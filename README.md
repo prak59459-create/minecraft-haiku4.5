@@ -18,13 +18,16 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Procedural Generation** - Infinite world generation using Perlin noise
 - **Multiple Biomes** - Grass, sand, and varied terrain types
 - **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
+- **Multiple Block Types** (21 types):
+  - Stone, Grass, Dirt, Cobblestone, Limestone
+  - Oak Log, Oak Leaves, Oak Planks
+  - Spruce Log, Spruce Leaves
+  - Birch Log, Birch Leaves
+  - Sand, Water, Gravel, Glass, Bedrock
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
 - **Ore Generation** - Procedural ore generation at various depths
-- **Tree Generation** - Natural tree placement in suitable terrain
+- **Tree Generation** - Multiple tree types (Oak, Spruce, Birch) with natural variation
+- **Biome Variety** - Grass and sand biomes with terrain-specific block types
 
 ### Physics & Collision
 - **Gravity System** - Realistic falling and landing
@@ -48,10 +51,17 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Web Audio API** - Dynamic audio generation
 
 ### User Interface
-- **HUD Display** - Real-time coordinates, FPS, and block info
-- **Block Inventory** - Visual block selector with 9 slots
-- **Crosshair** - Center screen targeting reticle
+- **HUD Display** - Real-time coordinates, FPS, block info, and game mode indicator
+- **Block Inventory** - Visual block selector with 9 slots and improved styling
+- **Crosshair** - Center screen targeting reticle with glow effect
 - **Help Panel** - In-game control instructions (Press H)
+- **Block Selection Tooltips** - Hover to see block names
+
+### World Management
+- **Save/Load System** - Automatic world persistence using LocalStorage
+- **Auto-Save** - World saves every 60 seconds
+- **Creative Mode** - Toggle unlimited blocks with M key
+- **Manual Save** - Press Ctrl+S to save world anytime
 
 ### Performance Optimization
 - **Chunk-based Rendering** - Only visible chunks are rendered
@@ -63,10 +73,7 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 | Key | Action |
 |-----|--------|
-| **W** | Move Forward |
-| **A** | Move Left |
-| **S** | Move Backward |
-| **D** | Move Right |
+| **W/A/S/D** | Move Forward/Left/Back/Right |
 | **Space** | Jump |
 | **Shift** | Sprint / Crouch |
 | **Mouse** | Look Around (Click to enable) |
@@ -75,7 +82,9 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 | **1-9** | Select Block Slot |
 | **Scroll Wheel** | Change Selected Block |
 | **C** | Pick Block (Pick the block you're looking at) |
-| **H** | Toggle Help |
+| **M** | Toggle Creative/Survival Mode |
+| **Ctrl+S** | Save World |
+| **H** | Toggle Help Panel |
 | **F3** | Toggle Debug Info |
 
 ## Getting Started
@@ -170,17 +179,33 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 - **Clean Separation** - Game logic, rendering, and physics separate
 - **Extensible** - Easy to add new block types or biomes
 
+### Recent Improvements (v2.0)
+
+- [x] Added world save/load system with LocalStorage
+- [x] Creative mode toggle (M key)
+- [x] Auto-save functionality every 60 seconds
+- [x] Expanded block types (21 total types)
+- [x] Multiple tree types (Oak, Spruce, Birch)
+- [x] Enhanced particle effects with better visuals
+- [x] Improved water rendering with chunk management
+- [x] Better face lighting based on direction
+- [x] Glass blocks with transparency
+- [x] Limestone ore generation
+- [x] Improved UI styling with backdrop blur
+- [x] Enhanced collision detection
+
 ### Future Enhancements
 
-- [ ] Inventory UI with multiple stacks
-- [ ] Creative mode with unlimited blocks
-- [ ] Survival mode with health/hunger
+- [ ] Inventory UI with multiple stacks and crafting
+- [ ] Survival mode with health/hunger system
 - [ ] Multiplayer support
 - [ ] Texture mapping for blocks
-- [ ] Advanced weather systems
-- [ ] More biome types
-- [ ] Mob system
-- [ ] Crafting system
+- [ ] Advanced weather systems (rain, snow)
+- [ ] More biome types (forest, mountain, desert)
+- [ ] Mob system with basic AI
+- [ ] Cave generation system
+- [ ] Dungeon structures
+- [ ] Enchantment system
 
 ## Performance Tips
 

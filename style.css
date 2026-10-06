@@ -136,6 +136,25 @@ body {
     margin: 3px 0;
 }
 
+#inventory {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+    padding: 5px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    backdrop-filter: blur(4px);
+}
+
+.inventory-slot:active {
+    transform: scale(0.95);
+}
+
+#hud {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px 12px;
+    border-radius: 4px;
+    backdrop-filter: blur(2px);
+}
+
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;
