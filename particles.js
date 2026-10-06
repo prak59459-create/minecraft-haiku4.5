@@ -4,29 +4,36 @@ export class ParticleSystem {
         this.particles = [];
         this.geometry = new THREE.BufferGeometry();
         this.material = new THREE.PointsMaterial({
-            size: 0.2,
+            size: 0.25,
             sizeAttenuation: true,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.85,
+            sizeVariation: true
         });
         this.points = new THREE.Points(this.geometry, this.material);
+        this.points.frustumCulled = true;
         this.scene.add(this.points);
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
-        const particleCount = 8 + Math.floor(Math.random() * 8);
+        const particleCount = 10 + Math.floor(Math.random() * 10);
 
         for (let i = 0; i < particleCount; i++) {
+            const speed = 0.4 + Math.random() * 0.3;
+            const angle = Math.random() * Math.PI * 2;
+            const vertical = (Math.random() - 0.5) * 2;
+
             const particle = {
                 position: { x, y, z },
                 velocity: {
-                    x: (Math.random() - 0.5) * 0.3,
-                    y: Math.random() * 0.3,
-                    z: (Math.random() - 0.5) * 0.3
+                    x: Math.cos(angle) * speed,
+                    y: vertical * speed + 0.2,
+                    z: Math.sin(angle) * speed
                 },
                 life: 1,
-                maxLife: 0.8 + Math.random() * 0.4,
-                color: blockColor
+                maxLife: 0.7 + Math.random() * 0.5,
+                color: blockColor,
+                size: 0.15 + Math.random() * 0.1
             };
             this.particles.push(particle);
         }
@@ -60,6 +67,7 @@ export class ParticleSystem {
 
         const positions = new Float32Array(this.particles.length * 3);
         const colors = new Float32Array(this.particles.length * 3);
+        const sizes = new Float32Array(this.particles.length);
 
         for (let i = 0; i < this.particles.length; i++) {
             const p = this.particles[i];
@@ -72,10 +80,13 @@ export class ParticleSystem {
             colors[i * 3] = color.r;
             colors[i * 3 + 1] = color.g;
             colors[i * 3 + 2] = color.b;
+
+            sizes[i] = (p.size || 0.2) * Math.max(0, alpha);
         }
 
         this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        this.material.opacity = 0.8;
+        this.geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+        this.material.opacity = 0.85;
     }
 }
