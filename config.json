@@ -1,9 +1,13 @@
 {
+  "version": "2.0",
   "world": {
     "renderDistance": 8,
+    "maxChunksLoaded": 50,
     "seedOffset": 0,
     "waterLevel": 62,
-    "bedrockLevel": 0
+    "bedrockLevel": 0,
+    "autoSaveInterval": 60000,
+    "persistenceEnabled": true
   },
   "player": {
     "speed": 0.1,
@@ -24,19 +28,25 @@
     "renderScale": 1.0,
     "shadowMapSize": 2048,
     "particleLimit": 2000,
-    "fpsTarget": 60
+    "fpsTarget": 60,
+    "antiAliasing": true
   },
   "terrain": {
     "chunkSize": 16,
-    "maxHeight": 160,
+    "maxHeight": 150,
     "minHeight": 20,
     "seaLevel": 62,
-    "treeFrequency": 0.5
+    "treeFrequency": 0.5,
+    "treeVariety": true
   },
   "audio": {
     "enabled": true,
     "masterVolume": 0.5,
     "soundFx": true,
     "music": false
+  },
+  "gameplay": {
+    "allowCreativeMode": true,
+    "debugInfoDefault": false
   }
 }
