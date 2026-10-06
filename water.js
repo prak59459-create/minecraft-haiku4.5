@@ -83,7 +83,33 @@ export class WaterRenderer {
         return null;
     }
 
-    update() {
+    update(playerPos = null) {
         this.time += 0.016;
+
+        if (playerPos && this.world.chunks) {
+            for (const [key, chunk] of this.world.chunks) {
+                const [cx, cz] = key.split(',').map(Number);
+                const meshKey = key;
+
+                if (!this.waterMeshes.has(meshKey)) {
+                    const mesh = this.buildWaterMesh(chunk);
+                    if (mesh) {
+                        this.scene.add(mesh);
+                        this.waterMeshes.set(meshKey, mesh);
+                    }
+                }
+            }
+
+            const playerChunkX = Math.floor(playerPos.x / 16);
+            const playerChunkZ = Math.floor(playerPos.z / 16);
+
+            for (const [key, mesh] of this.waterMeshes) {
+                const [cx, cz] = key.split(',').map(Number);
+                if (Math.abs(cx - playerChunkX) > 10 || Math.abs(cz - playerChunkZ) > 10) {
+                    this.scene.remove(mesh);
+                    this.waterMeshes.delete(key);
+                }
+            }
+        }
     }
 }

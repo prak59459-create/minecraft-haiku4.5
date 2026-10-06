@@ -7,6 +7,7 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { WorldStorage } from './worldstorage.js';
 
 class MinecraftGame {
     constructor() {
@@ -32,12 +33,17 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.creativeMode = false;
+        this.autoSaveInterval = 60000;
+        this.lastSaveTime = Date.now();
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
+        this.setupGameModeKeys();
+        this.loadWorldMetadata();
         this.animate();
     }
 
@@ -84,6 +90,38 @@ class MinecraftGame {
         });
     }
 
+    setupGameModeKeys() {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'm' || e.key === 'M') {
+                this.creativeMode = !this.creativeMode;
+                const mode = this.creativeMode ? 'Creative' : 'Survival';
+                console.log(`Switched to ${mode} mode`);
+            }
+            if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+                e.preventDefault();
+                this.saveWorld();
+            }
+        });
+    }
+
+    loadWorldMetadata() {
+        const metadata = WorldStorage.loadMetadata();
+        if (metadata) {
+            console.log('World loaded:', metadata);
+        }
+    }
+
+    saveWorld() {
+        const metadata = {
+            playerPos: this.player.position,
+            timestamp: Date.now(),
+            gameMode: this.creativeMode ? 'creative' : 'survival',
+            renderedChunks: this.chunkMeshes.size
+        };
+        WorldStorage.saveMetadata(metadata);
+        console.log('World saved');
+    }
+
     onMouseClick(event) {
         if (document.pointerLockElement !== document.body) return;
 
@@ -96,6 +134,9 @@ class MinecraftGame {
 
             const color = BLOCK_COLORS[hit.block] || 0x808080;
             this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
+
+            const chunk = this.world.getChunk(Math.floor(hit.x / 16), Math.floor(hit.z / 16));
+            if (chunk) chunk.save();
 
             const now = Date.now();
             if (now - this.lastBreakSound > 50) {
@@ -112,6 +153,9 @@ class MinecraftGame {
                 this.world.setBlock(nx, ny, nz, this.selectedBlockType);
                 this.updateChunkMesh(nx, ny, nz);
                 this.audioManager.playBlockSound('place');
+
+                const chunk = this.world.getChunk(Math.floor(nx / 16), Math.floor(nz / 16));
+                if (chunk) chunk.save();
             }
         }
     }
@@ -208,12 +252,17 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.6;
+                    const heightLight = Math.min(0.4, (wy / WORLD_HEIGHT) * 0.5);
+                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.08;
 
-                    color.multiplyScalar(brightness);
+                    let skyLight = 1.0;
+                    if (wy > 200) skyLight = 1.2;
+                    else if (wy > 150) skyLight = 1.1;
+
+                    const brightness = (baseLight + heightLight + varLight) * skyLight;
+
+                    color.multiplyScalar(Math.min(1.0, brightness));
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
                 }
@@ -231,9 +280,10 @@ class MinecraftGame {
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
+                flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 20,
+                emissive: 0x000000
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -257,23 +307,35 @@ class MinecraftGame {
             { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
         ];
 
-        const r = Math.floor(color.r * 255);
-        const g = Math.floor(color.g * 255);
-        const b = Math.floor(color.b * 255);
+        const r = Math.floor(Math.min(255, color.r * 255));
+        const g = Math.floor(Math.min(255, color.g * 255));
+        const b = Math.floor(Math.min(255, color.b * 255));
 
-        for (const face of faces) {
+        for (let i = 0; i < faces.length; i++) {
+            const face = faces[i];
             const [dx, dy, dz] = face.dir;
             const nx = x + dx;
             const ny = y + dy;
             const nz = z + dz;
 
             const neighbor = this.world.getBlock(nx, ny, nz);
-            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+
+            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER && neighbor !== BLOCKS.GLASS) continue;
 
             const startIndex = vertices.length / 3;
+
+            let faceLight = 1.0;
+            if (dy > 0) faceLight = 1.1;
+            else if (dy < 0) faceLight = 0.8;
+            else faceLight = 0.95;
+
+            const fr = Math.floor(r * faceLight);
+            const fg = Math.floor(g * faceLight);
+            const fb = Math.floor(b * faceLight);
+
             for (const [vx, vy, vz] of face.verts) {
                 vertices.push(x + vx, y + vy, z + vz);
-                colors.push(r, g, b);
+                colors.push(fr, fg, fb);
             }
 
             indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -292,16 +354,18 @@ class MinecraftGame {
 
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const dist = Math.sqrt((cx - playerChunkX) ** 2 + (cz - playerChunkZ) ** 2);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (dist > 10) {
                 if (this.chunkMeshes.has(key)) {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
+                    chunk.save();
                 }
                 continue;
             }
 
-            if (!this.chunkMeshes.has(key)) {
+            if (!this.chunkMeshes.has(key) && dist <= 8) {
                 const mesh = this.buildChunkMesh(chunk);
                 if (mesh) {
                     this.scene.add(mesh);
@@ -348,19 +412,28 @@ class MinecraftGame {
         this.updateVisibleChunks();
         this.updateDayNightCycle();
         this.particleSystem.update();
-        this.waterRenderer.update();
+        this.waterRenderer.update(this.player.position);
+        this.performAutoSave();
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps, this.creativeMode);
 
         if (this.showDebug) {
             this.debugDisplay.update(this);
         }
 
         this.renderer.render(this.scene, this.camera);
+    }
+
+    performAutoSave() {
+        const now = Date.now();
+        if (now - this.lastSaveTime > this.autoSaveInterval) {
+            this.saveWorld();
+            this.lastSaveTime = now;
+        }
     }
 
     updateDayNightCycle() {
