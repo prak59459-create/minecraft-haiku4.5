@@ -13,7 +13,13 @@ export const BLOCKS = {
     COAL_ORE: 11,
     IRON_ORE: 12,
     GOLD_ORE: 13,
-    DIAMOND_ORE: 14
+    DIAMOND_ORE: 14,
+    DARK_OAK_LOG: 15,
+    SPRUCE_LOG: 16,
+    BIRCH_LOG: 17,
+    CLAY: 18,
+    LAVA: 19,
+    MOSSY_STONE: 20
 };
 
 export const BLOCK_NAMES = {
@@ -31,7 +37,13 @@ export const BLOCK_NAMES = {
     11: 'Coal Ore',
     12: 'Iron Ore',
     13: 'Gold Ore',
-    14: 'Diamond Ore'
+    14: 'Diamond Ore',
+    15: 'Dark Oak Log',
+    16: 'Spruce Log',
+    17: 'Birch Log',
+    18: 'Clay',
+    19: 'Lava',
+    20: 'Mossy Stone'
 };
 
 export const BLOCK_COLORS = {
@@ -49,7 +61,13 @@ export const BLOCK_COLORS = {
     11: 0x1A1A1A,
     12: 0xB8860B,
     13: 0xFFD700,
-    14: 0x00CED1
+    14: 0x00CED1,
+    15: 0x3D2817,
+    16: 0x4C3D2F,
+    17: 0x956839,
+    18: 0xA0A0A0,
+    19: 0xFF6600,
+    20: 0x6B7D6B
 };
 
 export const SOLID_BLOCKS = new Set([
@@ -65,12 +83,24 @@ export const SOLID_BLOCKS = new Set([
     BLOCKS.COAL_ORE,
     BLOCKS.IRON_ORE,
     BLOCKS.GOLD_ORE,
-    BLOCKS.DIAMOND_ORE
+    BLOCKS.DIAMOND_ORE,
+    BLOCKS.DARK_OAK_LOG,
+    BLOCKS.SPRUCE_LOG,
+    BLOCKS.BIRCH_LOG,
+    BLOCKS.CLAY,
+    BLOCKS.LAVA,
+    BLOCKS.MOSSY_STONE
 ]);
 
 export const TRANSPARENT_BLOCKS = new Set([
     BLOCKS.WATER,
-    BLOCKS.OAK_LEAVES
+    BLOCKS.OAK_LEAVES,
+    BLOCKS.LAVA
+]);
+
+export const LIQUID_BLOCKS = new Set([
+    BLOCKS.WATER,
+    BLOCKS.LAVA
 ]);
 
 export const LIGHT_EMITTING = new Set([]);
