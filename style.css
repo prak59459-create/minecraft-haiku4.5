@@ -136,6 +136,20 @@ body {
     margin: 3px 0;
 }
 
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+}
+
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;

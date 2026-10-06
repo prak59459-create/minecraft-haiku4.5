@@ -21,6 +21,8 @@ export class Player {
         this.isCrouching = false;
 
         this.keys = {};
+        this.lastStepDistance = 0;
+        this.stepInterval = 0.5;
         this.setupKeyboardControls();
     }
 
@@ -47,13 +49,32 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        if (this.onStep) this.updateStepSound();
+    }
+
+    updateStepSound() {
+        if (!this.isOnGround) return;
+        const moveSpeed = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+        if (moveSpeed > 0.01) {
+            this.lastStepDistance += moveSpeed;
+            if (this.lastStepDistance > this.stepInterval) {
+                this.onStep();
+                this.lastStepDistance = 0;
+            }
+        } else {
+            this.lastStepDistance = 0;
+        }
     }
 
     handleMovement() {
         let moveX = 0;
         let moveZ = 0;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        this.isCrouching = this.keys['shift'] && isMoving;
+        this.isSprinting = this.keys['shift'] && isMoving && !this.isCrouching;
+
+        const speed = this.isSprinting ? PLAYER_SPRINT_SPEED : (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPEED);
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -65,9 +86,6 @@ export class Player {
 
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
-
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
     }
 
     applyPhysics() {
