@@ -19,8 +19,11 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.crouchHeight = PLAYER_HEIGHT;
 
         this.keys = {};
+        this.sprintStamina = 100;
+        this.maxStamina = 100;
         this.setupKeyboardControls();
     }
 
@@ -36,6 +39,9 @@ export class Player {
                     if (this.onJump) this.onJump();
                 }
             }
+            if (e.key === 'Shift') {
+                this.isCrouching = !this.isCrouching;
+            }
         });
 
         document.addEventListener('keyup', (e) => {
@@ -45,15 +51,42 @@ export class Player {
 
     update() {
         this.handleMovement();
+        this.updateCrouch();
+        this.updateStamina();
         this.applyPhysics();
         this.checkCollisions();
+    }
+
+    updateCrouch() {
+        const targetHeight = this.isCrouching ? PLAYER_HEIGHT * 0.6 : PLAYER_HEIGHT;
+        this.crouchHeight += (targetHeight - this.crouchHeight) * 0.1;
+    }
+
+    updateStamina() {
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        if (this.isSprinting && this.isOnGround && isMoving) {
+            this.sprintStamina = Math.max(0, this.sprintStamina - 0.5);
+        } else {
+            this.sprintStamina = Math.min(this.maxStamina, this.sprintStamina + 0.3);
+        }
     }
 
     handleMovement() {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        const canSprint = isMoving && this.isOnGround && this.sprintStamina > 10 && !this.isCrouching;
+
+        let speed = PLAYER_SPEED;
+        if (this.isCrouching) {
+            speed = PLAYER_CROUCH_SPEED;
+        } else if (this.keys['shift'] && canSprint) {
+            speed = PLAYER_SPRINT_SPEED;
+            this.isSprinting = true;
+        } else {
+            this.isSprinting = false;
+        }
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -65,9 +98,6 @@ export class Player {
 
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
-
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
     }
 
     applyPhysics() {
@@ -82,7 +112,7 @@ export class Player {
 
     checkCollisions() {
         const radius = PLAYER_WIDTH / 2;
-        const height = PLAYER_HEIGHT;
+        const height = this.crouchHeight;
 
         this.isOnGround = false;
 
@@ -153,7 +183,7 @@ export class Player {
     getEyePosition() {
         return {
             x: this.position.x,
-            y: this.position.y + PLAYER_HEIGHT * 0.85,
+            y: this.position.y + this.crouchHeight * 0.85,
             z: this.position.z
         };
     }
