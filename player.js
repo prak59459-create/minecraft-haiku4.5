@@ -120,8 +120,8 @@ export class Player {
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
                 if (isBlockSolid(block)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
-                    if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
+                    if (moveLen > 0.01) {
+                        const scale = Math.min(1.5 / moveLen, 0.25);
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
@@ -134,7 +134,7 @@ export class Player {
             let onGround = false;
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.8;
-                const cy = this.position.y - 0.01;
+                const cy = this.position.y - 0.05;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.8;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
@@ -152,17 +152,17 @@ export class Player {
         if (this.velocity.y > 0) {
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.9;
-                const cy = this.position.y + height + 0.01;
+                const cy = this.position.y + height + 0.05;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.9;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
-                    this.velocity.y = 0;
+                    this.velocity.y = Math.min(0, this.velocity.y);
                     break;
                 }
             }
         }
 
-        if (this.position.y < -10) {
+        if (this.position.y < -20) {
             this.position.y = 100;
             this.velocity.y = 0;
         }
@@ -183,7 +183,17 @@ export class Camera {
         this.targetRotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
         this.smoothing = 0.85;
+        this.minSensitivity = 0.001;
+        this.maxSensitivity = 0.01;
         this.setupMouseControls();
+    }
+
+    setMouseSensitivity(value) {
+        this.mouseSensitivity = Math.max(this.minSensitivity, Math.min(this.maxSensitivity, value));
+    }
+
+    adjustMouseSensitivity(delta) {
+        this.setMouseSensitivity(this.mouseSensitivity + delta);
     }
 
     setupMouseControls() {
