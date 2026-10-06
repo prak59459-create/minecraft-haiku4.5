@@ -21,6 +21,8 @@ class MinecraftGame {
 
         this.world = new World();
         this.player = new Player(this.world);
+        this.spawnPlayer();
+
         this.gameCamera = new Camera();
         this.ui = new UI();
         this.particleSystem = new ParticleSystem(this.scene);
@@ -41,6 +43,22 @@ class MinecraftGame {
         this.setupEventListeners();
         this.setupPickBlock();
         this.animate();
+    }
+
+    spawnPlayer() {
+        const spawnX = 0;
+        const spawnZ = 0;
+
+        let spawnY = 100;
+        for (let y = 200; y > 0; y--) {
+            const block = this.world.getBlock(spawnX, y, spawnZ);
+            if (isBlockSolid(block) && block !== BLOCKS.WATER) {
+                spawnY = y + 2;
+                break;
+            }
+        }
+
+        this.player.position = { x: spawnX, y: spawnY, z: spawnZ };
     }
 
     setupLighting() {
@@ -379,9 +397,19 @@ class MinecraftGame {
         this.directionalLight.position.set(200, sunY, 200);
         this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
 
-        const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        let skyColor;
+        if (sunIntensity > 0.5) {
+            skyColor = new THREE.Color(0x87CEEB);
+            const brightness = 0.3 + sunIntensity * 0.7;
+            skyColor.multiplyScalar(brightness);
+        } else {
+            skyColor = new THREE.Color(0x0a0a1a);
+            const starlight = sunIntensity + 0.3;
+            skyColor.multiplyScalar(starlight);
+        }
+
         this.scene.background = skyColor;
+        this.scene.fog.color.copy(skyColor);
     }
 }
 
