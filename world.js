@@ -106,15 +106,27 @@ function getTerrainType(x, z) {
 function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
+    const stoneVariation = perlinNoise.noise2D(x * 0.05, z * 0.05 + y * 0.01);
+    const caveChance = perlinNoise.noise2D(x * 0.08, z * 0.08 + y * 0.05);
+
     let ore = BLOCKS.STONE;
+
+    if (y < 32) {
+        if (stoneVariation > 0.5) ore = BLOCKS.DEEPSLATE;
+        else if (stoneVariation > 0.2) ore = BLOCKS.ANDESITE;
+    } else if (y < 64) {
+        if (stoneVariation > 0.6) ore = BLOCKS.GRANITE;
+        else if (stoneVariation > 0.3) ore = BLOCKS.DIORITE;
+    } else {
+        if (stoneVariation > 0.7) ore = BLOCKS.ANDESITE;
+    }
+
     const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
     const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
     const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
     const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
-    const deepslateChance = perlinNoise.noise2D(x * 0.05, z * 0.05 + y * 0.02);
 
-    if (y < 32 && deepslateChance > 0.6) ore = BLOCKS.DEEPSLATE;
-    else if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
+    if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
     else if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
     else if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
     else if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
