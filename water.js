@@ -17,12 +17,18 @@ export class WaterRenderer {
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
         const waterColor = new THREE.Color(0x3A7FD8);
+        const lavaColor = new THREE.Color(0xFF6B1A);
+        let hasLava = false;
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
                     const blockId = chunk.getBlock(x, y, z);
-                    if (blockId !== BLOCKS.WATER) continue;
+                    if (blockId !== BLOCKS.WATER && blockId !== BLOCKS.LAVA) continue;
+
+                    const isLava = blockId === BLOCKS.LAVA;
+                    if (isLava) hasLava = true;
+                    const liquidColor = isLava ? lavaColor : waterColor;
 
                     const wx = chunk.x * CHUNK_SIZE + x;
                     const wy = y;
@@ -45,11 +51,13 @@ export class WaterRenderer {
                         const [dx, dy, dz] = face.dir;
                         const neighborBlock = neighbor(dx, dy, dz);
 
-                        if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
+                        if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER && neighborBlock !== BLOCKS.LAVA) continue;
 
                         const startIndex = vertices.length / 3;
-                        const waterBrightness = 0.85 + Math.sin(wx * 0.2 + wz * 0.2 + this.time) * 0.1;
-                        const color = waterColor.clone().multiplyScalar(waterBrightness);
+                        const brightness = isLava ?
+                            (1.0 + Math.sin(wx * 0.3 + wz * 0.3 + this.time * 2) * 0.15) :
+                            (0.85 + Math.sin(wx * 0.2 + wz * 0.2 + this.time) * 0.1);
+                        const color = liquidColor.clone().multiplyScalar(brightness);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
@@ -77,9 +85,11 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.65,
+                opacity: hasLava ? 0.75 : 0.65,
                 side: THREE.FrontSide,
-                shininess: 50
+                shininess: hasLava ? 10 : 50,
+                emissive: hasLava ? 0x662200 : 0x000000,
+                emissiveIntensity: hasLava ? 0.3 : 0
             });
 
             const mesh = new THREE.Mesh(geometry, material);

@@ -50,7 +50,16 @@ export class Chunk {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
                     } else if (y < height - 4) {
                         const block = getOreBlock(wx, y, wz);
-                        this.setBlock(x, y, z, block);
+                        if (block === BLOCKS.STONE) {
+                            const lavaChance = perlinNoise.noise2D(wx * 0.05 + y * 0.02, wz * 0.05 + y * 0.02);
+                            if (y < 20 && lavaChance > 0.7) {
+                                this.setBlock(x, y, z, BLOCKS.LAVA);
+                            } else {
+                                this.setBlock(x, y, z, block);
+                            }
+                        } else {
+                            this.setBlock(x, y, z, block);
+                        }
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);

@@ -79,7 +79,7 @@ class MinecraftGame {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'c' || e.key === 'C') {
                 const hit = this.raycastBlock();
-                if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
+                if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER && hit.block !== BLOCKS.LAVA) {
                     this.selectedBlockType = hit.block;
                 }
             }
@@ -302,7 +302,7 @@ class MinecraftGame {
             const nz = z + dz;
 
             const neighbor = this.world.getBlock(nx, ny, nz);
-            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER && neighbor !== BLOCKS.LAVA) continue;
 
             const startIndex = vertices.length / 3;
             for (const [vx, vy, vz] of face.verts) {
