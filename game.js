@@ -13,10 +13,17 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
+            powerPreference: 'high-performance',
+            precision: 'highp'
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFLightShadowMap;
         this.config = config;
 
         this.world = new World();
@@ -238,13 +245,15 @@ class MinecraftGame {
             }
             geometry.computeVertexNormals();
 
-            const material = new THREE.MeshPhongMaterial({
+            const materialConfig = {
                 vertexColors: true,
                 wireframe: false,
                 flatShading: true,
                 side: THREE.FrontSide,
                 shininess: 15
-            });
+            };
+
+            const material = new THREE.MeshPhongMaterial(materialConfig);
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
