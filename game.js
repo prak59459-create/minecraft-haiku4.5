@@ -13,9 +13,12 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -46,15 +49,21 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.45 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5 + sunIntensity * 0.3);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
-        directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
+        directionalLight.shadow.camera.near = 0.1;
+        directionalLight.shadow.camera.far = 400;
+        directionalLight.shadow.camera.left = -150;
+        directionalLight.shadow.camera.right = 150;
+        directionalLight.shadow.camera.top = 150;
+        directionalLight.shadow.camera.bottom = -150;
+        directionalLight.shadow.bias = -0.0001;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -239,12 +248,13 @@ class MinecraftGame {
                 geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             }
 
-            const material = new THREE.MeshPhongMaterial({
+            const material = new THREE.MeshStandardMaterial({
                 vertexColors: true,
                 wireframe: false,
                 flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 0
+                metalness: 0.1,
+                roughness: 0.8
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -296,19 +306,32 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const renderDist = 8;
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const chunksToRemove = [];
+        for (const [key] of this.chunkMeshes) {
+            const [cx, cz] = key.split(',').map(Number);
+            const dist = Math.abs(cx - playerChunkX) + Math.abs(cz - playerChunkZ);
+            if (dist > renderDist + 1) {
+                chunksToRemove.push(key);
+            }
+        }
+
+        for (const key of chunksToRemove) {
+            const mesh = this.chunkMeshes.get(key);
+            if (mesh) {
+                this.scene.remove(mesh);
+                this.chunkMeshes.delete(key);
+            }
+        }
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const dist = Math.abs(cx - playerChunkX) + Math.abs(cz - playerChunkZ);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
-                if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
-                }
-                continue;
-            }
+            if (dist > renderDist) continue;
 
             if (!this.chunkMeshes.has(key)) {
                 const mesh = this.buildChunkMesh(chunk);
