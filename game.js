@@ -68,6 +68,13 @@ class MinecraftGame {
     setupEventListeners() {
         window.addEventListener('resize', () => this.onWindowResize());
         document.addEventListener('mousedown', (e) => this.onMouseClick(e));
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (document.pointerLockElement === document.body) {
+                    document.exitPointerLock();
+                }
+            }
+        });
     }
 
     setupPickBlock() {
@@ -337,6 +344,9 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        let meshesBuilt = 0;
+        const maxMeshesPerFrame = 2;
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
@@ -349,10 +359,13 @@ class MinecraftGame {
             }
 
             if (!this.chunkMeshes.has(key)) {
-                const mesh = this.buildChunkMesh(chunk);
-                if (mesh) {
-                    this.scene.add(mesh);
-                    this.chunkMeshes.set(key, mesh);
+                if (meshesBuilt < maxMeshesPerFrame) {
+                    const mesh = this.buildChunkMesh(chunk);
+                    if (mesh) {
+                        this.scene.add(mesh);
+                        this.chunkMeshes.set(key, mesh);
+                        meshesBuilt++;
+                    }
                 }
             }
         }
@@ -408,6 +421,7 @@ class MinecraftGame {
         }
 
         this.renderer.render(this.scene, this.camera);
+        this.renderer.info.reset();
     }
 
     updateDayNightCycle() {
