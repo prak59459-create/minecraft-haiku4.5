@@ -32,6 +32,8 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.lastRaycastHit = null;
+        this.raycastFrameCounter = 0;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -120,9 +122,9 @@ class MinecraftGame {
         const px = this.player.position.x;
         const py = this.player.position.y;
         const pz = this.player.position.z;
+        const height = this.player.currentHeight || 1.8;
 
-        return (Math.abs(px - x) < 0.6 && Math.abs(py - y) < 1.8 && Math.abs(pz - z) < 0.6) ||
-               (Math.abs(px - x) < 0.6 && Math.abs(py - y - 1) < 1.8 && Math.abs(pz - z) < 0.6);
+        return (Math.abs(px - x) < 0.6 && Math.abs(py - y) < height && Math.abs(pz - z) < 0.6);
     }
 
     raycastBlock() {
@@ -135,7 +137,7 @@ class MinecraftGame {
 
         let hit = null;
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = 0.1; dist <= this.raycastDistance; dist += 0.1) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -146,7 +148,7 @@ class MinecraftGame {
 
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
+                const prevDist = dist - 0.1;
                 const prevX = eyePos.x + direction.x * prevDist;
                 const prevY = eyePos.y + direction.y * prevDist;
                 const prevZ = eyePos.z + direction.z * prevDist;
@@ -287,13 +289,18 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const renderDistance = 8;
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const chunksToProcess = [];
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const dx = cx - playerChunkX;
+            const dz = cz - playerChunkZ;
+            const dist = dx * dx + dz * dz;
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (dist > renderDistance * renderDistance) {
                 if (this.chunkMeshes.has(key)) {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
@@ -302,11 +309,16 @@ class MinecraftGame {
             }
 
             if (!this.chunkMeshes.has(key)) {
-                const mesh = this.buildChunkMesh(chunk);
-                if (mesh) {
-                    this.scene.add(mesh);
-                    this.chunkMeshes.set(key, mesh);
-                }
+                chunksToProcess.push({ key, chunk, dist });
+            }
+        }
+
+        chunksToProcess.sort((a, b) => a.dist - b.dist);
+        for (const { key, chunk } of chunksToProcess.slice(0, 4)) {
+            const mesh = this.buildChunkMesh(chunk);
+            if (mesh) {
+                this.scene.add(mesh);
+                this.chunkMeshes.set(key, mesh);
             }
         }
     }
@@ -350,7 +362,11 @@ class MinecraftGame {
         this.particleSystem.update();
         this.waterRenderer.update();
 
-        const hit = this.raycastBlock();
+        this.raycastFrameCounter = (this.raycastFrameCounter + 1) % 2;
+        if (this.raycastFrameCounter === 0) {
+            this.lastRaycastHit = this.raycastBlock();
+        }
+        const hit = this.lastRaycastHit || this.raycastBlock();
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
