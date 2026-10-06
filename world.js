@@ -36,36 +36,28 @@ export class Chunk {
 
         const worldX = this.x * CHUNK_SIZE;
         const worldZ = this.z * CHUNK_SIZE;
+        const WATER_LEVEL = 62;
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let z = 0; z < CHUNK_SIZE; z++) {
                 const wx = worldX + x;
                 const wz = worldZ + z;
 
-                let height = getTerrainHeight(wx, wz);
-                let terrainType = getTerrainType(wx, wz);
+                const height = getTerrainHeight(wx, wz);
+                const terrainType = getTerrainType(wx, wz);
+                const topBlock = terrainType === 'sand' ? BLOCKS.SAND : BLOCKS.GRASS;
+                const subBlock = terrainType === 'sand' ? BLOCKS.SAND : BLOCKS.DIRT;
 
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
                     } else if (y < height - 4) {
-                        const block = getOreBlock(wx, y, wz);
-                        this.setBlock(x, y, z, block);
+                        this.setBlock(x, y, z, getOreBlock(wx, y, wz));
                     } else if (y < height - 1) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.DIRT);
-                        }
+                        this.setBlock(x, y, z, subBlock);
                     } else if (y < height) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        }
-                    } else if (y < 62) {
+                        this.setBlock(x, y, z, topBlock);
+                    } else if (y < WATER_LEVEL) {
                         this.setBlock(x, y, z, BLOCKS.WATER);
                     }
                 }
