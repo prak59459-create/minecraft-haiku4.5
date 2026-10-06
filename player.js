@@ -1,4 +1,4 @@
-import { BLOCKS, isBlockSolid } from './blocks.js';
+import { BLOCKS, isBlockSolid, LIQUID_BLOCKS } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
@@ -100,13 +100,27 @@ export class Player {
     }
 
     applyPhysics() {
-        if (!this.isOnGround) {
+        const eyeBlock = this.world.getBlock(
+            Math.floor(this.position.x),
+            Math.floor(this.position.y + PLAYER_HEIGHT * 0.85),
+            Math.floor(this.position.z)
+        );
+
+        const isInWater = eyeBlock === BLOCKS.WATER;
+        const isInLava = eyeBlock === BLOCKS.LAVA;
+        const liquidDrag = isInWater ? 0.8 : (isInLava ? 0.5 : 1.0);
+
+        if (!this.isOnGround && !isInWater && !isInLava) {
             this.velocity.y -= GRAVITY;
+        } else if (isInWater) {
+            this.velocity.y = Math.max(this.velocity.y - GRAVITY * 0.1, -0.2);
+        } else if (isInLava) {
+            this.velocity.y = Math.max(this.velocity.y - GRAVITY * 0.15, -0.1);
         }
 
-        this.position.x += this.velocity.x;
+        this.position.x += this.velocity.x * liquidDrag;
         this.position.y += this.velocity.y;
-        this.position.z += this.velocity.z;
+        this.position.z += this.velocity.z * liquidDrag;
     }
 
     checkCollisions() {
