@@ -54,6 +54,8 @@ export class Chunk {
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'clay') {
+                            this.setBlock(x, y, z, BLOCKS.CLAY);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
@@ -72,6 +74,11 @@ export class Chunk {
 
                 if (height > 65) {
                     generateTree(this, x, z, height);
+                } else if (height > 60 && terrainType === 'sand' && perlinNoise && perlinNoise.noise2D(wx * 0.05, wz * 0.05) > 0.6) {
+                    const beachFeature = perlinNoise.noise2D(wx * 0.1, wz * 0.1);
+                    if (beachFeature > 0.7) {
+                        this.setBlock(x, height, z, BLOCKS.GRAVEL);
+                    }
                 }
             }
         }
@@ -97,9 +104,11 @@ function getTerrainType(x, z) {
 
     const moisture = perlinNoise.noise2D(x * 0.015, z * 0.015);
     const temp = perlinNoise.noise2D(x * 0.025, z * 0.025);
+    const beachMoist = perlinNoise.noise2D(x * 0.03, z * 0.03);
 
+    if (beachMoist > 0.5) return 'sand';
     if (moisture > 0.3 && temp < 0.2) return 'sand';
-    if (moisture < -0.2 && temp > 0.4) return 'sand';
+    if (beachMoist > 0.3 && beachMoist < 0.5) return 'clay';
     return 'grass';
 }
 

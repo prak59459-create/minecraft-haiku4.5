@@ -9,13 +9,15 @@ import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
 
 class MinecraftGame {
-    constructor() {
+    constructor(config = {}) {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setClearColor(0x87CEEB);
+        this.config = config;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -305,15 +307,25 @@ class MinecraftGame {
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
         const renderDist = this.world.renderDistance;
+        const meshesToRemove = [];
+
+        for (const [key, mesh] of this.chunkMeshes) {
+            const [cx, cz] = key.split(',').map(Number);
+
+            if (Math.abs(cx - playerChunkX) > renderDist + 1 || Math.abs(cz - playerChunkZ) > renderDist + 1) {
+                this.scene.remove(mesh);
+                mesh.geometry.dispose();
+                mesh.material.dispose();
+                meshesToRemove.push(key);
+            }
+        }
+
+        meshesToRemove.forEach(key => this.chunkMeshes.delete(key));
 
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
             if (Math.abs(cx - playerChunkX) > renderDist || Math.abs(cz - playerChunkZ) > renderDist) {
-                if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
-                }
                 continue;
             }
 
