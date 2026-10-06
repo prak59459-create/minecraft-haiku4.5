@@ -74,10 +74,12 @@ class MinecraftGame {
 
     setupPickBlock() {
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'c' || e.key === 'C') {
+            if ((e.key === 'c' || e.key === 'C') && e.ctrlKey) {
                 const hit = this.raycastBlock();
                 if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
                     this.selectedBlockType = hit.block;
+                    const blockName = BLOCK_NAMES[hit.block] || 'Unknown';
+                    console.log(`Selected: ${blockName} (ID: ${hit.block})`);
                 }
             }
             if (e.key === 'F3') {
@@ -216,9 +218,10 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.7;
-                    const heightLight = (Math.min(wy, 128) / 128) * 0.25;
-                    const brightness = baseLight + heightLight;
+                    const baseLight = 0.65;
+                    const heightLight = Math.max(0, (Math.min(wy, 128) / 128) * 0.3);
+                    const depthLight = Math.min(0.15, (256 - wy) / 256 * 0.15);
+                    const brightness = baseLight + heightLight - depthLight;
 
                     color.multiplyScalar(brightness);
 
@@ -240,7 +243,7 @@ class MinecraftGame {
                 wireframe: false,
                 flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 20
+                shininess: 15
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
