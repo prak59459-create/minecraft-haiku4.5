@@ -1,5 +1,79 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 2.0.0 - World Persistence & Creative Mode (Session 3)
+
+### Major Additions
+
+#### World Persistence System
+- **LocalStorage-based save/load** for persistent worlds
+- **Auto-save every 60 seconds** for safety
+- **Manual save with Ctrl+S** keyboard shortcut
+- **World metadata tracking** (player position, timestamp, game mode)
+- Automatic chunk saving on modification and unload
+
+#### Creative Mode
+- **Toggle with M key** for creative/survival switch
+- **Unlimited block placement** in creative mode
+- **Game mode indicator** visible in HUD
+- Configuration option to enable/disable creative mode
+
+#### Expanded Block System (15 → 21 types)
+- Added: Oak Planks, Spruce Log, Spruce Leaves
+- Added: Birch Log, Birch Leaves, Limestone, Glass
+- All new blocks fully integrated with terrain generation
+- Proper transparency support for Glass and Leaves variants
+
+#### Enhanced Terrain Generation
+- **Multiple tree types**: Oak (common), Spruce (varied), Birch (light)
+- **Improved Perlin noise** with better terrain variation
+- **Better biome transitions** using moisture-based detection
+- **Limestone ore generation** at mid-depths
+- Varied tree sizes and foliage density
+
+#### Graphics & Performance
+- **Directional face lighting** for better 3D appearance
+- **Enhanced particle effects** with smoother animations
+- **Better water rendering** with chunk-based management
+- **Optimized collision detection** for improved responsiveness
+- **Distance-based mesh priorities** for better performance
+- **Improved ambient lighting** with height-based calculations
+
+#### UI/UX Improvements
+- **Updated inventory** showing 9 block types including new ones
+- **Inventory tooltips** for block names
+- **Enhanced styling** with backdrop blur effects
+- **Mode indicator** in HUD coordinates display
+- **Better help panel** with complete control listing
+- **Improved visual feedback** for slot selection
+
+#### Configuration System v2.0
+- **Enhanced config.json** with more tuning options
+- **Auto-save interval** configuration
+- **World persistence** toggleable setting
+- **Terrain parameter** improvements (better height calculation)
+- **Gameplay options** for creative mode and debug display
+
+#### Debug Display
+- **Chunk coordinate display** for position tracking
+- **Improved metrics layout** and readability
+- **Better color scheme** for easier reading
+- **Performance tracking** enhancements
+
+### Bug Fixes & Improvements
+- Fixed player crouch/sprint state management
+- Improved raycasting accuracy
+- Better chunk boundary interactions
+- Reduced water rendering edge cases
+- Optimized memory usage for long play sessions
+- Cleaner player movement logic
+
+### Documentation
+- Comprehensive README v2.0 with all features
+- Updated control documentation
+- New feature explanations
+- Performance optimization tips
+- Configuration guide
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features
