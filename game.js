@@ -102,7 +102,7 @@ class MinecraftGame {
 
             const now = Date.now();
             if (now - this.lastBreakSound > 50) {
-                this.audioManager.playBlockSound('break');
+                this.audioManager.playBlockSound('break', hit.block);
                 this.lastBreakSound = now;
             }
         } else if (event.button === 2) {
@@ -114,7 +114,7 @@ class MinecraftGame {
             if (!this.isPlayerOccupying(nx, ny, nz)) {
                 this.world.setBlock(nx, ny, nz, this.selectedBlockType);
                 this.updateChunkMesh(nx, ny, nz);
-                this.audioManager.playBlockSound('place');
+                this.audioManager.playBlockSound('place', this.selectedBlockType);
             }
         }
     }
