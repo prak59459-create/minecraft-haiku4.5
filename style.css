@@ -136,6 +136,22 @@ body {
     margin: 3px 0;
 }
 
+/* Visual feedback for block selection */
+.inventory-slot {
+    user-select: none;
+}
+
+.inventory-slot.selected::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border: 2px solid rgba(255, 255, 100, 0.8);
+    border-radius: 4px;
+    box-shadow: 0 0 8px rgba(255, 255, 100, 0.5) inset;
+    pointer-events: none;
+}
+
+/* Performance optimization for mobile */
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;
@@ -149,5 +165,12 @@ body {
 
     #help {
         font-size: 9px;
+    }
+
+    #crosshair {
+        width: 16px;
+        height: 16px;
+        margin: -8px 0 0 -8px;
+        border-width: 1px;
     }
 }

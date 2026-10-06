@@ -44,6 +44,7 @@ class MinecraftGame {
         this.setupEventListeners();
         this.setupPickBlock();
         this.addClouds();
+        this.preloadChunks();
         this.animate();
     }
 
@@ -115,6 +116,14 @@ class MinecraftGame {
             cloud.receiveShadow = false;
             cloud.castShadow = false;
             this.scene.add(cloud);
+        }
+    }
+
+    preloadChunks() {
+        for (let x = -2; x <= 2; x++) {
+            for (let z = -2; z <= 2; z++) {
+                this.world.getChunk(x, z);
+            }
         }
     }
 
