@@ -43,6 +43,31 @@ export class UI {
         slots[index].classList.add('selected');
 
         this.selectedBlock = index;
+        this.showSelectionFeedback(index);
+    }
+
+    showSelectionFeedback(index) {
+        const blockId = this.blocks[index];
+        const blockName = BLOCK_NAMES[blockId];
+        const message = document.createElement('div');
+        message.style.cssText = `
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            pointer-events: none;
+            animation: fadeInOut 0.5s ease-in-out;
+            z-index: 15;
+        `;
+        message.textContent = `Selected: ${blockName}`;
+        document.body.appendChild(message);
+        setTimeout(() => message.remove(), 500);
     }
 
     updateHUD(playerPos, selectedBlock, fps) {
