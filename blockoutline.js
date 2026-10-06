@@ -10,7 +10,10 @@ export class BlockOutline {
             color: 0xFFFFFF,
             linewidth: 2,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9,
+            fog: false,
+            depthTest: true,
+            depthWrite: false
         });
     }
 
