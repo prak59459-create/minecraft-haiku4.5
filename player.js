@@ -1,4 +1,4 @@
-import { BLOCKS, isBlockSolid } from './blocks.js';
+import { BLOCKS, isBlockSolid, TRANSPARENT_BLOCKS } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
@@ -19,6 +19,7 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.isInWater = false;
         this.crouchHeight = PLAYER_HEIGHT;
 
         this.keys = {};
@@ -50,11 +51,18 @@ export class Player {
     }
 
     update() {
+        this.checkIfInWater();
         this.handleMovement();
         this.updateCrouch();
         this.updateStamina();
         this.applyPhysics();
         this.checkCollisions();
+    }
+
+    checkIfInWater() {
+        const eyePos = this.getEyePosition();
+        const blockAtEye = this.world.getBlock(Math.floor(eyePos.x), Math.floor(eyePos.y), Math.floor(eyePos.z));
+        this.isInWater = blockAtEye === BLOCKS.WATER;
     }
 
     updateCrouch() {
@@ -102,7 +110,17 @@ export class Player {
 
     applyPhysics() {
         if (!this.isOnGround) {
-            this.velocity.y -= GRAVITY;
+            if (this.isInWater) {
+                this.velocity.y -= GRAVITY * 0.3;
+                this.velocity.y *= 0.95;
+            } else {
+                this.velocity.y -= GRAVITY;
+            }
+        }
+
+        if (this.isInWater) {
+            this.velocity.x *= 0.8;
+            this.velocity.z *= 0.8;
         }
 
         this.position.x += this.velocity.x;
