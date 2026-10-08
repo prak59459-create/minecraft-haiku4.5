@@ -45,7 +45,7 @@ export class UI {
         this.selectedBlock = index;
     }
 
-    updateHUD(playerPos, selectedBlock, fps) {
+    updateHUD(playerPos, selectedBlock, fps, stamina = 100, health = 20) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
@@ -53,6 +53,19 @@ export class UI {
         coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
         fpsEl.textContent = `FPS: ${fps}`;
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+
+        const staminaEl = document.getElementById('stamina');
+        const healthEl = document.getElementById('health');
+
+        if (staminaEl) {
+            staminaEl.textContent = `Stamina: ${Math.ceil(stamina)}/100`;
+            staminaEl.style.color = stamina < 30 ? '#ff6b6b' : '#4ecdc4';
+        }
+
+        if (healthEl) {
+            healthEl.textContent = `Health: ${Math.ceil(health)}/20`;
+            healthEl.style.color = health > 15 ? '#51cf66' : health > 10 ? '#ffd93d' : '#ff6b6b';
+        }
     }
 
     updateFPS() {

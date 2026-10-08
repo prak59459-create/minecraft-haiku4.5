@@ -77,4 +77,24 @@ export class AudioManager {
         osc.start(now);
         osc.stop(now + 0.05);
     }
+
+    playHurtSound() {
+        if (!this.audioContext) return;
+
+        const audioContext = this.audioContext;
+        const now = audioContext.currentTime;
+        const osc = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        osc.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.15);
+        gainNode.gain.setValueAtTime(0.2, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+        osc.start(now);
+        osc.stop(now + 0.15);
+    }
 }

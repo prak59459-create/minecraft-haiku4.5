@@ -38,12 +38,25 @@ class MinecraftGame {
         this.lastBreakSound = 0;
         this.showDebug = false;
 
+        this.setupFog();
+
         this.player.onJump = () => this.audioManager.playJumpSound();
+        this.player.onStep = () => this.audioManager.playStepSound();
+        this.player.onTakeDamage = (damage) => {
+            if (damage > 0) {
+                this.audioManager.playHurtSound();
+            }
+        };
 
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
         this.animate();
+    }
+
+    setupFog() {
+        const fog = new THREE.Fog(0x87CEEB, 200, 500);
+        this.scene.fog = fog;
     }
 
     setupLighting() {
@@ -373,7 +386,7 @@ class MinecraftGame {
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps, this.player.stamina, this.player.health);
 
         if (this.showDebug) {
             this.debugDisplay.update(this);

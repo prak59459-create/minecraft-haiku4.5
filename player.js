@@ -20,6 +20,18 @@ export class Player {
         this.isSprinting = false;
         this.isCrouching = false;
 
+        this.stamina = 100;
+        this.maxStamina = 100;
+        this.staminaRegenRate = 0.1;
+        this.sprintStaminaDrain = 0.5;
+
+        this.health = 20;
+        this.maxHealth = 20;
+
+        this.lastStepX = this.position.x;
+        this.lastStepZ = this.position.z;
+        this.stepDistance = 0.5;
+
         this.keys = {};
         this.setupKeyboardControls();
     }
@@ -47,13 +59,50 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        this.updateStamina();
+        this.updateStepSounds();
+    }
+
+    updateStamina() {
+        if (this.isSprinting && this.stamina > 0) {
+            this.stamina -= this.sprintStaminaDrain;
+        } else {
+            this.stamina = Math.min(this.maxStamina, this.stamina + this.staminaRegenRate);
+        }
+        this.stamina = Math.max(0, this.stamina);
+    }
+
+    updateStepSounds() {
+        const dx = this.position.x - this.lastStepX;
+        const dz = this.position.z - this.lastStepZ;
+        const distance = Math.sqrt(dx * dx + dz * dz);
+
+        if (distance > this.stepDistance && this.isOnGround) {
+            if (this.onStep) this.onStep();
+            this.lastStepX = this.position.x;
+            this.lastStepZ = this.position.z;
+        }
     }
 
     handleMovement() {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        const isShiftPressed = this.keys['shift'];
+
+        let speed = PLAYER_SPEED;
+        if (isShiftPressed && isMoving) {
+            if (this.stamina > 0) {
+                speed = PLAYER_SPRINT_SPEED;
+                this.isSprinting = true;
+            } else {
+                speed = PLAYER_SPEED;
+                this.isSprinting = false;
+            }
+        } else {
+            this.isSprinting = false;
+        }
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -65,9 +114,6 @@ export class Player {
 
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
-
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
     }
 
     applyPhysics() {
@@ -121,6 +167,13 @@ export class Player {
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     onGround = true;
+                    if (this.velocity.y < -0.5) {
+                        const fallDamage = Math.floor((Math.abs(this.velocity.y) - 0.5) * 2);
+                        if (fallDamage > 0) {
+                            this.health -= fallDamage;
+                            if (this.onTakeDamage) this.onTakeDamage(fallDamage);
+                        }
+                    }
                     break;
                 }
             }
@@ -145,6 +198,7 @@ export class Player {
         }
 
         if (this.position.y < -10) {
+            this.health = 0;
             this.position.y = 100;
             this.velocity.y = 0;
         }
