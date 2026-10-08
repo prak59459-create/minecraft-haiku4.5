@@ -40,7 +40,14 @@ export class UI {
 
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach(slot => slot.classList.remove('selected'));
-        slots[index].classList.add('selected');
+
+        const selectedSlot = slots[index];
+        selectedSlot.classList.add('selected');
+        selectedSlot.style.transform = 'scale(1.15)';
+
+        setTimeout(() => {
+            selectedSlot.style.transform = 'scale(1.1)';
+        }, 100);
 
         this.selectedBlock = index;
     }

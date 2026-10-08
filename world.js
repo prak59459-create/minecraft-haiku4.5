@@ -86,13 +86,22 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 64;
-    height += perlinNoise.noise2D(x * 0.004, z * 0.004) * 40;
-    height += perlinNoise.noise2D(x * 0.015, z * 0.015) * 20;
-    height += perlinNoise.noise2D(x * 0.04, z * 0.04) * 10;
-    height += perlinNoise.noise2D(x * 0.08, z * 0.08) * 5;
-    height += perlinNoise.noise2D(x * 0.2, z * 0.2) * 2;
+    const large = perlinNoise.noise2D(x * 0.003, z * 0.003);
+    const medium = perlinNoise.noise2D(x * 0.01, z * 0.01);
+    const small = perlinNoise.noise2D(x * 0.05, z * 0.05);
+    const detail = perlinNoise.noise2D(x * 0.1, z * 0.1);
+    const micro = perlinNoise.noise2D(x * 0.2, z * 0.2);
 
-    return Math.max(20, Math.min(180, Math.floor(height)));
+    height += large * 50;
+    height += medium * 30;
+    height += small * 15;
+    height += detail * 7;
+    height += micro * 2;
+
+    const mountainFactor = Math.max(0, large * 2);
+    height += mountainFactor * mountainFactor * 20;
+
+    return Math.max(20, Math.min(200, Math.floor(height)));
 }
 
 function getTerrainType(x, z) {
