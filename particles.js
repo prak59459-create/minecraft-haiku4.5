@@ -2,31 +2,38 @@ export class ParticleSystem {
     constructor(scene) {
         this.scene = scene;
         this.particles = [];
+        this.maxParticles = 2000;
         this.geometry = new THREE.BufferGeometry();
         this.material = new THREE.PointsMaterial({
             size: 0.2,
             sizeAttenuation: true,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.8,
+            vertexColors: true
         });
         this.points = new THREE.Points(this.geometry, this.material);
         this.scene.add(this.points);
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
-        const particleCount = 8 + Math.floor(Math.random() * 8);
+        if (this.particles.length >= this.maxParticles) return;
+
+        const particleCount = Math.min(8 + Math.floor(Math.random() * 8), this.maxParticles - this.particles.length);
 
         for (let i = 0; i < particleCount; i++) {
+            const angle = (Math.PI * 2 * i) / particleCount;
+            const spread = 0.25 + Math.random() * 0.2;
             const particle = {
-                position: { x, y, z },
+                position: { x: x + (Math.random() - 0.5) * 0.2, y: y + (Math.random() - 0.5) * 0.2, z },
                 velocity: {
-                    x: (Math.random() - 0.5) * 0.3,
-                    y: Math.random() * 0.3,
-                    z: (Math.random() - 0.5) * 0.3
+                    x: Math.cos(angle) * spread + (Math.random() - 0.5) * 0.1,
+                    y: Math.random() * 0.4 + 0.1,
+                    z: Math.sin(angle) * spread + (Math.random() - 0.5) * 0.1
                 },
                 life: 1,
-                maxLife: 0.8 + Math.random() * 0.4,
-                color: blockColor
+                maxLife: 0.6 + Math.random() * 0.4,
+                color: blockColor,
+                size: 0.15 + Math.random() * 0.1
             };
             this.particles.push(particle);
         }

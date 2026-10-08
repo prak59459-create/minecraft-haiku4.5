@@ -138,11 +138,15 @@ class MinecraftGame {
             this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
 
             const now = Date.now();
-            if (now - this.lastBreakSound > 50) {
+            if (now - this.lastBreakSound > 100) {
                 this.audioManager.playBlockSound('break');
                 this.lastBreakSound = now;
             }
         } else if (event.button === 2) {
+            if (this.selectedBlockType === BLOCKS.AIR || this.selectedBlockType === BLOCKS.WATER) {
+                return;
+            }
+
             const norm = hit.normal;
             const nx = hit.x + norm.x;
             const ny = hit.y + norm.y;
