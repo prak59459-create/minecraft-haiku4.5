@@ -5,6 +5,8 @@ export class UI {
         this.selectedBlock = 1;
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
+        this.fpsHistory = [];
+        this.maxHistory = 60;
         this.lastTime = performance.now();
         this.setupInventoryUI();
     }
@@ -50,7 +52,10 @@ export class UI {
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
 
-        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
+        const chunkX = Math.floor(playerPos.x / 16);
+        const chunkZ = Math.floor(playerPos.z / 16);
+
+        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)} [C: ${chunkX},${chunkZ}]`;
         fpsEl.textContent = `FPS: ${fps}`;
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
     }
@@ -62,9 +67,19 @@ export class UI {
 
         if (delta > 0) {
             this.fpsCounter = Math.round(1000 / delta);
+            this.fpsHistory.push(this.fpsCounter);
+            if (this.fpsHistory.length > this.maxHistory) {
+                this.fpsHistory.shift();
+            }
         }
 
         return this.fpsCounter;
+    }
+
+    getAverageFPS() {
+        if (this.fpsHistory.length === 0) return this.fpsCounter;
+        const sum = this.fpsHistory.reduce((a, b) => a + b, 0);
+        return Math.round(sum / this.fpsHistory.length);
     }
 
     toggleHelp() {
