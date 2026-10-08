@@ -68,7 +68,13 @@ export class Chunk {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
                     } else if (y < 62) {
-                        this.setBlock(x, y, z, BLOCKS.WATER);
+                        if (y < height - 5 && terrainType === 'sand') {
+                            this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (perlinNoise && perlinNoise.noise2D(wx * 0.05, wz * 0.05) > 0.6) {
+                            this.setBlock(x, y, z, BLOCKS.GRAVEL);
+                        } else {
+                            this.setBlock(x, y, z, BLOCKS.WATER);
+                        }
                     }
                 }
 

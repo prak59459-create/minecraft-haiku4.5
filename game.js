@@ -16,6 +16,8 @@ class MinecraftGame {
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -32,6 +34,8 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.frameCount = 0;
+        this.targetFPS = 60;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -319,23 +323,37 @@ class MinecraftGame {
 
         meshesToRemove.forEach(key => {
             const mesh = this.chunkMeshes.get(key);
-            this.scene.remove(mesh);
-            mesh.geometry.dispose();
-            mesh.material.dispose();
-            this.chunkMeshes.delete(key);
+            if (mesh) {
+                this.scene.remove(mesh);
+                mesh.geometry.dispose();
+                mesh.material.dispose();
+                this.chunkMeshes.delete(key);
+            }
         });
+
+        const chunksNear = [];
+        const chunksFar = [];
 
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const dist = Math.abs(cx - playerChunkX) + Math.abs(cz - playerChunkZ);
 
             if (!this.chunkMeshes.has(key)) {
-                const mesh = this.buildChunkMesh(chunk);
-                if (mesh) {
-                    this.scene.add(mesh);
-                    this.chunkMeshes.set(key, mesh);
+                if (dist <= 4) {
+                    chunksNear.push([key, chunk]);
+                } else {
+                    chunksFar.push([key, chunk]);
                 }
             }
         }
+
+        chunksNear.concat(chunksFar).forEach(([key, chunk]) => {
+            const mesh = this.buildChunkMesh(chunk);
+            if (mesh) {
+                this.scene.add(mesh);
+                this.chunkMeshes.set(key, mesh);
+            }
+        });
     }
 
     onWindowResize() {
