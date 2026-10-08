@@ -92,11 +92,24 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.003, z * 0.003) * 40;
+
+    const continentNoise = perlinNoise.noise2D(x * 0.001, z * 0.001);
+    height += continentNoise * 50;
+
+    const mountainNoise = perlinNoise.noise2D(x * 0.005, z * 0.005);
+    if (mountainNoise > 0.2) {
+        height += Math.pow(Math.max(0, mountainNoise - 0.2), 2) * 100;
+    }
+
     height += perlinNoise.noise2D(x * 0.01, z * 0.01) * 20;
     height += perlinNoise.noise2D(x * 0.03, z * 0.03) * 12;
     height += perlinNoise.noise2D(x * 0.08, z * 0.08) * 6;
     height += perlinNoise.noise2D(x * 0.15, z * 0.15) * 3;
+
+    const floatingNoise = perlinNoise.noise2D(x * 0.02, z * 0.02);
+    if (floatingNoise > 0.7 && height > 80) {
+        height += 20 + floatingNoise * 30;
+    }
 
     return Math.max(20, Math.min(180, Math.floor(height)));
 }
@@ -106,10 +119,13 @@ function getTerrainType(x, z) {
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
     const moisture = perlinNoise.noise2D(x * 0.025, z * 0.025);
+    const elevation = perlinNoise.noise2D(x * 0.015, z * 0.015);
 
+    if (elevation > 0.6) return 'grass';
+
+    if (moisture > 0.5) return 'mycelium';
     if (temp < -0.4) return 'sand';
     if (temp < -0.1 && moisture > 0.3) return 'sand';
-    if (moisture > 0.5) return 'mycelium';
     return 'grass';
 }
 
