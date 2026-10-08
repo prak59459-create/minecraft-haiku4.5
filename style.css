@@ -51,8 +51,14 @@ body {
     z-index: 10;
 }
 
-#coords, #fps, #blockInfo {
+#coords, #fps, #blockInfo, #hotbar-label {
     margin-bottom: 5px;
+}
+
+#hotbar-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 20px;
 }
 
 #inventory {
