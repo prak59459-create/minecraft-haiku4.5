@@ -45,14 +45,21 @@ export class UI {
         this.selectedBlock = index;
     }
 
-    updateHUD(playerPos, selectedBlock, fps) {
+    updateHUD(playerPos, selectedBlock, fps, raycastHit) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
+        const distEl = document.getElementById('distance');
 
         coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
         fpsEl.textContent = `FPS: ${fps}`;
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+
+        if (raycastHit && raycastHit.dist !== undefined) {
+            distEl.textContent = `Distance: ${raycastHit.dist.toFixed(1)}m`;
+        } else {
+            distEl.textContent = `Distance: -`;
+        }
     }
 
     updateFPS() {
