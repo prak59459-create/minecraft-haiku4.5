@@ -84,6 +84,8 @@ export class Chunk {
             }
         }
 
+        // Generate caves
+        generateCaves(this, worldX, worldZ);
         this.generated = true;
     }
 }
@@ -139,11 +141,12 @@ function generateTree(chunk, x, z, height) {
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
-    if (treeChance < 0.5) return;
+    if (treeChance < 0.4) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    const trunkHeight = 5 + Math.floor(Math.random() * 5);
     const y = height;
 
+    // Generate trunk
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
             if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
@@ -152,13 +155,16 @@ function generateTree(chunk, x, z, height) {
         }
     }
 
-    const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    // Generate foliage with improved shape
+    const foliageStart = y + trunkHeight - 4;
+    const foliageRadius = 3 + Math.floor(Math.random() * 2);
 
-    for (let dy = 0; dy < foliageRadius + 2; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
-        for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
-            for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
+    for (let dy = 0; dy < foliageRadius + 3; dy++) {
+        const progress = dy / (foliageRadius + 2);
+        const radiusAtLevel = Math.max(1, Math.round(foliageRadius * (1 - progress * progress)));
+
+        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            for (let dist = 0; dist <= radiusAtLevel; dist += 0.5) {
                 const dx = Math.round(Math.cos(angle) * dist);
                 const dz = Math.round(Math.sin(angle) * dist);
                 const fx = x + dx;
@@ -237,6 +243,24 @@ export class World {
         }
 
         toDelete.forEach(key => this.chunks.delete(key));
+    }
+}
+
+function generateCaves(chunk, worldX, worldZ) {
+    if (!perlinNoise) return;
+
+    for (let x = 0; x < CHUNK_SIZE; x++) {
+        for (let z = 0; z < CHUNK_SIZE; z++) {
+            for (let y = 10; y < 100; y++) {
+                const wx = worldX + x;
+                const wz = worldZ + z;
+
+                const caveNoise = perlinNoise.noise3D(wx * 0.05, y * 0.05, wz * 0.05);
+                if (caveNoise > 0.4 && chunk.getBlock(x, y, z) !== BLOCKS.BEDROCK) {
+                    chunk.setBlock(x, y, z, BLOCKS.AIR);
+                }
+            }
+        }
     }
 }
 
