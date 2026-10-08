@@ -97,8 +97,8 @@ export class DebugDisplay {
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3: Debug | H: Help',
+            'R: Respawn | C: Pick Block'
         ];
 
         this.container.innerHTML = lines.map(line => {

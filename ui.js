@@ -40,10 +40,15 @@ export class UI {
     }
 
     selectBlock(index) {
-        if (index < 0 || index > 8 || index === this.selectedBlock) return;
+        if (index < 0 || index > 8) return;
+        if (index === this.selectedBlock) return;
 
-        this.slots[this.selectedBlock].classList.remove('selected');
-        this.slots[index].classList.add('selected');
+        const oldSlot = this.slots[this.selectedBlock];
+        if (oldSlot) oldSlot.classList.remove('selected');
+
+        const newSlot = this.slots[index];
+        if (newSlot) newSlot.classList.add('selected');
+
         this.selectedBlock = index;
     }
 

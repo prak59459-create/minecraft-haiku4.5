@@ -36,6 +36,7 @@ class MinecraftGame {
         this.lastBreakSound = 0;
         this.showDebug = false;
         this.frameCount = 0;
+        this.blockColorCache = new Map();
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -78,13 +79,17 @@ class MinecraftGame {
                     this.selectedBlockType = hit.block;
                 }
             }
-            if (e.key === 'F3') {
+            if (e.key === 'F3' || e.key === 'f3') {
                 e.preventDefault();
                 this.showDebug = !this.showDebug;
                 this.debugDisplay.toggle();
             }
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
+            }
+            if (e.key === 'r' || e.key === 'R') {
+                this.player.position = { x: 0, y: 100, z: 0 };
+                this.player.velocity = { x: 0, y: 0, z: 0 };
             }
         });
     }
@@ -342,6 +347,7 @@ class MinecraftGame {
 
     animate() {
         requestAnimationFrame(() => this.animate());
+        this.frameCount++;
 
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
