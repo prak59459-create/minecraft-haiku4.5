@@ -98,7 +98,19 @@ class MinecraftGame {
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
+            if (e.key === 'r' || e.key === 'R') {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    this.resetGame();
+                }
+            }
         });
+    }
+
+    resetGame() {
+        console.log('Resetting game...');
+        this.player.position = { x: 0, y: 100, z: 0 };
+        this.player.velocity = { x: 0, y: 0, z: 0 };
     }
 
     onMouseClick(event) {
