@@ -36,20 +36,20 @@ export const BLOCK_NAMES = {
 
 export const BLOCK_COLORS = {
     0: 0x000000,
-    1: 0x808080,
-    2: 0x228B22,
-    3: 0x8B7355,
-    4: 0x696969,
-    5: 0x654321,
+    1: 0x7A7A7A,
+    2: 0x3CB371,
+    3: 0xA0826D,
+    4: 0x808080,
+    5: 0x5C4A3D,
     6: 0x2D5016,
-    7: 0xEDD5B1,
-    8: 0x4A90E2,
-    9: 0x999999,
-    10: 0x1A1A1A,
-    11: 0x1A1A1A,
-    12: 0xB8860B,
-    13: 0xFFD700,
-    14: 0x00CED1
+    7: 0xF0D9A8,
+    8: 0x5BA3D0,
+    9: 0xA0A0A0,
+    10: 0x0F0F0F,
+    11: 0x2A2A2A,
+    12: 0x967B3A,
+    13: 0xE8B923,
+    14: 0x00D9D9
 };
 
 export const SOLID_BLOCKS = new Set([
