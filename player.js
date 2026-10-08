@@ -19,14 +19,39 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.shiftPressed = false;
+        this.lastStepSoundTime = 0;
+        this.stepSoundInterval = 300;
 
         this.keys = {};
         this.setupKeyboardControls();
+        this.respawnAtSafeHeight();
+    }
+
+    respawnAtSafeHeight() {
+        const chunkSize = 16;
+        const worldX = Math.floor(this.position.x / chunkSize);
+        const worldZ = Math.floor(this.position.z / chunkSize);
+
+        let maxHeight = 60;
+        for (let y = 255; y >= 0; y--) {
+            const block = this.world.getBlock(
+                worldX * chunkSize + 8,
+                y,
+                worldZ * chunkSize + 8
+            );
+            if (isBlockSolid(block)) {
+                maxHeight = y + 2;
+                break;
+            }
+        }
+        this.position.y = Math.max(100, maxHeight);
     }
 
     setupKeyboardControls() {
         document.addEventListener('keydown', (e) => {
-            this.keys[e.key.toLowerCase()] = true;
+            const key = e.key.toLowerCase();
+            this.keys[key] = true;
 
             if (e.key === ' ') {
                 e.preventDefault();
@@ -36,10 +61,17 @@ export class Player {
                     if (this.onJump) this.onJump();
                 }
             }
+            if (key === 'shift') {
+                this.shiftPressed = true;
+            }
         });
 
         document.addEventListener('keyup', (e) => {
-            this.keys[e.key.toLowerCase()] = false;
+            const key = e.key.toLowerCase();
+            this.keys[key] = false;
+            if (key === 'shift') {
+                this.shiftPressed = false;
+            }
         });
     }
 
@@ -47,13 +79,36 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        this.updateStepSounds();
+    }
+
+    updateStepSounds() {
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        if (isMoving && this.isOnGround) {
+            const now = Date.now();
+            if (now - this.lastStepSoundTime > this.stepSoundInterval) {
+                if (this.onStep) this.onStep();
+                this.lastStepSoundTime = now;
+            }
+        }
     }
 
     handleMovement() {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+
+        let speed = PLAYER_SPEED;
+        if (this.shiftPressed && isMoving) {
+            const hasForwardMovement = this.keys['w'] || this.keys['s'];
+            speed = hasForwardMovement ? PLAYER_SPRINT_SPEED : PLAYER_CROUCH_SPEED;
+            this.isSprinting = true;
+            this.isCrouching = false;
+        } else {
+            this.isSprinting = false;
+            this.isCrouching = false;
+        }
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -65,9 +120,6 @@ export class Player {
 
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
-
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
     }
 
     applyPhysics() {

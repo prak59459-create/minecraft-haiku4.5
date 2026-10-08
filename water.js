@@ -6,6 +6,8 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.waveAmplitude = 0.05;
+        this.waveFrequency = 0.5;
     }
 
     buildWaterMesh(chunk) {
@@ -72,11 +74,15 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.7,
+                side: THREE.FrontSide,
+                emissive: 0x1a3a52,
+                shininess: 100,
+                flatShading: false
             });
 
             const mesh = new THREE.Mesh(geometry, material);
+            mesh.receiveShadow = true;
             return mesh;
         }
 
