@@ -53,7 +53,10 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        const isSprinting = this.keys['shift'] && isMoving;
+        const isCrouching = this.keys['control'] || this.keys['ctrl'];
+        const speed = isSprinting ? PLAYER_SPRINT_SPEED : (isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPEED);
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -63,11 +66,14 @@ export class Player {
         const cosY = Math.cos(this.rotation.y);
         const sinY = Math.sin(this.rotation.y);
 
-        this.velocity.x = moveX * cosY - moveZ * sinY;
-        this.velocity.z = moveX * sinY + moveZ * cosY;
+        const targetX = moveX * cosY - moveZ * sinY;
+        const targetZ = moveX * sinY + moveZ * cosY;
 
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+        this.velocity.x = targetX;
+        this.velocity.z = targetZ;
+
+        this.isSprinting = isSprinting;
+        this.isCrouching = isCrouching;
     }
 
     applyPhysics() {
@@ -108,6 +114,24 @@ export class Player {
                         this.position.z -= this.velocity.z * scale;
                     }
                     break;
+                }
+            }
+        }
+
+        const moveSpeed = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+        if (moveSpeed > 0.01) {
+            for (let step = 0; step <= 1; step += 0.25) {
+                const testRadius = radius * 0.8;
+                for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
+                    const cx = this.position.x + Math.cos(angle) * testRadius;
+                    const cy = this.position.y + step;
+                    const cz = this.position.z + Math.sin(angle) * testRadius;
+
+                    const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
+                    if (!isBlockSolid(block)) {
+                        this.position.y += 0.1;
+                        break;
+                    }
                 }
             }
         }

@@ -11,7 +11,7 @@ export class AudioManager {
         this.audioContext = audioContext;
     }
 
-    playBlockSound(type = 'break') {
+    playBlockSound(type = 'break', blockType = 'stone') {
         if (!this.audioContext) return;
 
         const audioContext = this.audioContext;
@@ -22,20 +22,44 @@ export class AudioManager {
         osc.connect(gainNode);
         gainNode.connect(audioContext.destination);
 
+        const isStone = blockType === 'stone' || blockType === 'ore';
+        const isDirt = blockType === 'dirt' || blockType === 'grass';
+        const isWood = blockType === 'wood' || blockType === 'log';
+
         if (type === 'break') {
-            osc.frequency.setValueAtTime(400, now);
-            osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-            gainNode.gain.setValueAtTime(0.2, now);
+            if (isWood) {
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
+                gainNode.gain.setValueAtTime(0.15, now);
+            } else if (isDirt) {
+                osc.frequency.setValueAtTime(350, now);
+                osc.frequency.exponentialRampToValueAtTime(120, now + 0.12);
+                gainNode.gain.setValueAtTime(0.12, now);
+            } else {
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                gainNode.gain.setValueAtTime(0.2, now);
+            }
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else if (type === 'place') {
+            if (isWood) {
+                osc.frequency.setValueAtTime(550, now);
+                osc.frequency.exponentialRampToValueAtTime(180, now + 0.1);
+                gainNode.gain.setValueAtTime(0.12, now);
+            } else if (isDirt) {
+                osc.frequency.setValueAtTime(650, now);
+                osc.frequency.exponentialRampToValueAtTime(220, now + 0.09);
+                gainNode.gain.setValueAtTime(0.1, now);
+            } else {
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.08);
+                gainNode.gain.setValueAtTime(0.15, now);
+            }
             gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
             osc.start(now);
             osc.stop(now + 0.1);
-        } else if (type === 'place') {
-            osc.frequency.setValueAtTime(600, now);
-            osc.frequency.exponentialRampToValueAtTime(200, now + 0.08);
-            gainNode.gain.setValueAtTime(0.15, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-            osc.start(now);
-            osc.stop(now + 0.08);
         }
     }
 
