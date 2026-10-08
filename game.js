@@ -117,10 +117,13 @@ class MinecraftGame {
             const ny = hit.y + norm.y;
             const nz = hit.z + norm.z;
 
-            if (!this.isPlayerOccupying(nx, ny, nz)) {
-                this.world.setBlock(nx, ny, nz, this.selectedBlockType);
-                this.updateChunkMesh(nx, ny, nz);
-                this.audioManager.playBlockSound('place');
+            if (!this.isPlayerOccupying(nx, ny, nz) && ny >= 1 && ny < 255) {
+                const existingBlock = this.world.getBlock(nx, ny, nz);
+                if (existingBlock === BLOCKS.AIR) {
+                    this.world.setBlock(nx, ny, nz, this.selectedBlockType);
+                    this.updateChunkMesh(nx, ny, nz);
+                    this.audioManager.playBlockSound('place');
+                }
             }
         }
     }
