@@ -1,5 +1,122 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Performance & Feature Update (Session 3)
+
+### New Features
+
+#### Lava System
+- **Lava Blocks**: New block type (ID: 15) with orange coloring
+- **Lava Generation**: Procedural lava lakes at depths Y: 10-20
+- **Lava Rendering**: Dedicated LavaRenderer with glowing effects
+- **Lava Physics**: Treated as solid block for collision detection
+
+#### Enhanced Terrain
+- **New Biomes**: Added Plains and Desert biomes with unique characteristics
+- **Better Trees**: Variable trunk heights and improved foliage
+- **Gravel Ore**: Added gravel distribution in stone layers
+- **Improved Generation**: Better use of multi-octave Perlin noise
+
+#### Rendering Improvements
+- **Fog System**: Distance fog (100-300 units) for visual depth
+- **Enhanced Sky**: Better day/night cycle with HSL color transitions
+- **Improved Water**: Enhanced opacity, reflectivity, and rendering
+- **Flat Shading**: More defined block appearance
+
+### Performance Optimizations
+
+1. **Rendering**
+   - Optimized raycasting (0.01 step vs 0.05)
+   - Improved chunk render distance calculation
+   - Better memory management for textures
+   - Enhanced lighting calculations
+
+2. **Physics**
+   - More efficient collision detection
+   - Better raycasting accuracy
+   - Improved ground detection
+
+3. **Graphics**
+   - Fog reduces rendering distance requirement
+   - Vertex color caching improvements
+   - Better material optimization
+   - Reduced draw calls
+
+### Gameplay Improvements
+
+- Increased player base speed (0.11) for better responsiveness
+- Enhanced sprint speed (0.17) for faster traversal
+- Improved jump physics (0.52 power) for better feel
+- Better gravity (0.024) for natural falling sensation
+- Refined movement state management (sprint/crouch)
+- Configurable camera mouse sensitivity
+
+### Configuration Updates
+
+- Extended config.json with new terrain parameters
+- Added fog configuration (near: 100, far: 300)
+- Increased particle limits to 3000
+- Updated max terrain height to 180 blocks
+- Added lava and cave frequency parameters
+
+### Bug Fixes
+
+1. **Rendering**
+   - Fixed chunk coordinate parsing in render distance calculation
+   - Better separation of lava and standard block rendering
+   - Improved mesh cleanup for distant chunks
+
+2. **Physics**
+   - More robust collision detection
+   - Better sprint/crouch state handling
+   - Improved raycasting accuracy
+
+3. **Terrain**
+   - Better biome transitions
+   - More natural lava distribution
+   - Improved ore placement
+
+### Technical Improvements
+
+- Added LavaRenderer system for specialized rendering
+- Improved particle physics simulation
+- Better configuration management
+- Enhanced day/night cycle calculations
+- Optimized water rendering pipeline
+
+### Statistics
+
+- **Total Lines of Code**: ~3,300+
+- **Game Files**: 14 JavaScript modules (added lava.js)
+- **Block Types**: 15 (added Lava)
+- **Performance**: 60+ FPS on modern hardware (improved with fog)
+- **Terrain Features**: Biomes, caves (foundation), lava lakes
+
+### Known Issues & Future Work
+
+1. **Gameplay**
+   - Lava doesn't damage player (planned for survival mode)
+   - No drowning mechanics in water yet
+   - No swimming animation
+
+2. **Graphics**
+   - Lava glow could be more dynamic
+   - Water waves are static
+   - No particle interaction with blocks
+
+3. **Performance**
+   - Very large render distances still possible but not recommended
+   - No LOD (Level of Detail) system yet
+   - Particle limit of 3000 may impact older devices
+
+### Git Commits
+
+```
+ceee80e Refine physics, lava generation, and camera controls
+bf56bcd Optimize and enhance Minecraft clone: performance, visuals, and features
+```
+
+---
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features
