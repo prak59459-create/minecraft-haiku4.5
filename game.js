@@ -35,7 +35,10 @@ class MinecraftGame {
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
+        this.lastStepSound = 0;
         this.showDebug = false;
+        this.lastPlayerY = 100;
+        this.isWalking = false;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -207,7 +210,10 @@ class MinecraftGame {
             for (let dz = -1; dz <= 1; dz++) {
                 const key = `${cx + dx},${cz + dz}`;
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
+                    const mesh = this.chunkMeshes.get(key);
+                    this.scene.remove(mesh);
+                    if (mesh.geometry) mesh.geometry.dispose();
+                    if (mesh.material) mesh.material.dispose();
                     this.chunkMeshes.delete(key);
                 }
             }
@@ -343,19 +349,28 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
-        for (const [key, chunk] of this.world.chunks) {
+        const meshesToRemove = [];
+        for (const [key, mesh] of this.chunkMeshes) {
             const [cx, cz] = key.split(',').map(Number);
             const chunkDist = Math.max(Math.abs(cx - playerChunkX), Math.abs(cz - playerChunkZ));
 
             if (chunkDist > renderDistance) {
-                if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
-                }
-                continue;
+                meshesToRemove.push([key, mesh]);
             }
+        }
 
-            if (!this.chunkMeshes.has(key)) {
+        meshesToRemove.forEach(([key, mesh]) => {
+            this.scene.remove(mesh);
+            if (mesh.geometry) mesh.geometry.dispose();
+            if (mesh.material) mesh.material.dispose();
+            this.chunkMeshes.delete(key);
+        });
+
+        for (const [key, chunk] of this.world.chunks) {
+            const [cx, cz] = key.split(',').map(Number);
+            const chunkDist = Math.max(Math.abs(cx - playerChunkX), Math.abs(cz - playerChunkZ));
+
+            if (chunkDist <= renderDistance && !this.chunkMeshes.has(key)) {
                 const mesh = this.buildChunkMesh(chunk);
                 if (mesh) {
                     this.scene.add(mesh);
@@ -403,6 +418,7 @@ class MinecraftGame {
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
+        this.updateStepSounds();
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);
@@ -415,6 +431,21 @@ class MinecraftGame {
         }
 
         this.renderer.render(this.scene, this.camera);
+    }
+
+    updateStepSounds() {
+        const isMoving = Math.abs(this.player.velocity.x) > 0.02 || Math.abs(this.player.velocity.z) > 0.02;
+        const wasWalking = this.isWalking;
+        this.isWalking = isMoving && this.player.isOnGround;
+
+        if (this.isWalking && this.player.isOnGround) {
+            const now = Date.now();
+            const stepInterval = this.player.isSprinting ? 250 : 400;
+            if (now - this.lastStepSound > stepInterval) {
+                this.audioManager.playStepSound();
+                this.lastStepSound = now;
+            }
+        }
     }
 
     updateDayNightCycle() {
