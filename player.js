@@ -19,6 +19,7 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.lastStepTime = 0;
 
         this.keys = {};
         this.setupKeyboardControls();
