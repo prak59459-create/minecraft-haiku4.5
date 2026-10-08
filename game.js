@@ -7,31 +7,36 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { Config } from './config.js';
 
 class MinecraftGame {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
-        this.world = new World();
+        this.world = new World(Config.get('world.renderDistance'));
         this.player = new Player(this.world);
         this.gameCamera = new Camera();
         this.ui = new UI();
-        this.particleSystem = new ParticleSystem(this.scene);
+        this.particleSystem = new ParticleSystem(this.scene, Config.get('graphics.particleLimit'));
         this.waterRenderer = new WaterRenderer(this.scene, this.world);
-        this.audioManager = new AudioManager();
+        this.audioManager = new AudioManager(Config.get('audio.masterVolume'));
         this.debugDisplay = new DebugDisplay();
         this.blockOutline = new BlockOutline(this.scene);
 
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
-        this.raycastDistance = 6;
+        this.raycastDistance = Config.get('raycast.distance');
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.lastChunkUpdateTime = 0;
+        this.chunkUpdateInterval = 100;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -290,12 +295,18 @@ class MinecraftGame {
     }
 
     updateVisibleChunks() {
+        const now = performance.now();
+        if (now - this.lastChunkUpdateTime < this.chunkUpdateInterval) {
+            return;
+        }
+        this.lastChunkUpdateTime = now;
+
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
-        const renderDist = 8;
+        const renderDist = this.world.renderDistance;
         const meshesToRemove = [];
 
         for (const [key, mesh] of this.chunkMeshes) {
@@ -376,6 +387,17 @@ class MinecraftGame {
         }
 
         this.renderer.render(this.scene, this.camera);
+
+        this.performanceCheck();
+    }
+
+    performanceCheck() {
+        const currentFPS = this.ui.fpsCounter;
+        if (currentFPS < 30 && this.world.chunks.size > (this.world.renderDistance * 2 + 1) ** 2) {
+            this.world.renderDistance = Math.max(4, this.world.renderDistance - 1);
+        } else if (currentFPS > 50 && this.world.chunks.size < (this.world.renderDistance * 2 - 1) ** 2) {
+            this.world.renderDistance = Math.min(12, this.world.renderDistance + 1);
+        }
     }
 
     updateDayNightCycle() {
