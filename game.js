@@ -16,22 +16,28 @@ class MinecraftGame {
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
         this.gameCamera = new Camera();
         this.ui = new UI();
-        this.particleSystem = new ParticleSystem(this.scene);
+        this.particleSystem = new ParticleSystem(this.scene, 2000);
         this.waterRenderer = new WaterRenderer(this.scene, this.world);
         this.audioManager = new AudioManager();
         this.debugDisplay = new DebugDisplay();
         this.blockOutline = new BlockOutline(this.scene);
 
         this.chunkMeshes = new Map();
+        this.meshGenerationQueue = [];
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.renderDistance = 8;
+        this.frameCount = 0;
+        this.lastFrameTime = performance.now();
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -125,12 +131,18 @@ class MinecraftGame {
                (Math.abs(px - x) < 0.6 && Math.abs(py - y - 1) < 1.8 && Math.abs(pz - z) < 0.6);
     }
 
-    raycastBlock() {
+    raycastBlock(cosY = null, sinY = null, cosX = null, sinX = null) {
         const eyePos = this.player.getEyePosition();
+
+        const _cosY = cosY !== null ? cosY : Math.cos(this.gameCamera.rotation.y);
+        const _sinY = sinY !== null ? sinY : Math.sin(this.gameCamera.rotation.y);
+        const _cosX = cosX !== null ? cosX : Math.cos(this.gameCamera.rotation.x);
+        const _sinX = sinX !== null ? sinX : Math.sin(this.gameCamera.rotation.x);
+
         const direction = new THREE.Vector3(
-            Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
-            Math.sin(this.gameCamera.rotation.x),
-            Math.cos(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x)
+            _sinY * _cosX,
+            _sinX,
+            _cosY * _cosX
         );
 
         let hit = null;
@@ -284,16 +296,26 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const chunksToRemove = [];
+        for (const [key, mesh] of this.chunkMeshes) {
+            const [cx, cz] = key.split(',').map(Number);
+            const distance = Math.max(Math.abs(cx - playerChunkX), Math.abs(cz - playerChunkZ));
+
+            if (distance > this.renderDistance) {
+                this.scene.remove(mesh);
+                chunksToRemove.push(key);
+            }
+        }
+
+        for (const key of chunksToRemove) {
+            this.chunkMeshes.delete(key);
+        }
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const distance = Math.max(Math.abs(cx - playerChunkX), Math.abs(cz - playerChunkZ));
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
-                if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
-                }
-                continue;
-            }
+            if (distance > this.renderDistance) continue;
 
             if (!this.chunkMeshes.has(key)) {
                 const mesh = this.buildChunkMesh(chunk);
@@ -328,10 +350,15 @@ class MinecraftGame {
         const eyePos = this.player.getEyePosition();
         this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
 
+        const cosY = Math.cos(this.gameCamera.rotation.y);
+        const sinY = Math.sin(this.gameCamera.rotation.y);
+        const cosX = Math.cos(this.gameCamera.rotation.x);
+        const sinX = Math.sin(this.gameCamera.rotation.x);
+
         const direction = new THREE.Vector3(
-            Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
-            Math.sin(this.gameCamera.rotation.x),
-            Math.cos(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x)
+            sinY * cosX,
+            sinX,
+            cosY * cosX
         );
         this.camera.lookAt(
             eyePos.x + direction.x,
@@ -344,7 +371,7 @@ class MinecraftGame {
         this.particleSystem.update();
         this.waterRenderer.update();
 
-        const hit = this.raycastBlock();
+        const hit = this.raycastBlock(cosY, sinY, cosX, sinX);
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
