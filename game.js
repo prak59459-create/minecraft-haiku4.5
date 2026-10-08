@@ -7,6 +7,7 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { SkyRenderer } from './sky.js';
 
 class MinecraftGame {
     constructor() {
@@ -29,6 +30,7 @@ class MinecraftGame {
         this.audioManager = new AudioManager();
         this.debugDisplay = new DebugDisplay();
         this.blockOutline = new BlockOutline(this.scene);
+        this.skyRenderer = new SkyRenderer(this.scene);
 
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
@@ -365,6 +367,7 @@ class MinecraftGame {
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
+        this.skyRenderer.update(this.player.position);
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);
