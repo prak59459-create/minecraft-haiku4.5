@@ -18,14 +18,15 @@ export class Config {
                 renderDistance: 8,
                 seedOffset: 0,
                 waterLevel: 62,
-                bedrockLevel: 0
+                bedrockLevel: 0,
+                chunkGenerationThreads: 2
             },
             player: {
-                speed: 0.1,
-                sprintSpeed: 0.15,
-                crouchSpeed: 0.05,
-                jumpPower: 0.5,
-                gravity: 0.02,
+                speed: 0.12,
+                sprintSpeed: 0.18,
+                crouchSpeed: 0.06,
+                jumpPower: 0.52,
+                gravity: 0.025,
                 mouseSensitivity: 0.003,
                 eyeHeight: 0.85,
                 height: 1.8,
@@ -33,26 +34,38 @@ export class Config {
             },
             raycast: {
                 distance: 6,
-                stepSize: 0.05
+                stepSize: 0.1
             },
             graphics: {
                 renderScale: 1.0,
                 shadowMapSize: 2048,
-                particleLimit: 2000,
-                fpsTarget: 60
+                shadowResolution: true,
+                particleLimit: 3000,
+                fpsTarget: 60,
+                useVsync: true,
+                antialias: true,
+                ambientOcclusion: false
             },
             terrain: {
                 chunkSize: 16,
                 maxHeight: 160,
                 minHeight: 20,
                 seaLevel: 62,
-                treeFrequency: 0.5
+                treeFrequency: 0.5,
+                terrainVariance: 1.0
             },
             audio: {
                 enabled: true,
                 masterVolume: 0.5,
                 soundFx: true,
-                music: false
+                music: false,
+                spatialAudio: true
+            },
+            performance: {
+                enableMeshOptimization: true,
+                enableMemoryOptimization: true,
+                maxDrawCalls: 1000,
+                useFrustumCulling: true
             }
         };
     }
