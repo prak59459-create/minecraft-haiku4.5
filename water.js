@@ -85,5 +85,12 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+
+        const now = Date.now() * 0.001;
+        const waveHeight = Math.sin(now) * 0.1 + Math.cos(now * 0.5) * 0.05;
+    }
+
+    getWaveOffset(x, z, time) {
+        return Math.sin((x + z + time) * 0.5) * 0.02;
     }
 }

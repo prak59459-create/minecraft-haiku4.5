@@ -105,6 +105,7 @@ export class Player {
             { dy: height * 0.9, radius: radius * 0.7 }
         ];
 
+        let collided = false;
         for (const point of checkPoints) {
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
@@ -119,9 +120,11 @@ export class Player {
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
+                    collided = true;
                     break;
                 }
             }
+            if (collided) break;
         }
 
         if (this.velocity.y < 0) {
@@ -156,7 +159,7 @@ export class Player {
             }
         }
 
-        if (this.position.y < -10) {
+        if (this.position.y < -64) {
             this.position.y = 100;
             this.velocity.y = 0;
         }

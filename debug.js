@@ -76,26 +76,39 @@ export class DebugDisplay {
         }
 
         this.stats.vertices = vertices;
-        this.stats.triangles = triangles;
+        this.stats.triangles = Math.round(triangles);
         this.stats.drawCalls = game.chunkMeshes.size;
 
         if (performance.memory) {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
         }
 
+        this.playerPos = game.player.position;
+        this.playerVel = game.player.velocity;
+        this.onGround = game.player.isOnGround;
+        this.sprinting = game.player.isSprinting;
+        this.crouching = game.player.isCrouching;
+
         this.render();
     }
 
     render() {
+        const posStr = `${this.playerPos.x.toFixed(1)} ${this.playerPos.y.toFixed(1)} ${this.playerPos.z.toFixed(1)}`;
+        const velStr = `${this.playerVel.x.toFixed(2)} ${this.playerVel.y.toFixed(2)} ${this.playerVel.z.toFixed(2)}`;
+        const state = `${this.onGround ? '✓' : '✗'} Ground | ${this.sprinting ? '▶' : '-'} Sprint | ${this.crouching ? '▼' : '-'} Crouch`;
+
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
-            `Chunks: ${this.stats.chunks}`,
+            `Chunks: ${this.stats.chunks} | Rendered: ${this.stats.drawCalls}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
-            `Draw Calls: ${this.stats.drawCalls}`,
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
+            '--- Player ---',
+            `Pos: ${posStr}`,
+            `Vel: ${velStr}`,
+            `State: ${state}`,
             '==================',
             'Press F3 to toggle',
             'Press H for help'
@@ -103,6 +116,7 @@ export class DebugDisplay {
 
         this.container.innerHTML = lines.map(line => {
             if (line.startsWith('=')) return `<div>${line}</div>`;
+            if (line.startsWith('-')) return `<div style="margin-top: 4px;">${line}</div>`;
             const parts = line.split(': ');
             if (parts.length === 2) {
                 return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
