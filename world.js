@@ -77,6 +77,7 @@ export class Chunk {
             }
         }
 
+        generateCaves(this);
         this.generated = true;
     }
 }
@@ -124,6 +125,34 @@ function getOreBlock(x, y, z) {
     else if (y < 40 && diamondChance > 0.75 - depthFactor * 0.1) ore = BLOCKS.DIAMOND_ORE;
 
     return ore;
+}
+
+function generateCaves(chunk) {
+    if (!perlinNoise) return;
+
+    const worldX = chunk.x * CHUNK_SIZE;
+    const worldZ = chunk.z * CHUNK_SIZE;
+    const CHUNK_SIZE_LOCAL = 16;
+
+    for (let x = 0; x < CHUNK_SIZE_LOCAL; x++) {
+        for (let z = 0; z < CHUNK_SIZE_LOCAL; z++) {
+            for (let y = 20; y < 80; y++) {
+                const wx = worldX + x;
+                const wz = worldZ + z;
+
+                const caveNoise = perlinNoise.noise3D ?
+                    perlinNoise.noise3D(wx * 0.05, y * 0.05, wz * 0.05) :
+                    perlinNoise.noise2D(wx * 0.05 + y * 0.02, wz * 0.05 + y * 0.02);
+
+                if (caveNoise > 0.6) {
+                    const block = chunk.getBlock(x, y, z);
+                    if (block !== BLOCKS.WATER && block !== BLOCKS.BEDROCK) {
+                        chunk.setBlock(x, y, z, BLOCKS.AIR);
+                    }
+                }
+            }
+        }
+    }
 }
 
 function generateTree(chunk, x, z, height) {
