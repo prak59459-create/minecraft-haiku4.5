@@ -151,7 +151,8 @@ class MinecraftGame {
 
             const now = Date.now();
             if (now - this.lastBreakSound > 50) {
-                this.audioManager.playBlockSound('break');
+                const blockType = this.getBlockType(hit.block);
+                this.audioManager.playBlockSound('break', blockType);
                 this.lastBreakSound = now;
             }
         } else if (event.button === 2) {
@@ -163,9 +164,18 @@ class MinecraftGame {
             if (!this.isPlayerOccupying(nx, ny, nz)) {
                 this.world.setBlock(nx, ny, nz, this.selectedBlockType);
                 this.updateChunkMesh(nx, ny, nz);
-                this.audioManager.playBlockSound('place');
+                const blockType = this.getBlockType(this.selectedBlockType);
+                this.audioManager.playBlockSound('place', blockType);
             }
         }
+    }
+
+    getBlockType(blockId) {
+        if ([BLOCKS.OAK_LOG, BLOCKS.SPRUCE_LOG].includes(blockId)) return 'wood';
+        if ([BLOCKS.OAK_LEAVES, BLOCKS.SPRUCE_LEAVES].includes(blockId)) return 'leaves';
+        if ([BLOCKS.DIRT, BLOCKS.GRASS, BLOCKS.SAND].includes(blockId)) return 'dirt';
+        if ([BLOCKS.COAL_ORE, BLOCKS.IRON_ORE, BLOCKS.GOLD_ORE, BLOCKS.DIAMOND_ORE].includes(blockId)) return 'ore';
+        return 'stone';
     }
 
     isPlayerOccupying(x, y, z) {
