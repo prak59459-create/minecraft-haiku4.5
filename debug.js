@@ -87,27 +87,39 @@ export class DebugDisplay {
     }
 
     render() {
+        const getHealthBar = (current, max) => {
+            const filled = Math.round((current / max) * 10);
+            const empty = 10 - filled;
+            return '[' + '█'.repeat(filled) + '░'.repeat(empty) + ']';
+        };
+
         const lines = [
-            '=== DEBUG INFO ===',
-            `FPS: ${this.stats.fps}`,
-            `Chunks: ${this.stats.chunks}`,
-            `Vertices: ${this.stats.vertices.toLocaleString()}`,
-            `Triangles: ${this.stats.triangles.toLocaleString()}`,
-            `Draw Calls: ${this.stats.drawCalls}`,
-            `Particles: ${this.stats.particles}`,
-            `Memory: ${this.stats.memory} MB`,
-            '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            '╔════ DEBUG INFO ════╗',
+            `║ FPS: ${this.stats.fps.toString().padStart(3)}`,
+            `║ Chunks: ${this.stats.chunks.toString().padStart(3)}`,
+            `║ Vertices: ${this.stats.vertices.toLocaleString().padStart(7)}`,
+            `║ Triangles: ${this.stats.triangles.toLocaleString().padStart(7)}`,
+            `║ Draw Calls: ${this.stats.drawCalls.toString().padStart(3)}`,
+            `║ Particles: ${this.stats.particles.toString().padStart(4)}`,
+            `║ Memory: ${this.stats.memory.padStart(6)} MB`,
+            '╚════════════════════╝',
+            '',
+            'Controls:',
+            'F3 - Toggle Debug',
+            'H  - Toggle Help'
         ];
 
         this.container.innerHTML = lines.map(line => {
-            if (line.startsWith('=')) return `<div>${line}</div>`;
-            const parts = line.split(': ');
-            if (parts.length === 2) {
-                return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
+            if (line.startsWith('╔') || line.startsWith('╚')) {
+                return `<div style="color: #00FF00;">${line}</div>`;
             }
-            return `<div>${line}</div>`;
+            if (line.startsWith('║')) {
+                const [label, value] = line.split(':');
+                return `<div><span style="color: #00FF00;">${label}:</span> <span style="color: #FFFF00;">${value}</span></div>`;
+            }
+            if (line === '') return `<div>&nbsp;</div>`;
+            if (line.startsWith('Controls:')) return `<div style="color: #00FFFF; margin-top: 5px;">${line}</div>`;
+            return `<div style="color: #AAAAAA; font-size: 10px;">${line}</div>`;
         }).join('');
     }
 }

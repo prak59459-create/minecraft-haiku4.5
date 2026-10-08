@@ -91,11 +91,13 @@ export class AudioManager {
         osc.connect(gainNode);
         gainNode.connect(audioContext.destination);
 
-        osc.frequency.setValueAtTime(200 + Math.random() * 100, now);
-        gainNode.gain.setValueAtTime(0.05, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        const freq = 150 + Math.random() * 50;
+        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.08);
+        gainNode.gain.setValueAtTime(this.masterVolume * 0.2, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
 
         osc.start(now);
-        osc.stop(now + 0.05);
+        osc.stop(now + 0.08);
     }
 }

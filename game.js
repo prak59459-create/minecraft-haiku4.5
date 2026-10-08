@@ -38,6 +38,7 @@ class MinecraftGame {
         this.meshBuildQueue = [];
 
         this.player.onJump = () => this.audioManager.playJumpSound();
+        this.player.onStep = () => this.audioManager.playStepSound();
 
         this.setupLighting();
         this.setupEventListeners();
@@ -294,13 +295,21 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const renderDistance = 8;
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
+
+        const visibleChunks = new Set();
+        for (let dx = -renderDistance; dx <= renderDistance; dx++) {
+            for (let dz = -renderDistance; dz <= renderDistance; dz++) {
+                visibleChunks.add(`${playerChunkX + dx},${playerChunkZ + dz}`);
+            }
+        }
 
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (!visibleChunks.has(key)) {
                 if (this.chunkMeshes.has(key)) {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
@@ -314,6 +323,7 @@ class MinecraftGame {
                     this.scene.add(mesh);
                     this.chunkMeshes.set(key, mesh);
                 }
+                this.waterRenderer.updateChunkWater(chunk);
             }
         }
     }
