@@ -255,7 +255,6 @@ class MinecraftGame {
 
     getAmbientOcclusion(chunk, x, y, z) {
         let count = 0;
-        const maxNeighbors = 6;
 
         const neighbors = [
             [x+1, y, z], [x-1, y, z],
@@ -267,7 +266,7 @@ class MinecraftGame {
             if (isBlockSolid(chunk.getBlock(nx, ny, nz))) count++;
         }
 
-        return 1 - (count * 0.12);
+        return Math.max(0.4, 1 - (count * 0.14));
     }
 
     addBlockFaces(vertices, colors, indices, x, y, z, blockId, color, chunk) {
