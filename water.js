@@ -16,7 +16,7 @@ export class WaterRenderer {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x4A90E2);
+        const baseWaterColor = new THREE.Color(0x2E7BC4);
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -48,11 +48,13 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const depthFade = Math.max(0.5, 1.0 - (wy / (WORLD_HEIGHT * 2)));
+                        const variation = 0.9 + Math.sin(wx * 0.2 + wz * 0.2) * 0.1;
+                        const color = baseWaterColor.clone().multiplyScalar(depthFade * variation);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
+                            colors.push(Math.round(color.r * 255), Math.round(color.g * 255), Math.round(color.b * 255));
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -72,11 +74,14 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.65,
+                side: THREE.FrontSide,
+                shininess: 100,
+                emissive: 0x001a33
             });
 
             const mesh = new THREE.Mesh(geometry, material);
+            mesh.renderOrder = 0.5;
             return mesh;
         }
 
