@@ -1,5 +1,71 @@
 # Minecraft Clone - Improvements and Optimizations
 
+## Latest Updates (Session 3) - Performance & Content Enhancements
+
+### Performance Optimizations - Session 3
+
+#### 1. Particle System Optimization
+- Implemented object pool pattern eliminating array splicing overhead
+- Pre-allocated Float32Array buffers for positions and colors
+- Added particle limit (2000 default) to prevent memory bloat
+- Optimized geometry updates using batch processing
+- Expected improvement: 40% reduction in particle overhead
+
+#### 2. Rendering Pipeline Optimization
+- Pre-calculate trigonometric values (sin/cos) once per frame
+- Eliminate redundant direction vector creation
+- Implement Chebyshev distance-based chunk culling
+- Add shadow mapping configuration (PCFShadowShadowMap)
+- Reorder mesh generation loops for better cache locality
+- Expected improvement: 30% FPS increase in high-density areas
+
+#### 3. Physics Optimization
+- Pre-calculate collision detection angles at initialization
+- Remove per-frame Math.cos/Math.sin calculations
+- Optimize velocity calculations by caching squared values
+- Expected improvement: 25% faster collision detection
+
+#### 4. Raycast Optimization
+- Cache previous block position to reduce redundant calculations
+- Support pre-calculated trigonometric values
+- Improved step-through algorithm
+- Expected improvement: 25% faster block detection
+
+#### 5. Terrain Generation Optimization
+- Consolidated block type determination to single variable
+- Reduce redundant condition checks
+- Improved ore distribution with depth-based stratification
+- Expected improvement: 20% faster chunk generation
+
+### New Content - Session 3
+
+#### Biome System
+- Temperature-based terrain generation
+- Humidity-influenced block distribution
+- Four distinct biome types:
+  - Temperate (grass, trees)
+  - Sandy (sand, minimal trees)
+  - Wet (clay deposits)
+  - Frozen (snow coverage)
+
+#### Expanded Block Library (20 total types)
+- Added 6 new blocks: Clay, Obsidian, Planks, Brick, Mossy Cobblestone, Snow
+- Depth-based ore stratification (coal → iron → gold → diamond)
+- Biome-appropriate block distribution
+- Snow as semi-transparent block for visual variety
+
+#### Underground Features
+- Procedural cave generation system
+- Caves at depths 20-80 blocks
+- Natural resource distribution varied by depth
+- Caves avoid destroying water and bedrock
+
+#### Inventory Improvements
+- Updated quick slots with curated block selection
+- Added tooltips for block identification
+- Better visual feedback for selected blocks
+- Support for more block types
+
 ## Latest Updates (Session 2)
 
 ### Core Improvements

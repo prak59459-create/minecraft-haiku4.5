@@ -42,40 +42,42 @@ export class Chunk {
                 const wx = worldX + x;
                 const wz = worldZ + z;
 
-                let height = getTerrainHeight(wx, wz);
-                let terrainType = getTerrainType(wx, wz);
+                const height = getTerrainHeight(wx, wz);
+                const terrainType = getTerrainType(wx, wz);
 
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
+                    let block = BLOCKS.AIR;
+
                     if (y === 0) {
-                        this.setBlock(x, y, z, BLOCKS.BEDROCK);
+                        block = BLOCKS.BEDROCK;
                     } else if (y < height - 4) {
-                        const block = getOreBlock(wx, y, wz);
-                        this.setBlock(x, y, z, block);
+                        block = getOreBlock(wx, y, wz);
                     } else if (y < height - 1) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.DIRT);
-                        }
+                        if (terrainType === 'sand') block = BLOCKS.SAND;
+                        else if (terrainType === 'clay') block = BLOCKS.CLAY;
+                        else if (terrainType === 'snow') block = BLOCKS.DIRT;
+                        else block = BLOCKS.DIRT;
                     } else if (y < height) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        }
+                        if (terrainType === 'sand') block = BLOCKS.SAND;
+                        else if (terrainType === 'clay') block = BLOCKS.CLAY;
+                        else if (terrainType === 'snow') block = BLOCKS.SNOW;
+                        else block = BLOCKS.GRASS;
                     } else if (y < 62) {
-                        this.setBlock(x, y, z, BLOCKS.WATER);
+                        block = BLOCKS.WATER;
+                    }
+
+                    if (block !== BLOCKS.AIR) {
+                        this.setBlock(x, y, z, block);
                     }
                 }
 
-                if (height > 65) {
+                if (height > 65 && terrainType !== 'sand') {
                     generateTree(this, x, z, height);
                 }
             }
         }
 
+        generateCaves(this);
         this.generated = true;
     }
 }
@@ -95,8 +97,14 @@ function getTerrainHeight(x, z) {
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
-    const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const temp = perlinNoise.noise2D(x * 0.015, z * 0.015);
+    const humidity = perlinNoise.noise2D(x * 0.02 + 100, z * 0.02 + 100);
+
+    if (temp < -0.4) return 'snow';
+    if (temp < -0.2) return 'grass';
+    if (temp < 0.1) return 'clay';
+    if (temp < 0.3) return 'sand';
+    if (humidity > 0.5) return 'clay';
     return 'grass';
 }
 
@@ -104,17 +112,47 @@ function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
     let ore = BLOCKS.STONE;
+    const depthFactor = 1 - (y / 256);
+
     const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
     const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
     const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
     const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
 
-    if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
-    if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
-    if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
-    if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    if (y < 160 && coalChance > 0.5 - depthFactor * 0.3) ore = BLOCKS.COAL_ORE;
+    else if (y < 120 && ironChance > 0.6 - depthFactor * 0.2) ore = BLOCKS.IRON_ORE;
+    else if (y < 80 && goldChance > 0.7 - depthFactor * 0.15) ore = BLOCKS.GOLD_ORE;
+    else if (y < 40 && diamondChance > 0.75 - depthFactor * 0.1) ore = BLOCKS.DIAMOND_ORE;
 
     return ore;
+}
+
+function generateCaves(chunk) {
+    if (!perlinNoise) return;
+
+    const worldX = chunk.x * CHUNK_SIZE;
+    const worldZ = chunk.z * CHUNK_SIZE;
+    const CHUNK_SIZE_LOCAL = 16;
+
+    for (let x = 0; x < CHUNK_SIZE_LOCAL; x++) {
+        for (let z = 0; z < CHUNK_SIZE_LOCAL; z++) {
+            for (let y = 20; y < 80; y++) {
+                const wx = worldX + x;
+                const wz = worldZ + z;
+
+                const caveNoise = perlinNoise.noise3D ?
+                    perlinNoise.noise3D(wx * 0.05, y * 0.05, wz * 0.05) :
+                    perlinNoise.noise2D(wx * 0.05 + y * 0.02, wz * 0.05 + y * 0.02);
+
+                if (caveNoise > 0.6) {
+                    const block = chunk.getBlock(x, y, z);
+                    if (block !== BLOCKS.WATER && block !== BLOCKS.BEDROCK) {
+                        chunk.setBlock(x, y, z, BLOCKS.AIR);
+                    }
+                }
+            }
+        }
+    }
 }
 
 function generateTree(chunk, x, z, height) {

@@ -3,9 +3,12 @@ import { BLOCK_NAMES } from './blocks.js';
 export class UI {
     constructor() {
         this.selectedBlock = 1;
-        this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        this.blocks = [1, 2, 3, 7, 5, 6, 15, 8, 17];
+        this.allAvailableBlocks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+        this.blockIndex = 0;
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.frameTimings = [];
         this.setupInventoryUI();
     }
 
