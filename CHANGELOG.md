@@ -1,5 +1,48 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Performance and Feature Expansion (Session 3)
+
+### Performance Improvements
+- **Optimized raycasting** with block-level stepping for better efficiency
+- **Mesh generation improvements** with Y-range culling based on player position
+- **Particle system refactoring** with object pooling and memory management
+- **Reduced draw calls** through better block face culling logic
+
+### Visual Enhancements
+- **Enhanced day/night cycle** with dynamic color transitions
+- **Improved lighting system** with better shadow mapping parameters
+- **Pulsing block outline** with yellow glow animation
+- **Better water rendering** with improved material properties (opacity, shininess)
+- **Dynamic ambient lighting** that changes with time of day
+
+### Gameplay Expansions
+- **Multi-biome terrain generation** with better distribution
+  - Grass/Meadow biomes with varied trees
+  - Forest biomes with denser tree growth
+  - Desert biomes with sand
+  - Snow biomes with different terrain
+- **New block types**:
+  - Snow blocks
+  - Ice blocks (transparent)
+  - Lava (transparent)
+  - Multiple wood types (Dark Oak, Birch logs)
+  - Spruce leaves
+- **Improved tree generation** with varied sizes in forest biomes
+- **Enhanced ore distribution** with better frequency curves
+- **Gravel layer generation** in deeper sections
+
+### Code Quality & Polish
+- **Better block transparency handling** in culling system
+- **Improved player movement physics** with normalized direction vectors
+- **Enhanced FPS counter** for more accurate frame rate reporting
+- **Debug display expansion** with player position and chunk coordinates
+- **Improved inventory UI** with block name tooltips on hover
+
+### Bug Fixes
+- Fixed transparent block rendering in mesh generation
+- Improved collision detection with better spatial checks
+- Fixed water block face rendering with other transparent blocks
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features
