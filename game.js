@@ -7,6 +7,7 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { GameStats } from './stats.js';
 
 class MinecraftGame {
     constructor() {
@@ -27,6 +28,7 @@ class MinecraftGame {
         this.audioManager = new AudioManager();
         this.debugDisplay = new DebugDisplay();
         this.blockOutline = new BlockOutline(this.scene);
+        this.stats = new GameStats();
 
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
@@ -34,6 +36,7 @@ class MinecraftGame {
         this.lastBreakSound = 0;
         this.showDebug = false;
         this.lastChunkCleanup = 0;
+        this.lastJumpCheck = false;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -41,6 +44,7 @@ class MinecraftGame {
         this.setupEventListeners();
         this.setupPickBlock();
         this.setupCanvasInteraction();
+        this.debugDisplay.setGameStats(this.stats);
         this.animate();
     }
 
@@ -133,6 +137,7 @@ class MinecraftGame {
         if (event.button === 0) {
             this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
             this.updateChunkMesh(hit.x, hit.y, hit.z);
+            this.stats.recordBlockDestroyed();
 
             const color = BLOCK_COLORS[hit.block] || 0x808080;
             this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
@@ -155,6 +160,7 @@ class MinecraftGame {
             if (!this.isPlayerOccupying(nx, ny, nz)) {
                 this.world.setBlock(nx, ny, nz, this.selectedBlockType);
                 this.updateChunkMesh(nx, ny, nz);
+                this.stats.recordBlockPlaced();
                 this.audioManager.playBlockSound('place');
             }
         }
@@ -380,6 +386,14 @@ class MinecraftGame {
 
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
+
+        const wasJumping = this.lastJumpCheck;
+        this.lastJumpCheck = !this.player.isOnGround;
+        if (!wasJumping && this.lastJumpCheck) {
+            this.stats.recordJump();
+        }
+
+        this.stats.updateDistance(this.player.position, this.player.isSprinting);
 
         const eyePos = this.player.getEyePosition();
         this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);

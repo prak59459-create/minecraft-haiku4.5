@@ -101,6 +101,17 @@ export class DebugDisplay {
             'Press H for help'
         ];
 
+        if (this.gameStats) {
+            const gs = this.gameStats.getStats();
+            lines.push('=== GAME STATS ===');
+            lines.push(`Blocks Placed: ${gs.blocksPlaced}`);
+            lines.push(`Blocks Destroyed: ${gs.blocksDestroyed}`);
+            lines.push(`Jumps: ${gs.jumps}`);
+            lines.push(`Distance: ${gs.distanceTraveled}m`);
+            lines.push(`Sprint: ${gs.sprintDistance}m`);
+            lines.push(`Session: ${gs.sessionTimeFormatted}`);
+        }
+
         this.container.innerHTML = lines.map(line => {
             if (line.startsWith('=')) return `<div>${line}</div>`;
             const parts = line.split(': ');
@@ -109,5 +120,9 @@ export class DebugDisplay {
             }
             return `<div>${line}</div>`;
         }).join('');
+    }
+
+    setGameStats(stats) {
+        this.gameStats = stats;
     }
 }
