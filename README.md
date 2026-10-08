@@ -1,230 +1,197 @@
 # Minecraft Clone - Haiku 4.5
 
-A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaScript. Experience procedural terrain generation, block destruction and placement, and an immersive 3D environment.
+A fully-featured 3D Minecraft clone built with Three.js and modern web technologies. Experience block-building gameplay with procedurally generated terrain, physics, and dynamic lighting.
 
 ## Features
 
 ### Core Gameplay
-- **WASD Movement** - Move through the world naturally
-- **Mouse Look** - Free camera control with mouse
-- **Space Jump** - Jump and gravity physics
-- **Shift Sprint/Crouch** - Sprint for speed or crouch for stealth
-- **Block Destruction** - Left-click to destroy blocks
-- **Block Placement** - Right-click to place blocks
-- **Block Selection** - Use 1-9 or scroll wheel to switch between blocks
-- **Pick Block** - Press C to pick the block you're looking at
+- **Block Building & Destruction**: Place and destroy blocks with left/right mouse clicks
+- **Procedural Terrain Generation**: Infinite terrain using Perlin noise with multiple biomes
+- **Chunk System**: Efficient chunk loading/unloading for seamless world exploration
+- **Physics & Collisions**: Realistic gravity, jumping, and collision detection
+- **Day/Night Cycle**: Dynamic lighting that changes throughout the game day
 
 ### World & Terrain
-- **Procedural Generation** - Infinite world generation using Perlin noise
-- **Multiple Biomes** - Grass, sand, and varied terrain types
-- **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
-  - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
-- **Ore Generation** - Procedural ore generation at various depths
-- **Tree Generation** - Natural tree placement in suitable terrain
+- **Multiple Biomes**: Grass, Sand, and Snow terrains with unique block types
+- **Trees**: Oak and Spruce trees with natural generation
+- **Ores**: Coal, Iron, Gold, and Diamond ores with depth-based distribution
+- **Water**: Flowing water with animated wave effects
+- **Block Variety**: 20+ different block types including decorative and building blocks
 
-### Physics & Collision
-- **Gravity System** - Realistic falling and landing
-- **Collision Detection** - Precise player-block collision detection
-- **Raycasting** - Accurate block selection and targeting
-- **Block Highlight** - Visual feedback for the block you're looking at
+### Player & Controls
+
+#### Movement
+- **WASD**: Move forward, backward, left, right
+- **Mouse**: Look around (click to lock pointer)
+- **Space**: Jump
+- **Shift**: Sprint or crouch (toggle with Control key)
+
+#### Building & Interaction
+- **Left-Click**: Destroy blocks
+- **Right-Click**: Place blocks
+- **1-9 or Scroll Wheel**: Select blocks from inventory
+- **C**: Pick block (copy block you're looking at)
+
+#### UI & Debug
+- **H**: Toggle help menu
+- **F3**: Toggle debug display (coordinates, FPS, etc.)
+- **ESC**: Unlock cursor (in most browsers)
 
 ### Visual Features
-- **3D Voxel Rendering** - Full 3D block-based world
-- **Dynamic Lighting** - Sun and ambient lighting system
-- **Day/Night Cycle** - Real-time sky color transitions
-- **Particle Effects** - Block destruction particles
-- **Water Rendering** - Semi-transparent water with proper face culling
+- **Dynamic Lighting**: Realistic lighting with height-based brightness
+- **Fog Effect**: Atmospheric fog for better depth perception
+- **Particle Effects**: Block break particles with physics
+- **Block Outline**: Visual highlight of targeted block
+- **Smooth Shading**: Optimized geometry rendering
+- **HUD Display**: Real-time coordinates, FPS, and selected block info
 
-### Audio
-- **Procedural Sound Effects**:
-  - Block break sounds
-  - Block place sounds
-  - Jump sounds (prepared)
-  - Step sounds (prepared)
-- **Web Audio API** - Dynamic audio generation
+### Available Blocks
+1. Stone
+2. Grass
+3. Dirt
+4. Cobblestone
+5. Oak Log
+6. Oak Leaves
+7. Sand
+8. Water
+9. Gravel
+10. Bedrock
+11. Coal Ore
+12. Iron Ore
+13. Gold Ore
+14. Diamond Ore
+15. Bricks
+16. Glass
+17. Clay
+18. Snow
+19. Spruce Log
+20. Spruce Leaves
 
-### User Interface
-- **HUD Display** - Real-time coordinates, FPS, and block info
-- **Block Inventory** - Visual block selector with 9 slots
-- **Crosshair** - Center screen targeting reticle
-- **Help Panel** - In-game control instructions (Press H)
+## Performance Optimizations
 
-### Performance Optimization
-- **Chunk-based Rendering** - Only visible chunks are rendered
-- **Indexed Geometry** - Efficient mesh generation with indices
-- **Vertex Colors** - Per-vertex coloring for variations
-- **Memory Management** - Automatic chunk cleanup for distant areas
+- **GPU-Accelerated Rendering**: High-performance Three.js rendering
+- **Chunk Mesh Caching**: Dirty flag system prevents unnecessary mesh regeneration
+- **Memory Management**: Proper geometry and material disposal
+- **Fog Culling**: Atmospheric fog improves far-distance performance
+- **Optimized Materials**: Flat shading and efficient vertex colors
+- **Frustum Culling**: Only renders visible chunks
 
-## Controls
+## Technical Details
 
-| Key | Action |
-|-----|--------|
-| **W** | Move Forward |
-| **A** | Move Left |
-| **S** | Move Backward |
-| **D** | Move Right |
-| **Space** | Jump |
-| **Shift** | Sprint / Crouch |
-| **Mouse** | Look Around (Click to enable) |
-| **Left-Click** | Destroy Block |
-| **Right-Click** | Place Block |
-| **1-9** | Select Block Slot |
-| **Scroll Wheel** | Change Selected Block |
-| **C** | Pick Block (Pick the block you're looking at) |
-| **H** | Toggle Help |
-| **F3** | Toggle Debug Info |
+### Technologies
+- **Three.js**: 3D WebGL rendering
+- **Simplex Noise**: Procedural terrain generation
+- **JavaScript ES Modules**: Modern modular code structure
+
+### Architecture
+- **Game Engine**: Main game loop and rendering system (game.js)
+- **World Management**: Chunk system and block management (world.js)
+- **Player Physics**: Movement, collision, and camera control (player.js)
+- **Visual Systems**: Particles, water, UI, and debug display
+- **Audio System**: Sound effects for blocks and actions
+
+### Project Structure
+```
+minecraft-haiku4.5/
+├── index.html          # Main HTML file
+├── style.css           # UI styling
+├── game.js             # Main game engine
+├── world.js            # World and chunk management
+├── player.js           # Player movement and physics
+├── blocks.js           # Block definitions and properties
+├── particles.js        # Particle system
+├── water.js            # Water rendering
+├── audio.js            # Audio management
+├── ui.js               # User interface
+├── debug.js            # Debug display
+├── blockoutline.js     # Block selection outline
+├── config.js           # Configuration system
+└── package.json        # Project metadata
+```
 
 ## Getting Started
 
 ### Prerequisites
-- A modern web browser (Chrome, Firefox, Safari, Edge)
-- Python 3 (for local server)
+- Modern web browser with WebGL support
+- Python 3 (for running local server)
 
-### Installation
+### Installation & Running
 
-1. Clone the repository:
-```bash
-git clone https://github.com/prak59459-create/minecraft-haiku4.5.git
-cd minecraft-haiku4.5
-```
+1. Clone or download the repository
+2. Navigate to the project directory
+3. Start a local web server:
+   ```bash
+   python -m http.server 8000
+   ```
+4. Open your browser and navigate to `http://localhost:8000`
 
-2. Start a local server:
-```bash
-python -m http.server 8000
-```
+### Configuration
 
-3. Open in your browser:
-```
-http://localhost:8000
-```
+Edit `config.json` or `config.js` to customize:
+- Render distance (default: 8 chunks)
+- Player movement speed
+- Graphics quality
+- Audio settings
+- World terrain parameters
 
-## How to Play
+## Tips & Tricks
 
-1. **Explore** - Walk around and explore the procedurally generated world
-2. **Gather Blocks** - Left-click to destroy blocks and collect them
-3. **Build** - Select a block from your inventory (1-9 keys) and right-click to place it
-4. **Navigate** - Use WASD to move and mouse to look around
-5. **Survive** - Manage gravity and avoid falling into water or off cliffs
+- **Efficient Building**: Use number keys for quick block selection
+- **Exploring**: Use Shift to sprint and cover terrain faster
+- **Building High**: Hold space while moving forward to climb blocks
+- **Block Picking**: Press C while looking at a block to select it
+- **Performance**: Reduce render distance if experiencing lag
 
-## Technical Details
+## Browser Compatibility
 
-### Architecture
+Works best in:
+- Chrome/Chromium 90+
+- Firefox 88+
+- Edge 90+
+- Safari 14+
 
-```
-game.js          - Main game loop and rendering
-world.js         - Terrain generation and chunk management
-player.js        - Player physics and controls
-blocks.js        - Block definitions and properties
-ui.js            - User interface management
-particles.js     - Particle effects system
-water.js         - Water rendering system
-audio.js         - Sound effects generation
-```
+Requires WebGL 2.0 support for optimal performance.
 
-### Technologies Used
+## Known Limitations
 
-- **Three.js** - 3D WebGL rendering
-- **SimplexNoise** - Procedural terrain generation
-- **Web Audio API** - Dynamic sound generation
-- **Vanilla JavaScript** - Core game logic
-- **HTML5/CSS3** - UI and styling
+- Single-player only (no multiplayer)
+- No inventory management UI (uses fixed slots)
+- Limited block types compared to Minecraft
+- No redstone, mobs, or crafting systems
+- No save/load functionality
 
-### Performance
+## Future Improvements
 
-- Renders 8-chunk radius around player
-- Optimized mesh generation with indexed geometry
-- Dynamic lighting updates for day/night cycle
-- Particle system for visual effects
-- ~60 FPS on modern hardware
+- [ ] Inventory management system
+- [ ] Crafting recipes
+- [ ] More decorative blocks
+- [ ] Cave generation
+- [ ] Mob spawning and AI
+- [ ] Block damage/durability
+- [ ] Falling sand/water physics
+- [ ] Enhanced texturing system
+- [ ] Performance profiling tools
 
-## Game Design
+## Performance Benchmarks
 
-### Terrain Generation
-
-The world uses multi-octave Perlin noise for natural-looking terrain:
-- Large scale features for mountains and valleys
-- Medium scale for terrain variation
-- Small scale for detail and randomness
-
-### Biomes
-
-- **Grass Biome** - Natural terrain with trees and water
-- **Sand Biome** - Desert-like areas with sand blocks
-
-### Ore Distribution
-
-- **Coal Ore** - Common, up to height 160
-- **Iron Ore** - Medium frequency, up to height 120
-- **Gold Ore** - Rare, up to height 80
-- **Diamond Ore** - Very rare, up to height 40
-
-## Development
-
-### Code Structure
-
-- **Modular Design** - Each system in its own file
-- **Clean Separation** - Game logic, rendering, and physics separate
-- **Extensible** - Easy to add new block types or biomes
-
-### Future Enhancements
-
-- [ ] Inventory UI with multiple stacks
-- [ ] Creative mode with unlimited blocks
-- [ ] Survival mode with health/hunger
-- [ ] Multiplayer support
-- [ ] Texture mapping for blocks
-- [ ] Advanced weather systems
-- [ ] More biome types
-- [ ] Mob system
-- [ ] Crafting system
-
-## Performance Tips
-
-1. **Reduce Render Distance** - Modify `renderDistance` in game.js for better FPS
-2. **Lower Chunk Size** - Reduce `CHUNK_SIZE` for faster loading
-3. **Disable Shadows** - Comment out shadow mapping for faster rendering
-4. **Use Fullscreen** - Better GPU acceleration in fullscreen mode
-
-## Troubleshooting
-
-### Low FPS
-- Reduce render distance in game.js
-- Close other browser tabs
-- Update graphics drivers
-- Use a modern browser (Chrome or Firefox recommended)
-
-### Blocks Not Rendering
-- Reload the page
-- Check browser console for errors
-- Ensure JavaScript is enabled
-- Try a different browser
-
-### No Sound
-- Check browser audio permissions
-- Enable audio in browser settings
-- Try different browser
-- Check volume settings
+- **Target FPS**: 60 FPS on modern hardware
+- **Render Distance**: 8-16 chunks (adjustable)
+- **Chunk Size**: 16x256x16 blocks
+- **Memory Usage**: Varies with render distance (100-500 MB typical)
 
 ## Credits
 
-Built with:
-- Three.js (https://threejs.org/)
-- SimplexNoise (https://github.com/jwagner/simplex-noise.js)
-
-Inspired by Minecraft (© Mojang Studios)
+Built with Claude Haiku 4.5 using Three.js and Simplex Noise libraries.
 
 ## License
 
-MIT License - Feel free to use, modify, and distribute
+MIT License - Feel free to use, modify, and distribute this project.
 
-## Contributing
+## Support
 
-Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests.
+For issues, questions, or suggestions, please check the project repository or documentation.
 
-## Author
+---
 
-Claude Haiku 4.5 - AI Assistant by Anthropic
+**Last Updated**: October 2026
+**Version**: 1.0.0
