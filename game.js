@@ -94,13 +94,17 @@ class MinecraftGame {
                     this.selectedBlockType = hit.block;
                 }
             }
-            if (e.key === 'F3') {
+            if (e.key === 'F3' || e.key === 'F3') {
                 e.preventDefault();
                 this.showDebug = !this.showDebug;
                 this.debugDisplay.toggle();
             }
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
+            }
+            if (e.key === 'Escape') {
+                document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+                document.exitPointerLock();
             }
         });
     }
