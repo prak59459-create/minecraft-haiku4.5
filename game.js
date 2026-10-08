@@ -14,14 +14,22 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
+            powerPreference: 'high-performance',
+            precision: 'highp'
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+        this.renderer.shadowMap.autoUpdate = true;
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.toneMapping = THREE.ReinhardToneMapping;
+        this.renderer.toneMappingExposure = 1.0;
 
-        this.world = new World();
+        this.world = new World(14);
         this.player = new Player(this.world);
         this.gameCamera = new Camera();
         this.ui = new UI();
@@ -321,10 +329,13 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const renderDistance = 10;
+        const unloadDistance = 14;
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (Math.abs(cx - playerChunkX) > unloadDistance || Math.abs(cz - playerChunkZ) > unloadDistance) {
                 if (this.chunkMeshes.has(key)) {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
@@ -332,12 +343,18 @@ class MinecraftGame {
                 continue;
             }
 
-            if (!this.chunkMeshes.has(key)) {
-                const mesh = this.buildChunkMesh(chunk);
-                if (mesh) {
-                    this.scene.add(mesh);
-                    this.chunkMeshes.set(key, mesh);
+            const distance = Math.max(Math.abs(cx - playerChunkX), Math.abs(cz - playerChunkZ));
+            if (distance <= renderDistance) {
+                if (!this.chunkMeshes.has(key)) {
+                    const mesh = this.buildChunkMesh(chunk);
+                    if (mesh) {
+                        this.scene.add(mesh);
+                        this.chunkMeshes.set(key, mesh);
+                    }
                 }
+            } else if (this.chunkMeshes.has(key)) {
+                this.scene.remove(this.chunkMeshes.get(key));
+                this.chunkMeshes.delete(key);
             }
         }
     }

@@ -32,6 +32,9 @@ export class Player {
         this.lastStepZ = this.position.z;
         this.stepDistance = 0.5;
 
+        this.inWater = false;
+        this.waterDamageTimer = 0;
+
         this.keys = {};
         this.setupKeyboardControls();
     }
