@@ -456,4 +456,20 @@ class MinecraftGame {
     }
 }
 
-const game = new MinecraftGame();
+window.addEventListener('load', () => {
+    try {
+        window.game = new MinecraftGame();
+        console.log('Minecraft clone initialized successfully');
+    } catch (error) {
+        console.error('Failed to initialize game:', error);
+        alert('Failed to initialize game. Please check console for details.');
+    }
+});
+
+window.addEventListener('error', (event) => {
+    console.error('Global error:', event.error);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled promise rejection:', event.reason);
+});

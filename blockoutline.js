@@ -2,29 +2,43 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
-        this.createOutlineMaterial();
+        this.time = 0;
+        this.createOutlineMaterials();
     }
 
-    createOutlineMaterial() {
-        this.material = new THREE.LineBasicMaterial({
+    createOutlineMaterials() {
+        this.materialBreakable = new THREE.LineBasicMaterial({
             color: 0xFFFFFF,
             linewidth: 2,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9
+        });
+
+        this.materialUnbreakable = new THREE.LineBasicMaterial({
+            color: 0xFF6B6B,
+            linewidth: 2,
+            transparent: true,
+            opacity: 0.7
         });
     }
 
-    setSelectedBlock(x, y, z) {
+    setSelectedBlock(x, y, z, material) {
         if (this.outline) {
             this.scene.remove(this.outline);
+            if (this.outline.geometry) {
+                this.outline.geometry.dispose();
+            }
         }
 
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
 
+        const offset = 0.01;
         const positions = [
-            [x, y, z], [x + 1, y, z], [x + 1, y + 1, z], [x, y + 1, z],
-            [x, y, z + 1], [x + 1, y, z + 1], [x + 1, y + 1, z + 1], [x, y + 1, z + 1]
+            [x - offset, y - offset, z - offset], [x + 1 + offset, y - offset, z - offset],
+            [x + 1 + offset, y + 1 + offset, z - offset], [x - offset, y + 1 + offset, z - offset],
+            [x - offset, y - offset, z + 1 + offset], [x + 1 + offset, y - offset, z + 1 + offset],
+            [x + 1 + offset, y + 1 + offset, z + 1 + offset], [x - offset, y + 1 + offset, z + 1 + offset]
         ];
 
         const edges = [
@@ -41,20 +55,28 @@ export class BlockOutline {
 
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
 
-        this.outline = new THREE.LineSegments(geometry, this.material);
+        this.outline = new THREE.LineSegments(geometry, material);
+        this.outline.renderOrder = 1;
         this.scene.add(this.outline);
     }
 
     clear() {
         if (this.outline) {
             this.scene.remove(this.outline);
+            if (this.outline.geometry) {
+                this.outline.geometry.dispose();
+            }
             this.outline = null;
         }
     }
 
     update(raycastHit) {
+        this.time += 0.016;
+
         if (raycastHit && raycastHit.block !== 0) {
-            this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z);
+            const isBreakable = raycastHit.block !== 10;
+            const material = isBreakable ? this.materialBreakable : this.materialUnbreakable;
+            this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z, material);
         } else {
             this.clear();
         }
