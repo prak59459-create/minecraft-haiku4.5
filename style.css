@@ -74,15 +74,22 @@ body {
     font-weight: bold;
 }
 
-#inventory {
+#inventory-container {
     position: absolute;
-    bottom: 20px;
+    bottom: 15px;
     left: 50%;
     transform: translateX(-50%);
-    display: flex;
-    gap: 5px;
     pointer-events: auto;
     z-index: 10;
+}
+
+#inventory {
+    display: flex;
+    gap: 6px;
+    background: rgba(20, 20, 20, 0.4);
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(100, 100, 100, 0.3);
 }
 
 .inventory-slot {
@@ -138,35 +145,38 @@ body {
 
 #help {
     position: absolute;
-    bottom: 75px;
+    bottom: 90px;
     left: 50%;
     transform: translateX(-50%) scale(0.9);
-    background: rgba(0, 0, 0, 0.85);
-    color: rgba(255, 255, 255, 0.9);
-    padding: 14px 20px;
-    border-radius: 6px;
+    background: rgba(10, 10, 10, 0.92);
+    color: rgba(220, 220, 220, 0.95);
+    padding: 16px 24px;
+    border-radius: 8px;
     font-size: 12px;
     text-align: center;
     pointer-events: none;
     opacity: 0;
     transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
-    border: 1px solid rgba(100, 200, 255, 0.4);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(100, 200, 255, 0.5);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8);
+    max-width: 600px;
 }
 
 #help.show {
     opacity: 1;
     transform: translateX(-50%) scale(1);
+    pointer-events: auto;
 }
 
 #help p {
-    margin: 5px 0;
-    letter-spacing: 0.3px;
+    margin: 8px 0;
+    letter-spacing: 0.2px;
+    line-height: 1.5;
 }
 
 #help strong {
-    color: rgba(100, 200, 255, 1);
-    font-weight: 600;
+    color: rgba(120, 200, 255, 1);
+    font-weight: 700;
 }
 
 @media (max-width: 768px) {
