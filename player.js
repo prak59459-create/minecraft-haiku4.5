@@ -169,15 +169,20 @@ export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
+        this.minSensitivity = 0.001;
+        this.maxSensitivity = 0.01;
         this.setupMouseControls();
+        this.setupSensitivityControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+            if (document.pointerLockElement === document.body) {
+                this.rotation.y -= e.movementX * this.mouseSensitivity;
+                this.rotation.x -= e.movementY * this.mouseSensitivity;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+                this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            }
         });
 
         document.addEventListener('click', () => {
@@ -185,10 +190,26 @@ export class Camera {
                 document.body.requestPointerLock();
             }
         });
+
+        document.addEventListener('contextmenu', (e) => {
+            if (document.pointerLockElement === document.body) {
+                e.preventDefault();
+            }
+        });
     }
 
     updateFromPlayer(player) {
         player.rotation.x = this.rotation.x;
         player.rotation.y = this.rotation.y;
+    }
+
+    setupSensitivityControls() {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '[') {
+                this.mouseSensitivity = Math.max(this.minSensitivity, this.mouseSensitivity - 0.0005);
+            } else if (e.key === ']') {
+                this.mouseSensitivity = Math.min(this.maxSensitivity, this.mouseSensitivity + 0.0005);
+            }
+        });
     }
 }

@@ -112,6 +112,7 @@ class MinecraftGame {
                 this.lastBreakSound = now;
             }
         } else if (event.button === 2) {
+            event.preventDefault();
             const norm = hit.normal;
             const nx = hit.x + norm.x;
             const ny = hit.y + norm.y;
@@ -121,6 +122,23 @@ class MinecraftGame {
                 this.world.setBlock(nx, ny, nz, this.selectedBlockType);
                 this.updateChunkMesh(nx, ny, nz);
                 this.audioManager.playBlockSound('place');
+            }
+        } else if (event.button === 1) {
+            event.preventDefault();
+            if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
+                this.selectedBlockType = hit.block;
+                this.ui.blocks = [this.selectedBlockType, 2, 3, 4, 5, 6, 7, 8, 9, 15, 16, 17, 18];
+                const slots = document.querySelectorAll('.inventory-slot');
+                slots.forEach((slot, idx) => {
+                    slot.classList.remove('selected');
+                    if (idx === 0) {
+                        slot.dataset.block = this.selectedBlockType;
+                        slot.classList.add('selected');
+                        const color = BLOCK_COLORS[this.selectedBlockType];
+                        const c = new THREE.Color(color);
+                        slot.querySelector('.slot-block').style.backgroundColor = `rgb(${Math.floor(c.r * 255)}, ${Math.floor(c.g * 255)}, ${Math.floor(c.b * 255)})`;
+                    }
+                });
             }
         }
     }
@@ -204,6 +222,7 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
+        const colorCache = new Map();
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -215,12 +234,19 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const color = new THREE.Color(BLOCK_COLORS[blockId]);
+                    const colorKey = blockId;
+                    let color;
+                    if (colorCache.has(colorKey)) {
+                        color = colorCache.get(colorKey).clone();
+                    } else {
+                        color = new THREE.Color(BLOCK_COLORS[blockId]);
+                        colorCache.set(colorKey, color);
+                    }
 
                     const baseLight = 0.7;
                     const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.08;
+                    const brightness = Math.max(0.3, baseLight + heightLight + varLight);
 
                     color.multiplyScalar(brightness);
 
@@ -242,13 +268,15 @@ class MinecraftGame {
                 wireframe: false,
                 flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 20,
-                fog: true
+                shininess: 15,
+                fog: true,
+                wireframe: false
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
             mesh.frustumCulled = true;
+            mesh.position.copy({ x: 0, y: 0, z: 0 });
             return mesh;
         }
 
@@ -281,9 +309,13 @@ class MinecraftGame {
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
-            for (const [vx, vy, vz] of face.verts) {
+            const faceAO = this.calculateAmbientOcclusion(x, y, z, dx, dy, dz);
+
+            for (let i = 0; i < face.verts.length; i++) {
+                const [vx, vy, vz] = face.verts[i];
+                const ao = faceAO[i] || 1.0;
                 vertices.push(x + vx, y + vy, z + vz);
-                colors.push(r, g, b);
+                colors.push(Math.floor(r * ao), Math.floor(g * ao), Math.floor(b * ao));
             }
 
             indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -292,6 +324,11 @@ class MinecraftGame {
         }
 
         return faceCount > 0;
+    }
+
+    calculateAmbientOcclusion(x, y, z, dx, dy, dz) {
+        const ao = [1.0, 1.0, 1.0, 1.0];
+        return ao;
     }
 
     updateVisibleChunks() {

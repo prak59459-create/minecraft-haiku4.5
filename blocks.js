@@ -86,7 +86,8 @@ export const SOLID_BLOCKS = new Set([
 
 export const TRANSPARENT_BLOCKS = new Set([
     BLOCKS.WATER,
-    BLOCKS.OAK_LEAVES
+    BLOCKS.OAK_LEAVES,
+    BLOCKS.GLASS
 ]);
 
 export const LIGHT_EMITTING = new Set([]);
