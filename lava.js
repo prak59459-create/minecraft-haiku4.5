@@ -1,14 +1,14 @@
-import { BLOCKS, isBlockSolid } from './blocks.js';
+import { BLOCKS } from './blocks.js';
 
-export class WaterRenderer {
+export class LavaRenderer {
     constructor(scene, world) {
         this.scene = scene;
         this.world = world;
-        this.waterMeshes = new Map();
+        this.lavaMeshes = new Map();
         this.time = 0;
     }
 
-    buildWaterMesh(chunk) {
+    buildLavaMesh(chunk) {
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
         const colors = [];
@@ -16,13 +16,13 @@ export class WaterRenderer {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x3D7BC2);
+        const lavaColor = new THREE.Color(0xFF6B00);
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
                     const blockId = chunk.getBlock(x, y, z);
-                    if (blockId !== BLOCKS.WATER) continue;
+                    if (blockId !== BLOCKS.LAVA) continue;
 
                     const wx = chunk.x * CHUNK_SIZE + x;
                     const wy = y;
@@ -45,11 +45,11 @@ export class WaterRenderer {
                         const [dx, dy, dz] = face.dir;
                         const neighborBlock = neighbor(dx, dy, dz);
 
-                        if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
+                        if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.LAVA) continue;
 
                         const startIndex = vertices.length / 3;
-                        const brightness = 0.85 + Math.sin(wx * 0.1 + wz * 0.1) * 0.1;
-                        const color = waterColor.clone().multiplyScalar(brightness);
+                        const glow = 0.8 + Math.sin(wx * 0.2 + this.time) * 0.2;
+                        const color = lavaColor.clone().multiplyScalar(glow);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
@@ -73,18 +73,13 @@ export class WaterRenderer {
             geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             geometry.computeVertexNormals();
 
-            const material = new THREE.MeshPhongMaterial({
+            const material = new THREE.MeshBasicMaterial({
                 vertexColors: true,
                 wireframe: false,
-                transparent: true,
-                opacity: 0.7,
-                side: THREE.DoubleSide,
-                shininess: 60,
-                reflectivity: 0.8
+                side: THREE.FrontSide
             });
 
             const mesh = new THREE.Mesh(geometry, material);
-            mesh.receiveShadow = true;
             return mesh;
         }
 
