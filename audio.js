@@ -3,40 +3,61 @@ export class AudioManager {
         this.audioContext = null;
         this.initialized = false;
         this.soundCache = new Map();
+        this.masterVolume = 0.3;
         this.initAudioContext();
     }
 
     initAudioContext() {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.audioContext = audioContext;
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.audioContext = audioContext;
+        } catch (e) {
+            console.warn('AudioContext not supported');
+        }
     }
 
-    playBlockSound(type = 'break') {
+    playBlockSound(type = 'break', blockType = null) {
         if (!this.audioContext) return;
 
         const audioContext = this.audioContext;
         const now = audioContext.currentTime;
+
+        if (type === 'break') {
+            this.playBreakSound(audioContext, now);
+        } else if (type === 'place') {
+            this.playPlaceSound(audioContext, now);
+        }
+    }
+
+    playBreakSound(audioContext, now) {
         const osc = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
 
         osc.connect(gainNode);
         gainNode.connect(audioContext.destination);
 
-        if (type === 'break') {
-            osc.frequency.setValueAtTime(400, now);
-            osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-            gainNode.gain.setValueAtTime(0.2, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-            osc.start(now);
-            osc.stop(now + 0.1);
-        } else if (type === 'place') {
-            osc.frequency.setValueAtTime(600, now);
-            osc.frequency.exponentialRampToValueAtTime(200, now + 0.08);
-            gainNode.gain.setValueAtTime(0.15, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-            osc.start(now);
-            osc.stop(now + 0.08);
-        }
+        const freq = 300 + Math.random() * 200;
+        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.12);
+        gainNode.gain.setValueAtTime(this.masterVolume * 0.6, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+        osc.start(now);
+        osc.stop(now + 0.12);
+    }
+
+    playPlaceSound(audioContext, now) {
+        const osc = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        osc.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(250, now + 0.1);
+        gainNode.gain.setValueAtTime(this.masterVolume * 0.5, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
     }
 
     playJumpSound() {
