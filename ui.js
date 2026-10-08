@@ -22,6 +22,14 @@ export class UI {
             const num = parseInt(e.key);
             if (num >= 1 && num <= 9) {
                 this.selectBlock(num - 1);
+            } else if (e.key.toLowerCase() === 'g') {
+                this.selectBlock(9);
+            } else if (e.key.toLowerCase() === 'o') {
+                this.selectBlock(10);
+            } else if (e.key.toLowerCase() === 'b') {
+                this.selectBlock(11);
+            } else if (e.key.toLowerCase() === 'm') {
+                this.selectBlock(12);
             }
         });
 
@@ -29,16 +37,17 @@ export class UI {
             e.preventDefault();
             const direction = e.deltaY > 0 ? 1 : -1;
             let newIndex = this.selectedBlock + direction;
-            if (newIndex < 0) newIndex = 8;
-            if (newIndex > 8) newIndex = 0;
+            const maxSlots = Math.min(13, slots.length - 1);
+            if (newIndex < 0) newIndex = maxSlots;
+            if (newIndex > maxSlots) newIndex = 0;
             this.selectBlock(newIndex);
         }, { passive: false });
     }
 
     selectBlock(index) {
-        if (index < 0 || index > 8) return;
-
         const slots = document.querySelectorAll('.inventory-slot');
+        if (index < 0 || index >= slots.length) return;
+
         slots.forEach(slot => slot.classList.remove('selected'));
         slots[index].classList.add('selected');
 
