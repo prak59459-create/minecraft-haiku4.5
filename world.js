@@ -42,31 +42,27 @@ export class Chunk {
                 const wx = worldX + x;
                 const wz = worldZ + z;
 
-                let height = getTerrainHeight(wx, wz);
-                let terrainType = getTerrainType(wx, wz);
+                const height = getTerrainHeight(wx, wz);
+                const terrainType = getTerrainType(wx, wz);
+                const isSand = terrainType === 'sand';
 
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
+                    let block = BLOCKS.AIR;
+
                     if (y === 0) {
-                        this.setBlock(x, y, z, BLOCKS.BEDROCK);
+                        block = BLOCKS.BEDROCK;
                     } else if (y < height - 4) {
-                        const block = getOreBlock(wx, y, wz);
-                        this.setBlock(x, y, z, block);
+                        block = getOreBlock(wx, y, wz);
                     } else if (y < height - 1) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.DIRT);
-                        }
+                        block = isSand ? BLOCKS.SAND : BLOCKS.DIRT;
                     } else if (y < height) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        }
+                        block = isSand ? BLOCKS.SAND : BLOCKS.GRASS;
                     } else if (y < 62) {
-                        this.setBlock(x, y, z, BLOCKS.WATER);
+                        block = BLOCKS.WATER;
+                    }
+
+                    if (block !== BLOCKS.AIR) {
+                        this.setBlock(x, y, z, block);
                     }
                 }
 
