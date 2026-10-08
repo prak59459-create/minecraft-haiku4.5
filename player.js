@@ -6,7 +6,9 @@ const PLAYER_SPEED = 0.1;
 const PLAYER_SPRINT_SPEED = 0.15;
 const PLAYER_CROUCH_SPEED = 0.05;
 const GRAVITY = 0.02;
+const WATER_GRAVITY = 0.008;
 const JUMP_POWER = 0.5;
+const WATER_JUMP_POWER = 0.3;
 
 export class Player {
     constructor(world) {
@@ -19,6 +21,7 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.isInWater = false;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -30,8 +33,9 @@ export class Player {
 
             if (e.key === ' ') {
                 e.preventDefault();
-                if (this.isOnGround) {
-                    this.velocity.y = JUMP_POWER;
+                const jumpPower = this.isInWater ? WATER_JUMP_POWER : JUMP_POWER;
+                if (this.isOnGround || this.isInWater) {
+                    this.velocity.y = jumpPower;
                     this.isOnGround = false;
                     if (this.onJump) this.onJump();
                 }
@@ -54,11 +58,12 @@ export class Player {
         let moveZ = 0;
 
         const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const waterSpeedMult = this.isInWater ? 0.6 : 1.0;
 
-        if (this.keys['w']) moveZ -= speed;
-        if (this.keys['s']) moveZ += speed;
-        if (this.keys['a']) moveX -= speed;
-        if (this.keys['d']) moveX += speed;
+        if (this.keys['w']) moveZ -= speed * waterSpeedMult;
+        if (this.keys['s']) moveZ += speed * waterSpeedMult;
+        if (this.keys['a']) moveX -= speed * waterSpeedMult;
+        if (this.keys['d']) moveX += speed * waterSpeedMult;
 
         const cosY = Math.cos(this.rotation.y);
         const sinY = Math.sin(this.rotation.y);
@@ -66,13 +71,15 @@ export class Player {
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
 
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']) && !this.isInWater;
         this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
     }
 
     applyPhysics() {
+        const gravity = this.isInWater ? WATER_GRAVITY : GRAVITY;
+
         if (!this.isOnGround) {
-            this.velocity.y -= GRAVITY;
+            this.velocity.y -= gravity;
         }
 
         this.position.x += this.velocity.x;
@@ -85,6 +92,7 @@ export class Player {
         const height = PLAYER_HEIGHT;
 
         this.isOnGround = false;
+        this.isInWater = false;
 
         const checkPoints = [
             { dy: 0.1, radius: radius * 0.9 },
@@ -100,7 +108,10 @@ export class Player {
                 const cz = this.position.z + Math.sin(angle) * point.radius;
 
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
-                if (isBlockSolid(block)) {
+
+                if (block === BLOCKS.WATER) {
+                    this.isInWater = true;
+                } else if (isBlockSolid(block)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
                     if (moveLen > 0) {
                         const scale = 1.5 / moveLen;
@@ -119,7 +130,8 @@ export class Player {
                 const cy = this.position.y - 0.01;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.8;
 
-                if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
+                const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
+                if (isBlockSolid(block)) {
                     onGround = true;
                     break;
                 }
