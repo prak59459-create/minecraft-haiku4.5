@@ -155,9 +155,27 @@ class MinecraftGame {
         const px = this.player.position.x;
         const py = this.player.position.y;
         const pz = this.player.position.z;
+        const playerRadius = 0.3;
+        const playerHeight = 1.8;
 
-        return (Math.abs(px - x) < 0.6 && Math.abs(py - y) < 1.8 && Math.abs(pz - z) < 0.6) ||
-               (Math.abs(px - x) < 0.6 && Math.abs(py - y - 1) < 1.8 && Math.abs(pz - z) < 0.6);
+        // Check if block position overlaps with player collision box
+        const blockMinX = x;
+        const blockMaxX = x + 1;
+        const blockMinY = y;
+        const blockMaxY = y + 1;
+        const blockMinZ = z;
+        const blockMaxZ = z + 1;
+
+        const playerMinX = px - playerRadius;
+        const playerMaxX = px + playerRadius;
+        const playerMinY = py;
+        const playerMaxY = py + playerHeight;
+        const playerMinZ = pz - playerRadius;
+        const playerMaxZ = pz + playerRadius;
+
+        return blockMinX < playerMaxX && blockMaxX > playerMinX &&
+               blockMinY < playerMaxY && blockMaxY > playerMinY &&
+               blockMinZ < playerMaxZ && blockMaxZ > playerMinZ;
     }
 
     raycastBlock() {

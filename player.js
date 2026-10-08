@@ -207,8 +207,10 @@ export class Camera {
         document.addEventListener('keydown', (e) => {
             if (e.key === '[') {
                 this.mouseSensitivity = Math.max(this.minSensitivity, this.mouseSensitivity - 0.0005);
+                console.log(`Mouse Sensitivity: ${(this.mouseSensitivity * 1000).toFixed(2)}`);
             } else if (e.key === ']') {
                 this.mouseSensitivity = Math.min(this.maxSensitivity, this.mouseSensitivity + 0.0005);
+                console.log(`Mouse Sensitivity: ${(this.mouseSensitivity * 1000).toFixed(2)}`);
             }
         });
     }
