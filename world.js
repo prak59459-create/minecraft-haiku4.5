@@ -87,6 +87,10 @@ export class Chunk {
                             this.setBlock(x, y, z, BLOCKS.SAND);
                         } else if (terrainType === 'snow') {
                             this.setBlock(x, y, z, BLOCKS.COBBLESTONE);
+                        } else if (terrainType === 'mountain') {
+                            this.setBlock(x, y, z, BLOCKS.STONE);
+                        } else if (terrainType === 'jungle') {
+                            this.setBlock(x, y, z, BLOCKS.GRASS);
                         } else if (terrainType === 'grass' || terrainType === 'forest') {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         } else {
@@ -97,7 +101,7 @@ export class Chunk {
                     }
                 }
 
-                if (height > 65 && (terrainType === 'grass' || terrainType === 'forest')) {
+                if (height > 65 && (terrainType === 'grass' || terrainType === 'forest' || terrainType === 'jungle')) {
                     generateTree(this, x, z, height, terrainType);
                 }
             }
@@ -124,11 +128,14 @@ function getTerrainType(x, z) {
 
     const temp = perlinNoise.noise2D(x * 0.015, z * 0.015);
     const humidity = perlinNoise.noise2D(x * 0.02 + 100, z * 0.02 + 100);
+    const elevation = perlinNoise.noise2D(x * 0.01, z * 0.01);
 
-    if (temp < -0.4) return 'snow';
-    if (temp > 0.5 && humidity < -0.2) return 'desert';
-    if (humidity > 0.3) return 'forest';
-    if (temp > 0.3) return 'sand';
+    if (temp < -0.5) return 'snow';
+    if (temp < -0.3 && elevation > 0.2) return 'mountain';
+    if (temp > 0.6 && humidity < -0.3) return 'desert';
+    if (temp > 0.4 && humidity > 0.4) return 'jungle';
+    if (humidity > 0.35) return 'forest';
+    if (temp > 0.2) return 'sand';
     return 'grass';
 }
 
@@ -159,13 +166,20 @@ function generateTree(chunk, x, z, height, terrainType = 'grass') {
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
 
     if (terrainType === 'forest' && treeChance < 0.3) return;
-    if (terrainType !== 'forest' && treeChance < 0.6) return;
+    if (terrainType === 'jungle' && treeChance < 0.1) return;
+    if (!(terrainType === 'forest' || terrainType === 'jungle') && treeChance < 0.6) return;
 
-    const trunkHeight = terrainType === 'forest' ? 5 + Math.floor(Math.random() * 5) : 4 + Math.floor(Math.random() * 4);
+    const trunkHeight = terrainType === 'jungle' ? 6 + Math.floor(Math.random() * 8) :
+                        terrainType === 'forest' ? 5 + Math.floor(Math.random() * 5) :
+                        4 + Math.floor(Math.random() * 4);
     const y = height;
 
-    const logType = terrainType === 'forest' ? (Math.random() > 0.5 ? BLOCKS.DARK_OAK_LOG : BLOCKS.OAK_LOG) : BLOCKS.OAK_LOG;
-    const leafType = terrainType === 'forest' ? (Math.random() > 0.5 ? BLOCKS.SPRUCE_LEAVES : BLOCKS.OAK_LEAVES) : BLOCKS.OAK_LEAVES;
+    const logType = terrainType === 'jungle' ? BLOCKS.DARK_OAK_LOG :
+                    terrainType === 'forest' ? (Math.random() > 0.5 ? BLOCKS.DARK_OAK_LOG : BLOCKS.OAK_LOG) :
+                    BLOCKS.OAK_LOG;
+    const leafType = terrainType === 'jungle' ? BLOCKS.OAK_LEAVES :
+                     terrainType === 'forest' ? (Math.random() > 0.5 ? BLOCKS.SPRUCE_LEAVES : BLOCKS.OAK_LEAVES) :
+                     BLOCKS.OAK_LEAVES;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
@@ -175,8 +189,10 @@ function generateTree(chunk, x, z, height, terrainType = 'grass') {
         }
     }
 
-    const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = terrainType === 'forest' ? 3 + Math.floor(Math.random() * 2) : 2 + Math.floor(Math.random() * 2);
+    const foliageStart = y + trunkHeight - 4;
+    const foliageRadius = terrainType === 'jungle' ? 4 + Math.floor(Math.random() * 3) :
+                          terrainType === 'forest' ? 3 + Math.floor(Math.random() * 2) :
+                          2 + Math.floor(Math.random() * 2);
 
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
         const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));

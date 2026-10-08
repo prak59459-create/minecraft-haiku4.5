@@ -1,9 +1,10 @@
 {
   "world": {
     "renderDistance": 8,
-    "seedOffset": 0,
+    "seed": 0,
     "waterLevel": 62,
-    "bedrockLevel": 0
+    "bedrockLevel": 0,
+    "worldName": "Minecraft Clone"
   },
   "player": {
     "speed": 0.1,
