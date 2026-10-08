@@ -30,9 +30,10 @@ export class Player {
 
             if (e.key === ' ') {
                 e.preventDefault();
-                if (this.isOnGround) {
+                if (this.isOnGround && this.canJump) {
                     this.velocity.y = JUMP_POWER;
                     this.isOnGround = false;
+                    this.canJump = false;
                     if (this.onJump) this.onJump();
                 }
             }
@@ -117,6 +118,7 @@ export class Player {
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     this.isOnGround = true;
+                    this.canJump = true;
                     this.velocity.y = 0;
                     break;
                 }

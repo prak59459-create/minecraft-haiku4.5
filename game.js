@@ -16,6 +16,8 @@ class MinecraftGame {
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowMap;
         this.renderer.fog = new THREE.Fog(0x87CEEB, 200, 400);
 
         this.world = new World();
@@ -33,6 +35,7 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.frameCount = 0;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -229,9 +232,10 @@ class MinecraftGame {
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
+                flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 25,
+                fog: true
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -258,6 +262,12 @@ class MinecraftGame {
         ];
 
         let faceCount = 0;
+        const textureVar = (x + y * 73 + z * 37) % 256 / 256;
+        const varAmount = 0.92 + textureVar * 0.08;
+        const varR = Math.floor(r * varAmount);
+        const varG = Math.floor(g * varAmount);
+        const varB = Math.floor(b * varAmount);
+
         for (const face of faces) {
             const [dx, dy, dz] = face.dir;
             const neighbor = this.world.getBlock(x + dx, y + dy, z + dz);
@@ -266,7 +276,7 @@ class MinecraftGame {
             const startIndex = vertices.length / 3;
             for (const [vx, vy, vz] of face.verts) {
                 vertices.push(x + vx, y + vy, z + vz);
-                colors.push(r, g, b);
+                colors.push(varR, varG, varB);
             }
 
             indices.push(startIndex, startIndex + 1, startIndex + 2);
