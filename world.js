@@ -7,9 +7,23 @@ const RENDER_DISTANCE = 8;
 
 let perlinNoise;
 
+class SimpleFallbackNoise {
+    noise2D(x, y) {
+        const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+        return n - Math.floor(n) * 2 - 1;
+    }
+
+    noise3D(x, y, z) {
+        const n = Math.sin(x * 12.9898 + y * 78.233 + z * 45.164) * 43758.5453;
+        return n - Math.floor(n) * 2 - 1;
+    }
+}
+
 export function initPerlinNoise() {
     if (typeof SimplexNoise !== 'undefined') {
         perlinNoise = new SimplexNoise();
+    } else {
+        perlinNoise = new SimpleFallbackNoise();
     }
 }
 
@@ -53,8 +67,13 @@ export class Chunk {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
                     } else if (y < height - 4) {
-                        const block = getOreBlock(wx, y, wz);
-                        this.setBlock(x, y, z, block);
+                        const caveDensity = perlinNoise.noise3D(wx * 0.05, y * 0.05, wz * 0.05);
+                        if (caveDensity < -0.3 && y > 10 && y < height - 10) {
+                            this.setBlock(x, y, z, BLOCKS.AIR);
+                        } else {
+                            const block = getOreBlock(wx, y, wz);
+                            this.setBlock(x, y, z, block);
+                        }
                     } else if (y < height - 1) {
                         if (terrainType === 'sand' || terrainType === 'desert') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
