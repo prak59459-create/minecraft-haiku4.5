@@ -20,6 +20,8 @@ export class Player {
         this.isSprinting = false;
         this.isCrouching = false;
         this.shiftPressed = false;
+        this.lastStepSoundTime = 0;
+        this.stepSoundInterval = 300;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -77,6 +79,18 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        this.updateStepSounds();
+    }
+
+    updateStepSounds() {
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        if (isMoving && this.isOnGround) {
+            const now = Date.now();
+            if (now - this.lastStepSoundTime > this.stepSoundInterval) {
+                if (this.onStep) this.onStep();
+                this.lastStepSoundTime = now;
+            }
+        }
     }
 
     handleMovement() {
