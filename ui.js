@@ -6,13 +6,17 @@ export class UI {
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+
+        this.coordsEl = document.getElementById('coords');
+        this.fpsEl = document.getElementById('fps');
+        this.blockEl = document.getElementById('blockInfo');
+        this.slots = Array.from(document.querySelectorAll('.inventory-slot'));
+
         this.setupInventoryUI();
     }
 
     setupInventoryUI() {
-        const slots = document.querySelectorAll('.inventory-slot');
-        slots.forEach((slot, index) => {
-            const blockId = parseInt(slot.dataset.block);
+        this.slots.forEach((slot, index) => {
             slot.addEventListener('click', () => {
                 this.selectBlock(index);
             });
@@ -36,23 +40,17 @@ export class UI {
     }
 
     selectBlock(index) {
-        if (index < 0 || index > 8) return;
+        if (index < 0 || index > 8 || index === this.selectedBlock) return;
 
-        const slots = document.querySelectorAll('.inventory-slot');
-        slots.forEach(slot => slot.classList.remove('selected'));
-        slots[index].classList.add('selected');
-
+        this.slots[this.selectedBlock].classList.remove('selected');
+        this.slots[index].classList.add('selected');
         this.selectedBlock = index;
     }
 
     updateHUD(playerPos, selectedBlock, fps) {
-        const coordsEl = document.getElementById('coords');
-        const fpsEl = document.getElementById('fps');
-        const blockEl = document.getElementById('blockInfo');
-
-        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
-        fpsEl.textContent = `FPS: ${fps}`;
-        blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+        this.coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
+        this.fpsEl.textContent = `FPS: ${fps}`;
+        this.blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
     }
 
     updateFPS() {

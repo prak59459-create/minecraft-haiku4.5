@@ -2,41 +2,72 @@ export class ParticleSystem {
     constructor(scene) {
         this.scene = scene;
         this.particles = [];
+        this.activeCount = 0;
+        this.maxParticles = 2000;
         this.geometry = new THREE.BufferGeometry();
+        this.positionBuffer = new Float32Array(this.maxParticles * 3);
+        this.colorBuffer = new Uint8Array(this.maxParticles * 3);
+
+        this.geometry.setAttribute('position', new THREE.BufferAttribute(this.positionBuffer, 3));
+        this.geometry.setAttribute('color', new THREE.BufferAttribute(this.colorBuffer, 3, true));
+
         this.material = new THREE.PointsMaterial({
             size: 0.2,
             sizeAttenuation: true,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.8,
+            vertexColors: true
         });
         this.points = new THREE.Points(this.geometry, this.material);
         this.scene.add(this.points);
+
+        this.preallocateParticles();
+    }
+
+    preallocateParticles() {
+        for (let i = 0; i < this.maxParticles; i++) {
+            this.particles.push({
+                position: { x: 0, y: 0, z: 0 },
+                velocity: { x: 0, y: 0, z: 0 },
+                life: 0,
+                maxLife: 1,
+                color: 0xFFFFFF,
+                active: false
+            });
+        }
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
-        const particleCount = 8 + Math.floor(Math.random() * 8);
+        const particleCount = Math.min(8 + Math.floor(Math.random() * 8), this.maxParticles - this.activeCount);
+        const color = new THREE.Color(blockColor);
+        const r = Math.floor(color.r * 255);
+        const g = Math.floor(color.g * 255);
+        const b = Math.floor(color.b * 255);
 
-        for (let i = 0; i < particleCount; i++) {
-            const particle = {
-                position: { x, y, z },
-                velocity: {
-                    x: (Math.random() - 0.5) * 0.3,
-                    y: Math.random() * 0.3,
-                    z: (Math.random() - 0.5) * 0.3
-                },
-                life: 1,
-                maxLife: 0.8 + Math.random() * 0.4,
-                color: blockColor
-            };
-            this.particles.push(particle);
+        for (let i = 0; i < particleCount && this.activeCount < this.maxParticles; i++) {
+            const p = this.particles[this.activeCount];
+            p.position.x = x;
+            p.position.y = y;
+            p.position.z = z;
+            p.velocity.x = (Math.random() - 0.5) * 0.3;
+            p.velocity.y = Math.random() * 0.3;
+            p.velocity.z = (Math.random() - 0.5) * 0.3;
+            p.life = 1;
+            p.maxLife = 0.8 + Math.random() * 0.4;
+            p.color = blockColor;
+            p.active = true;
+            this.activeCount++;
         }
     }
 
     update() {
         const gravity = 0.01;
+        let writeIndex = 0;
 
-        for (let i = this.particles.length - 1; i >= 0; i--) {
+        for (let i = 0; i < this.activeCount; i++) {
             const p = this.particles[i];
+            if (!p.active) continue;
+
             p.velocity.y -= gravity;
             p.position.x += p.velocity.x;
             p.position.y += p.velocity.y;
@@ -44,38 +75,27 @@ export class ParticleSystem {
             p.life -= 1 / 60;
 
             if (p.life <= 0) {
-                this.particles.splice(i, 1);
+                p.active = false;
+            } else {
+                const color = new THREE.Color(p.color);
+                const idx = writeIndex * 3;
+                this.positionBuffer[idx] = p.position.x;
+                this.positionBuffer[idx + 1] = p.position.y;
+                this.positionBuffer[idx + 2] = p.position.z;
+
+                this.colorBuffer[idx] = Math.floor(color.r * 255);
+                this.colorBuffer[idx + 1] = Math.floor(color.g * 255);
+                this.colorBuffer[idx + 2] = Math.floor(color.b * 255);
+
+                writeIndex++;
             }
         }
 
-        this.updateGeometry();
-    }
-
-    updateGeometry() {
-        if (this.particles.length === 0) {
-            this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([]), 3));
-            this.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array([]), 3));
-            return;
+        this.activeCount = writeIndex;
+        if (this.geometry.getAttribute('position')) {
+            this.geometry.getAttribute('position').needsUpdate = true;
+            this.geometry.getAttribute('color').needsUpdate = true;
         }
-
-        const positions = new Float32Array(this.particles.length * 3);
-        const colors = new Float32Array(this.particles.length * 3);
-
-        for (let i = 0; i < this.particles.length; i++) {
-            const p = this.particles[i];
-            positions[i * 3] = p.position.x;
-            positions[i * 3 + 1] = p.position.y;
-            positions[i * 3 + 2] = p.position.z;
-
-            const color = new THREE.Color(p.color);
-            const alpha = p.life / p.maxLife;
-            colors[i * 3] = color.r;
-            colors[i * 3 + 1] = color.g;
-            colors[i * 3 + 2] = color.b;
-        }
-
-        this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        this.material.opacity = 0.8;
+        this.geometry.setDrawRange(0, this.activeCount);
     }
 }

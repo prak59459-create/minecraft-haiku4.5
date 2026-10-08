@@ -2,7 +2,11 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.lastX = null;
+        this.lastY = null;
+        this.lastZ = null;
         this.createOutlineMaterial();
+        this.createOutline();
     }
 
     createOutlineMaterial() {
@@ -14,17 +18,11 @@ export class BlockOutline {
         });
     }
 
-    setSelectedBlock(x, y, z) {
-        if (this.outline) {
-            this.scene.remove(this.outline);
-        }
-
-        const geometry = new THREE.BufferGeometry();
+    createOutline() {
         const vertices = [];
-
         const positions = [
-            [x, y, z], [x + 1, y, z], [x + 1, y + 1, z], [x, y + 1, z],
-            [x, y, z + 1], [x + 1, y, z + 1], [x + 1, y + 1, z + 1], [x, y + 1, z + 1]
+            [0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0],
+            [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]
         ];
 
         const edges = [
@@ -39,24 +37,23 @@ export class BlockOutline {
             vertices.push(x1, y1, z1, x2, y2, z2);
         }
 
+        const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
-
         this.outline = new THREE.LineSegments(geometry, this.material);
+        this.outline.visible = false;
         this.scene.add(this.outline);
     }
 
-    clear() {
-        if (this.outline) {
-            this.scene.remove(this.outline);
-            this.outline = null;
-        }
-    }
-
     update(raycastHit) {
-        if (raycastHit && raycastHit.block !== 0) {
-            this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z);
-        } else {
-            this.clear();
+        if (raycastHit && raycastHit.block !== 0 &&
+            (this.lastX !== raycastHit.x || this.lastY !== raycastHit.y || this.lastZ !== raycastHit.z)) {
+            this.outline.position.set(raycastHit.x, raycastHit.y, raycastHit.z);
+            this.outline.visible = true;
+            this.lastX = raycastHit.x;
+            this.lastY = raycastHit.y;
+            this.lastZ = raycastHit.z;
+        } else if (!raycastHit || raycastHit.block === 0) {
+            this.outline.visible = false;
         }
     }
 }
