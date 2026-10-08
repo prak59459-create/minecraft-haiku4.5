@@ -136,6 +136,39 @@ body {
     margin: 3px 0;
 }
 
+#inventory-extra {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 5px;
+    pointer-events: auto;
+    z-index: 9;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+#inventory-extra:hover {
+    opacity: 1;
+}
+
+#inventory-extra .inventory-slot {
+    width: 35px;
+    height: 35px;
+    padding: 2px;
+    gap: 1px;
+}
+
+#inventory-extra .inventory-slot .slot-block {
+    width: 18px;
+    height: 18px;
+}
+
+#inventory-extra .inventory-slot .slot-number {
+    font-size: 9px;
+}
+
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;
@@ -149,5 +182,9 @@ body {
 
     #help {
         font-size: 9px;
+    }
+
+    #inventory-extra {
+        display: none;
     }
 }

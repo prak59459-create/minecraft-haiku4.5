@@ -2,11 +2,13 @@ import { BLOCKS, isBlockSolid } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
-const PLAYER_SPEED = 0.1;
-const PLAYER_SPRINT_SPEED = 0.15;
-const PLAYER_CROUCH_SPEED = 0.05;
-const GRAVITY = 0.02;
-const JUMP_POWER = 0.5;
+const PLAYER_SPEED = 0.12;
+const PLAYER_SPRINT_SPEED = 0.18;
+const PLAYER_CROUCH_SPEED = 0.06;
+const GRAVITY = 0.025;
+const JUMP_POWER = 0.55;
+const TERMINAL_VELOCITY = -0.5;
+const FRICTION = 0.85;
 
 export class Player {
     constructor(world) {
@@ -73,6 +75,10 @@ export class Player {
     applyPhysics() {
         if (!this.isOnGround) {
             this.velocity.y -= GRAVITY;
+            this.velocity.y = Math.max(TERMINAL_VELOCITY, this.velocity.y);
+        } else {
+            this.velocity.x *= FRICTION;
+            this.velocity.z *= FRICTION;
         }
 
         this.position.x += this.velocity.x;
@@ -163,15 +169,20 @@ export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
+        this.minSensitivity = 0.001;
+        this.maxSensitivity = 0.01;
         this.setupMouseControls();
+        this.setupSensitivityControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+            if (document.pointerLockElement === document.body) {
+                this.rotation.y -= e.movementX * this.mouseSensitivity;
+                this.rotation.x -= e.movementY * this.mouseSensitivity;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+                this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            }
         });
 
         document.addEventListener('click', () => {
@@ -179,10 +190,26 @@ export class Camera {
                 document.body.requestPointerLock();
             }
         });
+
+        document.addEventListener('contextmenu', (e) => {
+            if (document.pointerLockElement === document.body) {
+                e.preventDefault();
+            }
+        });
     }
 
     updateFromPlayer(player) {
         player.rotation.x = this.rotation.x;
         player.rotation.y = this.rotation.y;
+    }
+
+    setupSensitivityControls() {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '[') {
+                this.mouseSensitivity = Math.max(this.minSensitivity, this.mouseSensitivity - 0.0005);
+            } else if (e.key === ']') {
+                this.mouseSensitivity = Math.min(this.maxSensitivity, this.mouseSensitivity + 0.0005);
+            }
+        });
     }
 }

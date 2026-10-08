@@ -79,6 +79,11 @@ export class DebugDisplay {
         this.stats.triangles = triangles;
         this.stats.drawCalls = game.chunkMeshes.size;
 
+        const playerPos = game.player.position;
+        this.stats.playerX = playerPos.x.toFixed(1);
+        this.stats.playerY = playerPos.y.toFixed(1);
+        this.stats.playerZ = playerPos.z.toFixed(1);
+
         if (performance.memory) {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
         }
@@ -90,6 +95,7 @@ export class DebugDisplay {
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
+            `Pos: X=${this.stats.playerX} Y=${this.stats.playerY} Z=${this.stats.playerZ}`,
             `Chunks: ${this.stats.chunks}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
@@ -97,12 +103,12 @@ export class DebugDisplay {
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3 Toggle | H Help | [] Sensitivity'
         ];
 
         this.container.innerHTML = lines.map(line => {
             if (line.startsWith('=')) return `<div>${line}</div>`;
+            if (line.startsWith('F3') || line.startsWith('Press')) return `<div style="color: #888888; font-size: 10px;">${line}</div>`;
             const parts = line.split(': ');
             if (parts.length === 2) {
                 return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;

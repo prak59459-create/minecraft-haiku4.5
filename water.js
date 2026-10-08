@@ -85,5 +85,15 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+        this.updateWaterMeshes();
+    }
+
+    updateWaterMeshes() {
+        for (const [key, mesh] of this.waterMeshes) {
+            if (mesh && mesh.material) {
+                const waveStrength = Math.sin(this.time * 2) * 0.1;
+                mesh.material.emissive.setHSL(0.6, 0.5, 0.3 + waveStrength * 0.1);
+            }
+        }
     }
 }
