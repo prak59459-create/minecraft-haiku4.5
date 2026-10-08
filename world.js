@@ -79,7 +79,7 @@ export class Chunk {
                 }
 
                 if (height > 65 && (terrainType === 'grass' || terrainType === 'forest')) {
-                    generateTree(this, x, z, height);
+                    generateTree(this, x, z, height, terrainType);
                 }
             }
         }
@@ -130,27 +130,32 @@ function getOreBlock(x, y, z) {
     return ore;
 }
 
-function generateTree(chunk, x, z, height) {
+function generateTree(chunk, x, z, height, terrainType = 'grass') {
     if (!perlinNoise) return;
 
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
-    if (treeChance < 0.5) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    if (terrainType === 'forest' && treeChance < 0.3) return;
+    if (terrainType !== 'forest' && treeChance < 0.6) return;
+
+    const trunkHeight = terrainType === 'forest' ? 5 + Math.floor(Math.random() * 5) : 4 + Math.floor(Math.random() * 4);
     const y = height;
+
+    const logType = terrainType === 'forest' ? (Math.random() > 0.5 ? BLOCKS.DARK_OAK_LOG : BLOCKS.OAK_LOG) : BLOCKS.OAK_LOG;
+    const leafType = terrainType === 'forest' ? (Math.random() > 0.5 ? BLOCKS.SPRUCE_LEAVES : BLOCKS.OAK_LEAVES) : BLOCKS.OAK_LEAVES;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
             if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
-                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
+                chunk.setBlock(x, y + i, z, logType);
             }
         }
     }
 
     const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    const foliageRadius = terrainType === 'forest' ? 3 + Math.floor(Math.random() * 2) : 2 + Math.floor(Math.random() * 2);
 
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
         const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
@@ -164,7 +169,7 @@ function generateTree(chunk, x, z, height) {
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
                     if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
-                        chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                        chunk.setBlock(fx, fy, fz, leafType);
                     }
                 }
             }

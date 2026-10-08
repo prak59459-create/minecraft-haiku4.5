@@ -44,20 +44,30 @@ class MinecraftGame {
     setupLighting() {
         const time = Date.now() * 0.0001;
         const sunY = Math.sin(time) * 100 + 100;
-        const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.25, Math.sin(time) + 0.4);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientColor = new THREE.Color();
+        const hue = time * 0.1;
+        ambientColor.setHSL(0.6 + Math.sin(hue) * 0.1, 0.3, 0.4 + sunIntensity * 0.15);
+        const ambientLight = new THREE.AmbientLight(ambientColor, 0.5 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const sunColor = new THREE.Color();
+        sunColor.setHSL(0.1 + Math.sin(hue) * 0.05, 0.8, 0.5 + sunIntensity * 0.2);
+        const directionalLight = new THREE.DirectionalLight(sunColor, 0.6 + sunIntensity * 0.3);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -200;
+        directionalLight.shadow.camera.right = 200;
+        directionalLight.shadow.camera.top = 200;
+        directionalLight.shadow.camera.bottom = -200;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
+        this.ambientLight = ambientLight;
     }
 
     setupEventListeners() {
@@ -269,7 +279,7 @@ class MinecraftGame {
             const nz = z + dz;
 
             const neighbor = this.world.getBlock(nx, ny, nz);
-            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+            if (isBlockSolid(neighbor) && !this.isBlockTransparent(neighbor)) continue;
 
             const startIndex = vertices.length / 3;
             for (const [vx, vy, vz] of face.verts) {
@@ -283,6 +293,12 @@ class MinecraftGame {
         }
 
         return faceCount > 0;
+    }
+
+    isBlockTransparent(blockId) {
+        return blockId === BLOCKS.WATER || blockId === BLOCKS.OAK_LEAVES ||
+               blockId === BLOCKS.SPRUCE_LEAVES || blockId === BLOCKS.ICE ||
+               blockId === BLOCKS.LAVA;
     }
 
     updateVisibleChunks() {
@@ -367,13 +383,35 @@ class MinecraftGame {
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.4);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.5 + sunIntensity * 0.4;
+
+        const ambientIntensity = 0.4 + sunIntensity * 0.25;
+        this.ambientLight.intensity = ambientIntensity;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        const hue = time * 0.05;
+        let skyHue = 0.6;
+        let saturation = 0.4;
+        let lightness = 0.5;
+
+        if (sunIntensity < 0.3) {
+            skyHue = 0.75;
+            saturation = 0.2;
+            lightness = 0.2 + sunIntensity * 0.3;
+        } else if (sunIntensity < 0.5) {
+            skyHue = 0.58 + hue * 0.05;
+            saturation = 0.5;
+            lightness = 0.4 + sunIntensity * 0.2;
+        } else {
+            skyHue = 0.6;
+            saturation = 0.4;
+            lightness = 0.5 + sunIntensity * 0.25;
+        }
+
+        skyColor.setHSL(skyHue, saturation, lightness);
         this.scene.background = skyColor;
     }
 }
