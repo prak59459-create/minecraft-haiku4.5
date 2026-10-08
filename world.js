@@ -48,6 +48,8 @@ export class Chunk {
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
+                    } else if (isCaveBlock(wx, y, wz)) {
+                        this.setBlock(x, y, z, BLOCKS.AIR);
                     } else if (y < height - 4) {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
@@ -66,7 +68,13 @@ export class Chunk {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
                     } else if (y < 62) {
-                        this.setBlock(x, y, z, BLOCKS.WATER);
+                        if (y < height - 5 && terrainType === 'sand') {
+                            this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (perlinNoise && perlinNoise.noise2D(wx * 0.05, wz * 0.05) > 0.6) {
+                            this.setBlock(x, y, z, BLOCKS.GRAVEL);
+                        } else {
+                            this.setBlock(x, y, z, BLOCKS.WATER);
+                        }
                     }
                 }
 
@@ -96,7 +104,10 @@ function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const moisture = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
+    if (temp < -0.4) return 'sand';
+    if (temp < -0.2 && moisture > 0.3) return 'sand';
     return 'grass';
 }
 
@@ -115,6 +126,15 @@ function getOreBlock(x, y, z) {
     if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
 
     return ore;
+}
+
+function isCaveBlock(x, y, z) {
+    if (!perlinNoise || y < 5 || y > 100) return false;
+
+    const caveNoise = perlinNoise.noise3D ? perlinNoise.noise3D(x * 0.05, y * 0.05, z * 0.05) : 0;
+    const caveChance = perlinNoise.noise2D(x * 0.03, z * 0.03) * 0.5 + 0.5;
+
+    return caveNoise + caveChance > 1.2;
 }
 
 function generateTree(chunk, x, z, height) {

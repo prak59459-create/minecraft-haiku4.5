@@ -53,7 +53,22 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+
+        if (this.keys['control']) {
+            this.isCrouching = true;
+            this.isSprinting = false;
+        } else if (this.keys['shift'] && isMoving) {
+            this.isSprinting = true;
+            this.isCrouching = false;
+        } else {
+            this.isSprinting = false;
+            this.isCrouching = false;
+        }
+
+        let speed = PLAYER_SPEED;
+        if (this.isSprinting) speed = PLAYER_SPRINT_SPEED;
+        if (this.isCrouching) speed = PLAYER_CROUCH_SPEED;
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -65,9 +80,6 @@ export class Player {
 
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
-
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
     }
 
     applyPhysics() {
@@ -93,6 +105,7 @@ export class Player {
             { dy: height * 0.9, radius: radius * 0.7 }
         ];
 
+        let collided = false;
         for (const point of checkPoints) {
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
@@ -107,9 +120,11 @@ export class Player {
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
+                    collided = true;
                     break;
                 }
             }
+            if (collided) break;
         }
 
         if (this.velocity.y < 0) {
@@ -144,7 +159,7 @@ export class Player {
             }
         }
 
-        if (this.position.y < -10) {
+        if (this.position.y < -64) {
             this.position.y = 100;
             this.velocity.y = 0;
         }
@@ -162,16 +177,18 @@ export class Player {
 export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
+        this.targetRotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
+        this.smoothingFactor = 0.8;
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+            this.targetRotation.y -= e.movementX * this.mouseSensitivity;
+            this.targetRotation.x -= e.movementY * this.mouseSensitivity;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            this.targetRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.targetRotation.x));
         });
 
         document.addEventListener('click', () => {
@@ -182,6 +199,9 @@ export class Camera {
     }
 
     updateFromPlayer(player) {
+        this.rotation.x += (this.targetRotation.x - this.rotation.x) * (1 - this.smoothingFactor);
+        this.rotation.y += (this.targetRotation.y - this.rotation.y) * (1 - this.smoothingFactor);
+
         player.rotation.x = this.rotation.x;
         player.rotation.y = this.rotation.y;
     }
