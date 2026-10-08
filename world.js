@@ -19,6 +19,7 @@ export class Chunk {
         this.blocks = new Uint8Array(CHUNK_SIZE * WORLD_HEIGHT * CHUNK_SIZE);
         this.generated = false;
         this.mesh = null;
+        this.dirty = false;
     }
 
     getBlock(x, y, z) {
@@ -29,6 +30,7 @@ export class Chunk {
     setBlock(x, y, z, blockId) {
         const idx = x + y * CHUNK_SIZE + z * CHUNK_SIZE * WORLD_HEIGHT;
         this.blocks[idx] = blockId;
+        this.dirty = true;
     }
 
     generate() {
