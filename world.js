@@ -221,12 +221,26 @@ export class World {
         const playerChunkZ = Math.floor(playerZ / CHUNK_SIZE);
 
         const chunksToKeep = new Set();
+        const chunksToGenerate = [];
+
         for (let dx = -this.renderDistance; dx <= this.renderDistance; dx++) {
             for (let dz = -this.renderDistance; dz <= this.renderDistance; dz++) {
                 const key = `${playerChunkX + dx},${playerChunkZ + dz}`;
                 chunksToKeep.add(key);
-                this.getChunk(playerChunkX + dx, playerChunkZ + dz);
+
+                if (!this.chunks.has(key)) {
+                    chunksToGenerate.push({
+                        x: playerChunkX + dx,
+                        z: playerChunkZ + dz,
+                        dist: dx * dx + dz * dz
+                    });
+                }
             }
+        }
+
+        chunksToGenerate.sort((a, b) => a.dist - b.dist);
+        for (const { x, z } of chunksToGenerate.slice(0, 4)) {
+            this.getChunk(x, z);
         }
 
         const toDelete = [];

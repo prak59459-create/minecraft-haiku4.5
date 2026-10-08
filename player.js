@@ -55,7 +55,8 @@ export class Player {
 
         const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
         const isSprinting = this.keys['shift'] && isMoving;
-        const speed = isSprinting ? PLAYER_SPRINT_SPEED : PLAYER_SPEED;
+        const isCrouching = this.keys['control'] || this.keys['ctrl'];
+        const speed = isSprinting ? PLAYER_SPRINT_SPEED : (isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPEED);
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -65,11 +66,14 @@ export class Player {
         const cosY = Math.cos(this.rotation.y);
         const sinY = Math.sin(this.rotation.y);
 
-        this.velocity.x = moveX * cosY - moveZ * sinY;
-        this.velocity.z = moveX * sinY + moveZ * cosY;
+        const targetX = moveX * cosY - moveZ * sinY;
+        const targetZ = moveX * sinY + moveZ * cosY;
+
+        this.velocity.x = targetX;
+        this.velocity.z = targetZ;
 
         this.isSprinting = isSprinting;
-        this.isCrouching = this.keys['control'] || this.keys['ctrl'];
+        this.isCrouching = isCrouching;
     }
 
     applyPhysics() {

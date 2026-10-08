@@ -186,8 +186,12 @@ class MinecraftGame {
         );
 
         let hit = null;
+        let lastBlock = BLOCKS.AIR;
+        let lastBx = Math.floor(eyePos.x);
+        let lastBy = Math.floor(eyePos.y);
+        let lastBz = Math.floor(eyePos.z);
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = 0.1; dist <= this.raycastDistance; dist += 0.1) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -196,25 +200,23 @@ class MinecraftGame {
             const by = Math.floor(y);
             const bz = Math.floor(z);
 
+            if (bx === lastBx && by === lastBy && bz === lastBz) continue;
+
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
-                const prevX = eyePos.x + direction.x * prevDist;
-                const prevY = eyePos.y + direction.y * prevDist;
-                const prevZ = eyePos.z + direction.z * prevDist;
-
-                const prevBx = Math.floor(prevX);
-                const prevBy = Math.floor(prevY);
-                const prevBz = Math.floor(prevZ);
-
                 let normal = { x: 0, y: 0, z: 0 };
-                if (prevBx !== bx) normal.x = prevBx < bx ? -1 : 1;
-                else if (prevBy !== by) normal.y = prevBy < by ? -1 : 1;
-                else if (prevBz !== bz) normal.z = prevBz < bz ? -1 : 1;
+                if (lastBx !== bx) normal.x = lastBx < bx ? -1 : 1;
+                else if (lastBy !== by) normal.y = lastBy < by ? -1 : 1;
+                else if (lastBz !== bz) normal.z = lastBz < bz ? -1 : 1;
 
                 hit = { x: bx, y: by, z: bz, block, normal, dist };
                 break;
             }
+
+            lastBlock = block;
+            lastBx = bx;
+            lastBy = by;
+            lastBz = bz;
         }
 
         if (!hit) {
@@ -422,6 +424,7 @@ class MinecraftGame {
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
+        this.blockOutline.time += 0.016;
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);
