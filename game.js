@@ -104,27 +104,35 @@ class MinecraftGame {
         if (hit.block === BLOCKS.AIR) return;
 
         if (event.button === 0) {
-            this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
-            this.updateChunkMesh(hit.x, hit.y, hit.z);
+            try {
+                this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
+                this.updateChunkMesh(hit.x, hit.y, hit.z);
 
-            const color = BLOCK_COLORS[hit.block] || 0x808080;
-            this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
+                const color = BLOCK_COLORS[hit.block] || 0x808080;
+                this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
 
-            const now = Date.now();
-            if (now - this.lastBreakSound > 50) {
-                this.audioManager.playBlockSound('break');
-                this.lastBreakSound = now;
+                const now = Date.now();
+                if (now - this.lastBreakSound > 50) {
+                    this.audioManager.playBlockSound('break');
+                    this.lastBreakSound = now;
+                }
+            } catch (e) {
+                console.warn('Error breaking block:', e);
             }
         } else if (event.button === 2) {
-            const norm = hit.normal;
-            const nx = hit.x + norm.x;
-            const ny = hit.y + norm.y;
-            const nz = hit.z + norm.z;
+            try {
+                const norm = hit.normal;
+                const nx = hit.x + norm.x;
+                const ny = hit.y + norm.y;
+                const nz = hit.z + norm.z;
 
-            if (!this.isPlayerOccupying(nx, ny, nz)) {
-                this.world.setBlock(nx, ny, nz, this.selectedBlockType);
-                this.updateChunkMesh(nx, ny, nz);
-                this.audioManager.playBlockSound('place');
+                if (!this.isPlayerOccupying(nx, ny, nz)) {
+                    this.world.setBlock(nx, ny, nz, this.selectedBlockType);
+                    this.updateChunkMesh(nx, ny, nz);
+                    this.audioManager.playBlockSound('place');
+                }
+            } catch (e) {
+                console.warn('Error placing block:', e);
             }
         }
     }
@@ -207,11 +215,12 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const startY = Math.max(0, this.player.position.y - 64);
-        const endY = Math.min(WORLD_HEIGHT, this.player.position.y + 64);
+        const playerY = this.player.position.y;
+        const startY = Math.max(1, Math.floor(playerY) - 96);
+        const endY = Math.min(WORLD_HEIGHT, Math.floor(playerY) + 96);
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
-            for (let y = Math.max(1, startY); y < endY; y++) {
+            for (let y = startY; y < endY; y++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
                     const blockId = chunk.getBlock(x, y, z);
                     if (blockId === BLOCKS.AIR) continue;
