@@ -13,9 +13,16 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
+            powerPreference: 'high-performance'
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -32,6 +39,8 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.frameCount = 0;
+        this.lastFrameTime = performance.now();
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -351,13 +360,25 @@ class MinecraftGame {
     }
 
     disposeMesh(mesh) {
-        if (mesh.geometry) mesh.geometry.dispose();
-        if (mesh.material) {
-            if (Array.isArray(mesh.material)) {
-                mesh.material.forEach(m => m.dispose());
-            } else {
-                mesh.material.dispose();
+        if (!mesh) return;
+
+        try {
+            if (mesh.geometry) {
+                mesh.geometry.dispose();
             }
+            if (mesh.material) {
+                if (Array.isArray(mesh.material)) {
+                    mesh.material.forEach(m => {
+                        if (m && m.dispose) m.dispose();
+                        if (m && m.map) m.map.dispose();
+                    });
+                } else if (mesh.material.dispose) {
+                    mesh.material.dispose();
+                    if (mesh.material.map) mesh.material.map.dispose();
+                }
+            }
+        } catch (e) {
+            console.warn('Error disposing mesh:', e);
         }
     }
 
@@ -442,3 +463,13 @@ class MinecraftGame {
 }
 
 const game = new MinecraftGame();
+
+window.addEventListener('beforeunload', () => {
+    for (const mesh of game.chunkMeshes.values()) {
+        game.disposeMesh(mesh);
+    }
+    game.chunkMeshes.clear();
+    if (game.renderer) {
+        game.renderer.dispose();
+    }
+});
