@@ -49,19 +49,21 @@ export class Chunk {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
                     } else if (y < height - 4) {
-                        const block = getOreBlock(wx, y, wz);
+                        const block = getOreBlock(wx, y, wz, terrainType);
                         this.setBlock(x, y, z, block);
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'mycelium') {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
                     } else if (y < height) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
+                        } else if (terrainType === 'mycelium') {
+                            this.setBlock(x, y, z, BLOCKS.MYCELIUM);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
@@ -71,7 +73,8 @@ export class Chunk {
                 }
 
                 if (height > 65) {
-                    generateTree(this, x, z, height);
+                    const treeType = terrainType === 'mycelium' ? 'mycelium' : 'oak';
+                    generateTree(this, x, z, height, treeType);
                 }
             }
         }
@@ -84,23 +87,28 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    height += perlinNoise.noise2D(x * 0.003, z * 0.003) * 40;
+    height += perlinNoise.noise2D(x * 0.01, z * 0.01) * 20;
+    height += perlinNoise.noise2D(x * 0.03, z * 0.03) * 12;
+    height += perlinNoise.noise2D(x * 0.08, z * 0.08) * 6;
+    height += perlinNoise.noise2D(x * 0.15, z * 0.15) * 3;
 
-    return Math.max(20, Math.min(160, Math.floor(height)));
+    return Math.max(20, Math.min(180, Math.floor(height)));
 }
 
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const moisture = perlinNoise.noise2D(x * 0.025, z * 0.025);
+
+    if (temp < -0.4) return 'sand';
+    if (temp < -0.1 && moisture > 0.3) return 'sand';
+    if (moisture > 0.5) return 'mycelium';
     return 'grass';
 }
 
-function getOreBlock(x, y, z) {
+function getOreBlock(x, y, z, terrainType) {
     if (!perlinNoise) return BLOCKS.STONE;
 
     let ore = BLOCKS.STONE;
@@ -108,16 +116,19 @@ function getOreBlock(x, y, z) {
     const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
     const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
     const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
+    const gravelChance = perlinNoise.noise2D(x * 0.07, z * 0.07);
 
     if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
-    if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
-    if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
-    if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    else if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
+    else if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
+    else if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    else if (gravelChance > 0.6 && y < 100) ore = BLOCKS.GRAVEL;
+    else if (terrainType === 'sand' && y > 40 && y < 65) ore = BLOCKS.SAND;
 
     return ore;
 }
 
-function generateTree(chunk, x, z, height) {
+function generateTree(chunk, x, z, height, treeType = 'oak') {
     if (!perlinNoise) return;
 
     const worldX = chunk.x * CHUNK_SIZE + x;
@@ -125,19 +136,22 @@ function generateTree(chunk, x, z, height) {
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
     if (treeChance < 0.5) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    const logBlock = treeType === 'mycelium' ? BLOCKS.DARK_OAK_LOG : BLOCKS.OAK_LOG;
+    const leavesBlock = treeType === 'mycelium' ? BLOCKS.DARK_OAK_LEAVES : BLOCKS.OAK_LEAVES;
+
+    const trunkHeight = treeType === 'mycelium' ? 6 + Math.floor(Math.random() * 5) : 4 + Math.floor(Math.random() * 4);
     const y = height;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
             if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
-                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
+                chunk.setBlock(x, y + i, z, logBlock);
             }
         }
     }
 
     const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    const foliageRadius = treeType === 'mycelium' ? 3 + Math.floor(Math.random() * 2) : 2 + Math.floor(Math.random() * 2);
 
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
         const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
@@ -151,7 +165,7 @@ function generateTree(chunk, x, z, height) {
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
                     if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
-                        chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                        chunk.setBlock(fx, fy, fz, leavesBlock);
                     }
                 }
             }
