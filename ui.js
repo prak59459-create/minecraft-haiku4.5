@@ -6,7 +6,37 @@ export class UI {
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.pointerLocked = false;
         this.setupInventoryUI();
+        this.setupPointerLockHint();
+    }
+
+    setupPointerLockHint() {
+        const hint = document.createElement('div');
+        hint.id = 'pointer-lock-hint';
+        hint.textContent = 'Click to play';
+        hint.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 20px 40px;
+            border-radius: 4px;
+            font-size: 18px;
+            text-align: center;
+            z-index: 100;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        `;
+        document.body.appendChild(hint);
+        this.pointerLockHint = hint;
+    }
+
+    showPointerLockHint(show) {
+        this.pointerLocked = !show;
+        this.pointerLockHint.style.opacity = show ? '1' : '0';
     }
 
     setupInventoryUI() {

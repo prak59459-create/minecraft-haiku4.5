@@ -2,6 +2,7 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.lastPosition = null;
         this.createOutlineMaterial();
     }
 
@@ -10,14 +11,22 @@ export class BlockOutline {
             color: 0xFFFFFF,
             linewidth: 2,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.8,
+            fog: false
         });
     }
 
     setSelectedBlock(x, y, z) {
+        if (this.lastPosition && this.lastPosition.x === x && this.lastPosition.y === y && this.lastPosition.z === z) {
+            return;
+        }
+
         if (this.outline) {
             this.scene.remove(this.outline);
+            this.outline.geometry.dispose();
         }
+
+        this.lastPosition = { x, y, z };
 
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
@@ -48,7 +57,9 @@ export class BlockOutline {
     clear() {
         if (this.outline) {
             this.scene.remove(this.outline);
+            this.outline.geometry.dispose();
             this.outline = null;
+            this.lastPosition = null;
         }
     }
 

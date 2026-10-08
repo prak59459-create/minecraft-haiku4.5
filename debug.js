@@ -83,6 +83,14 @@ export class DebugDisplay {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
         }
 
+        this.playerX = game.player.position.x.toFixed(2);
+        this.playerY = game.player.position.y.toFixed(2);
+        this.playerZ = game.player.position.z.toFixed(2);
+        this.chunkX = Math.floor(game.player.position.x / 16);
+        this.chunkZ = Math.floor(game.player.position.z / 16);
+        this.isOnGround = game.player.isOnGround;
+        this.isSprinting = game.player.isSprinting;
+
         this.render();
     }
 
@@ -90,22 +98,23 @@ export class DebugDisplay {
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
-            `Chunks: ${this.stats.chunks}`,
+            `Pos: ${this.playerX}, ${this.playerY}, ${this.playerZ}`,
+            `Chunk: ${this.chunkX}, ${this.chunkZ}`,
+            `Ground: ${this.isOnGround ? 'Yes' : 'No'} | Sprint: ${this.isSprinting ? 'Yes' : 'No'}`,
+            `Chunks: ${this.stats.chunks} | Particles: ${this.stats.particles}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
             `Draw Calls: ${this.stats.drawCalls}`,
-            `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3: Toggle | H: Help'
         ];
 
         this.container.innerHTML = lines.map(line => {
             if (line.startsWith('=')) return `<div>${line}</div>`;
-            const parts = line.split(': ');
-            if (parts.length === 2) {
-                return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
+            const parts = line.split(/:\s/);
+            if (parts.length >= 2) {
+                return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts.slice(1).join(': ')}</span></div>`;
             }
             return `<div>${line}</div>`;
         }).join('');
