@@ -118,6 +118,24 @@ export class Player {
             }
         }
 
+        const moveSpeed = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+        if (moveSpeed > 0.01) {
+            for (let step = 0; step <= 1; step += 0.25) {
+                const testRadius = radius * 0.8;
+                for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
+                    const cx = this.position.x + Math.cos(angle) * testRadius;
+                    const cy = this.position.y + step;
+                    const cz = this.position.z + Math.sin(angle) * testRadius;
+
+                    const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
+                    if (!isBlockSolid(block)) {
+                        this.position.y += 0.1;
+                        break;
+                    }
+                }
+            }
+        }
+
         if (this.velocity.y < 0) {
             let onGround = false;
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
