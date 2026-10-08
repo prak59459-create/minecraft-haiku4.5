@@ -20,6 +20,7 @@ class MinecraftGame {
 
         this.world = new World();
         this.player = new Player(this.world);
+        this.findSpawnLocation();
         this.gameCamera = new Camera();
         this.ui = new UI();
         this.particleSystem = new ParticleSystem(this.scene);
@@ -46,6 +47,18 @@ class MinecraftGame {
         this.setupEventListeners();
         this.setupPickBlock();
         this.animate();
+    }
+
+    findSpawnLocation() {
+        for (let y = 200; y > 0; y--) {
+            const block = this.world.getBlock(8, y, 8);
+            const blockBelow = this.world.getBlock(8, y - 1, 8);
+            if (isBlockSolid(blockBelow) && !isBlockSolid(block)) {
+                this.player.position.y = y + 1;
+                return;
+            }
+        }
+        this.player.position.y = 100;
     }
 
     setupLighting() {

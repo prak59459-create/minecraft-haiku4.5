@@ -11,7 +11,7 @@ const JUMP_POWER = 0.5;
 export class Player {
     constructor(world) {
         this.world = world;
-        this.position = { x: 0, y: 100, z: 0 };
+        this.position = { x: 8, y: 100, z: 8 };
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
 
@@ -19,6 +19,8 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+
+        this.maxYVelocity = 1;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -73,6 +75,7 @@ export class Player {
     applyPhysics() {
         if (!this.isOnGround) {
             this.velocity.y -= GRAVITY;
+            this.velocity.y = Math.max(this.velocity.y, -this.maxYVelocity);
         }
 
         this.position.x += this.velocity.x;
@@ -87,14 +90,15 @@ export class Player {
         this.isOnGround = false;
 
         const checkPoints = [
-            { dy: 0.1, radius: radius * 0.9 },
-            { dy: height * 0.3, radius: radius * 0.9 },
-            { dy: height * 0.6, radius: radius * 0.9 },
-            { dy: height * 0.9, radius: radius * 0.7 }
+            { dy: 0.1, radius: radius * 0.95 },
+            { dy: height * 0.25, radius: radius * 0.95 },
+            { dy: height * 0.5, radius: radius * 0.9 },
+            { dy: height * 0.75, radius: radius * 0.8 },
+            { dy: height * 0.95, radius: radius * 0.7 }
         ];
 
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
                 const cz = this.position.z + Math.sin(angle) * point.radius;
@@ -103,7 +107,7 @@ export class Player {
                 if (isBlockSolid(block)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
                     if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
+                        const scale = 1.2 / moveLen;
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
