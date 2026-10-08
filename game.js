@@ -78,9 +78,11 @@ class MinecraftGame {
                 const hit = this.raycastBlock();
                 if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
                     this.selectedBlockType = hit.block;
+                    this.updateInventorySelection(hit.block);
+                    this.audioManager.playBlockSound('place');
                 }
             }
-            if (e.key === 'F3') {
+            if (e.key === 'F3' || e.key === 'f3') {
                 e.preventDefault();
                 this.showDebug = !this.showDebug;
                 this.debugDisplay.toggle();
@@ -89,6 +91,13 @@ class MinecraftGame {
                 this.ui.toggleHelp();
             }
         });
+    }
+
+    updateInventorySelection(blockType) {
+        const blockIndex = this.ui.blocks.indexOf(blockType);
+        if (blockIndex !== -1) {
+            this.ui.selectBlock(blockIndex);
+        }
     }
 
     onMouseClick(event) {
