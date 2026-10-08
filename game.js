@@ -10,6 +10,7 @@ import { BlockOutline } from './blockoutline.js';
 
 class MinecraftGame {
     constructor() {
+        this.version = '1.1.0';
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.scene.fog = new THREE.Fog(0x87CEEB, 250, 500);
@@ -19,6 +20,8 @@ class MinecraftGame {
         this.renderer.setClearColor(0x87CEEB);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+
+        console.log(`🎮 Minecraft Clone v${this.version} - Ready to Play!`);
 
         this.world = new World();
         this.player = new Player(this.world);

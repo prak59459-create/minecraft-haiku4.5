@@ -15,7 +15,12 @@ export class UI {
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach((slot, index) => {
             const blockId = parseInt(slot.dataset.block);
-            slot.addEventListener('click', () => {
+            slot.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.selectBlock(index);
+            });
+            slot.addEventListener('touchstart', (e) => {
+                e.preventDefault();
                 this.selectBlock(index);
             });
         });
@@ -28,6 +33,9 @@ export class UI {
         });
 
         document.addEventListener('wheel', (e) => {
+            if (e.ctrlKey || e.metaKey) return;
+            if (!document.body.contains(e.target) || e.target === document.body) return;
+
             e.preventDefault();
             const direction = e.deltaY > 0 ? 1 : -1;
             let newIndex = this.selectedBlock + direction;
