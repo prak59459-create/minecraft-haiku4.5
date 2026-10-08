@@ -134,8 +134,13 @@ class MinecraftGame {
         );
 
         let hit = null;
+        let prevBx = Math.floor(eyePos.x);
+        let prevBy = Math.floor(eyePos.y);
+        let prevBz = Math.floor(eyePos.z);
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        // Optimize raycasting with adaptive step size
+        const stepSize = 0.1;
+        for (let dist = stepSize; dist <= this.raycastDistance; dist += stepSize) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -144,17 +149,11 @@ class MinecraftGame {
             const by = Math.floor(y);
             const bz = Math.floor(z);
 
+            // Skip if same block
+            if (bx === prevBx && by === prevBy && bz === prevBz) continue;
+
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
-                const prevX = eyePos.x + direction.x * prevDist;
-                const prevY = eyePos.y + direction.y * prevDist;
-                const prevZ = eyePos.z + direction.z * prevDist;
-
-                const prevBx = Math.floor(prevX);
-                const prevBy = Math.floor(prevY);
-                const prevBz = Math.floor(prevZ);
-
                 let normal = { x: 0, y: 0, z: 0 };
                 if (prevBx !== bx) normal.x = prevBx < bx ? -1 : 1;
                 else if (prevBy !== by) normal.y = prevBy < by ? -1 : 1;
@@ -163,6 +162,10 @@ class MinecraftGame {
                 hit = { x: bx, y: by, z: bz, block, normal, dist };
                 break;
             }
+
+            prevBx = bx;
+            prevBy = by;
+            prevBz = bz;
         }
 
         if (!hit) {
@@ -196,6 +199,9 @@ class MinecraftGame {
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
 
+        // Cache for color calculations
+        const colorCache = new Map();
+
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
@@ -206,14 +212,20 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const color = new THREE.Color(BLOCK_COLORS[blockId]);
-
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
-
-                    color.multiplyScalar(brightness);
+                    // Use color cache to avoid creating duplicate Color objects
+                    let colorKey = `${blockId}_${wy}`;
+                    let color;
+                    if (colorCache.has(colorKey)) {
+                        color = colorCache.get(colorKey);
+                    } else {
+                        color = new THREE.Color(BLOCK_COLORS[blockId]);
+                        const baseLight = 0.7;
+                        const heightLight = (wy / WORLD_HEIGHT) * 0.3;
+                        const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
+                        const brightness = baseLight + heightLight + varLight;
+                        color.multiplyScalar(brightness);
+                        colorCache.set(colorKey, color);
+                    }
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
                 }
@@ -287,17 +299,32 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const renderDist = 8;
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        // Clean up meshes for unloaded chunks
+        const meshesToRemove = [];
+        for (const [key] of this.chunkMeshes) {
+            const [cx, cz] = key.split(',').map(Number);
+            if (!this.world.chunks.has(key) || Math.abs(cx - playerChunkX) > renderDist || Math.abs(cz - playerChunkZ) > renderDist) {
+                meshesToRemove.push(key);
+            }
+        }
+
+        meshesToRemove.forEach(key => {
+            const mesh = this.chunkMeshes.get(key);
+            this.scene.remove(mesh);
+            mesh.geometry.dispose();
+            mesh.material.dispose();
+            this.chunkMeshes.delete(key);
+        });
+
+        // Build meshes for visible chunks
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
-                if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
-                }
+            if (Math.abs(cx - playerChunkX) > renderDist || Math.abs(cz - playerChunkZ) > renderDist) {
                 continue;
             }
 
@@ -377,4 +404,7 @@ class MinecraftGame {
     }
 }
 
-const game = new MinecraftGame();
+// Initialize and run the game
+window.addEventListener('DOMContentLoaded', () => {
+    const game = new MinecraftGame();
+});
