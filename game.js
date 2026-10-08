@@ -7,6 +7,8 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { SkyRenderer } from './sky.js';
+import { PerformanceMonitor } from './performance.js';
 
 class MinecraftGame {
     constructor() {
@@ -30,12 +32,15 @@ class MinecraftGame {
         this.audioManager = new AudioManager();
         this.debugDisplay = new DebugDisplay();
         this.blockOutline = new BlockOutline(this.scene);
+        this.skyRenderer = new SkyRenderer(this.scene);
+        this.performanceMonitor = new PerformanceMonitor();
 
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.lastStepSound = 0;
+        this.lastFrameTime = Date.now();
         this.showDebug = false;
         this.lastPlayerY = 100;
         this.isWalking = false;
@@ -249,10 +254,10 @@ class MinecraftGame {
                         colorCache.set(colorKey, color);
                     }
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.08;
-                    const brightness = Math.max(0.3, baseLight + heightLight + varLight);
+                    const baseLight = 0.75;
+                    const heightLight = Math.pow(wy / WORLD_HEIGHT, 0.8) * 0.25;
+                    const varLight = Math.sin(wx * 0.3 + wz * 0.3) * 0.06;
+                    const brightness = Math.max(0.4, baseLight + heightLight + varLight);
 
                     color.multiplyScalar(brightness);
 
@@ -275,14 +280,12 @@ class MinecraftGame {
                 flatShading: true,
                 side: THREE.FrontSide,
                 shininess: 15,
-                fog: true,
-                wireframe: false
+                fog: true
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
             mesh.frustumCulled = true;
-            mesh.position.copy({ x: 0, y: 0, z: 0 });
             return mesh;
         }
 
@@ -397,6 +400,11 @@ class MinecraftGame {
     animate() {
         requestAnimationFrame(() => this.animate());
 
+        const frameStartTime = Date.now();
+        const deltaTime = frameStartTime - this.lastFrameTime;
+        this.lastFrameTime = frameStartTime;
+        this.performanceMonitor.recordFrameTime(deltaTime);
+
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
 
@@ -419,6 +427,7 @@ class MinecraftGame {
         this.particleSystem.update();
         this.waterRenderer.update();
         this.updateStepSounds();
+        this.performanceMonitor.updateMetrics(this);
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);
