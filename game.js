@@ -319,7 +319,8 @@ class MinecraftGame {
 
         for (const key of chunksToRender) {
             if (!this.chunkMeshes.has(key)) {
-                const chunk = this.world.getChunk(...key.split(',').map(Number));
+                const [cx, cz] = key.split(',').map(Number);
+                const chunk = this.world.getChunk(cx, cz);
                 const mesh = this.buildChunkMesh(chunk);
                 if (mesh) {
                     this.scene.add(mesh);

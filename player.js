@@ -53,7 +53,14 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        const isSprinting = this.keys['shift'] && isMoving;
+
+        this.isSprinting = isSprinting;
+        this.isCrouching = this.keys['shift'] && isMoving && !isSprinting;
+
+        const speed = isSprinting ? PLAYER_SPRINT_SPEED :
+                     (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPEED);
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -65,9 +72,6 @@ export class Player {
 
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
-
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
     }
 
     applyPhysics() {
@@ -160,9 +164,9 @@ export class Player {
 }
 
 export class Camera {
-    constructor() {
+    constructor(sensitivity = 0.003) {
         this.rotation = { x: 0, y: 0 };
-        this.mouseSensitivity = 0.003;
+        this.mouseSensitivity = sensitivity;
         this.setupMouseControls();
     }
 

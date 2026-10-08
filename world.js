@@ -67,7 +67,7 @@ export class Chunk {
                         }
                     } else if (y < 62) {
                         this.setBlock(x, y, z, BLOCKS.WATER);
-                    } else if (y > 8 && y < 15 && getLavaChance(wx, y, wz) > 0.7) {
+                    } else if (y > 10 && y < 20 && getLavaChance(wx, y, wz) > 0.65) {
                         this.setBlock(x, y, z, BLOCKS.LAVA);
                     }
                 }
@@ -143,7 +143,9 @@ function getOreBlock(x, y, z) {
 
 function getLavaChance(x, y, z) {
     if (!perlinNoise) return 0;
-    return perlinNoise.noise2D(x * 0.03, z * 0.03) + perlinNoise.noise2D(x * 0.08 + y * 0.02, z * 0.08);
+    const horizontal = perlinNoise.noise2D(x * 0.025, z * 0.025);
+    const vertical = perlinNoise.noise2D(x * 0.1 + y * 0.015, z * 0.1 + y * 0.015);
+    return horizontal * 0.6 + vertical * 0.4;
 }
 
 function generateTree(chunk, x, z, height) {
