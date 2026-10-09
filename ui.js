@@ -16,6 +16,11 @@ export class UI {
             slot.addEventListener('click', () => {
                 this.selectBlock(index);
             });
+
+            slot.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                this.selectBlock(index);
+            });
         });
 
         document.addEventListener('keydown', (e) => {
@@ -26,12 +31,14 @@ export class UI {
         });
 
         document.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const direction = e.deltaY > 0 ? 1 : -1;
-            let newIndex = this.selectedBlock + direction;
-            if (newIndex < 0) newIndex = 8;
-            if (newIndex > 8) newIndex = 0;
-            this.selectBlock(newIndex);
+            if (e.target === document.body || e.target === document.getElementById('gameCanvas')) {
+                e.preventDefault();
+                const direction = e.deltaY > 0 ? 1 : -1;
+                let newIndex = this.selectedBlock + direction;
+                if (newIndex < 0) newIndex = 8;
+                if (newIndex > 8) newIndex = 0;
+                this.selectBlock(newIndex);
+            }
         }, { passive: false });
     }
 
