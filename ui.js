@@ -55,6 +55,11 @@ export class UI {
         return this.blocks[this.selectedBlock];
     }
 
+    toggleHelp() {
+        const helpEl = document.getElementById('help');
+        helpEl.classList.toggle('show');
+    }
+
     updateHUD(playerPos, selectedBlock, fps) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');

@@ -132,29 +132,32 @@ function generateTree(chunk, x, z, height) {
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
-    if (treeChance < 0.4) return;
+    if (treeChance < 0.35) return;
 
     const seed = Math.sin(worldX * 73.156 + worldZ * 94.673) * 10000;
-    const trunkHeight = 5 + Math.floor((seed % 5));
+    const treeType = Math.floor((seed % 3));
+    const trunkHeight = treeType === 0 ? 4 + Math.floor((seed % 4)) : 5 + Math.floor((seed % 3));
     const y = height;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
-            if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
+            const blockAtPos = chunk.getBlock(x, y + i, z);
+            if (blockAtPos === BLOCKS.AIR || blockAtPos === BLOCKS.OAK_LEAVES) {
                 chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
             }
         }
     }
 
-    const foliageStart = y + Math.max(trunkHeight - 4, 1);
-    const foliageRadius = 3 + Math.floor((seed % 2));
+    const foliageStart = y + Math.max(trunkHeight - 3 - Math.floor(treeType / 1.5), 1);
+    const foliageRadius = treeType === 0 ? 2 + Math.floor((seed % 2)) : 3 + Math.floor((seed % 2));
 
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.2));
-        const sampleRadius = radiusAtLevel * 1.2;
+        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / (treeType === 1 ? 1 : 1.2)));
+        const sampleRadius = radiusAtLevel * 1.3;
 
-        for (let angle = 0; angle < Math.PI * 2; angle += 0.25) {
-            for (let dist = 0; dist <= sampleRadius; dist += 0.5) {
+        const angleStep = treeType === 0 ? 0.3 : 0.25;
+        for (let angle = 0; angle < Math.PI * 2; angle += angleStep) {
+            for (let dist = 0; dist <= sampleRadius; dist += 0.4) {
                 const dx = Math.round(Math.cos(angle) * dist);
                 const dz = Math.round(Math.sin(angle) * dist);
                 const fx = x + dx;
@@ -163,7 +166,7 @@ function generateTree(chunk, x, z, height) {
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
                     const blockAtPos = chunk.getBlock(fx, fy, fz);
-                    if (blockAtPos === BLOCKS.AIR || blockAtPos === BLOCKS.OAK_LEAVES) {
+                    if (blockAtPos === BLOCKS.AIR) {
                         chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
                     }
                 }
@@ -173,9 +176,10 @@ function generateTree(chunk, x, z, height) {
 }
 
 export class World {
-    constructor(renderDistance = 8) {
+    constructor(renderDistance = 10) {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
+        this.lastChunkCleanup = 0;
         initPerlinNoise();
     }
 
