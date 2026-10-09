@@ -2,11 +2,11 @@ import { BLOCKS, isBlockSolid } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
-const PLAYER_SPEED = 0.1;
-const PLAYER_SPRINT_SPEED = 0.15;
-const PLAYER_CROUCH_SPEED = 0.05;
-const GRAVITY = 0.02;
-const JUMP_POWER = 0.5;
+const PLAYER_SPEED = 0.12;
+const PLAYER_SPRINT_SPEED = 0.18;
+const PLAYER_CROUCH_SPEED = 0.04;
+const GRAVITY = 0.025;
+const JUMP_POWER = 0.55;
 
 export class Player {
     constructor(world) {
@@ -19,6 +19,8 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.isInWater = false;
+        this.shiftPressedLastFrame = false;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -53,7 +55,14 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+
+        if (this.keys['shift'] && !this.shiftPressedLastFrame && isMoving) {
+            this.isCrouching = !this.isCrouching;
+        }
+        this.shiftPressedLastFrame = this.keys['shift'];
+
+        const speed = this.isCrouching ? PLAYER_CROUCH_SPEED : (this.keys['shift'] && !this.isCrouching ? PLAYER_SPRINT_SPEED : PLAYER_SPEED);
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -66,8 +75,12 @@ export class Player {
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
 
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+        this.isSprinting = !this.isCrouching && this.keys['shift'] && isMoving;
+
+        if (this.isInWater) {
+            this.velocity.x *= 0.6;
+            this.velocity.z *= 0.6;
+        }
     }
 
     applyPhysics() {
@@ -85,31 +98,39 @@ export class Player {
         const height = PLAYER_HEIGHT;
 
         this.isOnGround = false;
+        this.isInWater = false;
 
         const checkPoints = [
-            { dy: 0.1, radius: radius * 0.9 },
-            { dy: height * 0.3, radius: radius * 0.9 },
-            { dy: height * 0.6, radius: radius * 0.9 },
-            { dy: height * 0.9, radius: radius * 0.7 }
+            { dy: 0.05, radius: radius * 0.95 },
+            { dy: height * 0.2, radius: radius * 0.95 },
+            { dy: height * 0.5, radius: radius * 0.95 },
+            { dy: height * 0.85, radius: radius * 0.8 }
         ];
 
+        let hitSolid = false;
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
                 const cz = this.position.z + Math.sin(angle) * point.radius;
 
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
-                if (isBlockSolid(block)) {
+                if (block === BLOCKS.WATER) {
+                    this.isInWater = true;
+                    if (this.velocity.y < 0) {
+                        this.velocity.y *= 0.5;
+                    }
+                } else if (isBlockSolid(block) && !hitSolid) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
-                    if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
+                    if (moveLen > 0.01) {
+                        const scale = Math.min(1.5 / moveLen, 0.5);
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
-                    break;
+                    hitSolid = true;
                 }
             }
+            if (hitSolid) break;
         }
 
         if (this.velocity.y < 0) {
@@ -144,6 +165,11 @@ export class Player {
             }
         }
 
+        const eyeY = this.position.y + PLAYER_HEIGHT * 0.85;
+        if (isBlockSolid(this.world.getBlock(Math.floor(this.position.x), Math.floor(eyeY), Math.floor(this.position.z)))) {
+            this.position.y -= 0.1;
+        }
+
         if (this.position.y < -10) {
             this.position.y = 100;
             this.velocity.y = 0;
@@ -162,21 +188,30 @@ export class Player {
 export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
-        this.mouseSensitivity = 0.003;
+        this.mouseSensitivity = 0.0025;
+        this.maxPitch = Math.PI / 2;
         this.setupMouseControls();
     }
 
     setupMouseControls() {
-        document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+        let lastX = 0;
+        let lastY = 0;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+        document.addEventListener('mousemove', (e) => {
+            if (document.pointerLockElement !== document.body) return;
+
+            const deltaX = e.movementX || 0;
+            const deltaY = e.movementY || 0;
+
+            this.rotation.y -= deltaX * this.mouseSensitivity;
+            this.rotation.x -= deltaY * this.mouseSensitivity;
+
+            this.rotation.x = Math.max(-this.maxPitch, Math.min(this.maxPitch, this.rotation.x));
         });
 
         document.addEventListener('click', () => {
             if (document.pointerLockElement !== document.body) {
-                document.body.requestPointerLock();
+                document.body.requestPointerLock().catch(e => console.error('Pointer lock failed:', e));
             }
         });
     }
