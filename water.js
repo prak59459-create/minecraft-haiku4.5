@@ -48,7 +48,8 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const brightness = 0.85 + (Math.sin(wx * 0.1 + wz * 0.1) + Math.cos(wy * 0.05)) * 0.1;
+                        const color = waterColor.clone().multiplyScalar(brightness);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
