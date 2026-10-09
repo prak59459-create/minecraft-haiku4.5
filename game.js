@@ -7,6 +7,7 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { SaveSystem } from './savesystem.js';
 
 class MinecraftGame {
     constructor() {
@@ -26,17 +27,21 @@ class MinecraftGame {
         this.audioManager = new AudioManager();
         this.debugDisplay = new DebugDisplay();
         this.blockOutline = new BlockOutline(this.scene);
+        this.saveSystem = new SaveSystem();
 
         this.chunkMeshes = new Map();
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.lastSaveTime = 0;
+        this.autoSaveInterval = 60000;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
+        this.loadWorldIfExists();
         this.animate();
     }
 
@@ -86,7 +91,42 @@ class MinecraftGame {
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
+            if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+                e.preventDefault();
+                this.saveWorld();
+            }
+            if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) {
+                e.preventDefault();
+                this.loadWorld();
+            }
         });
+    }
+
+    loadWorldIfExists() {
+        if (this.saveSystem.hasSave()) {
+            const result = this.saveSystem.loadWorld(this.world);
+            if (result) {
+                this.player.position = { ...result.playerPos };
+                this.needsChunkMeshRebuild = true;
+            }
+        }
+    }
+
+    saveWorld() {
+        const success = this.saveSystem.saveWorld(this.world, this.player.position);
+        this.lastSaveTime = Date.now();
+        if (success) {
+            console.log('World saved successfully');
+        } else {
+            console.error('Failed to save world');
+        }
+    }
+
+    autoSave() {
+        const now = Date.now();
+        if (now - this.lastSaveTime > this.autoSaveInterval) {
+            this.saveWorld();
+        }
     }
 
     onMouseClick(event) {
@@ -373,6 +413,7 @@ class MinecraftGame {
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
+        this.autoSave();
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);

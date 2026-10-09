@@ -83,28 +83,54 @@ export class DebugDisplay {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
         }
 
+        this.gameData = {
+            playerX: game.player.position.x.toFixed(2),
+            playerY: game.player.position.y.toFixed(2),
+            playerZ: game.player.position.z.toFixed(2),
+            rotX: (game.gameCamera.rotation.x * 180 / Math.PI).toFixed(1),
+            rotY: (game.gameCamera.rotation.y * 180 / Math.PI).toFixed(1),
+            renderDist: game.world.renderDistance,
+            inventorySlot: game.ui.selectedSlot + 1
+        };
+
         this.render();
     }
 
     render() {
         const lines = [
-            '=== DEBUG INFO ===',
+            '═══ DEBUG INFO ═══',
             `FPS: ${this.stats.fps}`,
+            '',
+            '─ Position ─',
+            `X: ${this.gameData.playerX}`,
+            `Y: ${this.gameData.playerY}`,
+            `Z: ${this.gameData.playerZ}`,
+            '',
+            '─ Rotation ─',
+            `Yaw: ${this.gameData.rotY}°`,
+            `Pitch: ${this.gameData.rotX}°`,
+            '',
+            '─ Rendering ─',
             `Chunks: ${this.stats.chunks}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
             `Draw Calls: ${this.stats.drawCalls}`,
             `Particles: ${this.stats.particles}`,
+            '',
+            '─ System ─',
             `Memory: ${this.stats.memory} MB`,
-            '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            `Inv: ${this.gameData.inventorySlot}/9`,
+            '',
+            '═════════════════',
+            'F3: Toggle | H: Help'
         ];
 
-        this.container.innerHTML = lines.map(line => {
-            if (line.startsWith('=')) return `<div>${line}</div>`;
+        this.container.innerHTML = lines.map((line, idx) => {
+            if (line.startsWith('═') || line.startsWith('─')) {
+                return `<div style="opacity: 0.6;">${line}</div>`;
+            }
             const parts = line.split(': ');
-            if (parts.length === 2) {
+            if (parts.length === 2 && line.includes(':')) {
                 return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
             }
             return `<div>${line}</div>`;
