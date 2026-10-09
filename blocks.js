@@ -46,11 +46,15 @@ export const BLOCK_COLORS = {
     8: 0x4A90E2,
     9: 0x999999,
     10: 0x1A1A1A,
-    11: 0x1A1A1A,
-    12: 0xB8860B,
-    13: 0xFFD700,
-    14: 0x00CED1
+    11: 0x2A2A2A,
+    12: 0xC8A512,
+    13: 0xFFE033,
+    14: 0x20E0E0
 };
+
+export const ORE_COLORS = new Set([
+    11, 12, 13, 14
+]);
 
 export const SOLID_BLOCKS = new Set([
     BLOCKS.STONE,

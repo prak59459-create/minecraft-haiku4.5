@@ -7,6 +7,9 @@ const PLAYER_SPRINT_SPEED = 0.15;
 const PLAYER_CROUCH_SPEED = 0.05;
 const GRAVITY = 0.02;
 const JUMP_POWER = 0.5;
+const AIR_FRICTION = 0.98;
+const GROUND_FRICTION = 0.95;
+const STEP_HEIGHT = 0.6;
 
 export class Player {
     constructor(world) {
@@ -73,6 +76,11 @@ export class Player {
     applyPhysics() {
         if (!this.isOnGround) {
             this.velocity.y -= GRAVITY;
+            this.velocity.x *= AIR_FRICTION;
+            this.velocity.z *= AIR_FRICTION;
+        } else {
+            this.velocity.x *= GROUND_FRICTION;
+            this.velocity.z *= GROUND_FRICTION;
         }
 
         this.position.x += this.velocity.x;
@@ -86,14 +94,14 @@ export class Player {
 
         this.isOnGround = false;
 
-        const checkPoints = [
+        const horizontalCheckPoints = [
             { dy: 0.1, radius: radius * 0.9 },
             { dy: height * 0.3, radius: radius * 0.9 },
             { dy: height * 0.6, radius: radius * 0.9 },
             { dy: height * 0.9, radius: radius * 0.7 }
         ];
 
-        for (const point of checkPoints) {
+        for (const point of horizontalCheckPoints) {
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
@@ -103,9 +111,13 @@ export class Player {
                 if (isBlockSolid(block)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
                     if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
-                        this.position.x -= this.velocity.x * scale;
-                        this.position.z -= this.velocity.z * scale;
+                        if (this.isOnGround && point.dy < STEP_HEIGHT) {
+                            this.position.y += STEP_HEIGHT;
+                        } else {
+                            const scale = 1.5 / moveLen;
+                            this.position.x -= this.velocity.x * scale;
+                            this.position.z -= this.velocity.z * scale;
+                        }
                     }
                     break;
                 }
@@ -114,15 +126,19 @@ export class Player {
 
         if (this.velocity.y < 0) {
             let onGround = false;
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.8;
-                const cy = this.position.y - 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.8;
+            const checkRadius = 8;
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / checkRadius) {
+                const cx = this.position.x + Math.cos(angle) * radius * 0.7;
+                const cz = this.position.z + Math.sin(angle) * radius * 0.7;
 
-                if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
-                    onGround = true;
-                    break;
+                for (let oy = -0.1; oy <= 0.1; oy += 0.05) {
+                    const cy = this.position.y + oy;
+                    if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
+                        onGround = true;
+                        break;
+                    }
                 }
+                if (onGround) break;
             }
 
             if (onGround) {
@@ -134,11 +150,11 @@ export class Player {
         if (this.velocity.y > 0) {
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.9;
-                const cy = this.position.y + height + 0.01;
+                const cy = this.position.y + height + 0.1;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.9;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
-                    this.velocity.y = 0;
+                    this.velocity.y = Math.min(0, this.velocity.y);
                     break;
                 }
             }
@@ -162,7 +178,7 @@ export class Player {
 export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
-        this.mouseSensitivity = 0.003;
+        this.mouseSensitivity = 0.0025;
         this.setupMouseControls();
     }
 
