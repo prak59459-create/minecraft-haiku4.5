@@ -215,7 +215,8 @@ class MinecraftGame {
     rebuildDirtyChunks() {
         if (this.dirtyChunks.size === 0) return;
 
-        const keysToRebuild = Array.from(this.dirtyChunks).slice(0, 2);
+        const maxRebuildPerFrame = 2;
+        const keysToRebuild = Array.from(this.dirtyChunks).slice(0, maxRebuildPerFrame);
 
         for (const key of keysToRebuild) {
             const [cx, cz] = key.split(',').map(Number);

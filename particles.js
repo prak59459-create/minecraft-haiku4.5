@@ -2,12 +2,14 @@ export class ParticleSystem {
     constructor(scene) {
         this.scene = scene;
         this.particles = [];
+        this.maxParticles = 2000;
         this.geometry = new THREE.BufferGeometry();
         this.material = new THREE.PointsMaterial({
             size: 0.2,
             sizeAttenuation: true,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.8,
+            vertexColors: true
         });
         this.points = new THREE.Points(this.geometry, this.material);
         this.scene.add(this.points);
@@ -34,6 +36,10 @@ export class ParticleSystem {
 
     update() {
         const gravity = 0.01;
+
+        if (this.particles.length > this.maxParticles) {
+            this.particles.splice(0, this.particles.length - this.maxParticles);
+        }
 
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
@@ -68,14 +74,13 @@ export class ParticleSystem {
             positions[i * 3 + 2] = p.position.z;
 
             const color = new THREE.Color(p.color);
-            const alpha = p.life / p.maxLife;
-            colors[i * 3] = color.r;
-            colors[i * 3 + 1] = color.g;
-            colors[i * 3 + 2] = color.b;
+            const alpha = Math.max(0, p.life / p.maxLife);
+            colors[i * 3] = color.r * alpha;
+            colors[i * 3 + 1] = color.g * alpha;
+            colors[i * 3 + 2] = color.b * alpha;
         }
 
         this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        this.material.opacity = 0.8;
     }
 }
