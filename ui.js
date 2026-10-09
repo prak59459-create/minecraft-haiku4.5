@@ -3,7 +3,7 @@ import { BLOCK_NAMES } from './blocks.js';
 export class UI {
     constructor() {
         this.selectedBlock = 1;
-        this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        this.blocks = [1, 2, 3, 4, 5, 7, 8, 14, 16];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
         this.setupInventoryUI();
@@ -45,14 +45,22 @@ export class UI {
         this.selectedBlock = index;
     }
 
-    updateHUD(playerPos, selectedBlock, fps) {
+    updateHUD(playerPos, selectedBlock, fps, player, biomeType) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
 
         coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
         fpsEl.textContent = `FPS: ${fps}`;
-        blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+
+        let blockText = BLOCK_NAMES[selectedBlock] || 'Air';
+        if (player && player.isInWater) {
+            blockText = `[WATER] ${blockText}`;
+        }
+        if (biomeType) {
+            blockText += ` (${biomeType})`;
+        }
+        blockEl.textContent = blockText;
     }
 
     updateFPS() {

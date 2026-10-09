@@ -19,8 +19,10 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.isInWater = false;
 
         this.keys = {};
+        this.lastStepPos = { x: 0, z: 0 };
         this.setupKeyboardControls();
     }
 
@@ -44,16 +46,58 @@ export class Player {
     }
 
     update() {
+        const prevX = this.position.x;
+        const prevZ = this.position.z;
+
         this.handleMovement();
+        this.checkWaterState();
         this.applyPhysics();
         this.checkCollisions();
+
+        if (this.isOnGround && this.isMoving()) {
+            const distance = Math.sqrt((this.position.x - this.lastStepPos.x) ** 2 + (this.position.z - this.lastStepPos.z) ** 2);
+            if (distance > 0.4) {
+                this.lastStepPos.x = this.position.x;
+                this.lastStepPos.z = this.position.z;
+                if (this.onStep) this.onStep();
+            }
+        }
+    }
+
+    checkWaterState() {
+        const eyeX = this.position.x;
+        const eyeY = this.position.y + PLAYER_HEIGHT * 0.5;
+        const eyeZ = this.position.z;
+
+        const block = this.world.getBlock(Math.floor(eyeX), Math.floor(eyeY), Math.floor(eyeZ));
+        this.isInWater = block === BLOCKS.WATER;
+    }
+
+    isMoving() {
+        return this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
     }
 
     handleMovement() {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        let speed = PLAYER_SPEED;
+
+        if (this.keys['shift']) {
+            if (isMoving && (this.keys['w'] || this.keys['s'])) {
+                speed = PLAYER_SPRINT_SPEED;
+                this.isSprinting = true;
+                this.isCrouching = false;
+            } else {
+                speed = PLAYER_CROUCH_SPEED;
+                this.isSprinting = false;
+                this.isCrouching = true;
+            }
+        } else {
+            this.isSprinting = false;
+            this.isCrouching = false;
+        }
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -65,14 +109,20 @@ export class Player {
 
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
-
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
     }
 
     applyPhysics() {
-        if (!this.isOnGround) {
-            this.velocity.y -= GRAVITY;
+        if (this.isInWater) {
+            this.velocity.y *= 0.95;
+            this.velocity.y -= GRAVITY * 0.3;
+
+            if (this.keys[' ']) {
+                this.velocity.y = 0.2;
+            }
+        } else {
+            if (!this.isOnGround) {
+                this.velocity.y -= GRAVITY;
+            }
         }
 
         this.position.x += this.velocity.x;
