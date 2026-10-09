@@ -127,15 +127,24 @@ class MinecraftGame {
 
     raycastBlock() {
         const eyePos = this.player.getEyePosition();
-        const direction = new THREE.Vector3(
-            Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
-            Math.sin(this.gameCamera.rotation.x),
-            Math.cos(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x)
-        );
+        const cosX = Math.cos(this.gameCamera.rotation.x);
+        const sinX = Math.sin(this.gameCamera.rotation.x);
+        const cosY = Math.cos(this.gameCamera.rotation.y);
+        const sinY = Math.sin(this.gameCamera.rotation.y);
+
+        const direction = {
+            x: sinY * cosX,
+            y: sinX,
+            z: cosY * cosX
+        };
 
         let hit = null;
+        const step = 0.05;
+        let prevBx = Math.floor(eyePos.x);
+        let prevBy = Math.floor(eyePos.y);
+        let prevBz = Math.floor(eyePos.z);
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = step; dist <= this.raycastDistance; dist += step) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -144,17 +153,10 @@ class MinecraftGame {
             const by = Math.floor(y);
             const bz = Math.floor(z);
 
+            if (bx === prevBx && by === prevBy && bz === prevBz) continue;
+
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
-                const prevX = eyePos.x + direction.x * prevDist;
-                const prevY = eyePos.y + direction.y * prevDist;
-                const prevZ = eyePos.z + direction.z * prevDist;
-
-                const prevBx = Math.floor(prevX);
-                const prevBy = Math.floor(prevY);
-                const prevBz = Math.floor(prevZ);
-
                 let normal = { x: 0, y: 0, z: 0 };
                 if (prevBx !== bx) normal.x = prevBx < bx ? -1 : 1;
                 else if (prevBy !== by) normal.y = prevBy < by ? -1 : 1;
@@ -163,6 +165,10 @@ class MinecraftGame {
                 hit = { x: bx, y: by, z: bz, block, normal, dist };
                 break;
             }
+
+            prevBx = bx;
+            prevBy = by;
+            prevBz = bz;
         }
 
         if (!hit) {
@@ -206,13 +212,17 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const color = new THREE.Color(BLOCK_COLORS[blockId]);
+                    const baseColor = BLOCK_COLORS[blockId];
+                    const r = (baseColor >> 16) & 255;
+                    const g = (baseColor >> 8) & 255;
+                    const b = baseColor & 255;
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.75;
+                    const heightLight = (wy / WORLD_HEIGHT) * 0.25;
+                    const varLight = Math.sin(wx * 0.3 + wz * 0.3) * 0.08;
+                    const brightness = Math.max(0.5, baseLight + heightLight + varLight);
 
+                    const color = new THREE.Color(baseColor);
                     color.multiplyScalar(brightness);
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
@@ -226,17 +236,15 @@ class MinecraftGame {
             if (indices.length > 0) {
                 geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             }
-            geometry.computeVertexNormals();
 
-            const material = new THREE.MeshPhongMaterial({
+            const material = new THREE.MeshLambertMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
                 side: THREE.FrontSide,
-                shininess: 30
+                flatShading: true
             });
             const mesh = new THREE.Mesh(geometry, material);
-            mesh.castShadow = true;
+            mesh.castShadow = false;
             mesh.receiveShadow = true;
             mesh.frustumCulled = true;
             return mesh;
@@ -261,7 +269,8 @@ class MinecraftGame {
         const g = Math.floor(color.g * 255);
         const b = Math.floor(color.b * 255);
 
-        for (const face of faces) {
+        for (let faceIdx = 0; faceIdx < faces.length; faceIdx++) {
+            const face = faces[faceIdx];
             const [dx, dy, dz] = face.dir;
             const nx = x + dx;
             const ny = y + dy;
@@ -271,9 +280,20 @@ class MinecraftGame {
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
+
+            let faceLight = 0.9;
+            if (faceIdx === 2) faceLight = 1.0;
+            else if (faceIdx === 3) faceLight = 0.7;
+            else if (faceIdx === 4) faceLight = 0.95;
+            else if (faceIdx === 5) faceLight = 0.85;
+
+            const adjR = Math.floor(r * faceLight);
+            const adjG = Math.floor(g * faceLight);
+            const adjB = Math.floor(b * faceLight);
+
             for (const [vx, vy, vz] of face.verts) {
                 vertices.push(x + vx, y + vy, z + vz);
-                colors.push(r, g, b);
+                colors.push(adjR, adjG, adjB);
             }
 
             indices.push(startIndex, startIndex + 1, startIndex + 2);
