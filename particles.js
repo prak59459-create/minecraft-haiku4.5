@@ -67,11 +67,10 @@ export class ParticleSystem {
             positions[i * 3 + 1] = p.position.y;
             positions[i * 3 + 2] = p.position.z;
 
-            const color = new THREE.Color(p.color);
-            const alpha = p.life / p.maxLife;
-            colors[i * 3] = color.r;
-            colors[i * 3 + 1] = color.g;
-            colors[i * 3 + 2] = color.b;
+            const hexColor = p.color;
+            colors[i * 3] = ((hexColor >> 16) & 255) / 255;
+            colors[i * 3 + 1] = ((hexColor >> 8) & 255) / 255;
+            colors[i * 3 + 2] = (hexColor & 255) / 255;
         }
 
         this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));

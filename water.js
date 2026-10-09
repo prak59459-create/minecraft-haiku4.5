@@ -6,6 +6,7 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.colorCache = new THREE.Color(0x4A90E2);
     }
 
     buildWaterMesh(chunk) {
@@ -16,7 +17,9 @@ export class WaterRenderer {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x4A90E2);
+        const waterColorR = 0x4A / 255;
+        const waterColorG = 0x90 / 255;
+        const waterColorB = 0xE2 / 255;
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -48,11 +51,14 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const brightness = 0.8 + Math.random() * 0.2;
+                        const r = Math.floor(waterColorR * brightness * 255);
+                        const g = Math.floor(waterColorG * brightness * 255);
+                        const b = Math.floor(waterColorB * brightness * 255);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
+                            colors.push(r, g, b);
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -83,7 +89,32 @@ export class WaterRenderer {
         return null;
     }
 
-    update() {
+    updateVisibleWaterChunks(playerX, playerZ) {
+        for (const [key, chunk] of this.world.chunks) {
+            const [cx, cz] = key.split(',').map(Number);
+            const playerChunkX = Math.floor(playerX / 16);
+            const playerChunkZ = Math.floor(playerZ / 16);
+
+            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+                if (this.waterMeshes.has(key)) {
+                    this.scene.remove(this.waterMeshes.get(key));
+                    this.waterMeshes.delete(key);
+                }
+                continue;
+            }
+
+            if (!this.waterMeshes.has(key) && chunk.generated) {
+                const mesh = this.buildWaterMesh(chunk);
+                if (mesh) {
+                    this.scene.add(mesh);
+                    this.waterMeshes.set(key, mesh);
+                }
+            }
+        }
+    }
+
+    update(playerX, playerZ) {
         this.time += 0.016;
+        this.updateVisibleWaterChunks(playerX, playerZ);
     }
 }
