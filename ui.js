@@ -1,19 +1,23 @@
-import { BLOCK_NAMES } from './blocks.js';
+import { BLOCK_NAMES, BLOCKS } from './blocks.js';
 
 export class UI {
     constructor() {
-        this.selectedBlock = 1;
-        this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        this.selectedBlock = 0;
+        this.blocks = [BLOCKS.STONE, BLOCKS.GRASS, BLOCKS.DIRT, BLOCKS.COBBLESTONE, BLOCKS.OAK_LOG, BLOCKS.OAK_LEAVES, BLOCKS.SAND, BLOCKS.WATER, BLOCKS.GRAVEL];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.frameCount = 0;
         this.setupInventoryUI();
     }
 
     setupInventoryUI() {
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach((slot, index) => {
-            const blockId = parseInt(slot.dataset.block);
             slot.addEventListener('click', () => {
+                this.selectBlock(index);
+            });
+            slot.addEventListener('touchstart', (e) => {
+                e.preventDefault();
                 this.selectBlock(index);
             });
         });
@@ -26,12 +30,14 @@ export class UI {
         });
 
         document.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const direction = e.deltaY > 0 ? 1 : -1;
-            let newIndex = this.selectedBlock + direction;
-            if (newIndex < 0) newIndex = 8;
-            if (newIndex > 8) newIndex = 0;
-            this.selectBlock(newIndex);
+            if (document.pointerLockElement === document.body) {
+                e.preventDefault();
+                const direction = e.deltaY > 0 ? 1 : -1;
+                let newIndex = this.selectedBlock + direction;
+                if (newIndex < 0) newIndex = 8;
+                if (newIndex > 8) newIndex = 0;
+                this.selectBlock(newIndex);
+            }
         }, { passive: false });
     }
 
@@ -43,6 +49,10 @@ export class UI {
         slots[index].classList.add('selected');
 
         this.selectedBlock = index;
+    }
+
+    getSelectedBlockType() {
+        return this.blocks[this.selectedBlock];
     }
 
     updateHUD(playerPos, selectedBlock, fps) {

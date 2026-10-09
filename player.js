@@ -7,6 +7,8 @@ const PLAYER_SPRINT_SPEED = 0.15;
 const PLAYER_CROUCH_SPEED = 0.05;
 const GRAVITY = 0.02;
 const JUMP_POWER = 0.5;
+const WATER_DRAG = 0.8;
+const SWIM_SPEED = 0.08;
 
 export class Player {
     constructor(world) {
@@ -49,16 +51,25 @@ export class Player {
         this.checkCollisions();
     }
 
+    isInWater() {
+        const eyePos = this.getEyePosition();
+        return this.world.getBlock(Math.floor(eyePos.x), Math.floor(eyePos.y), Math.floor(eyePos.z)) === BLOCKS.WATER;
+    }
+
     handleMovement() {
         let moveX = 0;
         let moveZ = 0;
+        let moveY = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const inWater = this.isInWater();
+        const speed = inWater ? SWIM_SPEED : (this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED);
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
         if (this.keys['a']) moveX -= speed;
         if (this.keys['d']) moveX += speed;
+
+        if (inWater && this.keys[' ']) moveY += SWIM_SPEED * 0.5;
 
         const cosY = Math.cos(this.rotation.y);
         const sinY = Math.sin(this.rotation.y);
@@ -66,12 +77,21 @@ export class Player {
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
 
+        if (inWater) {
+            this.velocity.y = moveY > 0 ? moveY : this.velocity.y;
+        }
+
         this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
         this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
     }
 
     applyPhysics() {
-        if (!this.isOnGround) {
+        const inWater = this.isInWater();
+
+        if (inWater) {
+            this.velocity.y *= WATER_DRAG;
+            this.velocity.y -= GRAVITY * 0.3;
+        } else if (!this.isOnGround) {
             this.velocity.y -= GRAVITY;
         }
 
