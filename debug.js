@@ -83,6 +83,10 @@ export class DebugDisplay {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
         }
 
+        this.playerX = game.player.position.x.toFixed(1);
+        this.playerY = game.player.position.y.toFixed(1);
+        this.playerZ = game.player.position.z.toFixed(1);
+
         this.render();
     }
 
@@ -90,6 +94,7 @@ export class DebugDisplay {
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
+            `Pos: X=${this.playerX}, Y=${this.playerY}, Z=${this.playerZ}`,
             `Chunks: ${this.stats.chunks}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
@@ -97,8 +102,7 @@ export class DebugDisplay {
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3: Toggle | H: Help'
         ];
 
         this.container.innerHTML = lines.map(line => {
