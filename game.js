@@ -344,7 +344,9 @@ class MinecraftGame {
 
             if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
+                    const mesh = this.chunkMeshes.get(key);
+                    this.scene.remove(mesh);
+                    this.disposeMesh(mesh);
                     this.chunkMeshes.delete(key);
                 }
                 continue;
@@ -373,7 +375,9 @@ class MinecraftGame {
 
             if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
                 if (waterMeshes.has(key)) {
-                    this.scene.remove(waterMeshes.get(key));
+                    const waterMesh = waterMeshes.get(key);
+                    this.scene.remove(waterMesh);
+                    this.disposeMesh(waterMesh);
                     waterMeshes.delete(key);
                 }
                 continue;
@@ -397,6 +401,18 @@ class MinecraftGame {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    disposeMesh(mesh) {
+        if (!mesh) return;
+        if (mesh.geometry) mesh.geometry.dispose();
+        if (mesh.material) {
+            if (Array.isArray(mesh.material)) {
+                mesh.material.forEach(m => m.dispose());
+            } else {
+                mesh.material.dispose();
+            }
+        }
     }
 
     getDistanceToChunk(cx, cz) {
@@ -437,7 +453,8 @@ class MinecraftGame {
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps, this.player);
+        const biomeType = this.world.getTerrainTypeAt(this.player.position.x, this.player.position.z);
+        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps, this.player, biomeType);
 
         if (this.showDebug) {
             this.debugDisplay.update(this);

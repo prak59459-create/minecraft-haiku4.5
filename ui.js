@@ -45,7 +45,7 @@ export class UI {
         this.selectedBlock = index;
     }
 
-    updateHUD(playerPos, selectedBlock, fps, player) {
+    updateHUD(playerPos, selectedBlock, fps, player, biomeType) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
@@ -56,6 +56,9 @@ export class UI {
         let blockText = BLOCK_NAMES[selectedBlock] || 'Air';
         if (player && player.isInWater) {
             blockText = `[WATER] ${blockText}`;
+        }
+        if (biomeType) {
+            blockText += ` (${biomeType})`;
         }
         blockEl.textContent = blockText;
     }

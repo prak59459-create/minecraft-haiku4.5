@@ -230,6 +230,10 @@ export class World {
 
         toDelete.forEach(key => this.chunks.delete(key));
     }
+
+    getTerrainTypeAt(x, z) {
+        return getTerrainType(x, z);
+    }
 }
 
 export const CHUNK_SIZE_EXPORT = CHUNK_SIZE;
