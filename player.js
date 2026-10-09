@@ -73,6 +73,7 @@ export class Player {
     applyPhysics() {
         if (!this.isOnGround) {
             this.velocity.y -= GRAVITY;
+            this.velocity.y = Math.max(-0.5, this.velocity.y);
         }
 
         this.position.x += this.velocity.x;
@@ -93,6 +94,7 @@ export class Player {
             { dy: height * 0.9, radius: radius * 0.7 }
         ];
 
+        let hitWall = false;
         for (const point of checkPoints) {
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
@@ -101,13 +103,41 @@ export class Player {
 
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
                 if (isBlockSolid(block)) {
-                    const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
-                    if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
-                        this.position.x -= this.velocity.x * scale;
-                        this.position.z -= this.velocity.z * scale;
-                    }
+                    hitWall = true;
                     break;
+                }
+            }
+            if (hitWall) break;
+        }
+
+        if (hitWall) {
+            const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+            if (moveLen > 0.01) {
+                const tryStep = 0.5;
+                let stepped = false;
+
+                for (let stepY = 0; stepY < tryStep; stepY += 0.1) {
+                    let canStep = true;
+                    for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+                        const cx = this.position.x + Math.cos(angle) * radius * 0.8;
+                        const cy = this.position.y + stepY;
+                        const cz = this.position.z + Math.sin(angle) * radius * 0.8;
+                        if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
+                            canStep = false;
+                            break;
+                        }
+                    }
+                    if (canStep) {
+                        this.position.y += stepY;
+                        stepped = true;
+                        break;
+                    }
+                }
+
+                if (!stepped) {
+                    const scale = 1.5 / moveLen;
+                    this.position.x -= this.velocity.x * scale;
+                    this.position.z -= this.velocity.z * scale;
                 }
             }
         }

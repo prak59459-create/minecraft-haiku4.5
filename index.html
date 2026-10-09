@@ -10,6 +10,15 @@
     <canvas id="gameCanvas"></canvas>
 
     <div id="ui">
+        <div id="loading-screen" class="loading-show">
+            <div class="loading-content">
+                <h1>Minecraft Clone</h1>
+                <p>Initializing world...</p>
+                <div class="loading-bar">
+                    <div class="loading-progress"></div>
+                </div>
+            </div>
+        </div>
         <div id="crosshair"></div>
         <div id="hud">
             <div id="coords">X: 0 Y: 0 Z: 0</div>
@@ -49,14 +58,27 @@
                 <span class="slot-number">8</span>
                 <div class="slot-block" style="background-color: #4A90E2;"></div>
             </div>
-            <div class="inventory-slot" data-index="8" data-block="9">
+            <div class="inventory-slot" data-index="8" data-block="15">
                 <span class="slot-number">9</span>
-                <div class="slot-block" style="background-color: #999999;"></div>
+                <div class="slot-block" style="background-color: #696969;"></div>
             </div>
         </div>
         <div id="help">
-            <p><strong>Controls:</strong> WASD Move | Space Jump | Shift Sprint/Crouch | Mouse Look</p>
-            <p>Left-Click Destroy | Right-Click Place | 1-9/Scroll Select Block</p>
+            <div class="help-section">
+                <h3>Controls</h3>
+                <p><strong>WASD</strong> - Move Forward/Back/Left/Right</p>
+                <p><strong>Space</strong> - Jump | <strong>Shift</strong> - Sprint/Crouch</p>
+                <p><strong>Mouse</strong> - Look Around | <strong>Left-Click</strong> - Destroy Block</p>
+                <p><strong>Right-Click</strong> - Place Block | <strong>1-9</strong> - Select Block</p>
+                <p><strong>Scroll</strong> - Change Selected Block | <strong>C</strong> - Pick Block</p>
+            </div>
+            <div class="help-section">
+                <h3>Tips</h3>
+                <p>Find ores underground for valuable resources</p>
+                <p>Use stone and wood to build structures</p>
+                <p>Press F3 to show debug info</p>
+                <p>Press H to toggle this help menu</p>
+            </div>
         </div>
     </div>
 

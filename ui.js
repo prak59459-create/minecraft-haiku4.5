@@ -16,6 +16,18 @@ export class UI {
             slot.addEventListener('click', () => {
                 this.selectBlock(index);
             });
+
+            slot.addEventListener('mouseenter', () => {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'inventory-tooltip';
+                tooltip.textContent = BLOCK_NAMES[blockId] || 'Unknown';
+                slot.appendChild(tooltip);
+            });
+
+            slot.addEventListener('mouseleave', () => {
+                const tooltip = slot.querySelector('.inventory-tooltip');
+                if (tooltip) tooltip.remove();
+            });
         });
 
         document.addEventListener('keydown', (e) => {
