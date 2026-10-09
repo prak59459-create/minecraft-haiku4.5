@@ -19,6 +19,8 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.isInWater = false;
+        this.shiftPressedLastFrame = false;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -53,7 +55,14 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+
+        if (this.keys['shift'] && !this.shiftPressedLastFrame && isMoving) {
+            this.isCrouching = !this.isCrouching;
+        }
+        this.shiftPressedLastFrame = this.keys['shift'];
+
+        const speed = this.isCrouching ? PLAYER_CROUCH_SPEED : (this.keys['shift'] && !this.isCrouching ? PLAYER_SPRINT_SPEED : PLAYER_SPEED);
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -66,8 +75,12 @@ export class Player {
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
 
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+        this.isSprinting = !this.isCrouching && this.keys['shift'] && isMoving;
+
+        if (this.isInWater) {
+            this.velocity.x *= 0.6;
+            this.velocity.z *= 0.6;
+        }
     }
 
     applyPhysics() {
@@ -85,6 +98,7 @@ export class Player {
         const height = PLAYER_HEIGHT;
 
         this.isOnGround = false;
+        this.isInWater = false;
 
         const checkPoints = [
             { dy: 0.1, radius: radius * 0.9 },
@@ -100,7 +114,12 @@ export class Player {
                 const cz = this.position.z + Math.sin(angle) * point.radius;
 
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
-                if (isBlockSolid(block)) {
+                if (block === BLOCKS.WATER) {
+                    this.isInWater = true;
+                    if (this.velocity.y < 0) {
+                        this.velocity.y *= 0.5;
+                    }
+                } else if (isBlockSolid(block)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
                     if (moveLen > 0) {
                         const scale = 1.5 / moveLen;

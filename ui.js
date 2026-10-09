@@ -13,19 +13,23 @@ export class UI {
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach((slot, index) => {
             const blockId = parseInt(slot.dataset.block);
-            slot.addEventListener('click', () => {
+            slot.addEventListener('click', (e) => {
+                if (document.pointerLockElement === document.body) {
+                    e.preventDefault();
+                }
                 this.selectBlock(index);
             });
         });
 
         document.addEventListener('keydown', (e) => {
             const num = parseInt(e.key);
-            if (num >= 1 && num <= 9) {
+            if (num >= 1 && num <= 9 && document.pointerLockElement === document.body) {
                 this.selectBlock(num - 1);
             }
         });
 
         document.addEventListener('wheel', (e) => {
+            if (document.pointerLockElement !== document.body) return;
             e.preventDefault();
             const direction = e.deltaY > 0 ? 1 : -1;
             let newIndex = this.selectedBlock + direction;
