@@ -54,23 +54,29 @@ export class Chunk {
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
                     } else if (y < height) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.SNOW);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
                     } else if (y < 62) {
-                        this.setBlock(x, y, z, BLOCKS.WATER);
+                        if (terrainType === 'snow' && y > 55) {
+                            this.setBlock(x, y, z, BLOCKS.ICE);
+                        } else {
+                            this.setBlock(x, y, z, BLOCKS.WATER);
+                        }
                     }
                 }
 
-                if (height > 65) {
+                if (height > 65 && terrainType !== 'snow') {
                     generateTree(this, x, z, height);
                 }
             }
@@ -98,6 +104,8 @@ function getTerrainType(x, z) {
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
     const humidity = perlinNoise.noise2D(x * 0.03, z * 0.03);
 
+    if (temp < -0.5) return 'snow';
+    if (temp < -0.35 && humidity > 0.2) return 'snow';
     if (temp < -0.4) return 'sand';
     if (temp < -0.2 && humidity > 0.3) return 'sandy_grass';
     return 'grass';
