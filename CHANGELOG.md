@@ -1,5 +1,42 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Optimization & Feature Update
+
+### New Features
+- **Flying Mode**: Toggle with Ctrl+F or Alt+F for creative mode gameplay
+  - Free movement in all directions (W/A/S/D + Space/Shift)
+  - Configurable flight speed
+- **Cave Generation**: Procedural cave systems using 3D Perlin noise
+  - Natural-looking underground exploration
+  - Better terrain diversity and interest
+- **New Block Types**:
+  - Glass (transparent, buildable)
+  - Snow (appears at high elevations > 120)
+  - Oak Planks (wooden building material)
+  - Brick (decorative/building material)
+
+### Performance Improvements
+- Optimized chunk visibility updates with efficient distance-based culling
+- Improved chunk mesh generation with reduced face overhead
+- Memory management: proper geometry disposal when chunks unload
+- Chunk update throttling (100ms intervals) to reduce CPU overhead
+- Better shadow mapping with expanded camera bounds
+- FOG effect (200-500 unit range) for better depth perception and performance
+
+### Visual Enhancements
+- Enhanced day/night cycle with realistic color transitions
+  - Better hue/saturation during night time
+  - Smooth lighting transitions
+- Improved lighting quality with enhanced shadow mapping
+- Better sky color progression throughout day/night cycle
+- Height-based terrain variation (gravel and snow at elevations)
+
+### Gameplay Improvements
+- Better terrain generation with natural-looking landscapes
+- Depth-based ore distribution for more realistic mining progression
+- Enhanced raycasting and collision detection
+- Improved user feedback with updated help menu
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features
