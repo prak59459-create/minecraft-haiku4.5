@@ -9,6 +9,7 @@ const GRAVITY = 0.02;
 const JUMP_POWER = 0.5;
 const AIR_FRICTION = 0.98;
 const GROUND_FRICTION = 0.95;
+const STEP_HEIGHT = 0.6;
 
 export class Player {
     constructor(world) {
@@ -110,9 +111,13 @@ export class Player {
                 if (isBlockSolid(block)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
                     if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
-                        this.position.x -= this.velocity.x * scale;
-                        this.position.z -= this.velocity.z * scale;
+                        if (this.isOnGround && point.dy < STEP_HEIGHT) {
+                            this.position.y += STEP_HEIGHT;
+                        } else {
+                            const scale = 1.5 / moveLen;
+                            this.position.x -= this.velocity.x * scale;
+                            this.position.z -= this.velocity.z * scale;
+                        }
                     }
                     break;
                 }
