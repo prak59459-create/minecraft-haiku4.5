@@ -16,6 +16,8 @@ class MinecraftGame {
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -32,13 +34,29 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.lastChunkUpdate = 0;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
+        this.initializePlayerPosition();
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
         this.animate();
+    }
+
+    initializePlayerPosition() {
+        this.player.position.x = 0;
+        this.player.position.z = 0;
+
+        let y = 100;
+        for (let i = 0; i < 256; i++) {
+            if (isBlockSolid(this.world.getBlock(0, i, 0))) {
+                y = i + 2;
+                break;
+            }
+        }
+        this.player.position.y = Math.max(100, y);
     }
 
     setupLighting() {
@@ -50,11 +68,16 @@ class MinecraftGame {
         this.scene.add(ambientLight);
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
-        directionalLight.position.set(150, sunY, 150);
+        directionalLight.position.set(200, sunY, 200);
         directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
-        directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.mapSize.width = 4096;
+        directionalLight.shadow.mapSize.height = 4096;
+        directionalLight.shadow.camera.far = 600;
+        directionalLight.shadow.camera.left = -200;
+        directionalLight.shadow.camera.right = 200;
+        directionalLight.shadow.camera.top = 200;
+        directionalLight.shadow.camera.bottom = -200;
+        directionalLight.shadow.bias = -0.001;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -366,7 +389,12 @@ class MinecraftGame {
             eyePos.z + direction.z
         );
 
-        this.updateVisibleChunks();
+        const now = Date.now();
+        if (now - this.lastChunkUpdate > 250) {
+            this.updateVisibleChunks();
+            this.lastChunkUpdate = now;
+        }
+
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();

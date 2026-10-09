@@ -172,6 +172,7 @@ export class World {
     constructor(renderDistance = 8) {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
+        this.seed = Math.random() * 10000;
         initPerlinNoise();
     }
 
