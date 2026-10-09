@@ -12,10 +12,12 @@ class MinecraftGame {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -31,6 +33,8 @@ class MinecraftGame {
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
+        this.lastChunkUpdateTime = 0;
+        this.chunkUpdateInterval = 100;
         this.showDebug = false;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
@@ -347,6 +351,8 @@ class MinecraftGame {
     animate() {
         requestAnimationFrame(() => this.animate());
 
+        const now = performance.now();
+
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
 
@@ -364,7 +370,11 @@ class MinecraftGame {
             eyePos.z + direction.z
         );
 
-        this.updateVisibleChunks();
+        if (now - this.lastChunkUpdateTime > this.chunkUpdateInterval) {
+            this.updateVisibleChunks();
+            this.lastChunkUpdateTime = now;
+        }
+
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();

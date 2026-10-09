@@ -49,8 +49,12 @@ export class Chunk {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
                     } else if (y < height - 4) {
-                        const block = getOreBlock(wx, y, wz);
-                        this.setBlock(x, y, z, block);
+                        if (shouldGenerateCave(wx, y, wz)) {
+                            this.setBlock(x, y, z, BLOCKS.AIR);
+                        } else {
+                            const block = getOreBlock(wx, y, wz);
+                            this.setBlock(x, y, z, block);
+                        }
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
@@ -60,8 +64,6 @@ export class Chunk {
                     } else if (y < height) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
@@ -225,6 +227,17 @@ export class World {
 
         toDelete.forEach(key => this.chunks.delete(key));
     }
+}
+
+function shouldGenerateCave(x, y, z) {
+    if (!perlinNoise) return false;
+    if (y > 80) return false;
+
+    const caveNoise1 = perlinNoise.noise2D(x * 0.03 + y * 0.01, z * 0.03 + y * 0.01);
+    const caveNoise2 = perlinNoise.noise2D(x * 0.02, z * 0.02 + y * 0.02);
+    const caveDensity = (caveNoise1 + caveNoise2) / 2;
+
+    return caveDensity > 0.5;
 }
 
 export const CHUNK_SIZE_EXPORT = CHUNK_SIZE;
