@@ -19,10 +19,11 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Multiple Biomes** - Grass, sand, and varied terrain types
 - **Chunk System** - Dynamic chunk loading and unloading for performance
 - **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
+  - Stone, Grass, Dirt, Cobblestone, Dark Stone
+  - Oak Log, Oak Leaves, Oak Planks
+  - Sand, Water, Lava, Gravel, Bedrock
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
+  - Redstone Ore, Emerald Ore, Obsidian
 - **Ore Generation** - Procedural ore generation at various depths
 - **Tree Generation** - Natural tree placement in suitable terrain
 

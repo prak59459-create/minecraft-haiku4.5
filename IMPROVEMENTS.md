@@ -1,5 +1,43 @@
 # Minecraft Clone - Improvements and Optimizations
 
+## Latest Updates (Session 3)
+
+### Enhanced Features
+
+#### 1. Expanded Block Types
+- **New Blocks Added**: Lava, Obsidian, Redstone Ore, Emerald Ore, Oak Planks, Dark Stone
+- **Improved Ore Distribution**: Better depth-based ore generation with lava pockets
+- **Better Stone Types**: Dark stone at deep underground levels for visual variety
+
+#### 2. Enhanced World Generation
+- **Improved Terrain**: Multi-octave Perlin noise with better variation
+- **Biome Variety**: Gravel biomes in addition to sand and grass
+- **Better Visual Depth**: More varied terrain heights and formations
+
+#### 3. Visual & Physics Improvements
+- **Fog Rendering**: Added atmospheric fog for better visual depth and performance
+- **Water/Lava Physics**: Proper fluid mechanics when player enters water or lava
+- **Better Collision**: Improved fluid handling in player physics
+- **Enhanced Materials**: Fog support in all materials for consistency
+
+#### 4. UI Enhancements
+- **Improved Inventory Display**: Better visual styling with gradients and shadows
+- **Enhanced Crosshair**: More modern look with additional effects
+- **Better HUD**: Improved contrast and readability with background panel
+- **Improved Help Panel**: Better styling and visual feedback
+
+#### 5. Performance Optimizations
+- **Render Distance**: Configurable render distance from world settings
+- **Dynamic Fog**: Improved visual performance with fog culling
+- **Better Memory Management**: Improved chunk unloading
+
+### Technical Improvements
+- Added fog effects to scene
+- Enhanced material properties with fog support
+- Improved water/lava rendering system
+- Better terrain generation algorithm
+- Improved physics for fluid interactions
+
 ## Latest Updates (Session 2)
 
 ### Core Improvements

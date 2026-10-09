@@ -7,6 +7,7 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { WorldSave } from './worldsave.js';
 
 class MinecraftGame {
     constructor() {
@@ -58,6 +59,8 @@ class MinecraftGame {
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
+
+        this.renderer.fog = new THREE.Fog(0x87CEEB, 100, 300);
     }
 
     setupEventListeners() {
@@ -81,7 +84,47 @@ class MinecraftGame {
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                this.saveWorld();
+            }
+            if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                this.loadWorld();
+            }
         });
+    }
+
+    async saveWorld() {
+        try {
+            const success = await WorldSave.saveWorld(this.world, 'minecraft-haiku4.5');
+            if (success) {
+                console.log('World saved successfully!');
+                this.ui.showNotification('World saved!', 2000);
+            }
+        } catch (error) {
+            console.error('Failed to save world:', error);
+            this.ui.showNotification('Failed to save world!', 2000);
+        }
+    }
+
+    loadWorld() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = async (e) => {
+            try {
+                const file = e.target.files[0];
+                await WorldSave.loadWorldFromFile(file, this.world);
+                console.log('World loaded successfully!');
+                this.ui.showNotification('World loaded!', 2000);
+                this.updateVisibleChunks();
+            } catch (error) {
+                console.error('Failed to load world:', error);
+                this.ui.showNotification('Failed to load world!', 2000);
+            }
+        };
+        input.click();
     }
 
     onMouseClick(event) {
@@ -233,7 +276,8 @@ class MinecraftGame {
                 wireframe: false,
                 flatShading: false,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 30,
+                fog: true
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -290,10 +334,12 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const renderDist = this.world.renderDistance || 8;
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (Math.abs(cx - playerChunkX) > renderDist || Math.abs(cz - playerChunkZ) > renderDist) {
                 if (this.chunkMeshes.has(key)) {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
@@ -371,8 +417,29 @@ class MinecraftGame {
         this.directionalLight.position.set(200, sunY, 200);
         this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
 
+        const timeNorm = (time % (Math.PI * 2)) / (Math.PI * 2);
+        let hue, sat, light;
+
+        if (timeNorm < 0.25) {
+            hue = 0.6;
+            sat = 0.4;
+            light = 0.3 + timeNorm * 0.8;
+        } else if (timeNorm < 0.5) {
+            hue = 0.6;
+            sat = 0.4;
+            light = 0.7 - (timeNorm - 0.25) * 0.8;
+        } else if (timeNorm < 0.75) {
+            hue = 0.65 + (timeNorm - 0.5) * 0.2;
+            sat = 0.3;
+            light = 0.15 + (timeNorm - 0.5) * 0.2;
+        } else {
+            hue = 0.75 - (timeNorm - 0.75) * 0.2;
+            sat = 0.3;
+            light = 0.25 + (1 - timeNorm) * 0.1;
+        }
+
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        skyColor.setHSL(hue, sat, Math.max(0.15, light));
         this.scene.background = skyColor;
     }
 }

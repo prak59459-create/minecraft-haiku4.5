@@ -2,15 +2,16 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.time = 0;
         this.createOutlineMaterial();
     }
 
     createOutlineMaterial() {
         this.material = new THREE.LineBasicMaterial({
-            color: 0xFFFFFF,
+            color: 0x88CCFF,
             linewidth: 2,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9
         });
     }
 
@@ -42,6 +43,7 @@ export class BlockOutline {
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
 
         this.outline = new THREE.LineSegments(geometry, this.material);
+        this.outline.renderOrder = 999;
         this.scene.add(this.outline);
     }
 
@@ -53,8 +55,15 @@ export class BlockOutline {
     }
 
     update(raycastHit) {
+        this.time += 0.016;
+
         if (raycastHit && raycastHit.block !== 0) {
             this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z);
+
+            if (this.outline) {
+                const pulse = 0.7 + Math.sin(this.time * 4) * 0.25;
+                this.material.opacity = pulse;
+            }
         } else {
             this.clear();
         }
