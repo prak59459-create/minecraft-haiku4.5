@@ -181,8 +181,8 @@ export class World {
 
         const cx = Math.floor(x / CHUNK_SIZE);
         const cz = Math.floor(z / CHUNK_SIZE);
-        const lx = ((x % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
-        const lz = ((z % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+        const lx = x - (cx * CHUNK_SIZE);
+        const lz = z - (cz * CHUNK_SIZE);
 
         const chunk = this.getChunk(cx, cz);
         return chunk.getBlock(lx, y, lz);
@@ -193,8 +193,8 @@ export class World {
 
         const cx = Math.floor(x / CHUNK_SIZE);
         const cz = Math.floor(z / CHUNK_SIZE);
-        const lx = ((x % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
-        const lz = ((z % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+        const lx = x - (cx * CHUNK_SIZE);
+        const lz = z - (cz * CHUNK_SIZE);
 
         const chunk = this.getChunk(cx, cz);
         chunk.setBlock(lx, y, lz, blockId);
