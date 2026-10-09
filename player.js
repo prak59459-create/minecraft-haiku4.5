@@ -19,6 +19,7 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.isInWater = false;
 
         this.keys = {};
         this.lastStepPos = { x: 0, z: 0 };
@@ -49,6 +50,7 @@ export class Player {
         const prevZ = this.position.z;
 
         this.handleMovement();
+        this.checkWaterState();
         this.applyPhysics();
         this.checkCollisions();
 
@@ -60,6 +62,15 @@ export class Player {
                 if (this.onStep) this.onStep();
             }
         }
+    }
+
+    checkWaterState() {
+        const eyeX = this.position.x;
+        const eyeY = this.position.y + PLAYER_HEIGHT * 0.5;
+        const eyeZ = this.position.z;
+
+        const block = this.world.getBlock(Math.floor(eyeX), Math.floor(eyeY), Math.floor(eyeZ));
+        this.isInWater = block === BLOCKS.WATER;
     }
 
     isMoving() {
@@ -101,8 +112,17 @@ export class Player {
     }
 
     applyPhysics() {
-        if (!this.isOnGround) {
-            this.velocity.y -= GRAVITY;
+        if (this.isInWater) {
+            this.velocity.y *= 0.95;
+            this.velocity.y -= GRAVITY * 0.3;
+
+            if (this.keys[' ']) {
+                this.velocity.y = 0.2;
+            }
+        } else {
+            if (!this.isOnGround) {
+                this.velocity.y -= GRAVITY;
+            }
         }
 
         this.position.x += this.velocity.x;

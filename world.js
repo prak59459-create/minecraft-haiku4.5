@@ -96,7 +96,11 @@ function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const moisture = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
+    if (temp < -0.2) return 'sand';
+    if (temp < -0.1 && moisture > 0.3) return 'sand';
+    if (moisture < -0.4) return 'sand';
     return 'grass';
 }
 

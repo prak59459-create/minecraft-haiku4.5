@@ -33,6 +33,7 @@ class MinecraftGame {
         this.blockOutline = new BlockOutline(this.scene);
 
         this.chunkMeshes = new Map();
+        this.dirtyChunks = new Set();
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = Config.get('raycast.distance');
         this.lastBreakSound = 0;
@@ -69,6 +70,8 @@ class MinecraftGame {
         directionalLight.shadow.camera.top = 200;
         directionalLight.shadow.camera.bottom = -200;
         this.scene.add(directionalLight);
+
+        this.scene.fog = new THREE.Fog(0x87CEEB, 150, 300);
 
         this.ambientLight = ambientLight;
         this.directionalLight = directionalLight;
@@ -200,11 +203,33 @@ class MinecraftGame {
         for (let dx = -1; dx <= 1; dx++) {
             for (let dz = -1; dz <= 1; dz++) {
                 const key = `${cx + dx},${cz + dz}`;
+                this.dirtyChunks.add(key);
                 if (this.chunkMeshes.has(key)) {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
                 }
             }
+        }
+    }
+
+    rebuildDirtyChunks() {
+        if (this.dirtyChunks.size === 0) return;
+
+        const keysToRebuild = Array.from(this.dirtyChunks).slice(0, 2);
+
+        for (const key of keysToRebuild) {
+            const [cx, cz] = key.split(',').map(Number);
+            const chunk = this.world.chunks.get(key);
+
+            if (chunk) {
+                const mesh = this.buildChunkMesh(chunk);
+                if (mesh) {
+                    this.scene.add(mesh);
+                    this.chunkMeshes.set(key, mesh);
+                }
+            }
+
+            this.dirtyChunks.delete(key);
         }
     }
 
@@ -402,6 +427,7 @@ class MinecraftGame {
         );
 
         this.updateVisibleChunks();
+        this.rebuildDirtyChunks();
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
@@ -410,7 +436,7 @@ class MinecraftGame {
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps, this.player);
 
         if (this.showDebug) {
             this.debugDisplay.update(this);
