@@ -84,10 +84,10 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    height += perlinNoise.noise2D(x * 0.003, z * 0.003) * 40;
+    height += perlinNoise.noise2D(x * 0.015, z * 0.015) * 20;
+    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 10;
+    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 5;
 
     return Math.max(20, Math.min(160, Math.floor(height)));
 }
@@ -96,7 +96,10 @@ function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const humidity = perlinNoise.noise2D(x * 0.03, z * 0.03);
+
+    if (temp < -0.4) return 'sand';
+    if (temp < -0.2 && humidity > 0.3) return 'sandy_grass';
     return 'grass';
 }
 
@@ -123,9 +126,11 @@ function generateTree(chunk, x, z, height) {
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
-    if (treeChance < 0.5) return;
+    const treeType = perlinNoise.noise2D(worldX * 0.05, worldZ * 0.05);
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    if (treeChance < 0.4) return;
+
+    const trunkHeight = 5 + Math.floor(Math.random() * 5);
     const y = height;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
@@ -136,13 +141,16 @@ function generateTree(chunk, x, z, height) {
         }
     }
 
-    const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    const foliageStart = y + Math.max(1, trunkHeight - 4);
+    const foliageRadius = 2 + Math.floor(Math.random() * 3);
+    const foliageLayers = 3 + Math.floor(Math.random() * 3);
 
-    for (let dy = 0; dy < foliageRadius + 2; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
-        for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
-            for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
+    for (let dy = 0; dy < foliageLayers; dy++) {
+        const layerRadius = Math.max(1, foliageRadius - Math.floor(dy / 2));
+        const layers = 8 + Math.floor(Math.random() * 4);
+
+        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI * 2 / layers) {
+            for (let dist = 1; dist <= layerRadius; dist += 0.8) {
                 const dx = Math.round(Math.cos(angle) * dist);
                 const dz = Math.round(Math.sin(angle) * dist);
                 const fx = x + dx;
@@ -150,7 +158,8 @@ function generateTree(chunk, x, z, height) {
                 const fy = foliageStart + dy;
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
-                    if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
+                    const block = chunk.getBlock(fx, fy, fz);
+                    if (block === BLOCKS.AIR) {
                         chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
                     }
                 }
@@ -168,12 +177,13 @@ export class World {
 
     getChunk(cx, cz) {
         const key = `${cx},${cz}`;
-        if (!this.chunks.has(key)) {
-            const chunk = new Chunk(cx, cz);
+        let chunk = this.chunks.get(key);
+        if (!chunk) {
+            chunk = new Chunk(cx, cz);
             chunk.generate();
             this.chunks.set(key, chunk);
         }
-        return this.chunks.get(key);
+        return chunk;
     }
 
     getBlock(x, y, z) {

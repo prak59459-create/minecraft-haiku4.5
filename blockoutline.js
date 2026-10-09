@@ -2,6 +2,7 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.currentBlock = null;
         this.createOutlineMaterial();
     }
 
@@ -15,6 +16,12 @@ export class BlockOutline {
     }
 
     setSelectedBlock(x, y, z) {
+        if (this.currentBlock && this.currentBlock.x === x && this.currentBlock.y === y && this.currentBlock.z === z) {
+            return;
+        }
+
+        this.currentBlock = { x, y, z };
+
         if (this.outline) {
             this.scene.remove(this.outline);
         }
@@ -50,6 +57,7 @@ export class BlockOutline {
             this.scene.remove(this.outline);
             this.outline = null;
         }
+        this.currentBlock = null;
     }
 
     update(raycastHit) {
