@@ -174,4 +174,10 @@ body {
     #help {
         font-size: 9px;
     }
+
+    #crosshair {
+        width: 24px;
+        height: 24px;
+        margin: -12px 0 0 -12px;
+    }
 }

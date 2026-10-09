@@ -110,16 +110,18 @@ class MinecraftGame {
         if (hit.block === BLOCKS.AIR) return;
 
         if (event.button === 0) {
-            this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
-            this.updateChunkMesh(hit.x, hit.y, hit.z);
+            if (hit.block !== BLOCKS.BEDROCK) {
+                this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
+                this.updateChunkMesh(hit.x, hit.y, hit.z);
 
-            const color = BLOCK_COLORS[hit.block] || 0x808080;
-            this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
+                const color = BLOCK_COLORS[hit.block] || 0x808080;
+                this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
 
-            const now = Date.now();
-            if (now - this.lastBreakSound > 50) {
-                this.audioManager.playBlockSound('break');
-                this.lastBreakSound = now;
+                const now = Date.now();
+                if (now - this.lastBreakSound > 50) {
+                    this.audioManager.playBlockSound('break');
+                    this.lastBreakSound = now;
+                }
             }
         } else if (event.button === 2) {
             const norm = hit.normal;
@@ -128,7 +130,9 @@ class MinecraftGame {
             const nz = hit.z + norm.z;
 
             const selectedBlockType = this.ui.getSelectedBlockType();
-            if (!this.isPlayerOccupying(nx, ny, nz) && selectedBlockType !== BLOCKS.AIR) {
+            const blockAtTarget = this.world.getBlock(nx, ny, nz);
+
+            if (!this.isPlayerOccupying(nx, ny, nz) && selectedBlockType !== BLOCKS.AIR && blockAtTarget === BLOCKS.AIR) {
                 this.world.setBlock(nx, ny, nz, selectedBlockType);
                 this.updateChunkMesh(nx, ny, nz);
                 this.audioManager.playBlockSound('place');
