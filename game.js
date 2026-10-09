@@ -47,6 +47,7 @@ class MinecraftGame {
         this.player.onJump = () => this.audioManager.playJumpSound();
 
         this.setupLighting();
+        this.setupFog();
         this.setupEventListeners();
         this.setupPickBlock();
         this.animate();
@@ -70,6 +71,10 @@ class MinecraftGame {
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
+    }
+
+    setupFog() {
+        this.scene.fog = new THREE.Fog(0x87CEEB, 150, 500);
     }
 
     setupEventListeners() {
@@ -311,23 +316,35 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const renderDistance = 10;
+        const unloadDistance = 12;
+        let meshesToBuild = [];
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const distance = Math.sqrt((cx - playerChunkX) ** 2 + (cz - playerChunkZ) ** 2);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (distance > unloadDistance) {
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
+                    const mesh = this.chunkMeshes.get(key);
+                    this.scene.remove(mesh);
+                    mesh.geometry.dispose();
                     this.chunkMeshes.delete(key);
                 }
                 continue;
             }
 
-            if (!this.chunkMeshes.has(key)) {
-                const mesh = this.buildChunkMesh(chunk);
-                if (mesh) {
-                    this.scene.add(mesh);
-                    this.chunkMeshes.set(key, mesh);
-                }
+            if (distance <= renderDistance && !this.chunkMeshes.has(key)) {
+                meshesToBuild.push({ key, chunk });
+            }
+        }
+
+        for (let i = 0; i < Math.min(meshesToBuild.length, this.maxChunksPerFrame); i++) {
+            const { key, chunk } = meshesToBuild[i];
+            const mesh = this.buildChunkMesh(chunk);
+            if (mesh) {
+                this.scene.add(mesh);
+                this.chunkMeshes.set(key, mesh);
             }
         }
     }

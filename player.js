@@ -8,6 +8,7 @@ const PLAYER_CROUCH_SPEED = 0.06;
 const GRAVITY = 0.018;
 const JUMP_POWER = 0.48;
 const AIR_RESISTANCE = 0.98;
+const ACCELERATION = 1.2;
 
 export class Player {
     constructor(world) {

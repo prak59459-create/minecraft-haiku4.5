@@ -6,17 +6,28 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.waterMaterial = null;
+        this.initMaterial();
+    }
+
+    initMaterial() {
+        this.waterMaterial = new THREE.MeshPhongMaterial({
+            color: 0x3A7BD5,
+            transparent: true,
+            opacity: 0.65,
+            side: THREE.DoubleSide,
+            shininess: 40,
+            wireframe: false
+        });
     }
 
     buildWaterMesh(chunk) {
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
-        const colors = [];
         const indices = [];
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x4A90E2);
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -48,11 +59,9 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -64,19 +73,12 @@ export class WaterRenderer {
 
         if (vertices.length > 0) {
             geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
-            geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
             geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             geometry.computeVertexNormals();
 
-            const material = new THREE.MeshPhongMaterial({
-                vertexColors: true,
-                wireframe: false,
-                transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
-            });
-
-            const mesh = new THREE.Mesh(geometry, material);
+            const mesh = new THREE.Mesh(geometry, this.waterMaterial);
+            mesh.castShadow = false;
+            mesh.receiveShadow = true;
             return mesh;
         }
 

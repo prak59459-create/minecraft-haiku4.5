@@ -70,10 +70,15 @@ export const SOLID_BLOCKS = new Set([
 
 export const TRANSPARENT_BLOCKS = new Set([
     BLOCKS.WATER,
-    BLOCKS.OAK_LEAVES
+    BLOCKS.OAK_LEAVES,
+    BLOCKS.AIR
 ]);
 
 export const LIGHT_EMITTING = new Set([]);
+
+export const LIQUID_BLOCKS = new Set([
+    BLOCKS.WATER
+]);
 
 export function isBlockSolid(blockId) {
     return SOLID_BLOCKS.has(blockId);
@@ -81,4 +86,8 @@ export function isBlockSolid(blockId) {
 
 export function isBlockTransparent(blockId) {
     return TRANSPARENT_BLOCKS.has(blockId);
+}
+
+export function isBlockLiquid(blockId) {
+    return LIQUID_BLOCKS.has(blockId);
 }
