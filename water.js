@@ -6,6 +6,7 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.lastUpdate = 0;
     }
 
     buildWaterMesh(chunk) {

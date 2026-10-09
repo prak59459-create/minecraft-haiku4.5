@@ -76,13 +76,12 @@ export class ParticleSystem {
 
             const color = new THREE.Color(p.color);
             const alpha = p.life / p.maxLife;
-            colors[i * 3] = color.r;
-            colors[i * 3 + 1] = color.g;
-            colors[i * 3 + 2] = color.b;
+            colors[i * 3] = color.r * alpha;
+            colors[i * 3 + 1] = color.g * alpha;
+            colors[i * 3 + 2] = color.b * alpha;
         }
 
         this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        this.material.opacity = 0.8;
     }
 }

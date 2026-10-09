@@ -418,11 +418,17 @@ class MinecraftGame {
         const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.4 + sunIntensity * 0.35;
+        this.directionalLight.intensity = Math.max(0.3, 0.4 + sunIntensity * 0.35);
 
-        const hue = 0.55 + Math.sin(time) * 0.1;
-        const saturation = 0.35 + sunIntensity * 0.15;
-        const lightness = 0.45 + sunIntensity * 0.35;
+        let hue = 0.55 + Math.sin(time) * 0.1;
+        let saturation = 0.35 + sunIntensity * 0.15;
+        let lightness = 0.45 + sunIntensity * 0.35;
+
+        if (sunIntensity < 0.3) {
+            hue = 0.6 + (0.3 - sunIntensity) * 0.3;
+            saturation = Math.max(0.2, saturation - 0.2);
+            lightness = Math.max(0.25, lightness - 0.15);
+        }
 
         const skyColor = new THREE.Color();
         skyColor.setHSL(hue, saturation, lightness);
@@ -430,7 +436,7 @@ class MinecraftGame {
 
         const ambientLight = this.scene.children.find(c => c instanceof THREE.AmbientLight);
         if (ambientLight) {
-            ambientLight.intensity = 0.4 + sunIntensity * 0.15;
+            ambientLight.intensity = Math.max(0.25, 0.4 + sunIntensity * 0.15);
         }
     }
 }
