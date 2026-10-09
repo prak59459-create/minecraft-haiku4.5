@@ -16,13 +16,15 @@ export class WaterRenderer {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x4A90E2);
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
                     const blockId = chunk.getBlock(x, y, z);
-                    if (blockId !== BLOCKS.WATER) continue;
+                    if (blockId !== BLOCKS.WATER && blockId !== BLOCKS.LAVA) continue;
+
+                    const fluidColor = blockId === BLOCKS.WATER ?
+                        new THREE.Color(0x4A90E2) : new THREE.Color(0xFF4500);
 
                     const wx = chunk.x * CHUNK_SIZE + x;
                     const wy = y;
@@ -45,10 +47,11 @@ export class WaterRenderer {
                         const [dx, dy, dz] = face.dir;
                         const neighborBlock = neighbor(dx, dy, dz);
 
-                        if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
+                        if (blockId === BLOCKS.WATER && neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
+                        if (blockId === BLOCKS.LAVA && neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.LAVA) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const color = fluidColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
@@ -68,15 +71,18 @@ export class WaterRenderer {
             geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             geometry.computeVertexNormals();
 
+            const hasLava = [...chunk.blocks].some((block, i) => block === BLOCKS.LAVA);
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: hasLava ? 0.7 : 0.6,
+                side: THREE.FrontSide,
+                fog: true
             });
 
             const mesh = new THREE.Mesh(geometry, material);
+            mesh.receiveShadow = true;
             return mesh;
         }
 

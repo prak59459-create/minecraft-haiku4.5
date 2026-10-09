@@ -71,8 +71,16 @@ export class Player {
     }
 
     applyPhysics() {
-        if (!this.isOnGround) {
+        const blockAtFeet = this.world.getBlock(Math.floor(this.position.x), Math.floor(this.position.y - 0.1), Math.floor(this.position.z));
+        const inFluid = blockAtFeet === 8 || blockAtFeet === 15;
+
+        if (!this.isOnGround && !inFluid) {
             this.velocity.y -= GRAVITY;
+        } else if (inFluid) {
+            this.velocity.y *= 0.98;
+            if (this.velocity.y < -0.02) {
+                this.velocity.y = -0.02;
+            }
         }
 
         this.position.x += this.velocity.x;
