@@ -151,3 +151,16 @@ body {
         font-size: 9px;
     }
 }
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
+#crosshair:hover {
+    animation: pulse 0.5s ease-in-out infinite;
+}
+
+.inventory-slot:active {
+    transform: scale(0.95);
+}
