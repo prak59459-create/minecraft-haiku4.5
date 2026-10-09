@@ -348,13 +348,16 @@ class MinecraftGame {
         const g = Math.floor(color.g * 255);
         const b = Math.floor(color.b * 255);
         let faceCount = 0;
+        const isLeaves = blockId === BLOCKS.OAK_LEAVES || blockId === BLOCKS.SPRUCE_LEAVES;
 
         for (const face of faces) {
             const [dx, dy, dz] = face.dir;
             const neighbor = this.world.getBlock(x + dx, y + dy, z + dz);
 
-            // Skip if neighbor is solid and not water
-            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+            // For leaves, render all faces except when neighbor is same type
+            if (isLeaves && neighbor === blockId) continue;
+            // For other blocks, skip if neighbor is solid and not water
+            if (!isLeaves && isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
             const verts = face.verts;

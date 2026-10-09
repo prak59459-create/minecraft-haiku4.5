@@ -49,8 +49,13 @@ export class Chunk {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
                     } else if (y < height - 4) {
-                        const block = getOreBlock(wx, y, wz);
-                        this.setBlock(x, y, z, block);
+                        const isCave = getCaveVoxel(wx, y, wz);
+                        if (isCave) {
+                            this.setBlock(x, y, z, BLOCKS.AIR);
+                        } else {
+                            const block = getOreBlock(wx, y, wz);
+                            this.setBlock(x, y, z, block);
+                        }
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
@@ -101,6 +106,26 @@ function getTerrainType(x, z) {
     if (temp < -0.4) return 'sand';
     if (humidity > 0.3) return 'sand';
     return 'grass';
+}
+
+function getCaveVoxel(x, y, z) {
+    if (!perlinNoise) return false;
+
+    const depth = y / WORLD_HEIGHT;
+    if (depth > 0.7) return false; // No caves in upper levels
+
+    const cave1 = perlinNoise.noise3D ?
+        Math.abs(perlinNoise.noise3D(x * 0.05, y * 0.05, z * 0.05)) :
+        Math.abs(perlinNoise.noise2D(x * 0.05 + y * 0.02, z * 0.05));
+
+    const cave2 = perlinNoise.noise3D ?
+        Math.abs(perlinNoise.noise3D(x * 0.02, y * 0.02, z * 0.02)) :
+        Math.abs(perlinNoise.noise2D(x * 0.02 + y * 0.01, z * 0.02));
+
+    const caveFactor = (cave1 * cave2);
+    const threshold = 0.15 + (depth * 0.2);
+
+    return caveFactor < threshold;
 }
 
 function getOreBlock(x, y, z) {
