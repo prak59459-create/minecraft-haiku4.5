@@ -349,6 +349,16 @@ class MinecraftGame {
                 this.scene.add(mesh);
                 this.chunkMeshes.set(key, mesh);
             }
+
+            const waterMesh = this.waterRenderer.buildWaterMesh(chunk);
+            if (waterMesh) {
+                this.scene.add(waterMesh);
+                const waterKey = `water_${key}`;
+                if (this.chunkMeshes.has(waterKey)) {
+                    this.scene.remove(this.chunkMeshes.get(waterKey));
+                }
+                this.chunkMeshes.set(waterKey, waterMesh);
+            }
         });
     }
 
