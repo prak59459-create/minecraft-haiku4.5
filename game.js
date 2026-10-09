@@ -1,6 +1,6 @@
 import { World, CHUNK_SIZE_EXPORT, WORLD_HEIGHT_EXPORT } from './world.js';
 import { Player, Camera } from './player.js';
-import { BLOCKS, BLOCK_COLORS, isBlockSolid } from './blocks.js';
+import { BLOCKS, BLOCK_COLORS, ORE_COLORS, isBlockSolid } from './blocks.js';
 import { UI } from './ui.js';
 import { ParticleSystem } from './particles.js';
 import { WaterRenderer } from './water.js';
@@ -306,6 +306,7 @@ class MinecraftGame {
         const r = Math.floor(color.r * 255);
         const g = Math.floor(color.g * 255);
         const b = Math.floor(color.b * 255);
+        const isOre = ORE_COLORS.has(blockId);
 
         for (const face of faces) {
             const [dx, dy, dz] = face.dir;
@@ -317,9 +318,10 @@ class MinecraftGame {
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
-            const lr = Math.floor(r * face.light);
-            const lg = Math.floor(g * face.light);
-            const lb = Math.floor(b * face.light);
+            const lightMult = isOre ? face.light * 1.1 : face.light;
+            const lr = Math.floor(r * lightMult);
+            const lg = Math.floor(g * lightMult);
+            const lb = Math.floor(b * lightMult);
 
             for (const [vx, vy, vz] of face.verts) {
                 vertices.push(x + vx, y + vy, z + vz);
