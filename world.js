@@ -86,6 +86,7 @@ export class Chunk {
             }
         }
 
+        generateCaves(this);
         this.generated = true;
     }
 }
@@ -172,6 +173,31 @@ function generateTree(chunk, x, z, height) {
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
                     if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
                         chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                    }
+                }
+            }
+        }
+    }
+}
+
+function generateCaves(chunk) {
+    if (!perlinNoise) return;
+
+    const worldX = chunk.x * CHUNK_SIZE;
+    const worldZ = chunk.z * CHUNK_SIZE;
+
+    for (let x = 0; x < CHUNK_SIZE; x++) {
+        for (let z = 0; z < CHUNK_SIZE; z++) {
+            const wx = worldX + x;
+            const wz = worldZ + z;
+
+            for (let y = 5; y < 60; y++) {
+                const caveNoise = perlinNoise.noise3D(wx * 0.05, y * 0.05, wz * 0.05);
+
+                if (Math.abs(caveNoise) > 0.4) {
+                    const block = chunk.getBlock(x, y, z);
+                    if (block === BLOCKS.STONE || block === BLOCKS.DARK_STONE) {
+                        chunk.setBlock(x, y, z, BLOCKS.AIR);
                     }
                 }
             }

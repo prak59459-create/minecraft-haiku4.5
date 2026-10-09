@@ -376,8 +376,29 @@ class MinecraftGame {
         this.directionalLight.position.set(200, sunY, 200);
         this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
 
+        const timeNorm = (time % (Math.PI * 2)) / (Math.PI * 2);
+        let hue, sat, light;
+
+        if (timeNorm < 0.25) {
+            hue = 0.6;
+            sat = 0.4;
+            light = 0.3 + timeNorm * 0.8;
+        } else if (timeNorm < 0.5) {
+            hue = 0.6;
+            sat = 0.4;
+            light = 0.7 - (timeNorm - 0.25) * 0.8;
+        } else if (timeNorm < 0.75) {
+            hue = 0.65 + (timeNorm - 0.5) * 0.2;
+            sat = 0.3;
+            light = 0.15 + (timeNorm - 0.5) * 0.2;
+        } else {
+            hue = 0.75 - (timeNorm - 0.75) * 0.2;
+            sat = 0.3;
+            light = 0.25 + (1 - timeNorm) * 0.1;
+        }
+
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        skyColor.setHSL(hue, sat, Math.max(0.15, light));
         this.scene.background = skyColor;
     }
 }
