@@ -9,6 +9,7 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Mouse Look** - Free camera control with mouse
 - **Space Jump** - Jump and gravity physics
 - **Shift Sprint/Crouch** - Sprint for speed or crouch for stealth
+- **Flying Mode** - Toggle creative mode with Ctrl+F or Alt+F for free flight
 - **Block Destruction** - Left-click to destroy blocks
 - **Block Placement** - Right-click to place blocks
 - **Block Selection** - Use 1-9 or scroll wheel to switch between blocks
@@ -18,13 +19,16 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Procedural Generation** - Infinite world generation using Perlin noise
 - **Multiple Biomes** - Grass, sand, and varied terrain types
 - **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
+- **Multiple Block Types** (18 types):
+  - Stone, Grass, Dirt, Cobblestone, Bedrock
+  - Oak Log, Oak Leaves, Oak Planks
+  - Sand, Gravel, Snow, Brick, Glass
+  - Water
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
-- **Ore Generation** - Procedural ore generation at various depths
+- **Ore Generation** - Depth-based procedural ore generation for realistic mining progression
 - **Tree Generation** - Natural tree placement in suitable terrain
+- **Cave Generation** - Procedural cave systems using 3D Perlin noise
+- **Biome Variation** - Different terrain features based on elevation and noise
 
 ### Physics & Collision
 - **Gravity System** - Realistic falling and landing
@@ -55,9 +59,22 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 ### Performance Optimization
 - **Chunk-based Rendering** - Only visible chunks are rendered
+- **Distance-based Culling** - Efficient chunk visibility management (8-chunk render distance)
 - **Indexed Geometry** - Efficient mesh generation with indices
 - **Vertex Colors** - Per-vertex coloring for variations
-- **Memory Management** - Automatic chunk cleanup for distant areas
+- **Memory Management** - Automatic chunk cleanup and geometry disposal
+- **FOG Effect** - Atmospheric rendering with depth perception (200-500 unit range)
+- **Throttled Updates** - Chunk updates throttled to 100ms intervals for optimal performance
+- **Shadow Mapping** - Dynamic shadow rendering with PCF shadow map
+
+### Visual Enhancements
+- **3D Voxel Rendering** - Full 3D block-based world
+- **Dynamic Lighting** - Sun and ambient lighting with day/night cycle
+- **Day/Night Cycle** - Real-time sky color transitions with realistic progression
+- **Particle Effects** - Block destruction particles with physics
+- **Water Rendering** - Semi-transparent water with proper face culling
+- **Block Outline** - Clear selection feedback for targeted blocks
+- **Atmospheric FOG** - Depth-based fog for better visual depth
 
 ## Controls
 
@@ -67,8 +84,9 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 | **A** | Move Left |
 | **S** | Move Backward |
 | **D** | Move Right |
-| **Space** | Jump |
-| **Shift** | Sprint / Crouch |
+| **Space** | Jump / Fly Up (in creative mode) |
+| **Shift** | Sprint / Crouch / Fly Down (in creative mode) |
+| **Ctrl+F / Alt+F** | Toggle Flying Mode (Creative Mode) |
 | **Mouse** | Look Around (Click to enable) |
 | **Left-Click** | Destroy Block |
 | **Right-Click** | Place Block |
