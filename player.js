@@ -70,6 +70,16 @@ export class Player {
         this.checkCollisions();
     }
 
+    getMovementSpeed() {
+        const moveX = this.velocity.x;
+        const moveZ = this.velocity.z;
+        return Math.sqrt(moveX * moveX + moveZ * moveZ);
+    }
+
+    isMoving() {
+        return this.getMovementSpeed() > 0.01;
+    }
+
     handleMovement() {
         let moveX = 0;
         let moveZ = 0;

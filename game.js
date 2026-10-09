@@ -205,7 +205,6 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        let vertexCount = 0;
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -219,10 +218,10 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.65;
+                    const heightLight = (wy / WORLD_HEIGHT) * 0.35;
+                    const varLight = Math.sin(wx * 0.3 + wz * 0.3) * 0.1;
+                    const brightness = Math.max(0.3, baseLight + heightLight + varLight);
 
                     color.multiplyScalar(brightness);
 
@@ -242,9 +241,10 @@ class MinecraftGame {
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
+                flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 40,
+                emissive: 0x111111
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -378,6 +378,11 @@ class MinecraftGame {
         this.waterRenderer.update();
 
         this.frameCount++;
+
+        if (this.player.isOnGround && this.player.isMoving()) {
+            this.audioManager.playStepSound();
+        }
+
         let hit = this.lastRaycastHit;
         if (this.frameCount % this.raycastUpdateFrequency === 0) {
             hit = this.raycastBlock();
@@ -386,7 +391,10 @@ class MinecraftGame {
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps, {
+            isOnGround: this.player.isOnGround,
+            isInWater: this.player.isInWater
+        });
 
         if (this.showDebug) {
             this.debugDisplay.update(this);
