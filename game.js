@@ -7,6 +7,7 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { WorldSave } from './worldsave.js';
 
 class MinecraftGame {
     constructor() {
@@ -83,7 +84,47 @@ class MinecraftGame {
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                this.saveWorld();
+            }
+            if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                this.loadWorld();
+            }
         });
+    }
+
+    async saveWorld() {
+        try {
+            const success = await WorldSave.saveWorld(this.world, 'minecraft-haiku4.5');
+            if (success) {
+                console.log('World saved successfully!');
+                this.ui.showNotification('World saved!', 2000);
+            }
+        } catch (error) {
+            console.error('Failed to save world:', error);
+            this.ui.showNotification('Failed to save world!', 2000);
+        }
+    }
+
+    loadWorld() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = async (e) => {
+            try {
+                const file = e.target.files[0];
+                await WorldSave.loadWorldFromFile(file, this.world);
+                console.log('World loaded successfully!');
+                this.ui.showNotification('World loaded!', 2000);
+                this.updateVisibleChunks();
+            } catch (error) {
+                console.error('Failed to load world:', error);
+                this.ui.showNotification('Failed to load world!', 2000);
+            }
+        };
+        input.click();
     }
 
     onMouseClick(event) {

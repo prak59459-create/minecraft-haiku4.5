@@ -71,4 +71,33 @@ export class UI {
         const help = document.getElementById('help');
         help.classList.toggle('show');
     }
+
+    showNotification(message, duration = 2000) {
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 6px;
+            border: 2px solid rgba(0, 150, 255, 0.7);
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            z-index: 1000;
+            animation: fadeInOut 0.3s ease-in-out;
+            box-shadow: 0 0 15px rgba(0, 150, 255, 0.4);
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.animation = 'fadeOut 0.3s ease-in-out';
+            setTimeout(() => notification.remove(), 300);
+        }, duration);
+    }
 }
