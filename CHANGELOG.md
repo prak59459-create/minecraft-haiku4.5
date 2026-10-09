@@ -1,5 +1,44 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Session 3 Optimizations & Enhancements (Current)
+
+### Performance Improvements
+- **Rendering Optimization**: High-performance GPU preference and device pixel ratio optimization
+- **Chunk Loading**: Distance-based prioritization for faster nearby chunk rendering
+- **Material Caching**: Reuse shader compilation across chunks to reduce memory overhead
+- **Fog System**: Added fog (200-500 range) for smooth distant rendering and performance boost
+- **Particle Limits**: Implemented max particle cap (2000) to prevent memory issues
+
+### Gameplay Enhancements
+- **Enhanced Cave Generation**: Multi-octave Perlin noise for complex cave systems with depth-based probability
+- **New Block Types**: Added Spruce Log and Spruce Leaves for more diverse world generation
+- **Biome-Aware Trees**: Different tree types (Oak/Spruce) based on terrain noise
+- **Better Spawn Location**: Improved initial spawn position for better game experience
+
+### Audio System Upgrades
+- **Audio Volume Control**: Master volume slider support
+- **Sound Throttling**: Prevent audio overload with minimum sound interval
+- **Block Type Audio Variation**: Different sound frequencies based on block types
+- **Audio Context Error Handling**: Better error handling for audio initialization
+
+### Visual Quality
+- **Improved Day/Night Cycle**: Better sky color transitions with pronounced day/night differences
+- **Water Depth Coloring**: Water color varies with depth for more realistic appearance
+- **Better Lighting**: Sky Box setup and improved lighting system
+- **Responsive UI**: Enhanced CSS with accessibility features and mobile optimizations
+- **Crosshair & HUD**: Improved visual feedback for better gameplay
+
+### Bug Fixes & Refinements
+- **Raycasting Accuracy**: Improved step size from 0.05 to 0.02 for more precise block detection
+- **Water Mesh Rendering**: Fixed water mesh integration into chunk visibility system
+- **Inventory Wheel**: Added pointer lock check to prevent unintended scrolling
+- **Debug Display**: Added player position tracking for better diagnostics
+
+### Development & Documentation
+- **Expanded Block System**: Support for new block types and variants
+- **Better Configuration**: Config system ready for extended settings
+- **Performance Monitoring**: Enhanced debug display with real-time metrics
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features

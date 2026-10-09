@@ -11,7 +11,7 @@ const JUMP_POWER = 0.5;
 export class Player {
     constructor(world) {
         this.world = world;
-        this.position = { x: 0, y: 100, z: 0 };
+        this.position = { x: 32, y: 120, z: 32 };
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
 

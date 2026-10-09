@@ -49,8 +49,12 @@ export class Chunk {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
                     } else if (y < height - 4) {
-                        const block = getOreBlock(wx, y, wz);
-                        this.setBlock(x, y, z, block);
+                        if (isCave(wx, y, wz)) {
+                            this.setBlock(x, y, z, BLOCKS.AIR);
+                        } else {
+                            const block = getOreBlock(wx, y, wz);
+                            this.setBlock(x, y, z, block);
+                        }
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
@@ -84,10 +88,11 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    height += perlinNoise.noise2D(x * 0.003, z * 0.003) * 40;
+    height += perlinNoise.noise2D(x * 0.01, z * 0.01) * 20;
+    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 10;
+    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 5;
+    height += perlinNoise.noise2D(x * 0.2, z * 0.2) * 2;
 
     return Math.max(20, Math.min(160, Math.floor(height)));
 }
@@ -96,8 +101,25 @@ function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const humidity = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
+    if (temp < -0.4) return 'sand';
+    if (humidity > 0.5) return 'grass';
+    if (humidity > 0.2) return 'grass';
     return 'grass';
+}
+
+function isCave(x, y, z) {
+    if (!perlinNoise || y < 10 || y > 120) return false;
+
+    const cave1 = perlinNoise.noise2D(x * 0.04 + y * 0.02, z * 0.04);
+    const cave2 = perlinNoise.noise2D(x * 0.08 + y * 0.01, z * 0.08);
+    const cave3 = perlinNoise.noise2D(x * 0.02, z * 0.02 + y * 0.01);
+
+    const depthFactor = 1 - (Math.abs(y - 60) / 60);
+    const combined = (cave1 * 0.5 + cave2 * 0.3 + cave3 * 0.2);
+
+    return combined > (0.35 - depthFactor * 0.15);
 }
 
 function getOreBlock(x, y, z) {
@@ -123,15 +145,20 @@ function generateTree(chunk, x, z, height) {
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
-    if (treeChance < 0.5) return;
+    const treeType = perlinNoise.noise2D(worldX * 0.05, worldZ * 0.05);
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    if (treeChance < 0.45) return;
+
+    const trunkHeight = 4 + Math.floor(Math.random() * 5);
     const y = height;
+    const isSpruceTree = treeType > 0.3;
+    const logBlock = isSpruceTree ? BLOCKS.SPRUCE_LOG : BLOCKS.OAK_LOG;
+    const leafBlock = isSpruceTree ? BLOCKS.SPRUCE_LEAVES : BLOCKS.OAK_LEAVES;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
             if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
-                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
+                chunk.setBlock(x, y + i, z, logBlock);
             }
         }
     }
@@ -151,7 +178,7 @@ function generateTree(chunk, x, z, height) {
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
                     if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
-                        chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                        chunk.setBlock(fx, fy, fz, leafBlock);
                     }
                 }
             }

@@ -13,6 +13,7 @@ export class UI {
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach((slot, index) => {
             const blockId = parseInt(slot.dataset.block);
+            this.blocks[index] = blockId;
             slot.addEventListener('click', () => {
                 this.selectBlock(index);
             });
@@ -26,6 +27,7 @@ export class UI {
         });
 
         document.addEventListener('wheel', (e) => {
+            if (document.pointerLockElement !== document.body) return;
             e.preventDefault();
             const direction = e.deltaY > 0 ? 1 : -1;
             let newIndex = this.selectedBlock + direction;
