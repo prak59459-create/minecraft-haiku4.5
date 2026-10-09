@@ -46,13 +46,15 @@ export class UI {
     }
 
     updateHUD(playerPos, selectedBlock, fps) {
-        const coordsEl = document.getElementById('coords');
-        const fpsEl = document.getElementById('fps');
-        const blockEl = document.getElementById('blockInfo');
+        if (!this.coordsEl) {
+            this.coordsEl = document.getElementById('coords');
+            this.fpsEl = document.getElementById('fps');
+            this.blockEl = document.getElementById('blockInfo');
+        }
 
-        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
-        fpsEl.textContent = `FPS: ${fps}`;
-        blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+        this.coordsEl.textContent = `X: ${Math.round(playerPos.x * 10) / 10} Y: ${Math.round(playerPos.y * 10) / 10} Z: ${Math.round(playerPos.z * 10) / 10}`;
+        this.fpsEl.textContent = `FPS: ${fps}`;
+        this.blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
     }
 
     updateFPS() {

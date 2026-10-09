@@ -21,6 +21,18 @@ export class Player {
         this.isCrouching = false;
 
         this.keys = {};
+
+        this.checkAngles8 = [];
+        this.checkAngles6 = [];
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            this.checkAngles8.push({ cos: Math.cos(angle), sin: Math.sin(angle) });
+        }
+        for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * Math.PI * 2;
+            this.checkAngles6.push({ cos: Math.cos(angle), sin: Math.sin(angle) });
+        }
+
         this.setupKeyboardControls();
     }
 
@@ -94,10 +106,10 @@ export class Player {
         ];
 
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
-                const cx = this.position.x + Math.cos(angle) * point.radius;
+            for (const angle of this.checkAngles8) {
+                const cx = this.position.x + angle.cos * point.radius;
                 const cy = this.position.y + point.dy;
-                const cz = this.position.z + Math.sin(angle) * point.radius;
+                const cz = this.position.z + angle.sin * point.radius;
 
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
                 if (isBlockSolid(block)) {
@@ -114,10 +126,10 @@ export class Player {
 
         if (this.velocity.y < 0) {
             let onGround = false;
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.8;
+            for (const angle of this.checkAngles6) {
+                const cx = this.position.x + angle.cos * radius * 0.8;
                 const cy = this.position.y - 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.8;
+                const cz = this.position.z + angle.sin * radius * 0.8;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     onGround = true;
@@ -132,10 +144,10 @@ export class Player {
         }
 
         if (this.velocity.y > 0) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.9;
+            for (const angle of this.checkAngles6) {
+                const cx = this.position.x + angle.cos * radius * 0.9;
                 const cy = this.position.y + height + 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.9;
+                const cz = this.position.z + angle.sin * radius * 0.9;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     this.velocity.y = 0;
@@ -163,6 +175,8 @@ export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
+        this.direction = { x: 0, y: 0, z: -1 };
+        this.directionDirty = true;
         this.setupMouseControls();
     }
 
@@ -172,6 +186,7 @@ export class Camera {
             this.rotation.x -= e.movementY * this.mouseSensitivity;
 
             this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            this.directionDirty = true;
         });
 
         document.addEventListener('click', () => {
@@ -179,6 +194,21 @@ export class Camera {
                 document.body.requestPointerLock();
             }
         });
+    }
+
+    getDirection() {
+        if (this.directionDirty) {
+            const sinX = Math.sin(this.rotation.x);
+            const cosX = Math.cos(this.rotation.x);
+            const sinY = Math.sin(this.rotation.y);
+            const cosY = Math.cos(this.rotation.y);
+
+            this.direction.x = sinY * cosX;
+            this.direction.y = sinX;
+            this.direction.z = cosY * cosX;
+            this.directionDirty = false;
+        }
+        return this.direction;
     }
 
     updateFromPlayer(player) {

@@ -1,10 +1,20 @@
 import { BLOCKS, isBlockSolid } from './blocks.js';
 
+const WATER_FACES = [
+    { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
+    { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
+    { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]] },
+    { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]] },
+    { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
+    { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
+];
+
+const WATER_COLOR_BASE = [0x4A / 255, 0x90 / 255, 0xE2 / 255];
+
 export class WaterRenderer {
     constructor(scene, world) {
         this.scene = scene;
         this.world = world;
-        this.waterMeshes = new Map();
         this.time = 0;
     }
 
@@ -16,7 +26,6 @@ export class WaterRenderer {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x4A90E2);
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -28,31 +37,24 @@ export class WaterRenderer {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const neighbor = (dx, dy, dz) => {
-                        return this.world.getBlock(wx + dx, wy + dy, wz + dz);
-                    };
-
-                    const faces = [
-                        { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
-                        { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
-                        { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]] },
-                        { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]] },
-                        { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
-                        { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
-                    ];
-
-                    for (const face of faces) {
+                    for (let fIdx = 0; fIdx < 6; fIdx++) {
+                        const face = WATER_FACES[fIdx];
                         const [dx, dy, dz] = face.dir;
-                        const neighborBlock = neighbor(dx, dy, dz);
+                        const neighborBlock = this.world.getBlock(wx + dx, wy + dy, wz + dz);
 
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const brightness = 0.8 + Math.random() * 0.2;
+                        const r = Math.floor(WATER_COLOR_BASE[0] * brightness * 255);
+                        const g = Math.floor(WATER_COLOR_BASE[1] * brightness * 255);
+                        const b = Math.floor(WATER_COLOR_BASE[2] * brightness * 255);
 
-                        for (const [vx, vy, vz] of face.verts) {
+                        const verts = face.verts;
+                        for (let v = 0; v < 4; v++) {
+                            const [vx, vy, vz] = verts[v];
                             vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
+                            colors.push(r, g, b);
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -66,7 +68,6 @@ export class WaterRenderer {
             geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
             geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
-            geometry.computeVertexNormals();
 
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
