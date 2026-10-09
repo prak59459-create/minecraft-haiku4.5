@@ -1,5 +1,43 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Performance & Enhancement Update (In Development)
+
+### New Features
+- **Clay Block** - New block type for desert biomes
+- **Dark Oak Log** - Tree type variation for biome diversity
+- **Gravel Biome** - New terrain type based on humidity
+- **Progressive Mesh Loading** - One chunk per frame to prevent stuttering
+- **Mesh Build Queue** - Prioritized chunk rendering by distance
+- **Particle Pooling** - Object reuse for efficient particle management
+- **Enhanced Debug Display** - Queue status, visible chunks tracking
+
+### Improvements
+- **Frustum Culling** - Only render visible chunks for better performance
+- **Visibility Throttling** - Reduce CPU overhead by 300ms update intervals
+- **Optimized Raycasting** - Larger step sizes for faster block detection
+- **Reduced Collision Checks** - Fewer angle checks without quality loss
+- **Day/Night Cycle** - Smooth color interpolation and circular sun movement
+- **Lighting System** - Enhanced shadow camera bounds and light intensities
+- **Water Rendering** - Sine-based color variation for visual interest
+- **Tree Generation** - Type variation (Oak/Dark Oak) based on biome
+- **Mobile Responsive** - Added 480px breakpoint for small devices
+- **Inventory UI** - Pointer lock awareness for scroll wheel interaction
+
+### Performance Enhancements
+- Max particles reduced from unlimited to 512 with pooling
+- Chunk visibility updated every 300ms instead of every frame
+- Collision detection optimized: 6-8 angle checks per point (was 16)
+- Raycasting initial step size: 0.1 (was 0.05) for 2x faster detection
+- Flat shading enabled for mesh rendering
+- Shadow maps improved with larger camera bounds
+- Up to 12-chunk render distance (was 8)
+
+### Bug Fixes
+- Fixed scroll wheel interference outside pointer lock
+- Improved mobile UI responsiveness
+- Better memory management for chunks
+- Fixed particle system memory leaks
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features
