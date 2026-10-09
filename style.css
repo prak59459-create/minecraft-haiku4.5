@@ -151,3 +151,31 @@ body {
         font-size: 9px;
     }
 }
+
+@media (max-width: 480px) {
+    #hud {
+        font-size: 9px;
+    }
+
+    .inventory-slot {
+        width: 30px;
+        height: 30px;
+        font-size: 10px;
+    }
+
+    .inventory-slot .slot-block {
+        width: 18px;
+        height: 18px;
+    }
+
+    #help {
+        font-size: 8px;
+        padding: 5px 10px;
+    }
+
+    #crosshair {
+        width: 15px;
+        height: 15px;
+        margin: -7.5px 0 0 -7.5px;
+    }
+}
