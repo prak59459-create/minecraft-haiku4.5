@@ -7,6 +7,7 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { Config } from './config.js';
 
 class MinecraftGame {
     constructor() {
@@ -56,15 +57,20 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
-        directionalLight.position.set(150, sunY, 150);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7 + sunIntensity * 0.25);
+        directionalLight.position.set(200, sunY, 200);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
-        directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.near = 0.1;
+        directionalLight.shadow.camera.far = 600;
+        directionalLight.shadow.camera.left = -256;
+        directionalLight.shadow.camera.right = 256;
+        directionalLight.shadow.camera.top = 256;
+        directionalLight.shadow.camera.bottom = -256;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -413,14 +419,31 @@ class MinecraftGame {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
         const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const timeOfDay = (time % (Math.PI * 2)) / (Math.PI * 2);
 
-        this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.position.set(250 * Math.cos(time), sunY, 250 * Math.sin(time));
+        this.directionalLight.intensity = 0.4 + sunIntensity * 0.35;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        if (timeOfDay < 0.25) {
+            skyColor.setHSL(0.15, 0.6, 0.3);
+        } else if (timeOfDay < 0.45) {
+            const t = (timeOfDay - 0.25) / 0.2;
+            skyColor.lerpHSLs(new THREE.Color().setHSL(0.15, 0.6, 0.3), new THREE.Color().setHSL(0.6, 0.4, 0.6), t);
+        } else if (timeOfDay < 0.55) {
+            skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        } else if (timeOfDay < 0.75) {
+            const t = (timeOfDay - 0.55) / 0.2;
+            skyColor.lerpHSLs(new THREE.Color().setHSL(0.6, 0.4, 0.6), new THREE.Color().setHSL(0.15, 0.6, 0.3), t);
+        } else {
+            skyColor.setHSL(0.15, 0.6, 0.3);
+        }
+
         this.scene.background = skyColor;
     }
 }
 
-const game = new MinecraftGame();
+(async () => {
+    await Config.load();
+    new MinecraftGame();
+})();
