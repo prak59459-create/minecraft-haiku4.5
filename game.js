@@ -13,8 +13,9 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.renderer.setClearColor(0x87CEEB);
 
         this.world = new World();
@@ -61,9 +62,13 @@ class MinecraftGame {
         directionalLight.shadow.camera.right = 256;
         directionalLight.shadow.camera.top = 256;
         directionalLight.shadow.camera.bottom = -256;
+        directionalLight.shadow.bias = -0.0001;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
+
+        const fogColor = 0xccddff;
+        this.scene.fog = new THREE.Fog(fogColor, 300, 800);
     }
 
     setupEventListeners() {
@@ -233,12 +238,15 @@ class MinecraftGame {
                 wireframe: false,
                 flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 25,
+                emissive: 0x000000,
+                emissiveIntensity: 0
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
             mesh.frustumCulled = true;
+            mesh.matrixAutoUpdate = true;
             return mesh;
         }
 
@@ -350,16 +358,13 @@ class MinecraftGame {
         const eyePos = this.player.getEyePosition();
         this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
 
-        const direction = new THREE.Vector3(
-            Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
-            Math.sin(this.gameCamera.rotation.x),
-            Math.cos(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x)
-        );
-        this.camera.lookAt(
-            eyePos.x + direction.x,
-            eyePos.y + direction.y,
-            eyePos.z + direction.z
-        );
+        const sinX = Math.sin(this.gameCamera.rotation.x);
+        const cosX = Math.cos(this.gameCamera.rotation.x);
+        const sinY = Math.sin(this.gameCamera.rotation.y);
+        const cosY = Math.cos(this.gameCamera.rotation.y);
+
+        const direction = new THREE.Vector3(sinY * cosX, sinX, cosY * cosX);
+        this.camera.lookAt(eyePos.x + direction.x, eyePos.y + direction.y, eyePos.z + direction.z);
 
         this.updateVisibleChunks();
         this.updateDayNightCycle();
@@ -370,7 +375,8 @@ class MinecraftGame {
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+        const blockName = this.ui.blocks[this.ui.selectedBlock];
+        this.ui.updateHUD(this.player.position, blockName, fps);
 
         if (this.showDebug) {
             this.debugDisplay.update(this);
