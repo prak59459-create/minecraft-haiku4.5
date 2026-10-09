@@ -18,10 +18,10 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Procedural Generation** - Infinite world generation using Perlin noise
 - **Multiple Biomes** - Grass, sand, and varied terrain types
 - **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
+- **Multiple Block Types** (16 types):
   - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
+  - Oak Log, Oak Leaves, Dark Oak Log
+  - Sand, Clay, Water, Gravel, Bedrock
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
 - **Ore Generation** - Procedural ore generation at various depths
 - **Tree Generation** - Natural tree placement in suitable terrain
@@ -133,13 +133,18 @@ audio.js         - Sound effects generation
 - **Vanilla JavaScript** - Core game logic
 - **HTML5/CSS3** - UI and styling
 
-### Performance
+### Performance Optimizations
 
-- Renders 8-chunk radius around player
-- Optimized mesh generation with indexed geometry
-- Dynamic lighting updates for day/night cycle
-- Particle system for visual effects
-- ~60 FPS on modern hardware
+- **Frustum Culling** - Only render visible chunks to reduce draw calls
+- **Progressive Mesh Loading** - Build one chunk mesh per frame to prevent stuttering
+- **Visibility Throttling** - Update chunk visibility every 300ms to reduce CPU overhead
+- **Optimized Raycasting** - Larger step sizes for faster block detection
+- **Particle Pooling** - Reuse particle objects to reduce garbage collection
+- **Reduced Collision Checks** - Optimized collision detection for better performance
+- **Flat Shading** - Better rendering speed without quality loss
+- **Dynamic Lighting** - Efficient day/night cycle with smooth transitions
+- **Render Distance** - Up to 12-chunk radius with progressive loading
+- **~60 FPS** on modern hardware with advanced optimizations
 
 ## Game Design
 
@@ -153,7 +158,8 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 ### Biomes
 
 - **Grass Biome** - Natural terrain with trees and water
-- **Sand Biome** - Desert-like areas with sand blocks
+- **Sand Biome** - Desert-like areas with sand and clay blocks
+- **Gravel Biome** - Rocky areas with gravel generation
 
 ### Ore Distribution
 
