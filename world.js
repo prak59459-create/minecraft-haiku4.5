@@ -205,11 +205,15 @@ export class World {
         const playerChunkZ = Math.floor(playerZ / CHUNK_SIZE);
 
         const chunksToKeep = new Set();
-        for (let dx = -this.renderDistance; dx <= this.renderDistance; dx++) {
-            for (let dz = -this.renderDistance; dz <= this.renderDistance; dz++) {
+        const maxLoadDist = Math.max(this.renderDistance + 2, 10);
+
+        for (let dx = -maxLoadDist; dx <= maxLoadDist; dx++) {
+            for (let dz = -maxLoadDist; dz <= maxLoadDist; dz++) {
                 const key = `${playerChunkX + dx},${playerChunkZ + dz}`;
                 chunksToKeep.add(key);
-                this.getChunk(playerChunkX + dx, playerChunkZ + dz);
+                if (Math.abs(dx) <= this.renderDistance && Math.abs(dz) <= this.renderDistance) {
+                    this.getChunk(playerChunkX + dx, playerChunkZ + dz);
+                }
             }
         }
 
