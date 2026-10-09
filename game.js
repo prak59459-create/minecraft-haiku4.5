@@ -19,6 +19,9 @@ class MinecraftGame {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
+        this.loadingScreen = document.getElementById('loading-screen');
+        this.loadingStartTime = Date.now();
+
         this.world = new World();
         this.player = new Player(this.world);
         this.gameCamera = new Camera();
@@ -349,6 +352,12 @@ class MinecraftGame {
 
     animate() {
         requestAnimationFrame(() => this.animate());
+
+        const elapsed = Date.now() - this.loadingStartTime;
+        if (elapsed > 1500 && this.loadingScreen.classList.contains('loading-show')) {
+            this.loadingScreen.classList.remove('loading-show');
+            this.loadingScreen.classList.add('loading-hide');
+        }
 
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);

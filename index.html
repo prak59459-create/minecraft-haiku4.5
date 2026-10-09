@@ -10,6 +10,15 @@
     <canvas id="gameCanvas"></canvas>
 
     <div id="ui">
+        <div id="loading-screen" class="loading-show">
+            <div class="loading-content">
+                <h1>Minecraft Clone</h1>
+                <p>Initializing world...</p>
+                <div class="loading-bar">
+                    <div class="loading-progress"></div>
+                </div>
+            </div>
+        </div>
         <div id="crosshair"></div>
         <div id="hud">
             <div id="coords">X: 0 Y: 0 Z: 0</div>
@@ -49,9 +58,9 @@
                 <span class="slot-number">8</span>
                 <div class="slot-block" style="background-color: #4A90E2;"></div>
             </div>
-            <div class="inventory-slot" data-index="8" data-block="9">
+            <div class="inventory-slot" data-index="8" data-block="15">
                 <span class="slot-number">9</span>
-                <div class="slot-block" style="background-color: #999999;"></div>
+                <div class="slot-block" style="background-color: #696969;"></div>
             </div>
         </div>
         <div id="help">
