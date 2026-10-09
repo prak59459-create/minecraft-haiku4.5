@@ -314,6 +314,7 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const chunksToRender = [];
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
@@ -326,13 +327,19 @@ class MinecraftGame {
             }
 
             if (!this.chunkMeshes.has(key)) {
-                const mesh = this.buildChunkMesh(chunk);
-                if (mesh) {
-                    this.scene.add(mesh);
-                    this.chunkMeshes.set(key, mesh);
-                }
+                const dist = Math.hypot(cx - playerChunkX, cz - playerChunkZ);
+                chunksToRender.push({ key, chunk, dist });
             }
         }
+
+        chunksToRender.sort((a, b) => a.dist - b.dist);
+        chunksToRender.forEach(({ key, chunk }) => {
+            const mesh = this.buildChunkMesh(chunk);
+            if (mesh) {
+                this.scene.add(mesh);
+                this.chunkMeshes.set(key, mesh);
+            }
+        });
     }
 
     onWindowResize() {
