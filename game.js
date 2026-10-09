@@ -7,17 +7,22 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { Config } from './config.js';
 
 class MinecraftGame {
-    constructor() {
+    async initialize() {
+        await Config.load();
+
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
-        this.world = new World();
+        this.world = new World(Config.get('world.renderDistance'));
         this.player = new Player(this.world);
         this.gameCamera = new Camera();
         this.ui = new UI();
@@ -29,11 +34,19 @@ class MinecraftGame {
 
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
-        this.raycastDistance = 6;
+        this.raycastDistance = Config.get('raycast.distance');
         this.lastBreakSound = 0;
+        this.lastStepSound = 0;
         this.showDebug = false;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
+        this.player.onStep = () => {
+            const now = Date.now();
+            if (now - this.lastStepSound > 200) {
+                this.audioManager.playStepSound();
+                this.lastStepSound = now;
+            }
+        };
 
         this.setupLighting();
         this.setupEventListeners();
@@ -42,21 +55,22 @@ class MinecraftGame {
     }
 
     setupLighting() {
-        const time = Date.now() * 0.0001;
-        const sunY = Math.sin(time) * 100 + 100;
-        const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
-        directionalLight.position.set(150, sunY, 150);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(150, 100, 150);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -200;
+        directionalLight.shadow.camera.right = 200;
+        directionalLight.shadow.camera.top = 200;
+        directionalLight.shadow.camera.bottom = -200;
         this.scene.add(directionalLight);
 
+        this.ambientLight = ambientLight;
         this.directionalLight = directionalLight;
     }
 
@@ -134,8 +148,9 @@ class MinecraftGame {
         );
 
         let hit = null;
+        let lastBlockCoords = { x: null, y: null, z: null };
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = 0.1; dist <= this.raycastDistance; dist += 0.1) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -144,9 +159,13 @@ class MinecraftGame {
             const by = Math.floor(y);
             const bz = Math.floor(z);
 
+            if (bx === lastBlockCoords.x && by === lastBlockCoords.y && bz === lastBlockCoords.z) {
+                continue;
+            }
+
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
+                const prevDist = Math.max(0.1, dist - 0.1);
                 const prevX = eyePos.x + direction.x * prevDist;
                 const prevY = eyePos.y + direction.y * prevDist;
                 const prevZ = eyePos.z + direction.z * prevDist;
@@ -163,6 +182,8 @@ class MinecraftGame {
                 hit = { x: bx, y: by, z: bz, block, normal, dist };
                 break;
             }
+
+            lastBlockCoords = { x: bx, y: by, z: bz };
         }
 
         if (!hit) {
@@ -268,7 +289,9 @@ class MinecraftGame {
             const nz = z + dz;
 
             const neighbor = this.world.getBlock(nx, ny, nz);
-            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+            if (isBlockSolid(neighbor)) continue;
+
+            if (blockId === BLOCKS.WATER && neighbor === BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
             for (const [vx, vy, vz] of face.verts) {
@@ -308,6 +331,39 @@ class MinecraftGame {
                     this.chunkMeshes.set(key, mesh);
                 }
             }
+        }
+
+        this.updateWaterRendering();
+    }
+
+    updateWaterRendering() {
+        const playerChunkX = Math.floor(this.player.position.x / 16);
+        const playerChunkZ = Math.floor(this.player.position.z / 16);
+
+        const waterMeshes = this.waterRenderer.waterMeshes || new Map();
+
+        for (const [key, chunk] of this.world.chunks) {
+            const [cx, cz] = key.split(',').map(Number);
+
+            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+                if (waterMeshes.has(key)) {
+                    this.scene.remove(waterMeshes.get(key));
+                    waterMeshes.delete(key);
+                }
+                continue;
+            }
+
+            if (!waterMeshes.has(key)) {
+                const waterMesh = this.waterRenderer.buildWaterMesh(chunk);
+                if (waterMesh) {
+                    this.scene.add(waterMesh);
+                    waterMeshes.set(key, waterMesh);
+                }
+            }
+        }
+
+        if (!this.waterRenderer.waterMeshes) {
+            this.waterRenderer.waterMeshes = waterMeshes;
         }
     }
 
@@ -364,17 +420,29 @@ class MinecraftGame {
     }
 
     updateDayNightCycle() {
-        const time = Date.now() * 0.00002;
-        const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const time = Date.now() * 0.00001;
+        const timeOfDay = ((time % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+
+        const sunY = Math.sin(timeOfDay) * 120 + 100;
+        const sunIntensity = Math.max(0.15, Math.sin(timeOfDay) + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.6 + sunIntensity * 0.4;
+        this.ambientLight.intensity = 0.4 + sunIntensity * 0.3;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        if (sunIntensity > 0.3) {
+            skyColor.setHSL(0.6 - sunIntensity * 0.1, 0.5, 0.4 + sunIntensity * 0.4);
+        } else {
+            skyColor.setRGB(0.05, 0.05, 0.15);
+        }
         this.scene.background = skyColor;
+
+        if (this.directionalLight.shadow) {
+            this.directionalLight.shadow.camera.updateProjectionMatrix();
+        }
     }
 }
 
 const game = new MinecraftGame();
+game.initialize().catch(err => console.error('Failed to initialize game:', err));
