@@ -1,16 +1,32 @@
 import { BLOCKS } from './blocks.js';
 
-const CHUNK_SIZE = 16;
-const CHUNK_HEIGHT = 256;
-const WORLD_HEIGHT = 256;
+export const CHUNK_SIZE = 16;
+export const CHUNK_HEIGHT = 256;
+export const WORLD_HEIGHT = 256;
+export const CHUNK_SIZE_EXPORT = CHUNK_SIZE;
+export const WORLD_HEIGHT_EXPORT = WORLD_HEIGHT;
 
 let perlinNoise;
 const CHUNK_POOL = [];
 const MAX_POOL_SIZE = 16;
+let WORLD_SEED = 0;
 
-export function initPerlinNoise() {
+export function initPerlinNoise(seed = 0) {
+    WORLD_SEED = seed;
     if (typeof SimplexNoise !== 'undefined') {
-        perlinNoise = new SimplexNoise(Math.random());
+        const random = new SeededRandom(seed);
+        perlinNoise = new SimplexNoise(() => random.next());
+    }
+}
+
+class SeededRandom {
+    constructor(seed) {
+        this.seed = seed || Math.random() * 0xFFFFFFFF;
+    }
+
+    next() {
+        this.seed = (this.seed * 9301 + 49297) % 233280;
+        return this.seed / 233280;
     }
 }
 
