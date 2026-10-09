@@ -323,7 +323,7 @@ class MinecraftGame {
             const [cx, cz] = key.split(',').map(Number);
             const dist = Math.abs(cx - playerChunkX) + Math.abs(cz - playerChunkZ);
 
-            if (dist > 10) {
+            if (dist > 12) {
                 this.scene.remove(mesh);
                 meshChunksToRemove.push(key);
                 mesh.geometry.dispose();
@@ -337,15 +337,20 @@ class MinecraftGame {
             const [cx, cz] = key.split(',').map(Number);
             const dist = Math.abs(cx - playerChunkX) + Math.abs(cz - playerChunkZ);
 
-            if (dist > 10) continue;
+            if (dist > 12) continue;
 
             if (!this.chunkMeshes.has(key)) {
-                chunksToLoad.push({ key, chunk, dist });
+                const priority = this.getChunkLoadPriority(cx, cz, playerChunkX, playerChunkZ);
+                chunksToLoad.push({ key, chunk, dist, priority });
             }
         }
 
-        chunksToLoad.sort((a, b) => a.dist - b.dist);
-        const maxChunksPerFrame = 1;
+        chunksToLoad.sort((a, b) => {
+            if (a.priority !== b.priority) return a.priority - b.priority;
+            return a.dist - b.dist;
+        });
+
+        const maxChunksPerFrame = 2;
         for (let i = 0; i < Math.min(maxChunksPerFrame, chunksToLoad.length); i++) {
             const { key, chunk } = chunksToLoad[i];
             const mesh = this.buildChunkMesh(chunk);
@@ -354,6 +359,15 @@ class MinecraftGame {
                 this.chunkMeshes.set(key, mesh);
             }
         }
+    }
+
+    getChunkLoadPriority(cx, cz, playerCx, playerCz) {
+        const dx = cx - playerCx;
+        const dz = cz - playerCz;
+        const playerDir = this.gameCamera.rotation.y;
+        const dirToChunk = Math.atan2(dz, dx);
+        const angleDiff = Math.abs(dirToChunk - playerDir);
+        return Math.min(angleDiff, Math.PI * 2 - angleDiff);
     }
 
     onWindowResize() {
