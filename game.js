@@ -297,6 +297,17 @@ class MinecraftGame {
         return faceCount > 0;
     }
 
+    removeOccludedChunks() {
+        const playerChunkX = Math.floor(this.player.position.x / 16);
+        const playerChunkZ = Math.floor(this.player.position.z / 16);
+
+        for (const [key, mesh] of this.chunkMeshes) {
+            const [cx, cz] = key.split(',').map(Number);
+            const distance = Math.sqrt((cx - playerChunkX) ** 2 + (cz - playerChunkZ) ** 2);
+            mesh.visible = distance < 10;
+        }
+    }
+
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
@@ -377,6 +388,7 @@ class MinecraftGame {
         );
 
         this.updateVisibleChunks();
+        this.removeOccludedChunks();
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
@@ -397,14 +409,21 @@ class MinecraftGame {
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.4 + sunIntensity * 0.35;
 
-        const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        let skyColor = new THREE.Color();
+        if (sunIntensity > 0.3) {
+            skyColor.setHSL(0.6, 0.5, 0.4 + sunIntensity * 0.35);
+        } else {
+            skyColor.setHSL(0.65, 0.2, 0.15 + sunIntensity * 0.2);
+        }
         this.scene.background = skyColor;
+
+        const fogColor = skyColor.clone();
+        this.scene.fog.color.copy(fogColor);
     }
 }
 
