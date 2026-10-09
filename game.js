@@ -10,18 +10,28 @@ import { BlockOutline } from './blockoutline.js';
 
 class MinecraftGame {
     constructor() {
-        this.canvas = document.getElementById('gameCanvas');
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({
-            canvas: this.canvas,
-            antialias: true,
-            powerPreference: 'high-performance'
-        });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setClearColor(0x87CEEB);
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+        try {
+            this.canvas = document.getElementById('gameCanvas');
+            if (!this.canvas) throw new Error('Canvas not found');
+
+            this.scene = new THREE.Scene();
+            this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            this.renderer = new THREE.WebGLRenderer({
+                canvas: this.canvas,
+                antialias: true,
+                powerPreference: 'high-performance',
+                alpha: true,
+                precision: 'highp'
+            });
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            this.renderer.setClearColor(0x87CEEB);
+            this.renderer.shadowMap.enabled = true;
+            this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+        } catch (error) {
+            console.error('Failed to initialize renderer:', error);
+            throw error;
+        }
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -350,9 +360,36 @@ class MinecraftGame {
     }
 
     onWindowResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(width, height);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    }
+
+    dispose() {
+        for (const mesh of this.chunkMeshes.values()) {
+            if (mesh && mesh.geometry) {
+                mesh.geometry.dispose();
+            }
+            if (mesh && mesh.material) {
+                if (Array.isArray(mesh.material)) {
+                    mesh.material.forEach(m => m.dispose());
+                } else {
+                    mesh.material.dispose();
+                }
+            }
+        }
+        this.chunkMeshes.clear();
+
+        for (const material of this.materials.values()) {
+            material.dispose();
+        }
+        this.materials.clear();
+
+        this.renderer.dispose();
     }
 
     getDistanceToChunk(cx, cz) {

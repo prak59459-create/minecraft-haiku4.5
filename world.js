@@ -205,6 +205,7 @@ export class World {
     }
 
     getBlock(x, y, z) {
+        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return BLOCKS.AIR;
         if (y < 0 || y >= WORLD_HEIGHT) return BLOCKS.AIR;
 
         const cx = Math.floor(x / CHUNK_SIZE);
@@ -213,11 +214,13 @@ export class World {
         const lz = ((z % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
 
         const chunk = this.getChunk(cx, cz);
-        return chunk.getBlock(lx, y, lz);
+        return chunk.getBlock(lx, Math.floor(y), lz);
     }
 
     setBlock(x, y, z, blockId) {
+        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return;
         if (y < 0 || y >= WORLD_HEIGHT) return;
+        if (!Number.isInteger(blockId) || blockId < 0) return;
 
         const cx = Math.floor(x / CHUNK_SIZE);
         const cz = Math.floor(z / CHUNK_SIZE);
@@ -225,7 +228,7 @@ export class World {
         const lz = ((z % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
 
         const chunk = this.getChunk(cx, cz);
-        chunk.setBlock(lx, y, lz, blockId);
+        chunk.setBlock(lx, Math.floor(y), lz, blockId);
     }
 
     updateChunksAround(playerX, playerZ) {

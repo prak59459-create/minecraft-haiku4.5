@@ -159,10 +159,19 @@ export class Player {
     }
 
     getEyePosition() {
+        const eyeHeight = PLAYER_HEIGHT * 0.85;
         return {
-            x: this.position.x,
-            y: this.position.y + PLAYER_HEIGHT * 0.85,
-            z: this.position.z
+            x: Math.round(this.position.x * 100) / 100,
+            y: Math.min(256, Math.max(0, this.position.y + eyeHeight)),
+            z: Math.round(this.position.z * 100) / 100
+        };
+    }
+
+    getGridPosition() {
+        return {
+            x: Math.floor(this.position.x),
+            y: Math.floor(this.position.y),
+            z: Math.floor(this.position.z)
         };
     }
 }
