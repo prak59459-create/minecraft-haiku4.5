@@ -13,8 +13,9 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.renderer.setClearColor(0x87CEEB);
 
         this.world = new World();
@@ -32,6 +33,7 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.material = null;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -59,6 +61,11 @@ class MinecraftGame {
 
         this.directionalLight = directionalLight;
         this.setupSkyBox();
+        this.setupFog();
+    }
+
+    setupFog() {
+        this.scene.fog = new THREE.Fog(0x87CEEB, 200, 500);
     }
 
     setupSkyBox() {
@@ -252,14 +259,17 @@ class MinecraftGame {
             }
             geometry.computeVertexNormals();
 
-            const material = new THREE.MeshPhongMaterial({
-                vertexColors: true,
-                wireframe: false,
-                flatShading: false,
-                side: THREE.FrontSide,
-                shininess: 30
-            });
-            const mesh = new THREE.Mesh(geometry, material);
+            if (!this.material) {
+                this.material = new THREE.MeshPhongMaterial({
+                    vertexColors: true,
+                    wireframe: false,
+                    flatShading: false,
+                    side: THREE.FrontSide,
+                    shininess: 30
+                });
+            }
+
+            const mesh = new THREE.Mesh(geometry, this.material);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
             mesh.frustumCulled = true;
