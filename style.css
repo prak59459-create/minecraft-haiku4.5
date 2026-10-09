@@ -153,14 +153,38 @@ body {
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 0.8; }
+    0%, 100% { opacity: 0.7; }
     50% { opacity: 1; }
 }
 
-#crosshair:hover {
-    animation: pulse 0.5s ease-in-out infinite;
+@keyframes breathe {
+    0%, 100% { box-shadow: 0 0 8px rgba(255, 255, 100, 0.5); }
+    50% { box-shadow: 0 0 12px rgba(255, 255, 100, 0.8); }
+}
+
+#crosshair {
+    animation: pulse 1s ease-in-out infinite;
+}
+
+.inventory-slot.selected {
+    animation: breathe 1.5s ease-in-out infinite;
 }
 
 .inventory-slot:active {
     transform: scale(0.95);
+    transition: transform 0.05s;
+}
+
+#gameCanvas {
+    transition: opacity 0.3s ease;
+}
+
+body.no-audio #hud::after {
+    content: '';
+    width: 5px;
+    height: 5px;
+    background: #FF6B6B;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 5px;
 }

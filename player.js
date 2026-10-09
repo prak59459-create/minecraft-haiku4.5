@@ -204,6 +204,8 @@ export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
+        this.fov = 75;
+        this.targetFov = 75;
         this.setupMouseControls();
     }
 
@@ -225,5 +227,12 @@ export class Camera {
     updateFromPlayer(player) {
         player.rotation.x = this.rotation.x;
         player.rotation.y = this.rotation.y;
+
+        this.targetFov = player.isSprinting ? 85 : 75;
+        this.fov += (this.targetFov - this.fov) * 0.1;
+    }
+
+    getFov() {
+        return this.fov;
     }
 }

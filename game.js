@@ -358,6 +358,9 @@ class MinecraftGame {
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
 
+        this.camera.fov = this.gameCamera.getFov();
+        this.camera.updateProjectionMatrix();
+
         const eyePos = this.player.getEyePosition();
         this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
 
