@@ -62,7 +62,9 @@ class MinecraftGame {
 
         this.directionalLight = directionalLight;
 
-        this.scene.fog = new THREE.Fog(0x87CEEB, 200, 500);
+        const fogColor = new THREE.Color().setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        this.scene.fog = new THREE.Fog(fogColor.getHex(), 200, 500);
+        this.scene.background = fogColor;
     }
 
     setupEventListeners() {
@@ -321,7 +323,13 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
-        const renderDist = 10;
+
+        let renderDist = 10;
+        if (this.ui.fpsCounter < 30) {
+            renderDist = 6;
+        } else if (this.ui.fpsCounter < 50) {
+            renderDist = 8;
+        }
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
@@ -413,9 +421,15 @@ class MinecraftGame {
         this.directionalLight.position.set(200, sunY, 200);
         this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
 
+        const lightness = 0.5 + sunIntensity * 0.3;
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        skyColor.setHSL(0.6, 0.4 * Math.max(0.3, sunIntensity), lightness);
         this.scene.background = skyColor;
+
+        const fogColor = new THREE.Color(skyColor);
+        if (this.scene.fog) {
+            this.scene.fog.color = fogColor;
+        }
     }
 }
 
