@@ -15,6 +15,7 @@ class MinecraftGame {
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setClearColor(0x87CEEB);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
@@ -70,6 +71,14 @@ class MinecraftGame {
         this.scene.fog = new THREE.Fog(fogColor, 200, 500);
 
         this.directionalLight = directionalLight;
+        this.setupDynamicLighting();
+    }
+
+    setupDynamicLighting() {
+        const pointLight = new THREE.PointLight(0xffff88, 0.3, 30);
+        pointLight.position.set(0, 2, 0);
+        this.playerLight = pointLight;
+        this.scene.add(pointLight);
     }
 
     setupEventListeners() {
@@ -375,6 +384,11 @@ class MinecraftGame {
 
         const eyePos = this.player.getEyePosition();
         this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
+
+        if (this.playerLight) {
+            this.playerLight.position.copy(this.player.position);
+            this.playerLight.position.y += 0.5;
+        }
 
         const direction = new THREE.Vector3(
             Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
