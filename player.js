@@ -96,6 +96,7 @@ export class Player {
             { dy: height * 0.9, radius: radius * 0.7, count: 4 }
         ];
 
+        let collided = false;
         for (const point of checkPoints) {
             const angleStep = Math.PI * 2 / point.count;
             for (let angle = 0; angle < Math.PI * 2; angle += angleStep) {
@@ -106,9 +107,14 @@ export class Player {
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
                     if (moveLen > 0.001) {
-                        const scale = 1.5 / moveLen;
-                        this.position.x -= this.velocity.x * scale;
-                        this.position.z -= this.velocity.z * scale;
+                        if (!collided && point.dy < height * 0.3 && this.velocity.y <= 0.1) {
+                            this.position.y += 0.5;
+                            collided = true;
+                        } else {
+                            const scale = 1.5 / moveLen;
+                            this.position.x -= this.velocity.x * scale;
+                            this.position.z -= this.velocity.z * scale;
+                        }
                     }
                     break;
                 }
@@ -169,16 +175,22 @@ export class Player {
 export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
-        this.mouseSensitivity = 0.003;
+        this.mouseSensitivity = 0.0025;
+        this.maxLookAngle = Math.PI / 2.2;
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+            if (document.pointerLockElement === document.body) {
+                this.rotation.y -= e.movementX * this.mouseSensitivity;
+                this.rotation.x -= e.movementY * this.mouseSensitivity;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+                this.rotation.x = Math.max(-this.maxLookAngle, Math.min(this.maxLookAngle, this.rotation.x));
+
+                while (this.rotation.y > Math.PI * 2) this.rotation.y -= Math.PI * 2;
+                while (this.rotation.y < 0) this.rotation.y += Math.PI * 2;
+            }
         });
 
         document.addEventListener('click', () => {
