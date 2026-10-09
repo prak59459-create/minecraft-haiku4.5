@@ -42,6 +42,7 @@ class MinecraftGame {
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
+        this.setupSettingsUI();
         this.animate();
     }
 
@@ -90,11 +91,52 @@ class MinecraftGame {
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
+            if (e.key === 'Escape') {
+                this.ui.toggleSettings();
+            }
+        });
+    }
+
+    setupSettingsUI() {
+        const settingsPanel = document.getElementById('settings-panel');
+        const settingsClose = document.getElementById('settings-close');
+        const volumeSlider = document.getElementById('volume-slider');
+        const sensitivitySlider = document.getElementById('sensitivity-slider');
+        const renderDistanceSelect = document.getElementById('render-distance');
+        const shadowToggle = document.getElementById('shadow-toggle');
+        const fogToggle = document.getElementById('fog-toggle');
+
+        settingsClose.addEventListener('click', () => this.ui.toggleSettings());
+
+        volumeSlider.addEventListener('change', (e) => {
+            const volume = e.target.value / 100;
+            this.audioManager.setVolume(volume);
+        });
+
+        sensitivitySlider.addEventListener('change', (e) => {
+            this.gameCamera.mouseSensitivity = 0.001 + (e.target.value - 0.1) * 0.003;
+        });
+
+        renderDistanceSelect.addEventListener('change', (e) => {
+            const distance = parseInt(e.target.value);
+            this.world.renderDistance = distance;
+        });
+
+        shadowToggle.addEventListener('change', (e) => {
+            this.renderer.shadowMap.enabled = e.target.checked;
+            this.directionalLight.castShadow = e.target.checked;
+        });
+
+        fogToggle.addEventListener('change', (e) => {
+            this.scene.fog = e.target.checked ? new THREE.Fog(0x87CEEB, 150, 500) : null;
         });
     }
 
     onMouseClick(event) {
         if (document.pointerLockElement !== document.body) return;
+
+        const settingsPanel = document.getElementById('settings-panel');
+        if (settingsPanel && settingsPanel.classList.contains('show')) return;
 
         const hit = this.raycastBlock();
         if (hit.block === BLOCKS.AIR) return;

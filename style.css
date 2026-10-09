@@ -136,6 +136,91 @@ body {
     margin: 3px 0;
 }
 
+#settings-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 300px;
+    background: rgba(20, 20, 20, 0.95);
+    border: 2px solid rgba(100, 149, 237, 0.7);
+    border-radius: 8px;
+    padding: 20px;
+    z-index: 100;
+    pointer-events: auto;
+    transition: transform 0.3s ease;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+#settings-panel.show {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+#settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(100, 149, 237, 0.5);
+    padding-bottom: 10px;
+}
+
+#settings-header h2 {
+    color: rgba(100, 149, 237, 0.9);
+    font-size: 18px;
+    margin: 0;
+}
+
+#settings-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+#settings-close:hover {
+    background: rgba(100, 149, 237, 0.3);
+    color: rgba(255, 255, 255, 1);
+}
+
+.setting-item {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.setting-item label {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.setting-item input[type="range"],
+.setting-item select {
+    background: rgba(50, 50, 50, 0.8);
+    border: 1px solid rgba(100, 149, 237, 0.5);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.setting-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;
@@ -149,5 +234,14 @@ body {
 
     #help {
         font-size: 9px;
+    }
+
+    #settings-panel {
+        width: 250px;
+        padding: 15px;
+    }
+
+    #settings-header h2 {
+        font-size: 16px;
     }
 }

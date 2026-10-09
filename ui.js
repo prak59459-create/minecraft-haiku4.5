@@ -71,4 +71,15 @@ export class UI {
         const help = document.getElementById('help');
         help.classList.toggle('show');
     }
+
+    toggleSettings() {
+        const settingsPanel = document.getElementById('settings-panel');
+        settingsPanel.classList.toggle('show');
+
+        if (settingsPanel.classList.contains('show')) {
+            if (document.pointerLockElement === document.body) {
+                document.exitPointerLock();
+            }
+        }
+    }
 }
