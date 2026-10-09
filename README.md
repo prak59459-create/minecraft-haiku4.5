@@ -49,9 +49,19 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 ### User Interface
 - **HUD Display** - Real-time coordinates, FPS, and block info
-- **Block Inventory** - Visual block selector with 9 slots
+- **Block Inventory** - Visual block selector with 9 slots and stacking (up to 64 per slot)
+- **Inventory Count Display** - Shows item counts in inventory slots
 - **Crosshair** - Center screen targeting reticle
+- **Block Outline** - Pulsing animation on selected block for better visibility
 - **Help Panel** - In-game control instructions (Press H)
+- **Debug Display** - Detailed performance metrics (Press F3)
+
+### Save & Load System
+- **Auto-Save** - Automatic world saves every 60 seconds
+- **Manual Save** - Ctrl+S to save your world
+- **Manual Load** - Ctrl+L to load a previously saved world
+- **Persistent Worlds** - Worlds stored in browser localStorage
+- **Chunk Preservation** - Saves up to 32 chunks and player position
 
 ### Performance Optimization
 - **Chunk-based Rendering** - Only visible chunks are rendered
@@ -75,6 +85,8 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 | **1-9** | Select Block Slot |
 | **Scroll Wheel** | Change Selected Block |
 | **C** | Pick Block (Pick the block you're looking at) |
+| **Ctrl+S** | Save World |
+| **Ctrl+L** | Load World |
 | **H** | Toggle Help |
 | **F3** | Toggle Debug Info |
 
@@ -115,14 +127,22 @@ http://localhost:8000
 ### Architecture
 
 ```
-game.js          - Main game loop and rendering
-world.js         - Terrain generation and chunk management
-player.js        - Player physics and controls
-blocks.js        - Block definitions and properties
-ui.js            - User interface management
-particles.js     - Particle effects system
-water.js         - Water rendering system
-audio.js         - Sound effects generation
+Core Game:
+├── game.js           - Main game loop and rendering
+├── world.js          - Terrain generation and chunk management
+├── player.js         - Player physics and controls
+└── blocks.js         - Block definitions and properties
+
+Systems:
+├── ui.js             - User interface management
+├── particles.js      - Particle effects system
+├── water.js          - Water rendering system
+├── audio.js          - Sound effects generation
+├── debug.js          - Debug display and statistics
+├── blockoutline.js   - Block outline visualization
+├── savesystem.js     - World save/load functionality
+├── config.js         - Configuration management
+└── config.json       - Game configuration file
 ```
 
 ### Technologies Used
@@ -135,11 +155,22 @@ audio.js         - Sound effects generation
 
 ### Performance
 
-- Renders 8-chunk radius around player
-- Optimized mesh generation with indexed geometry
-- Dynamic lighting updates for day/night cycle
-- Particle system for visual effects
-- ~60 FPS on modern hardware
+- **Render Distance** - 8-chunk radius around player (configurable)
+- **Optimized Rendering**:
+  - Indexed geometry for reduced draw calls
+  - Vertex colors for efficient coloring
+  - Frustum culling for invisible meshes
+  - Dynamic lighting updates for day/night cycle
+- **Efficient Physics**:
+  - 5-point collision detection
+  - Optimized raycast with block caching
+  - Smooth physics simulation
+- **Memory Management**:
+  - Automatic chunk unloading for distant areas
+  - Proper resource disposal
+  - Particle system with limits (2000 max)
+- **Target Performance**: ~60 FPS on modern hardware
+- **Memory Usage**: 200-400 MB typical with 8-chunk radius
 
 ## Game Design
 
