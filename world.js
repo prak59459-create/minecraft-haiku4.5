@@ -132,25 +132,29 @@ function generateTree(chunk, x, z, height) {
     const treeChance = perlinNoise.noise2D(worldX * 0.025, worldZ * 0.025);
     if (treeChance < 0.45) return;
 
-    const trunkHeight = 5 + Math.floor(Math.random() * 5);
+    const treeType = treeChance < 0.5 ? 'small' : treeChance < 0.75 ? 'medium' : 'large';
+    const trunkHeight = treeType === 'small' ? 4 + Math.floor(Math.random() * 3) :
+                        treeType === 'medium' ? 6 + Math.floor(Math.random() * 4) :
+                        8 + Math.floor(Math.random() * 6);
     const y = height;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
-            if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
+            const block = chunk.getBlock(x, y + i, z);
+            if (block === BLOCKS.AIR || block === BLOCKS.OAK_LEAVES) {
                 chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
             }
         }
     }
 
-    const foliageStart = y + trunkHeight - 4;
-    const foliageRadius = 3 + Math.floor(Math.random() * 2);
-    const foliageLayers = 4 + Math.floor(Math.random() * 2);
+    const foliageStart = y + Math.max(2, trunkHeight - 4);
+    const foliageRadius = treeType === 'small' ? 2 : treeType === 'medium' ? 3 : 4;
+    const foliageLayers = treeType === 'small' ? 3 : treeType === 'medium' ? 4 : 5;
 
     for (let dy = 0; dy < foliageLayers; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.2));
-        for (let angle = 0; angle < Math.PI * 2; angle += 0.35) {
-            for (let dist = 0; dist <= radiusAtLevel; dist += 0.6) {
+        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
+        for (let angle = 0; angle < Math.PI * 2; angle += 0.3) {
+            for (let dist = 0; dist <= radiusAtLevel; dist += 0.5) {
                 const dx = Math.round(Math.cos(angle) * dist);
                 const dz = Math.round(Math.sin(angle) * dist);
                 const fx = x + dx;

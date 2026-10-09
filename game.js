@@ -13,8 +13,13 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
+            powerPreference: 'high-performance'
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.setClearColor(0x87CEEB);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
@@ -35,6 +40,8 @@ class MinecraftGame {
         this.lastBreakSound = 0;
         this.showDebug = false;
         this.lastChunkUpdate = 0;
+        this.lastClickTime = 0;
+        this.clickCooldown = 100;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -124,6 +131,10 @@ class MinecraftGame {
     onMouseClick(event) {
         if (document.pointerLockElement !== document.body) return;
 
+        const now = Date.now();
+        if (now - this.lastClickTime < this.clickCooldown) return;
+        this.lastClickTime = now;
+
         const hit = this.raycastBlock();
         if (hit.block === BLOCKS.AIR) return;
 
@@ -135,12 +146,7 @@ class MinecraftGame {
 
                 const color = BLOCK_COLORS[block] || 0x808080;
                 this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
-
-                const now = Date.now();
-                if (now - this.lastBreakSound > 50) {
-                    this.audioManager.playBlockSound('break');
-                    this.lastBreakSound = now;
-                }
+                this.audioManager.playBlockSound('break');
             }
         } else if (event.button === 2) {
             const norm = hit.normal;
