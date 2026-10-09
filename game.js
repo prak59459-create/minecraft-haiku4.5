@@ -42,7 +42,19 @@ class MinecraftGame {
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
+
+        setTimeout(() => this.hideLoadingScreen(), 1000);
         this.animate();
+    }
+
+    hideLoadingScreen() {
+        const loading = document.getElementById('loading');
+        if (loading) {
+            loading.classList.add('done');
+            setTimeout(() => {
+                loading.style.display = 'none';
+            }, 500);
+        }
     }
 
     initializePlayerPosition() {
@@ -89,19 +101,21 @@ class MinecraftGame {
     }
 
     setupPickBlock() {
+        let lastPickTime = 0;
         document.addEventListener('keydown', (e) => {
+            if (document.pointerLockElement !== document.body) return;
+
             if (e.key === 'c' || e.key === 'C') {
                 const hit = this.raycastBlock();
                 if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
                     this.selectedBlockType = hit.block;
+                    const blockName = BLOCK_NAMES[hit.block] || 'Unknown';
                 }
-            }
-            if (e.key === 'F3') {
+            } else if (e.key === 'F3') {
                 e.preventDefault();
                 this.showDebug = !this.showDebug;
                 this.debugDisplay.toggle();
-            }
-            if (e.key === 'h' || e.key === 'H') {
+            } else if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
         });
@@ -208,7 +222,14 @@ class MinecraftGame {
             for (let dz = -1; dz <= 1; dz++) {
                 const key = `${cx + dx},${cz + dz}`;
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
+                    const mesh = this.chunkMeshes.get(key);
+                    this.scene.remove(mesh);
+                    if (mesh.geometry) {
+                        mesh.geometry.dispose();
+                    }
+                    if (mesh.material) {
+                        mesh.material.dispose();
+                    }
                     this.chunkMeshes.delete(key);
                 }
             }
