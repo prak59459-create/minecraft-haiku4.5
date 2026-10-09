@@ -1,5 +1,68 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Performance & Features Optimization (Session 3)
+
+### Major Improvements
+
+#### Performance Enhancements
+- **Optimized chunk management** with better distance-based culling
+  - Improved memory cleanup with proper geometry/material disposal
+  - Efficient Set-based chunk tracking
+- **Raycast optimization** with block caching and larger step size (0.1)
+- **Collision detection** improved with 5 check points for better accuracy
+- **Lighting system** with better brightness calculations and visual quality
+- **Particle system** optimized with life-based color fading
+- **Water rendering** with deterministic color variation
+
+#### New Features
+- **Inventory system with block stacking** (up to 64 per slot)
+  - Block count display on hotbar
+  - Proper inventory management for block breaking/placing
+- **World save/load system** with localStorage
+  - Ctrl+S to save, Ctrl+L to load
+  - Auto-save every 60 seconds
+  - Saves up to 32 chunks and player position
+- **Enhanced block outline** with pulsing animation effect
+- **Improved debug display** with:
+  - Player position and rotation
+  - Current inventory slot display
+  - Better visual organization with section separators
+  - Color-coded output
+
+#### Visual Improvements
+- **Better day/night cycle** with improved sky colors
+- **Enhanced lighting system** with power-based height calculation
+- **Improved terrain generation** with additional Perlin noise octaves
+- **Better tree generation** with varied heights and foliage
+- **Enhanced water rendering** with better color variation
+- **Improved particle effects** with better color and opacity gradients
+
+#### Audio Improvements
+- **Master volume control** (default 30%)
+- **Better audio context error handling**
+- **All sounds routed through master gain node**
+
+#### Code Quality
+- **Better error handling** throughout codebase
+- **Improved memory management** and cleanup
+- **Better separation of concerns** in UI class
+- **Enhanced configuration system** with more options
+- **Improved CSS styling** for better UI appearance
+
+### Bug Fixes
+- Fixed chunk disposal on unload
+- Fixed raycast accuracy issues
+- Improved collision detection reliability
+- Better audio context initialization
+
+### Configuration Updates
+- New settings for performance optimization
+- Better default values for rendering
+- Auto-save interval configuration
+- Enhanced terrain parameters
+
+---
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features

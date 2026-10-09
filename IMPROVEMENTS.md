@@ -1,5 +1,69 @@
 # Minecraft Clone - Improvements and Optimizations
 
+## Latest Updates (Session 3 - Current)
+
+### Session 3 Major Enhancements
+
+#### Performance Optimization
+1. **Chunk Management**
+   - Improved chunk loading/unloading with memory cleanup
+   - Better distance-based culling algorithm
+   - Proper disposal of Three.js geometries and materials
+   - Reduced memory footprint
+
+2. **Rendering Optimization**
+   - Optimized raycast algorithm with block caching
+   - Better collision detection with 5 check points
+   - Improved lighting calculations with power-based height formula
+   - Enhanced water rendering efficiency
+
+3. **Particle System**
+   - Life-based color fading for better visuals
+   - Increased particle limit to 2000
+   - Better velocity distribution
+   - Improved memory management
+
+#### New Gameplay Features
+1. **Inventory System**
+   - Proper block stacking (up to 64 per slot)
+   - Block count display on hotbar
+   - Add/remove blocks from inventory
+   - Better inventory management
+
+2. **World Persistence**
+   - Save/load system with localStorage
+   - Automatic auto-save every 60 seconds
+   - Manual save (Ctrl+S) and load (Ctrl+L)
+   - Save up to 32 chunks and player position
+
+#### Visual Enhancements
+1. **Improved Visuals**
+   - Better day/night cycle with improved sky colors
+   - Enhanced lighting with natural gradients
+   - Improved terrain with more octaves for detail
+   - Better tree generation with varied heights
+   - Enhanced water with deterministic coloring
+
+2. **UI Improvements**
+   - Block outline with pulsing animation
+   - Enhanced debug display with detailed info
+   - Better inventory display with count labels
+   - Improved overall visual polish
+
+#### Code Quality
+1. **Better Organization**
+   - Improved error handling
+   - Better memory management
+   - Cleaner code structure
+   - Enhanced configuration system
+
+2. **Documentation**
+   - Updated CHANGELOG with version 1.1.0
+   - Improved code comments
+   - Better configuration documentation
+
+---
+
 ## Latest Updates (Session 2)
 
 ### Core Improvements
