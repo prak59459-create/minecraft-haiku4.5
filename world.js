@@ -84,12 +84,12 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    height += perlinNoise.noise2D(x * 0.004, z * 0.004) * 35;
+    height += perlinNoise.noise2D(x * 0.015, z * 0.015) * 18;
+    height += perlinNoise.noise2D(x * 0.04, z * 0.04) * 10;
+    height += perlinNoise.noise2D(x * 0.08, z * 0.08) * 5;
 
-    return Math.max(20, Math.min(160, Math.floor(height)));
+    return Math.max(25, Math.min(160, Math.floor(height)));
 }
 
 function getTerrainType(x, z) {
@@ -103,18 +103,19 @@ function getTerrainType(x, z) {
 function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
-    let ore = BLOCKS.STONE;
-    const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
-    const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
-    const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
-    const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
+    const coalChance = perlinNoise.noise2D(x * 0.12 + y * 0.05, z * 0.12 + y * 0.05);
+    const ironChance = perlinNoise.noise2D(x * 0.1 + y * 0.04, z * 0.1 + y * 0.04);
+    const goldChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
+    const diamondChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
+    const obsidianChance = perlinNoise.noise2D(x * 0.05 + y * 0.01, z * 0.05 + y * 0.01);
 
-    if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
-    if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
-    if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
-    if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    if (y < 160 && coalChance > 0.48) return BLOCKS.COAL_ORE;
+    if (y < 120 && ironChance > 0.58) return BLOCKS.IRON_ORE;
+    if (y < 75 && goldChance > 0.68) return BLOCKS.GOLD_ORE;
+    if (y < 35 && diamondChance > 0.72) return BLOCKS.DIAMOND_ORE;
+    if (y < 20 && obsidianChance > 0.75) return BLOCKS.OBSIDIAN;
 
-    return ore;
+    return BLOCKS.STONE;
 }
 
 function generateTree(chunk, x, z, height) {
