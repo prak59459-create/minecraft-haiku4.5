@@ -93,13 +93,16 @@ export class Player {
             { dy: height * 0.9, radius: radius * 0.7 }
         ];
 
-        for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
-                const cx = this.position.x + Math.cos(angle) * point.radius;
-                const cy = this.position.y + point.dy;
-                const cz = this.position.z + Math.sin(angle) * point.radius;
+        const angles8 = [0, Math.PI / 4, Math.PI / 2, 3 * Math.PI / 4, Math.PI, 5 * Math.PI / 4, 3 * Math.PI / 2, 7 * Math.PI / 4];
+        const angles6 = [0, Math.PI / 3, 2 * Math.PI / 3, Math.PI, 4 * Math.PI / 3, 5 * Math.PI / 3];
 
-                const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
+        for (const point of checkPoints) {
+            for (const angle of angles8) {
+                const cx = Math.floor(this.position.x + Math.cos(angle) * point.radius);
+                const cy = Math.floor(this.position.y + point.dy);
+                const cz = Math.floor(this.position.z + Math.sin(angle) * point.radius);
+
+                const block = this.world.getBlock(cx, cy, cz);
                 if (isBlockSolid(block)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
                     if (moveLen > 0) {
@@ -114,12 +117,12 @@ export class Player {
 
         if (this.velocity.y < 0) {
             let onGround = false;
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.8;
-                const cy = this.position.y - 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.8;
+            for (const angle of angles6) {
+                const cx = Math.floor(this.position.x + Math.cos(angle) * radius * 0.8);
+                const cy = Math.floor(this.position.y - 0.01);
+                const cz = Math.floor(this.position.z + Math.sin(angle) * radius * 0.8);
 
-                if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
+                if (isBlockSolid(this.world.getBlock(cx, cy, cz))) {
                     onGround = true;
                     break;
                 }
@@ -132,12 +135,12 @@ export class Player {
         }
 
         if (this.velocity.y > 0) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.9;
-                const cy = this.position.y + height + 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.9;
+            for (const angle of angles6) {
+                const cx = Math.floor(this.position.x + Math.cos(angle) * radius * 0.9);
+                const cy = Math.floor(this.position.y + height + 0.01);
+                const cz = Math.floor(this.position.z + Math.sin(angle) * radius * 0.9);
 
-                if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
+                if (isBlockSolid(this.world.getBlock(cx, cy, cz))) {
                     this.velocity.y = 0;
                     break;
                 }
@@ -168,15 +171,20 @@ export class Camera {
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+            if (document.pointerLockElement === document.body) {
+                this.rotation.y -= e.movementX * this.mouseSensitivity;
+                this.rotation.x -= e.movementY * this.mouseSensitivity;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+                this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            }
         });
 
-        document.addEventListener('click', () => {
-            if (document.pointerLockElement !== document.body) {
-                document.body.requestPointerLock();
+        document.addEventListener('click', (e) => {
+            const settingsPanel = document.getElementById('settings-panel');
+            if (!settingsPanel || !settingsPanel.classList.contains('show')) {
+                if (document.pointerLockElement !== document.body) {
+                    document.body.requestPointerLock();
+                }
             }
         });
     }

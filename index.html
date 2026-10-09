@@ -29,34 +29,68 @@
                 <span class="slot-number">3</span>
                 <div class="slot-block" style="background-color: #8B7355;"></div>
             </div>
-            <div class="inventory-slot" data-index="3" data-block="4">
+            <div class="inventory-slot" data-index="3" data-block="5">
                 <span class="slot-number">4</span>
-                <div class="slot-block" style="background-color: #696969;"></div>
-            </div>
-            <div class="inventory-slot" data-index="4" data-block="5">
-                <span class="slot-number">5</span>
                 <div class="slot-block" style="background-color: #654321;"></div>
             </div>
-            <div class="inventory-slot" data-index="5" data-block="6">
-                <span class="slot-number">6</span>
-                <div class="slot-block" style="background-color: #2D5016;"></div>
-            </div>
-            <div class="inventory-slot" data-index="6" data-block="7">
-                <span class="slot-number">7</span>
+            <div class="inventory-slot" data-index="4" data-block="7">
+                <span class="slot-number">5</span>
                 <div class="slot-block" style="background-color: #EDD5B1;"></div>
+            </div>
+            <div class="inventory-slot" data-index="5" data-block="4">
+                <span class="slot-number">6</span>
+                <div class="slot-block" style="background-color: #696969;"></div>
+            </div>
+            <div class="inventory-slot" data-index="6" data-block="9">
+                <span class="slot-number">7</span>
+                <div class="slot-block" style="background-color: #999999;"></div>
             </div>
             <div class="inventory-slot" data-index="7" data-block="8">
                 <span class="slot-number">8</span>
                 <div class="slot-block" style="background-color: #4A90E2;"></div>
             </div>
-            <div class="inventory-slot" data-index="8" data-block="9">
+            <div class="inventory-slot" data-index="8" data-block="15">
                 <span class="slot-number">9</span>
-                <div class="slot-block" style="background-color: #999999;"></div>
+                <div class="slot-block" style="background-color: #4A3728;"></div>
             </div>
         </div>
         <div id="help">
             <p><strong>Controls:</strong> WASD Move | Space Jump | Shift Sprint/Crouch | Mouse Look</p>
             <p>Left-Click Destroy | Right-Click Place | 1-9/Scroll Select Block</p>
+            <p>Press H for help | Press F3 for debug | Press ESC for settings</p>
+        </div>
+        <div id="settings-panel">
+            <div id="settings-header">
+                <h2>Settings</h2>
+                <button id="settings-close">✕</button>
+            </div>
+            <div id="settings-content">
+                <div class="setting-item">
+                    <label>Master Volume</label>
+                    <input type="range" id="volume-slider" min="0" max="100" value="50">
+                </div>
+                <div class="setting-item">
+                    <label>Render Distance</label>
+                    <select id="render-distance">
+                        <option value="4">Near (4)</option>
+                        <option value="8" selected>Normal (8)</option>
+                        <option value="12">Far (12)</option>
+                        <option value="16">Ultra (16)</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label>Mouse Sensitivity</label>
+                    <input type="range" id="sensitivity-slider" min="0.1" max="1" step="0.1" value="0.5">
+                </div>
+                <div class="setting-item">
+                    <label>Enable Shadows</label>
+                    <input type="checkbox" id="shadow-toggle" checked>
+                </div>
+                <div class="setting-item">
+                    <label>Enable Fog</label>
+                    <input type="checkbox" id="fog-toggle" checked>
+                </div>
+            </div>
         </div>
     </div>
 
