@@ -45,21 +45,22 @@ class MinecraftGame {
     }
 
     setupLighting() {
-        const time = Date.now() * 0.0001;
-        const sunY = Math.sin(time) * 100 + 100;
-        const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
-        directionalLight.position.set(150, sunY, 150);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(200, 150, 200);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -256;
+        directionalLight.shadow.camera.right = 256;
+        directionalLight.shadow.camera.top = 256;
+        directionalLight.shadow.camera.bottom = -256;
         this.scene.add(directionalLight);
 
+        this.ambientLight = ambientLight;
         this.directionalLight = directionalLight;
     }
 
@@ -294,8 +295,6 @@ class MinecraftGame {
     }
 
     addBlockFaces(vertices, colors, indices, x, y, z, blockId, color, chunk) {
-        let faceCount = 0;
-
         const faces = [
             { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
             { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
@@ -308,18 +307,20 @@ class MinecraftGame {
         const r = Math.floor(color.r * 255);
         const g = Math.floor(color.g * 255);
         const b = Math.floor(color.b * 255);
+        let faceCount = 0;
 
         for (const face of faces) {
             const [dx, dy, dz] = face.dir;
-            const nx = x + dx;
-            const ny = y + dy;
-            const nz = z + dz;
+            const neighbor = this.world.getBlock(x + dx, y + dy, z + dz);
 
-            const neighbor = this.world.getBlock(nx, ny, nz);
+            // Skip if neighbor is solid and not water
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
-            for (const [vx, vy, vz] of face.verts) {
+            const verts = face.verts;
+
+            for (let i = 0; i < 4; i++) {
+                const [vx, vy, vz] = verts[i];
                 vertices.push(x + vx, y + vy, z + vz);
                 colors.push(r, g, b);
             }
@@ -380,51 +381,64 @@ class MinecraftGame {
     animate() {
         requestAnimationFrame(() => this.animate());
 
-        this.player.update();
-        this.gameCamera.updateFromPlayer(this.player);
+        try {
+            this.player.update();
+            this.gameCamera.updateFromPlayer(this.player);
 
-        const eyePos = this.player.getEyePosition();
-        this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
+            const eyePos = this.player.getEyePosition();
+            this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
 
-        const direction = new THREE.Vector3(
-            Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
-            Math.sin(this.gameCamera.rotation.x),
-            Math.cos(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x)
-        );
-        this.camera.lookAt(
-            eyePos.x + direction.x,
-            eyePos.y + direction.y,
-            eyePos.z + direction.z
-        );
+            const cosX = Math.cos(this.gameCamera.rotation.x);
+            const direction = new THREE.Vector3(
+                Math.sin(this.gameCamera.rotation.y) * cosX,
+                Math.sin(this.gameCamera.rotation.x),
+                Math.cos(this.gameCamera.rotation.y) * cosX
+            );
+            this.camera.lookAt(
+                eyePos.x + direction.x,
+                eyePos.y + direction.y,
+                eyePos.z + direction.z
+            );
 
-        this.updateVisibleChunks();
-        this.updateDayNightCycle();
-        this.particleSystem.update();
-        this.waterRenderer.update();
+            this.updateVisibleChunks();
+            this.updateDayNightCycle();
+            this.particleSystem.update();
+            this.waterRenderer.update();
 
-        const hit = this.raycastBlock();
-        this.blockOutline.update(hit);
+            const hit = this.raycastBlock();
+            this.blockOutline.update(hit);
 
-        const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+            const fps = this.ui.updateFPS();
+            this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
 
-        if (this.showDebug) {
-            this.debugDisplay.update(this);
+            if (this.showDebug) {
+                this.debugDisplay.update(this);
+            }
+
+            this.renderer.render(this.scene, this.camera);
+        } catch (error) {
+            console.error('Game loop error:', error);
         }
-
-        this.renderer.render(this.scene, this.camera);
     }
 
     updateDayNightCycle() {
-        const time = Date.now() * 0.00002;
-        const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const time = Date.now() * 0.00001;
+        const sunY = Math.sin(time) * 120 + 120;
+        const sunX = Math.cos(time) * 200;
+        const sunZ = Math.sin(time) * 100 + 100;
+        const sunIntensity = Math.max(0.25, Math.sin(time) + 0.5);
 
-        this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.position.set(sunX, sunY, sunZ);
+        this.directionalLight.intensity = 0.6 + sunIntensity * 0.2;
 
+        const ambientIntensity = 0.4 + sunIntensity * 0.2;
+        this.ambientLight.intensity = ambientIntensity;
+
+        const hue = 0.6;
+        const saturation = 0.5 - sunIntensity * 0.2;
+        const lightness = 0.4 + sunIntensity * 0.35;
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        skyColor.setHSL(hue, saturation, lightness);
         this.scene.background = skyColor;
     }
 }

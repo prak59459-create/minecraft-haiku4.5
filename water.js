@@ -6,6 +6,7 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.waveOffset = 0;
     }
 
     buildWaterMesh(chunk) {
@@ -85,5 +86,6 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+        this.waveOffset = Math.sin(this.time * 2) * 0.05;
     }
 }
