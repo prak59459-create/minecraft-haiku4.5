@@ -1,6 +1,75 @@
 # Minecraft Clone - Improvements and Optimizations
 
-## Latest Updates (Session 2)
+## Latest Updates (Session 3)
+
+### Performance Enhancements
+- **Optimized Raycasting**: Reduced unnecessary block checks with better early-exit conditions
+- **Memory Management**: Proper cleanup of geometry and materials for disposed chunks
+- **Efficient Mesh Generation**: Precalculated lighting values and optimized vertex access
+- **Shadow Mapping**: PCF shadow filtering enabled for softer shadows
+- **Frame Count Tracking**: Better FPS monitoring and statistics
+
+### Feature Additions
+
+**Block Selection System**
+- Keyboard shortcuts (1-9) for quick block selection
+- Scroll wheel support for inventory cycling
+- Visual inventory feedback with selection highlighting
+
+**Terrain Generation Improvements**
+- Procedural cave generation with layered Perlin noise
+- Humidity-based biome system for terrain variety
+- Depth-aware cave generation (deeper caves at lower levels)
+- Enhanced tree types (Oak and Spruce) with different characteristics
+- More realistic ore distribution by depth
+
+**New Block Types**
+- Obsidian (rare deep block)
+- Spruce Log and Spruce Leaves
+- Improved transparency handling for leaves
+
+**Lighting & Atmosphere**
+- Dynamic day/night cycle with smooth transitions
+- Improved ambient lighting system
+- Sky color changes based on sun intensity
+- Better directional light positioning
+
+**Audio System**
+- Block-type-based sound frequencies
+- Different pitches for different materials
+- Sound feedback for block placement and destruction
+
+**Player Controls**
+- Improved sprint/crouch mechanics
+- Sprint only on forward movement (W key)
+- Crouch on any directional movement with Shift
+- Better responsiveness and game feel
+
+**Settings Persistence**
+- localStorage-based game settings
+- Automatic saving of player position and selected block
+- Save interval optimization (every 5 seconds)
+
+**Visual Polish**
+- Enhanced crosshair with directional indicators
+- Better particle effects with radial distribution
+- Improved water rendering preparation
+- Better face culling for transparent blocks
+
+### Code Optimizations
+- Reduced redundant trigonometric calculations
+- Precalculated cosine values in animation loop
+- Optimized loop indexing in mesh generation
+- Better separation of concerns in movement handling
+- Error handling in main game loop
+
+### Technical Improvements
+- Proper chunk mesh memory cleanup
+- Better neighbor block checking for face culling
+- Improved leaf block rendering (semi-transparent)
+- Better handling of chunk boundaries
+
+## Previous Updates (Session 2)
 
 ### Core Improvements
 
