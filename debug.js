@@ -58,7 +58,7 @@ export class DebugDisplay {
 
         this.stats.fps = game.ui.fpsCounter;
         this.stats.chunks = game.world.chunks.size;
-        this.stats.particles = game.particleSystem.particles.length;
+        this.stats.particles = game.particleSystem.activeParticles.length;
 
         let vertices = 0;
         let triangles = 0;

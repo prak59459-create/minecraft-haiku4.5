@@ -2,11 +2,12 @@ import { BLOCKS, isBlockSolid } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
-const PLAYER_SPEED = 0.1;
-const PLAYER_SPRINT_SPEED = 0.15;
-const PLAYER_CROUCH_SPEED = 0.05;
-const GRAVITY = 0.02;
-const JUMP_POWER = 0.5;
+const PLAYER_SPEED = 0.12;
+const PLAYER_SPRINT_SPEED = 0.18;
+const PLAYER_CROUCH_SPEED = 0.06;
+const GRAVITY = 0.018;
+const JUMP_POWER = 0.48;
+const AIR_RESISTANCE = 0.98;
 
 export class Player {
     constructor(world) {
@@ -73,6 +74,8 @@ export class Player {
     applyPhysics() {
         if (!this.isOnGround) {
             this.velocity.y -= GRAVITY;
+            this.velocity.x *= AIR_RESISTANCE;
+            this.velocity.z *= AIR_RESISTANCE;
         }
 
         this.position.x += this.velocity.x;
@@ -87,14 +90,15 @@ export class Player {
         this.isOnGround = false;
 
         const checkPoints = [
-            { dy: 0.1, radius: radius * 0.9 },
-            { dy: height * 0.3, radius: radius * 0.9 },
-            { dy: height * 0.6, radius: radius * 0.9 },
+            { dy: 0.1, radius: radius * 0.8 },
+            { dy: height * 0.5, radius: radius * 0.8 },
             { dy: height * 0.9, radius: radius * 0.7 }
         ];
 
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            const angles = 6;
+            for (let i = 0; i < angles; i++) {
+                const angle = (i / angles) * Math.PI * 2;
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
                 const cz = this.position.z + Math.sin(angle) * point.radius;
@@ -102,7 +106,7 @@ export class Player {
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
                 if (isBlockSolid(block)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
-                    if (moveLen > 0) {
+                    if (moveLen > 0.001) {
                         const scale = 1.5 / moveLen;
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
@@ -114,14 +118,15 @@ export class Player {
 
         if (this.velocity.y < 0) {
             let onGround = false;
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.8;
-                const cy = this.position.y - 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.8;
+            const angles = 4;
+            for (let i = 0; i < angles && !onGround; i++) {
+                const angle = (i / angles) * Math.PI * 2;
+                const cx = this.position.x + Math.cos(angle) * radius * 0.7;
+                const cy = this.position.y - 0.1;
+                const cz = this.position.z + Math.sin(angle) * radius * 0.7;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     onGround = true;
-                    break;
                 }
             }
 
@@ -132,10 +137,12 @@ export class Player {
         }
 
         if (this.velocity.y > 0) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.9;
-                const cy = this.position.y + height + 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.9;
+            const angles = 4;
+            for (let i = 0; i < angles; i++) {
+                const angle = (i / angles) * Math.PI * 2;
+                const cx = this.position.x + Math.cos(angle) * radius * 0.8;
+                const cy = this.position.y + height + 0.1;
+                const cz = this.position.z + Math.sin(angle) * radius * 0.8;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     this.velocity.y = 0;
