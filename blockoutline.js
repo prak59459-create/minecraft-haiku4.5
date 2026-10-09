@@ -2,7 +2,9 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.currentPos = { x: -1, y: -1, z: -1 };
         this.createOutlineMaterial();
+        this.createOutlineGeometry();
     }
 
     createOutlineMaterial() {
@@ -10,21 +12,18 @@ export class BlockOutline {
             color: 0xFFFFFF,
             linewidth: 2,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.8,
+            fog: false
         });
     }
 
-    setSelectedBlock(x, y, z) {
-        if (this.outline) {
-            this.scene.remove(this.outline);
-        }
-
+    createOutlineGeometry() {
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
 
         const positions = [
-            [x, y, z], [x + 1, y, z], [x + 1, y + 1, z], [x, y + 1, z],
-            [x, y, z + 1], [x + 1, y, z + 1], [x + 1, y + 1, z + 1], [x, y + 1, z + 1]
+            [0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0],
+            [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]
         ];
 
         const edges = [
@@ -40,9 +39,21 @@ export class BlockOutline {
         }
 
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
+        this.geometry = geometry;
+    }
 
-        this.outline = new THREE.LineSegments(geometry, this.material);
-        this.scene.add(this.outline);
+    setSelectedBlock(x, y, z) {
+        if (this.currentPos.x === x && this.currentPos.y === y && this.currentPos.z === z) {
+            return;
+        }
+
+        if (!this.outline) {
+            this.outline = new THREE.LineSegments(this.geometry, this.material);
+            this.scene.add(this.outline);
+        }
+
+        this.outline.position.set(x, y, z);
+        this.currentPos = { x, y, z };
     }
 
     clear() {
