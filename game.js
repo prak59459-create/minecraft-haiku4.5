@@ -102,14 +102,15 @@ class MinecraftGame {
         if (hit.block === BLOCKS.AIR) return;
 
         if (event.button === 0) {
+            const block = hit.block;
             this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
             this.updateChunkMesh(hit.x, hit.y, hit.z);
 
-            const color = BLOCK_COLORS[hit.block] || 0x808080;
+            const color = BLOCK_COLORS[block] || 0x808080;
             this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
 
             const now = Date.now();
-            if (now - this.lastBreakSound > 50) {
+            if (now - this.lastBreakSound > 75) {
                 this.audioManager.playBlockSound('break');
                 this.lastBreakSound = now;
             }

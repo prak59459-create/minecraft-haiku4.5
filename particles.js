@@ -39,18 +39,23 @@ export class ParticleSystem {
     addBlockBreakParticles(x, y, z, blockColor) {
         if (this.particles.length >= this.maxParticles) return;
 
-        const particleCount = Math.min(8 + Math.floor(Math.random() * 8), this.maxParticles - this.particles.length);
+        const particleCount = Math.min(10 + Math.floor(Math.random() * 10), this.maxParticles - this.particles.length);
+        const speedMultiplier = 0.25 + Math.random() * 0.15;
 
         for (let i = 0; i < particleCount; i++) {
             const particle = this.getParticle();
-            particle.position.x = x;
-            particle.position.y = y;
-            particle.position.z = z;
-            particle.velocity.x = (Math.random() - 0.5) * 0.3;
-            particle.velocity.y = Math.random() * 0.3;
-            particle.velocity.z = (Math.random() - 0.5) * 0.3;
+            particle.position.x = x + (Math.random() - 0.5) * 0.3;
+            particle.position.y = y + (Math.random() - 0.5) * 0.3;
+            particle.position.z = z + (Math.random() - 0.5) * 0.3;
+
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 0.2 + Math.random() * 0.3;
+
+            particle.velocity.x = Math.cos(angle) * distance * speedMultiplier;
+            particle.velocity.y = 0.15 + Math.random() * 0.25;
+            particle.velocity.z = Math.sin(angle) * distance * speedMultiplier;
             particle.life = 1;
-            particle.maxLife = 0.8 + Math.random() * 0.4;
+            particle.maxLife = 0.6 + Math.random() * 0.6;
             particle.color = blockColor;
             particle.active = true;
             this.particles.push(particle);
