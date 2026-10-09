@@ -78,6 +78,8 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 | **C** | Pick Block (Pick the block you're looking at) |
 | **H** | Toggle Help |
 | **F3** | Toggle Debug Info |
+| **Ctrl+S** | Save World |
+| **Ctrl+L** | Load World |
 
 ## Getting Started
 
@@ -140,7 +142,16 @@ audio.js         - Sound effects generation
 - Optimized mesh generation with indexed geometry
 - Dynamic lighting updates for day/night cycle
 - Particle system for visual effects
+- Atmospheric fog for visual depth and performance
+- Cave generation for world exploration
 - ~60 FPS on modern hardware
+
+### World Persistence
+
+- **Save World** (Ctrl+S): Export your world as a JSON file
+- **Load World** (Ctrl+L): Import a previously saved world
+- Complete world state preservation
+- Automatic timestamps for save tracking
 
 ## Game Design
 
@@ -153,15 +164,19 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 
 ### Biomes
 
-- **Grass Biome** - Natural terrain with trees and water
+- **Grass Biome** - Natural terrain with trees, water, and caves
 - **Sand Biome** - Desert-like areas with sand blocks
+- **Gravel Biome** - Varied terrain with gravel deposits
 
 ### Ore Distribution
 
 - **Coal Ore** - Common, up to height 160
 - **Iron Ore** - Medium frequency, up to height 120
 - **Gold Ore** - Rare, up to height 80
-- **Diamond Ore** - Very rare, up to height 40
+- **Diamond Ore** - Very rare, up to height 50
+- **Redstone Ore** - Uncommon, up to height 30
+- **Emerald Ore** - Rare, up to height 100
+- **Lava Pockets** - Very rare, deep underground formations (height < 25)
 
 ## Development
 
@@ -171,6 +186,18 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 - **Clean Separation** - Game logic, rendering, and physics separate
 - **Extensible** - Easy to add new block types or biomes
 
+### Recently Implemented
+
+- [x] World save/load system (JSON export/import)
+- [x] Cave generation for exploration
+- [x] Advanced particle effects
+- [x] Enhanced day/night cycle with color transitions
+- [x] Block highlighting with pulsing animation
+- [x] Atmospheric fog for visual depth
+- [x] Lava and new ore types
+- [x] Improved terrain generation
+- [x] Fluid physics (water/lava)
+
 ### Future Enhancements
 
 - [ ] Inventory UI with multiple stacks
@@ -179,9 +206,11 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 - [ ] Multiplayer support
 - [ ] Texture mapping for blocks
 - [ ] Advanced weather systems
-- [ ] More biome types
+- [ ] More biome types (snow, forest variants)
 - [ ] Mob system
 - [ ] Crafting system
+- [ ] Lighting system improvements
+- [ ] Structure generation (houses, dungeons)
 
 ## Performance Tips
 
