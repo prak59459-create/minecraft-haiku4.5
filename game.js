@@ -47,7 +47,14 @@ class MinecraftGame {
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
+        this.setupCleanup();
         this.animate();
+    }
+
+    setupCleanup() {
+        window.addEventListener('beforeunload', () => {
+            this.dispose();
+        });
     }
 
     setupLighting() {
@@ -424,6 +431,16 @@ class MinecraftGame {
         }
 
         this.renderer.render(this.scene, this.camera);
+    }
+
+    dispose() {
+        for (const mesh of this.chunkMeshes.values()) {
+            if (mesh && mesh.geometry) {
+                mesh.geometry.dispose();
+                if (mesh.material) mesh.material.dispose();
+            }
+        }
+        this.renderer.dispose();
     }
 
     updateDayNightCycle() {
