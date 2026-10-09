@@ -53,7 +53,8 @@ export class Chunk {
                         this.setBlock(x, y, z, block);
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
+                            const clayChance = perlinNoise.noise2D(wx * 0.03, wz * 0.03);
+                            this.setBlock(x, y, z, clayChance > 0.4 ? BLOCKS.CLAY : BLOCKS.SAND);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
