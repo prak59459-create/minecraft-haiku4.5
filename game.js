@@ -12,10 +12,13 @@ class MinecraftGame {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
+        this.scene.fog = new THREE.Fog(0x87CEEB, 200, 500);
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -32,6 +35,8 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.frameCount = 0;
+        this.lastChunkUpdate = 0;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -292,6 +297,12 @@ class MinecraftGame {
     }
 
     updateVisibleChunks() {
+        this.frameCount++;
+        const now = Date.now();
+
+        if (now - this.lastChunkUpdate < 100) return;
+        this.lastChunkUpdate = now;
+
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
         const renderDist = 8;
@@ -305,6 +316,8 @@ class MinecraftGame {
             if (Math.abs(cx - playerChunkX) > renderDist || Math.abs(cz - playerChunkZ) > renderDist) {
                 this.scene.remove(mesh);
                 chunksToRemove.push(key);
+                if (mesh.geometry) mesh.geometry.dispose();
+                if (mesh.material) mesh.material.dispose();
             }
         }
         chunksToRemove.forEach(key => this.chunkMeshes.delete(key));
