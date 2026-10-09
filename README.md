@@ -5,24 +5,28 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 ## Features
 
 ### Core Gameplay
-- **WASD Movement** - Move through the world naturally
-- **Mouse Look** - Free camera control with mouse
+- **WASD Movement** - Move through the world naturally with step climbing
+- **Mouse Look** - Free camera control with mouse (high-performance)
 - **Space Jump** - Jump and gravity physics
 - **Shift Sprint/Crouch** - Sprint for speed or crouch for stealth
-- **Block Destruction** - Left-click to destroy blocks
+- **Block Destruction** - Left-click to destroy blocks with particles
 - **Block Placement** - Right-click to place blocks
 - **Block Selection** - Use 1-9 or scroll wheel to switch between blocks
 - **Pick Block** - Press C to pick the block you're looking at
+- **Smooth Controls** - Natural movement with precise collision detection
 
 ### World & Terrain
-- **Procedural Generation** - Infinite world generation using Perlin noise
-- **Multiple Biomes** - Grass, sand, and varied terrain types
+- **Procedural Generation** - Infinite world generation using advanced Perlin noise
+- **Multiple Biomes** - Grass, sand, snow, and varied terrain types
+- **Biome Features** - Temperature and humidity-based terrain variation
 - **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
+- **Improved Terrain** - Better height variation and natural-looking landscapes
+- **Multiple Block Types** (19+ blocks):
+  - Stone, Grass, Dirt, Cobblestone, Oak Plank
   - Oak Log, Oak Leaves
   - Sand, Water, Gravel, Bedrock
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
+  - Glass, Bricks, Snow, Ice
 - **Ore Generation** - Procedural ore generation at various depths
 - **Tree Generation** - Natural tree placement in suitable terrain
 
@@ -33,11 +37,13 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Block Highlight** - Visual feedback for the block you're looking at
 
 ### Visual Features
-- **3D Voxel Rendering** - Full 3D block-based world
-- **Dynamic Lighting** - Sun and ambient lighting system
-- **Day/Night Cycle** - Real-time sky color transitions
-- **Particle Effects** - Block destruction particles
-- **Water Rendering** - Semi-transparent water with proper face culling
+- **3D Voxel Rendering** - Full 3D block-based world with flat shading
+- **Dynamic Lighting** - Advanced sun and ambient lighting system
+- **Day/Night Cycle** - Real-time sky color transitions with fog effects
+- **Particle Effects** - Enhanced block destruction particles with physics
+- **Water Rendering** - Semi-transparent water with emissive glow and double-sided rendering
+- **Fog System** - Depth fog for better visual distance perception
+- **Material Properties** - Realistic block materials with proper shininess
 
 ### Audio
 - **Procedural Sound Effects**:
@@ -208,6 +214,36 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 - Enable audio in browser settings
 - Try different browser
 - Check volume settings
+
+## Recent Improvements (Latest Session)
+
+### Performance Optimizations
+- **Particle System**: Object pooling to reduce memory allocations
+- **Raycasting**: Improved efficiency with early termination
+- **Block Colors**: Cached color lookups for faster rendering
+- **Collision Detection**: Optimized point checking algorithm
+- **Block Outline**: Caching of current selection to avoid redundant updates
+
+### New Features
+- **5 New Block Types**: Oak Plank, Glass, Bricks, Snow, Ice
+- **Enhanced Biomes**: Snow biomes with temperature-based terrain
+- **Step Climbing**: Ability to climb 0.5-block-high steps naturally
+- **Improved Terrain**: Better Perlin noise with more height variation
+- **Enhanced Particles**: Improved particle physics and distribution
+
+### Visual Enhancements
+- **Fog System**: Added atmospheric fog for better depth perception
+- **Better Materials**: Improved material properties with emissive colors
+- **Enhanced Lighting**: Better shadow mapping and directional light
+- **Improved Water**: Semi-transparent water with emissive glow
+- **Flat Shading**: Sharper block visuals with flat shading
+
+### Gameplay Improvements
+- **Better Camera**: Smoother mouse look with improved sensitivity
+- **Enhanced Audio**: Pitch variation in block sounds
+- **Improved HUD**: Smooth FPS counter with exponential averaging
+- **Better Inventory**: Circular scrolling for block selection
+- **Responsive Controls**: Faster and more natural player movement
 
 ## Credits
 
