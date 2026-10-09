@@ -19,6 +19,9 @@ class MinecraftGame {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
+        // Load saved settings
+        this.loadGameSettings();
+
         this.world = new World();
         this.player = new Player(this.world);
         this.gameCamera = new Camera();
@@ -35,6 +38,7 @@ class MinecraftGame {
         this.lastBreakSound = 0;
         this.showDebug = false;
         this.frameCount = 0;
+        this.lastSaveTime = 0;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -42,6 +46,38 @@ class MinecraftGame {
         this.setupEventListeners();
         this.setupPickBlock();
         this.animate();
+    }
+
+    loadGameSettings() {
+        try {
+            const saved = localStorage.getItem('minecraftSettings');
+            if (saved) {
+                const settings = JSON.parse(saved);
+                this.savedSettings = settings;
+            }
+        } catch (e) {
+            console.warn('Could not load saved settings:', e);
+        }
+    }
+
+    saveGameSettings() {
+        try {
+            const now = Date.now();
+            if (now - this.lastSaveTime > 5000) {
+                const settings = {
+                    lastSelectedBlock: this.selectedBlockType,
+                    playerPosition: {
+                        x: Math.round(this.player.position.x),
+                        y: Math.round(this.player.position.y),
+                        z: Math.round(this.player.position.z)
+                    }
+                };
+                localStorage.setItem('minecraftSettings', JSON.stringify(settings));
+                this.lastSaveTime = now;
+            }
+        } catch (e) {
+            console.warn('Could not save settings:', e);
+        }
     }
 
     setupLighting() {
@@ -247,6 +283,14 @@ class MinecraftGame {
         const worldChunkX = chunk.x * CHUNK_SIZE;
         const worldChunkZ = chunk.z * CHUNK_SIZE;
 
+        // Precalculate lighting values
+        const getLighting = (wx, wy) => {
+            const baseLight = 0.7;
+            const heightLight = (wy / WORLD_HEIGHT) * 0.3;
+            const varLight = Math.sin(wx * 0.5 + (chunk.z * CHUNK_SIZE) * 0.5) * 0.1;
+            return Math.min(1.0, baseLight + heightLight + varLight);
+        };
+
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
@@ -259,11 +303,7 @@ class MinecraftGame {
 
                     const baseColor = BLOCK_COLORS[blockId];
                     const color = new THREE.Color(baseColor);
-
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = Math.min(1.0, baseLight + heightLight + varLight);
+                    const brightness = getLighting(wx, wy);
 
                     color.multiplyScalar(brightness);
 
@@ -416,6 +456,7 @@ class MinecraftGame {
             }
 
             this.renderer.render(this.scene, this.camera);
+            this.saveGameSettings();
         } catch (error) {
             console.error('Game loop error:', error);
         }
