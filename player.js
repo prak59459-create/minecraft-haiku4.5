@@ -2,11 +2,14 @@ import { BLOCKS, isBlockSolid } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
-const PLAYER_SPEED = 0.1;
-const PLAYER_SPRINT_SPEED = 0.15;
-const PLAYER_CROUCH_SPEED = 0.05;
-const GRAVITY = 0.02;
-const JUMP_POWER = 0.5;
+const PLAYER_SPEED = 0.12;
+const PLAYER_SPRINT_SPEED = 0.18;
+const PLAYER_CROUCH_SPEED = 0.06;
+const GRAVITY = 0.025;
+const JUMP_POWER = 0.55;
+const TERMINAL_VELOCITY = 0.5;
+const AIR_FRICTION = 0.98;
+const GROUND_FRICTION = 0.9;
 
 export class Player {
     constructor(world) {
@@ -72,7 +75,12 @@ export class Player {
 
     applyPhysics() {
         if (!this.isOnGround) {
-            this.velocity.y -= GRAVITY;
+            this.velocity.y = Math.max(-TERMINAL_VELOCITY, this.velocity.y - GRAVITY);
+            this.velocity.x *= AIR_FRICTION;
+            this.velocity.z *= AIR_FRICTION;
+        } else {
+            this.velocity.x *= GROUND_FRICTION;
+            this.velocity.z *= GROUND_FRICTION;
         }
 
         this.position.x += this.velocity.x;

@@ -4,29 +4,61 @@ export class ParticleSystem {
         this.particles = [];
         this.geometry = new THREE.BufferGeometry();
         this.material = new THREE.PointsMaterial({
-            size: 0.2,
+            size: 0.15,
             sizeAttenuation: true,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9,
+            vertexColors: true
         });
         this.points = new THREE.Points(this.geometry, this.material);
         this.scene.add(this.points);
+        this.maxParticles = 5000;
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
-        const particleCount = 8 + Math.floor(Math.random() * 8);
+        if (this.particles.length > this.maxParticles) return;
+
+        const particleCount = 12 + Math.floor(Math.random() * 12);
+        const color = new THREE.Color(blockColor);
 
         for (let i = 0; i < particleCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 0.2 + Math.random() * 0.2;
+
             const particle = {
                 position: { x, y, z },
                 velocity: {
-                    x: (Math.random() - 0.5) * 0.3,
-                    y: Math.random() * 0.3,
-                    z: (Math.random() - 0.5) * 0.3
+                    x: Math.cos(angle) * speed,
+                    y: Math.random() * 0.4 + 0.1,
+                    z: Math.sin(angle) * speed
                 },
                 life: 1,
-                maxLife: 0.8 + Math.random() * 0.4,
-                color: blockColor
+                maxLife: 0.6 + Math.random() * 0.6,
+                color: { r: color.r, g: color.g, b: color.b },
+                spin: (Math.random() - 0.5) * 0.2,
+                size: 0.1 + Math.random() * 0.15
+            };
+            this.particles.push(particle);
+        }
+    }
+
+    addDustParticles(x, y, z, particleCount = 4) {
+        if (this.particles.length > this.maxParticles) return;
+
+        const dustColor = new THREE.Color(0x888888);
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = {
+                position: { x: x + (Math.random() - 0.5) * 0.5, y, z: z + (Math.random() - 0.5) * 0.5 },
+                velocity: {
+                    x: (Math.random() - 0.5) * 0.1,
+                    y: Math.random() * 0.05,
+                    z: (Math.random() - 0.5) * 0.1
+                },
+                life: 1,
+                maxLife: 0.3 + Math.random() * 0.3,
+                color: dustColor,
+                spin: 0
             };
             this.particles.push(particle);
         }

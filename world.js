@@ -1,14 +1,32 @@
 import { BLOCKS } from './blocks.js';
 
-const CHUNK_SIZE = 16;
-const CHUNK_HEIGHT = 256;
-const WORLD_HEIGHT = 256;
+export const CHUNK_SIZE = 16;
+export const CHUNK_HEIGHT = 256;
+export const WORLD_HEIGHT = 256;
+export const CHUNK_SIZE_EXPORT = CHUNK_SIZE;
+export const WORLD_HEIGHT_EXPORT = WORLD_HEIGHT;
 
 let perlinNoise;
+const CHUNK_POOL = [];
+const MAX_POOL_SIZE = 16;
+let WORLD_SEED = 0;
 
-export function initPerlinNoise() {
+export function initPerlinNoise(seed = 0) {
+    WORLD_SEED = seed;
     if (typeof SimplexNoise !== 'undefined') {
-        perlinNoise = new SimplexNoise();
+        const random = new SeededRandom(seed);
+        perlinNoise = new SimplexNoise(() => random.next());
+    }
+}
+
+class SeededRandom {
+    constructor(seed) {
+        this.seed = seed || Math.random() * 0xFFFFFFFF;
+    }
+
+    next() {
+        this.seed = (this.seed * 9301 + 49297) % 233280;
+        return this.seed / 233280;
     }
 }
 
@@ -84,10 +102,11 @@ function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
     let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    height += perlinNoise.noise2D(x * 0.003, z * 0.003) * 40;
+    height += perlinNoise.noise2D(x * 0.01, z * 0.01) * 20;
+    height += perlinNoise.noise2D(x * 0.03, z * 0.03) * 12;
+    height += perlinNoise.noise2D(x * 0.08, z * 0.08) * 6;
+    height += perlinNoise.noise2D(x * 0.15, z * 0.15) * 3;
 
     return Math.max(20, Math.min(160, Math.floor(height)));
 }
@@ -102,6 +121,11 @@ function getTerrainType(x, z) {
 
 function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
+
+    const caveNoise = perlinNoise.noise3D(x * 0.05, y * 0.05, z * 0.05);
+    if (caveNoise > 0.6 && y > 10 && y < 100) {
+        return BLOCKS.AIR;
+    }
 
     let ore = BLOCKS.STONE;
     const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
@@ -123,10 +147,11 @@ function generateTree(chunk, x, z, height) {
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
-    if (treeChance < 0.5) return;
+    if (treeChance < 0.4) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
     const y = height;
+    const treeType = perlinNoise.noise2D(worldX * 0.05, worldZ * 0.05);
+    const trunkHeight = treeType > 0 ? 5 + Math.floor(Math.random() * 6) : 3 + Math.floor(Math.random() * 3);
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
@@ -136,13 +161,13 @@ function generateTree(chunk, x, z, height) {
         }
     }
 
-    const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    const foliageStart = y + trunkHeight - 4;
+    const foliageRadius = treeType > 0 ? 3 + Math.floor(Math.random() * 2) : 2;
 
-    for (let dy = 0; dy < foliageRadius + 2; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
-        for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
-            for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
+    for (let dy = 0; dy < foliageRadius + 3; dy++) {
+        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 2));
+        for (let angle = 0; angle < Math.PI * 2; angle += 0.3) {
+            for (let dist = 0; dist <= radiusAtLevel; dist += 0.6) {
                 const dx = Math.round(Math.cos(angle) * dist);
                 const dz = Math.round(Math.sin(angle) * dist);
                 const fx = x + dx;
