@@ -41,12 +41,36 @@ class MinecraftGame {
 
         this.saveManager.loadPlayerPosition(this.player);
 
+        this.ensurePlayerOnTerrain();
+
         this.player.onJump = () => this.audioManager.playJumpSound();
 
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
         this.animate();
+    }
+
+    ensurePlayerOnTerrain() {
+        const x = Math.floor(this.player.position.x);
+        const z = Math.floor(this.player.position.z);
+
+        let y = 256;
+        while (y > 0) {
+            const block = this.world.getBlock(x, y, z);
+            if (isBlockSolid(block)) {
+                this.player.position.y = y + 1.8;
+                break;
+            }
+            y--;
+        }
+
+        if (y === 0) {
+            this.player.position.y = 100;
+        }
+
+        this.player.velocity.y = 0;
+        this.player.isOnGround = true;
     }
 
     setupLighting() {

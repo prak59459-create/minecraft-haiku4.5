@@ -15,8 +15,11 @@ export class SaveManager {
     }
 
     getDefaultData() {
+        const randomSpawn = Math.random() < 0.5;
         return {
-            playerPosition: { x: 0, y: 100, z: 0 },
+            playerPosition: randomSpawn ?
+                { x: Math.random() * 200 - 100, y: 100, z: Math.random() * 200 - 100 } :
+                { x: 0, y: 100, z: 0 },
             selectedBlock: 1,
             worldSeed: Math.random()
         };
