@@ -151,3 +151,13 @@ body {
         font-size: 9px;
     }
 }
+
+@media (prefers-reduced-motion: reduce) {
+    .inventory-slot {
+        transition: none;
+    }
+
+    #help {
+        transition: none;
+    }
+}

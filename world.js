@@ -98,20 +98,27 @@ function getTerrainHeight(x, z) {
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
-    const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const moisture = perlinNoise.noise2D(x * 0.015, z * 0.015);
+    const temp = perlinNoise.noise2D(x * 0.025, z * 0.025);
+
+    if (temp < -0.25) return 'sand';
+    if (temp < -0.1 && moisture < -0.2) return 'sand';
+    if (moisture > 0.4) return 'grass';
+
     return 'grass';
 }
 
 function isCave(x, y, z) {
-    if (!perlinNoise || y < 10 || y > 120) return false;
+    if (!perlinNoise || y < 8 || y > 130) return false;
 
-    const caveNoise = perlinNoise.noise3D
-        ? perlinNoise.noise3D(x * 0.08, y * 0.08, z * 0.08)
-        : perlinNoise.noise2D(x * 0.08 + y * 0.04, z * 0.08 + y * 0.04);
+    const caveNoise1 = perlinNoise.noise2D(x * 0.06 + y * 0.03, z * 0.06 + y * 0.03);
+    const caveNoise2 = perlinNoise.noise2D(x * 0.15, z * 0.15 + y * 0.05);
+    const combined = caveNoise1 * 0.6 + caveNoise2 * 0.4;
 
-    const caveThreshold = -0.4 - (y / 256) * 0.2;
-    return caveNoise < caveThreshold;
+    const depthFactor = Math.max(0, (y - 8) / 122);
+    const caveThreshold = -0.3 - depthFactor * 0.15;
+
+    return combined < caveThreshold;
 }
 
 function getOreBlock(x, y, z) {
@@ -154,14 +161,16 @@ function generateTree(chunk, x, z, height) {
     }
 
     const foliageStart = y + Math.max(trunkHeight - 4, trunkHeight - 2);
-    const foliageRadius = 2 + Math.floor(Math.random() * 3);
+    const maxRadius = 3;
+    const foliageHeight = 4;
 
-    for (let dy = 0; dy < foliageRadius + 3; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
+    for (let dy = 0; dy < foliageHeight; dy++) {
+        const radiusAtLevel = Math.max(1, maxRadius - Math.floor(dy / 1.3));
         for (let dx = -radiusAtLevel; dx <= radiusAtLevel; dx++) {
             for (let dz = -radiusAtLevel; dz <= radiusAtLevel; dz++) {
-                const dist = Math.sqrt(dx * dx + dz * dz);
-                if (dist > radiusAtLevel) continue;
+                const distSq = dx * dx + dz * dz;
+                const radiusSq = radiusAtLevel * radiusAtLevel;
+                if (distSq > radiusSq + 0.5) continue;
 
                 const fx = x + dx;
                 const fz = z + dz;
