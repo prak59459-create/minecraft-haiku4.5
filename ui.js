@@ -5,7 +5,9 @@ export class UI {
         this.selectedBlock = 1;
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
+        this.fpsHistory = [];
         this.lastTime = performance.now();
+        this.lastHudUpdate = 0;
         this.setupInventoryUI();
     }
 
@@ -61,7 +63,12 @@ export class UI {
         this.lastTime = now;
 
         if (delta > 0) {
-            this.fpsCounter = Math.round(1000 / delta);
+            const fps = 1000 / delta;
+            this.fpsHistory.push(fps);
+            if (this.fpsHistory.length > 10) {
+                this.fpsHistory.shift();
+            }
+            this.fpsCounter = Math.round(this.fpsHistory.reduce((a, b) => a + b, 0) / this.fpsHistory.length);
         }
 
         return this.fpsCounter;

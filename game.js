@@ -13,9 +13,12 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -58,6 +61,8 @@ class MinecraftGame {
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
+
+        this.scene.fog = new THREE.Fog(0x87CEEB, 200, 500);
     }
 
     setupEventListeners() {
@@ -132,44 +137,63 @@ class MinecraftGame {
             Math.sin(this.gameCamera.rotation.x),
             Math.cos(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x)
         );
+        direction.normalize();
 
-        let hit = null;
+        let bx = Math.floor(eyePos.x);
+        let by = Math.floor(eyePos.y);
+        let bz = Math.floor(eyePos.z);
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
-            const x = eyePos.x + direction.x * dist;
-            const y = eyePos.y + direction.y * dist;
-            const z = eyePos.z + direction.z * dist;
+        const stepX = direction.x > 0 ? 1 : -1;
+        const stepY = direction.y > 0 ? 1 : -1;
+        const stepZ = direction.z > 0 ? 1 : -1;
 
-            const bx = Math.floor(x);
-            const by = Math.floor(y);
-            const bz = Math.floor(z);
+        const tDeltaX = direction.x !== 0 ? 1 / Math.abs(direction.x) : Infinity;
+        const tDeltaY = direction.y !== 0 ? 1 / Math.abs(direction.y) : Infinity;
+        const tDeltaZ = direction.z !== 0 ? 1 / Math.abs(direction.z) : Infinity;
 
+        let tMaxX = (direction.x > 0 ? (Math.floor(eyePos.x) + 1 - eyePos.x) : (eyePos.x - Math.floor(eyePos.x))) * tDeltaX;
+        let tMaxY = (direction.y > 0 ? (Math.floor(eyePos.y) + 1 - eyePos.y) : (eyePos.y - Math.floor(eyePos.y))) * tDeltaY;
+        let tMaxZ = (direction.z > 0 ? (Math.floor(eyePos.z) + 1 - eyePos.z) : (eyePos.z - Math.floor(eyePos.z))) * tDeltaZ;
+
+        let lastNormal = { x: 0, y: 0, z: 0 };
+        let dist = 0;
+
+        for (let i = 0; i < this.raycastDistance * 20; i++) {
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
-                const prevX = eyePos.x + direction.x * prevDist;
-                const prevY = eyePos.y + direction.y * prevDist;
-                const prevZ = eyePos.z + direction.z * prevDist;
-
-                const prevBx = Math.floor(prevX);
-                const prevBy = Math.floor(prevY);
-                const prevBz = Math.floor(prevZ);
-
-                let normal = { x: 0, y: 0, z: 0 };
-                if (prevBx !== bx) normal.x = prevBx < bx ? -1 : 1;
-                else if (prevBy !== by) normal.y = prevBy < by ? -1 : 1;
-                else if (prevBz !== bz) normal.z = prevBz < bz ? -1 : 1;
-
-                hit = { x: bx, y: by, z: bz, block, normal, dist };
-                break;
+                return { x: bx, y: by, z: bz, block, normal: lastNormal, dist };
             }
+
+            if (tMaxX < tMaxY) {
+                if (tMaxX < tMaxZ) {
+                    bx += stepX;
+                    dist = tMaxX;
+                    lastNormal = { x: -stepX, y: 0, z: 0 };
+                    tMaxX += tDeltaX;
+                } else {
+                    bz += stepZ;
+                    dist = tMaxZ;
+                    lastNormal = { x: 0, y: 0, z: -stepZ };
+                    tMaxZ += tDeltaZ;
+                }
+            } else {
+                if (tMaxY < tMaxZ) {
+                    by += stepY;
+                    dist = tMaxY;
+                    lastNormal = { x: 0, y: -stepY, z: 0 };
+                    tMaxY += tDeltaY;
+                } else {
+                    bz += stepZ;
+                    dist = tMaxZ;
+                    lastNormal = { x: 0, y: 0, z: -stepZ };
+                    tMaxZ += tDeltaZ;
+                }
+            }
+
+            if (dist > this.raycastDistance) break;
         }
 
-        if (!hit) {
-            hit = { x: 0, y: 0, z: 0, block: BLOCKS.AIR, normal: { x: 0, y: 1, z: 0 }, dist: this.raycastDistance };
-        }
-
-        return hit;
+        return { x: 0, y: 0, z: 0, block: BLOCKS.AIR, normal: { x: 0, y: 1, z: 0 }, dist: this.raycastDistance };
     }
 
     updateChunkMesh(x, y, z) {
@@ -195,10 +219,11 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
+        const colorCache = new Map();
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
-            for (let y = 1; y < WORLD_HEIGHT; y++) {
-                for (let z = 0; z < CHUNK_SIZE; z++) {
+            for (let z = 0; z < CHUNK_SIZE; z++) {
+                for (let y = 1; y < WORLD_HEIGHT; y++) {
                     const blockId = chunk.getBlock(x, y, z);
                     if (blockId === BLOCKS.AIR) continue;
 
@@ -206,14 +231,20 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const color = new THREE.Color(BLOCK_COLORS[blockId]);
+                    const cacheKey = `${blockId}:${wy}:${wx}:${wz}`;
+                    let color;
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
-
-                    color.multiplyScalar(brightness);
+                    if (colorCache.has(cacheKey)) {
+                        color = colorCache.get(cacheKey);
+                    } else {
+                        color = new THREE.Color(BLOCK_COLORS[blockId]);
+                        const baseLight = 0.7;
+                        const heightLight = (wy / WORLD_HEIGHT) * 0.3;
+                        const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
+                        const brightness = baseLight + heightLight + varLight;
+                        color.multiplyScalar(brightness);
+                        colorCache.set(cacheKey, color);
+                    }
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
                 }
@@ -226,14 +257,13 @@ class MinecraftGame {
             if (indices.length > 0) {
                 geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             }
-            geometry.computeVertexNormals();
 
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
+                flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 10
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -287,20 +317,28 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const renderDist = 10;
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const chunksToRender = [];
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const dist = Math.sqrt((cx - playerChunkX) ** 2 + (cz - playerChunkZ) ** 2);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (dist > renderDist) {
                 if (this.chunkMeshes.has(key)) {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
                 }
-                continue;
+            } else {
+                chunksToRender.push({ key, chunk, dist });
             }
+        }
 
+        chunksToRender.sort((a, b) => a.dist - b.dist);
+
+        for (const { key, chunk } of chunksToRender) {
             if (!this.chunkMeshes.has(key)) {
                 const mesh = this.buildChunkMesh(chunk);
                 if (mesh) {
