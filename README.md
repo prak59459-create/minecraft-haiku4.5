@@ -18,11 +18,12 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Procedural Generation** - Infinite world generation using Perlin noise
 - **Multiple Biomes** - Grass, sand, and varied terrain types
 - **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
-  - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
+- **Multiple Block Types** (17 total):
+  - Natural: Stone, Grass, Dirt, Cobblestone, Bedrock
+  - Organic: Oak Log, Oak Leaves, Sand, Gravel
+  - Water: Water
+  - Ores: Coal Ore, Iron Ore, Gold Ore, Diamond Ore, Emerald Ore
+  - Crafted: Bricks, Obsidian
 - **Ore Generation** - Procedural ore generation at various depths
 - **Tree Generation** - Natural tree placement in suitable terrain
 
@@ -52,6 +53,16 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Block Inventory** - Visual block selector with 9 slots
 - **Crosshair** - Center screen targeting reticle
 - **Help Panel** - In-game control instructions (Press H)
+- **Debug Display** - Performance metrics (Press F3)
+
+### Advanced Systems
+- **Lighting System** - Dynamic light sources and sky lighting
+- **Crafting System** - Recipe-based item creation
+- **Event System** - Extensible event-driven architecture
+- **Inventory Management** - Full slot-based inventory with stacking
+- **Performance Monitor** - Frame time tracking and optimization
+- **World Persistence** - Save/load world and player state
+- **Cave Generation** - 3D Perlin noise-based cave systems
 
 ### Performance Optimization
 - **Chunk-based Rendering** - Only visible chunks are rendered
@@ -114,15 +125,38 @@ http://localhost:8000
 
 ### Architecture
 
+**Core Systems:**
 ```
 game.js          - Main game loop and rendering
 world.js         - Terrain generation and chunk management
 player.js        - Player physics and controls
 blocks.js        - Block definitions and properties
+```
+
+**Rendering & Effects:**
+```
 ui.js            - User interface management
 particles.js     - Particle effects system
 water.js         - Water rendering system
+blockoutline.js  - Block selection outline
+debug.js         - Debug display system
+```
+
+**Advanced Systems:**
+```
 audio.js         - Sound effects generation
+lighting.js      - Dynamic lighting system
+crafting.js      - Recipe management and crafting
+inventory.js     - Inventory management system
+events.js        - Event-driven architecture
+performance.js   - Performance monitoring and optimization
+persistence.js   - World save/load system
+```
+
+**Configuration:**
+```
+config.json      - Game settings and parameters
+config.js        - Configuration management
 ```
 
 ### Technologies Used
@@ -170,17 +204,33 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 - **Clean Separation** - Game logic, rendering, and physics separate
 - **Extensible** - Easy to add new block types or biomes
 
+### Implemented Systems
+- [x] Procedural terrain with caves
+- [x] Multiple block types (17)
+- [x] Particle effects
+- [x] Audio system with sound variety
+- [x] Advanced lighting framework
+- [x] Crafting system foundation
+- [x] Inventory management system
+- [x] Event-driven architecture
+- [x] Performance monitoring
+- [x] World persistence
+- [x] Configuration system
+- [x] Debug display
+
 ### Future Enhancements
 
-- [ ] Inventory UI with multiple stacks
+- [ ] Inventory UI with drag-and-drop
 - [ ] Creative mode with unlimited blocks
 - [ ] Survival mode with health/hunger
 - [ ] Multiplayer support
 - [ ] Texture mapping for blocks
 - [ ] Advanced weather systems
-- [ ] More biome types
-- [ ] Mob system
-- [ ] Crafting system
+- [ ] More biome types (mountains, forest, desert)
+- [ ] Mob system with pathfinding
+- [ ] More crafting recipes
+- [ ] Dungeons and structures
+- [ ] NPCs and trading
 
 ## Performance Tips
 
