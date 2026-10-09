@@ -7,6 +7,7 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { SaveManager } from './save.js';
 
 class MinecraftGame {
     constructor() {
@@ -29,12 +30,16 @@ class MinecraftGame {
         this.audioManager = new AudioManager();
         this.debugDisplay = new DebugDisplay();
         this.blockOutline = new BlockOutline(this.scene);
+        this.saveManager = new SaveManager();
 
         this.chunkMeshes = new Map();
-        this.selectedBlockType = BLOCKS.STONE;
+        this.selectedBlockType = this.saveManager.getSelectedBlock();
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.lastSaveTime = 0;
+
+        this.saveManager.loadPlayerPosition(this.player);
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -417,6 +422,12 @@ class MinecraftGame {
 
         if (this.showDebug) {
             this.debugDisplay.update(this);
+        }
+
+        const now = Date.now();
+        if (now - this.lastSaveTime > 10000) {
+            this.saveManager.save(this);
+            this.lastSaveTime = now;
         }
 
         this.renderer.render(this.scene, this.camera);
