@@ -91,16 +91,19 @@ class MinecraftGame {
         if (hit.block === BLOCKS.AIR) return;
 
         if (event.button === 0) {
-            this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
-            this.updateChunkMesh(hit.x, hit.y, hit.z);
+            const block = this.world.getBlock(hit.x, hit.y, hit.z);
+            if (block !== BLOCKS.AIR && block !== BLOCKS.BEDROCK) {
+                this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
+                this.updateChunkMesh(hit.x, hit.y, hit.z);
 
-            const color = BLOCK_COLORS[hit.block] || 0x808080;
-            this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
+                const color = BLOCK_COLORS[block] || 0x808080;
+                this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
 
-            const now = Date.now();
-            if (now - this.lastBreakSound > 50) {
-                this.audioManager.playBlockSound('break');
-                this.lastBreakSound = now;
+                const now = Date.now();
+                if (now - this.lastBreakSound > 50) {
+                    this.audioManager.playBlockSound('break');
+                    this.lastBreakSound = now;
+                }
             }
         } else if (event.button === 2) {
             const norm = hit.normal;
@@ -108,7 +111,8 @@ class MinecraftGame {
             const ny = hit.y + norm.y;
             const nz = hit.z + norm.z;
 
-            if (!this.isPlayerOccupying(nx, ny, nz)) {
+            const existingBlock = this.world.getBlock(nx, ny, nz);
+            if (existingBlock === BLOCKS.AIR && !this.isPlayerOccupying(nx, ny, nz)) {
                 this.world.setBlock(nx, ny, nz, this.selectedBlockType);
                 this.updateChunkMesh(nx, ny, nz);
                 this.audioManager.playBlockSound('place');
@@ -209,9 +213,9 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
+                    const baseLight = 0.65;
+                    const heightLight = (wy / WORLD_HEIGHT) * 0.35;
+                    const varLight = Math.sin(wx * 0.3 + wz * 0.3) * 0.08;
                     const brightness = baseLight + heightLight + varLight;
 
                     color.multiplyScalar(brightness);
@@ -232,9 +236,9 @@ class MinecraftGame {
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
+                flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 20
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;

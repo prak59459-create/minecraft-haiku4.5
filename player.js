@@ -163,6 +163,11 @@ export class Player {
             }
         }
 
+        const eyeY = this.position.y + PLAYER_HEIGHT * 0.85;
+        if (isBlockSolid(this.world.getBlock(Math.floor(this.position.x), Math.floor(eyeY), Math.floor(this.position.z)))) {
+            this.position.y -= 0.1;
+        }
+
         if (this.position.y < -10) {
             this.position.y = 100;
             this.velocity.y = 0;
