@@ -16,7 +16,9 @@ export class WaterRenderer {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x4A90E2);
+        const baseR = 74;
+        const baseG = 144;
+        const baseB = 226;
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -27,10 +29,6 @@ export class WaterRenderer {
                     const wx = chunk.x * CHUNK_SIZE + x;
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
-
-                    const neighbor = (dx, dy, dz) => {
-                        return this.world.getBlock(wx + dx, wy + dy, wz + dz);
-                    };
 
                     const faces = [
                         { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
@@ -43,16 +41,16 @@ export class WaterRenderer {
 
                     for (const face of faces) {
                         const [dx, dy, dz] = face.dir;
-                        const neighborBlock = neighbor(dx, dy, dz);
+                        const neighborBlock = this.world.getBlock(wx + dx, wy + dy, wz + dz);
 
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const brightness = 0.85 + (wy / WORLD_HEIGHT) * 0.15;
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
+                            colors.push(Math.floor(baseR * brightness), Math.floor(baseG * brightness), Math.floor(baseB * brightness));
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -66,17 +64,18 @@ export class WaterRenderer {
             geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
             geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
-            geometry.computeVertexNormals();
 
-            const material = new THREE.MeshPhongMaterial({
+            const material = new THREE.MeshBasicMaterial({
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.7,
+                side: THREE.DoubleSide,
+                depthWrite: false
             });
 
             const mesh = new THREE.Mesh(geometry, material);
+            mesh.renderOrder = 1;
             return mesh;
         }
 
