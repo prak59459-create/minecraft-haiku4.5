@@ -126,16 +126,19 @@ function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
     let ore = BLOCKS.STONE;
-    const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
-    const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
-    const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
-    const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
     const stoneType = perlinNoise.noise2D(x * 0.05, z * 0.05);
 
-    if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
-    else if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
-    else if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
-    else if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    const coalChance = perlinNoise.noise2D(x * 0.12 + y * 0.08, z * 0.12 + y * 0.08);
+    const ironChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
+    const goldChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
+    const diamondChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
+    const gravelChance = perlinNoise.noise2D(x * 0.07 + y * 0.04, z * 0.07 + y * 0.04);
+
+    if (y > 64 && y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
+    else if (y > 16 && y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
+    else if (y < 80 && y > 8 && goldChance > 0.65) ore = BLOCKS.GOLD_ORE;
+    else if (y < 40 && y > 5 && diamondChance > 0.7) ore = BLOCKS.DIAMOND_ORE;
+    else if (y < 64 && gravelChance > 0.7 && gravelChance < 0.85) ore = BLOCKS.GRAVEL;
     else if (stoneType > 0.5) ore = BLOCKS.GRANITE;
     else if (stoneType < -0.5) ore = BLOCKS.DIORITE;
     else if (stoneType > 0.2 && stoneType < 0.3) ore = BLOCKS.ANDESITE;
@@ -149,11 +152,50 @@ function generateTree(chunk, x, z, height) {
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
-    if (treeChance < 0.5) return;
+    if (treeChance < 0.4) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    const treeType = perlinNoise.noise2D(worldX * 0.05, worldZ * 0.05);
     const y = height;
 
+    if (treeType < 0.3) {
+        generateSmallTree(chunk, x, z, y);
+    } else if (treeType < 0.7) {
+        generateMediumTree(chunk, x, z, y);
+    } else {
+        generateLargeTree(chunk, x, z, y);
+    }
+}
+
+function generateSmallTree(chunk, x, z, y) {
+    const trunkHeight = 3 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
+        if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
+            if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
+                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
+            }
+        }
+    }
+
+    for (let dy = -1; dy < 3; dy++) {
+        const radius = dy < 1 ? 2 : 1;
+        for (let dx = -radius; dx <= radius; dx++) {
+            for (let dz = -radius; dz <= radius; dz++) {
+                if (Math.abs(dx) + Math.abs(dz) > radius + 0.5) continue;
+                const fx = x + dx;
+                const fz = z + dz;
+                const fy = y + trunkHeight + dy;
+                if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
+                    if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
+                        chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                    }
+                }
+            }
+        }
+    }
+}
+
+function generateMediumTree(chunk, x, z, y) {
+    const trunkHeight = 5 + Math.floor(Math.random() * 3);
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
             if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
@@ -163,18 +205,43 @@ function generateTree(chunk, x, z, height) {
     }
 
     const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
-
-    for (let dy = 0; dy < foliageRadius + 2; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
-        for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
-            for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
-                const dx = Math.round(Math.cos(angle) * dist);
-                const dz = Math.round(Math.sin(angle) * dist);
+    for (let dy = 0; dy < 4; dy++) {
+        const radius = dy < 2 ? 3 : 2;
+        for (let dx = -radius; dx <= radius; dx++) {
+            for (let dz = -radius; dz <= radius; dz++) {
+                if (Math.abs(dx) + Math.abs(dz) > radius + 0.5) continue;
                 const fx = x + dx;
                 const fz = z + dz;
                 const fy = foliageStart + dy;
+                if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
+                    if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
+                        chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                    }
+                }
+            }
+        }
+    }
+}
 
+function generateLargeTree(chunk, x, z, y) {
+    const trunkHeight = 8 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
+        if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
+            if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
+                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
+            }
+        }
+    }
+
+    const foliageStart = y + trunkHeight - 4;
+    for (let dy = 0; dy < 5; dy++) {
+        const radius = dy < 2 ? 3 : dy < 4 ? 2 : 1;
+        for (let dx = -radius; dx <= radius; dx++) {
+            for (let dz = -radius; dz <= radius; dz++) {
+                if (Math.abs(dx) + Math.abs(dz) > radius + 0.5) continue;
+                const fx = x + dx;
+                const fz = z + dz;
+                const fy = foliageStart + dy;
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
                     if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
                         chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
