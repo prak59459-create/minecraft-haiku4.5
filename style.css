@@ -136,6 +136,18 @@ body {
     margin: 3px 0;
 }
 
+/* Loading and transitions */
+#gameCanvas {
+    transition: opacity 0.3s ease;
+}
+
+/* Performance optimizations */
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile optimizations */
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;
@@ -149,5 +161,26 @@ body {
 
     #help {
         font-size: 9px;
+    }
+
+    .inventory-slot.selected {
+        transform: scale(1.08);
+    }
+
+    #crosshair {
+        width: 16px;
+        height: 16px;
+        margin: -8px 0 0 -8px;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .inventory-slot,
+    .inventory-slot:hover,
+    .inventory-slot.selected,
+    #help {
+        transition: none;
+        animation: none;
     }
 }
