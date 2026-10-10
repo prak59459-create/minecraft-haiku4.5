@@ -59,6 +59,9 @@ export class DebugDisplay {
         this.stats.fps = game.ui.fpsCounter;
         this.stats.chunks = game.world.chunks.size;
         this.stats.particles = game.particleSystem.particles.length;
+        this.stats.blocksDestroyed = game.stats.totalBlocksDestroyed;
+        this.stats.blocksPlaced = game.stats.totalBlocksPlaced;
+        this.stats.sessionTime = game.stats.sessionTime;
 
         let vertices = 0;
         let triangles = 0;
@@ -99,6 +102,10 @@ export class DebugDisplay {
             `Draw Calls: ${this.stats.drawCalls}`,
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
+            '--- Statistics ---',
+            `Blocks Destroyed: ${this.stats.blocksDestroyed || 0}`,
+            `Blocks Placed: ${this.stats.blocksPlaced || 0}`,
+            `Session Time: ${((this.stats.sessionTime || 0) / 60).toFixed(1)}m`,
             '==================',
             'F3: Toggle Debug',
             'H: Show Help'

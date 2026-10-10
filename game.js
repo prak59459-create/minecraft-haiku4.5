@@ -41,8 +41,14 @@ class MinecraftGame {
         this.stats = {
             totalBlocksDestroyed: 0,
             totalBlocksPlaced: 0,
-            sessionTime: 0
+            sessionTime: 0,
+            chunksGenerated: 0,
+            chunksRendered: 0,
+            peakMemory: 0,
+            currentMemory: 0
         };
+        this.startTime = Date.now();
+        this.lastMemoryCheck = 0;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -373,6 +379,22 @@ class MinecraftGame {
         return Math.sqrt(dx * dx + dz * dz);
     }
 
+    updateStats() {
+        const now = Date.now();
+        this.stats.sessionTime = (now - this.startTime) / 1000;
+        this.stats.chunksGenerated = this.world.chunks.size;
+        this.stats.chunksRendered = this.chunkMeshes.size;
+
+        if (now - this.lastMemoryCheck > 1000) {
+            this.lastMemoryCheck = now;
+            if (performance.memory) {
+                const memMB = performance.memory.usedJSHeapSize / 1048576;
+                this.stats.currentMemory = memMB;
+                this.stats.peakMemory = Math.max(this.stats.peakMemory, memMB);
+            }
+        }
+    }
+
     animate() {
         requestAnimationFrame(() => this.animate());
 
@@ -397,6 +419,7 @@ class MinecraftGame {
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
+        this.updateStats();
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);
