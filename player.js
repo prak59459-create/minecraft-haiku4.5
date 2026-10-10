@@ -2,11 +2,11 @@ import { BLOCKS, isBlockSolid } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
-const PLAYER_SPEED = 0.1;
-const PLAYER_SPRINT_SPEED = 0.15;
+const PLAYER_SPEED = 0.11;
+const PLAYER_SPRINT_SPEED = 0.16;
 const PLAYER_CROUCH_SPEED = 0.05;
-const GRAVITY = 0.02;
-const JUMP_POWER = 0.5;
+const GRAVITY = 0.022;
+const JUMP_POWER = 0.54;
 
 export class Player {
     constructor(world) {
