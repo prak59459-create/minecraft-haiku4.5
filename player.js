@@ -77,8 +77,12 @@ export class Player {
         const cosY = Math.cos(this.rotation.y);
         const sinY = Math.sin(this.rotation.y);
 
-        this.velocity.x = (moveX * cosY - moveZ * sinY) * speed;
-        this.velocity.z = (moveX * sinY + moveZ * cosY) * speed;
+        const targetX = (moveX * cosY - moveZ * sinY) * speed;
+        const targetZ = (moveX * sinY + moveZ * cosY) * speed;
+
+        const damping = 0.1;
+        this.velocity.x = this.velocity.x * (1 - damping) + targetX * damping;
+        this.velocity.z = this.velocity.z * (1 - damping) + targetZ * damping;
 
         this.isSprinting = this.keys['shift'] && !this.isCrouching && isMoving;
     }
