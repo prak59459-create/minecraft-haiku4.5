@@ -12,7 +12,8 @@ class MinecraftGame {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.scene.fog = new THREE.Fog(0x87CEEB, 256, 512);
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 512);
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas,
             antialias: true,
@@ -54,7 +55,7 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
