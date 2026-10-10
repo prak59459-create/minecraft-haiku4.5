@@ -48,12 +48,18 @@ export class Chunk {
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
+                    } else if (isCaveBlock(wx, y, wz)) {
+                        this.setBlock(x, y, z, BLOCKS.AIR);
                     } else if (y < height - 4) {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'clay') {
+                            this.setBlock(x, y, z, BLOCKS.CLAY);
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
@@ -62,6 +68,10 @@ export class Chunk {
                             this.setBlock(x, y, z, BLOCKS.SAND);
                         } else if (terrainType === 'grass') {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
+                        } else if (terrainType === 'clay') {
+                            this.setBlock(x, y, z, BLOCKS.CLAY);
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.SNOW);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
@@ -97,7 +107,11 @@ function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
+    const humidity = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
     if (temp < -0.3) return 'sand';
+    if (temp > 0.5 && humidity < -0.2) return 'snow';
+    if (humidity > 0.4) return 'clay';
     return 'grass';
 }
 
@@ -110,14 +124,28 @@ function getOreBlock(x, y, z) {
     const goldChance = perlinNoise.noise2D(x * 0.08 + y * 0.04, z * 0.08 + y * 0.04);
     const diamondChance = perlinNoise.noise2D(x * 0.06 + y * 0.03, z * 0.06 + y * 0.03);
     const gravelChance = perlinNoise.noise2D(x * 0.15 + y * 0.05, z * 0.15 + y * 0.05);
+    const obsidianChance = perlinNoise.noise2D(x * 0.05 + y * 0.02, z * 0.05 + y * 0.02);
 
-    if (y < 160 && coalChance > 0.4) ore = BLOCKS.COAL_ORE;
-    else if (y < 100 && ironChance > 0.5) ore = BLOCKS.IRON_ORE;
-    else if (y < 60 && goldChance > 0.65) ore = BLOCKS.GOLD_ORE;
-    else if (y < 32 && diamondChance > 0.7) ore = BLOCKS.DIAMOND_ORE;
-    else if (y < 65 && gravelChance > 0.6) ore = BLOCKS.GRAVEL;
+    if (y < 160 && coalChance > 0.35) ore = BLOCKS.COAL_ORE;
+    else if (y < 100 && ironChance > 0.45) ore = BLOCKS.IRON_ORE;
+    else if (y < 60 && goldChance > 0.6) ore = BLOCKS.GOLD_ORE;
+    else if (y < 32 && diamondChance > 0.65) ore = BLOCKS.DIAMOND_ORE;
+    else if (y < 65 && gravelChance > 0.55) ore = BLOCKS.GRAVEL;
+    else if (y < 10 && obsidianChance > 0.7) ore = BLOCKS.OBSIDIAN;
 
     return ore;
+}
+
+function isCaveBlock(x, y, z) {
+    if (!perlinNoise) return false;
+
+    const caveValue = Math.abs(perlinNoise.noise3D ? perlinNoise.noise3D(x * 0.05, y * 0.05, z * 0.05) :
+                               perlinNoise.noise2D(x * 0.05, z * 0.05) * Math.sin(y * 0.05));
+
+    if (y < 50 && caveValue > 0.6) return true;
+    if (y < 30 && caveValue > 0.4) return true;
+
+    return false;
 }
 
 function generateTree(chunk, x, z, height) {
