@@ -2,7 +2,9 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.faceHighlight = null;
         this.createOutlineMaterial();
+        this.createFaceMaterial();
     }
 
     createOutlineMaterial() {
@@ -14,9 +16,21 @@ export class BlockOutline {
         });
     }
 
-    setSelectedBlock(x, y, z) {
+    createFaceMaterial() {
+        this.faceMaterial = new THREE.MeshBasicMaterial({
+            color: 0xFFFFFF,
+            transparent: true,
+            opacity: 0.15,
+            side: THREE.FrontSide
+        });
+    }
+
+    setSelectedBlock(x, y, z, normal = null) {
         if (this.outline) {
             this.scene.remove(this.outline);
+        }
+        if (this.faceHighlight) {
+            this.scene.remove(this.faceHighlight);
         }
 
         const geometry = new THREE.BufferGeometry();
@@ -43,6 +57,51 @@ export class BlockOutline {
 
         this.outline = new THREE.LineSegments(geometry, this.material);
         this.scene.add(this.outline);
+
+        if (normal) {
+            this.highlightFace(x, y, z, normal);
+        }
+    }
+
+    highlightFace(x, y, z, normal) {
+        const faceGeometry = new THREE.PlaneGeometry(0.98, 0.98);
+
+        const faceVertices = {
+            '[1,0,0]': {
+                pos: [x + 1.01, y + 0.01, z + 0.01],
+                rot: [0, Math.PI / 2, 0]
+            },
+            '[-1,0,0]': {
+                pos: [x - 0.01, y + 0.01, z + 0.01],
+                rot: [0, -Math.PI / 2, 0]
+            },
+            '[0,1,0]': {
+                pos: [x + 0.01, y + 1.01, z + 0.01],
+                rot: [Math.PI / 2, 0, 0]
+            },
+            '[0,-1,0]': {
+                pos: [x + 0.01, y - 0.01, z + 0.01],
+                rot: [-Math.PI / 2, 0, 0]
+            },
+            '[0,0,1]': {
+                pos: [x + 0.01, y + 0.01, z + 1.01],
+                rot: [0, 0, 0]
+            },
+            '[0,0,-1]': {
+                pos: [x + 0.01, y + 0.01, z - 0.01],
+                rot: [0, Math.PI, 0]
+            }
+        };
+
+        const key = `[${normal.x},${normal.y},${normal.z}]`;
+        if (faceVertices[key]) {
+            const face = faceVertices[key];
+            this.faceHighlight = new THREE.Mesh(faceGeometry, this.faceMaterial);
+            this.faceHighlight.position.set(...face.pos);
+            this.faceHighlight.rotation.order = 'YXZ';
+            this.faceHighlight.rotation.set(...face.rot);
+            this.scene.add(this.faceHighlight);
+        }
     }
 
     clear() {
@@ -50,11 +109,15 @@ export class BlockOutline {
             this.scene.remove(this.outline);
             this.outline = null;
         }
+        if (this.faceHighlight) {
+            this.scene.remove(this.faceHighlight);
+            this.faceHighlight = null;
+        }
     }
 
     update(raycastHit) {
         if (raycastHit && raycastHit.block !== 0) {
-            this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z);
+            this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z, raycastHit.normal);
         } else {
             this.clear();
         }
