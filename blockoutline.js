@@ -2,6 +2,9 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.lastX = null;
+        this.lastY = null;
+        this.lastZ = null;
         this.createOutlineMaterial();
     }
 
@@ -15,9 +18,17 @@ export class BlockOutline {
     }
 
     setSelectedBlock(x, y, z) {
+        if (this.lastX === x && this.lastY === y && this.lastZ === z) {
+            return;
+        }
+
         if (this.outline) {
             this.scene.remove(this.outline);
         }
+
+        this.lastX = x;
+        this.lastY = y;
+        this.lastZ = z;
 
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
@@ -49,6 +60,9 @@ export class BlockOutline {
         if (this.outline) {
             this.scene.remove(this.outline);
             this.outline = null;
+            this.lastX = null;
+            this.lastY = null;
+            this.lastZ = null;
         }
     }
 
