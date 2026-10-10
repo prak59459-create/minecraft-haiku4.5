@@ -36,6 +36,8 @@ class MinecraftGame {
         this.lastFrameTime = Date.now();
         this.chunkUpdateQueue = [];
         this.maxChunkUpdatesPerFrame = 2;
+        this.frameTimings = [];
+        this.maxFrameTimingsHistory = 300;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -226,10 +228,11 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.6;
+                    const heightLight = Math.min(0.4, (wy / WORLD_HEIGHT) * 0.5);
+                    const skyLight = Math.max(0, Math.sin((wy - 62) * 0.01) * 0.15);
+                    const varLight = Math.sin(wx * 0.3 + wz * 0.3) * 0.08;
+                    const brightness = Math.max(0.4, baseLight + heightLight + skyLight + varLight);
 
                     color.multiplyScalar(brightness);
 
