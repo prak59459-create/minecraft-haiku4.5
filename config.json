@@ -1,6 +1,6 @@
 {
   "world": {
-    "renderDistance": 8,
+    "renderDistance": 10,
     "seedOffset": 0,
     "waterLevel": 62,
     "bedrockLevel": 0
@@ -18,20 +18,21 @@
   },
   "raycast": {
     "distance": 6,
-    "stepSize": 0.05
+    "stepSize": 0.1
   },
   "graphics": {
     "renderScale": 1.0,
     "shadowMapSize": 2048,
-    "particleLimit": 2000,
-    "fpsTarget": 60
+    "particleLimit": 3000,
+    "fpsTarget": 60,
+    "enableVsync": true
   },
   "terrain": {
     "chunkSize": 16,
-    "maxHeight": 160,
-    "minHeight": 20,
+    "maxHeight": 150,
+    "minHeight": 25,
     "seaLevel": 62,
-    "treeFrequency": 0.5
+    "treeFrequency": 0.4
   },
   "audio": {
     "enabled": true,
