@@ -1,5 +1,110 @@
 # Minecraft Clone - Improvements and Optimizations
 
+## Latest Updates (Session 3 - Comprehensive Optimization & Enhancement)
+
+### Performance Enhancements
+1. **Raycasting Optimization**
+   - Adaptive stepping with block caching
+   - Reduced raycasting iterations (0.1 step vs 0.05)
+   - Better performance on high render distances
+
+2. **Particle System Overhaul**
+   - Implemented object pooling to reduce garbage collection
+   - Added particle limit cap (2000 max particles)
+   - Improved particle velocity damping
+   - Better visual quality with faster particles
+
+3. **Memory Management**
+   - Maximum chunk limit (256 chunks) to prevent OOM
+   - Better chunk cleanup for distant chunks
+   - Improved chunk iteration order for cache locality
+
+4. **Mesh Building Optimization**
+   - Reordered iteration loops (x-z outer, y inner) for better cache usage
+   - Per-face brightness shading implementation
+   - Reduced draw call count through better mesh organization
+
+### Terrain Generation Improvements
+1. **Enhanced Perlin Noise**
+   - Improved multi-octave noise scales (0.002, 0.01, 0.05, 0.1, 0.2)
+   - Better terrain height variation (more dramatic changes)
+   - Finer detail generation
+
+2. **Ore Distribution**
+   - Depth-aware ore generation
+   - Added Obsidian generation in deep caves (y < 20)
+   - Improved probability curves for realistic distribution
+   - Better ore balancing
+
+3. **Biome System**
+   - Added Gravel biome
+   - Better moisture/temperature detection
+   - Improved terrain type distribution
+
+4. **Tree Generation**
+   - Larger trees (5-11 blocks tall)
+   - Better foliage distribution with larger crowns
+   - Hash-based seeding for consistent placement
+   - More natural tree shapes
+
+### Player Control Improvements
+1. **Camera System**
+   - Smooth interpolation for better feel
+   - Target rotation tracking
+   - Improved responsiveness
+
+2. **Physics & Collision**
+   - Terminal velocity implementation (max fall speed)
+   - Better ground detection with improved accuracy
+   - Step-up handling for stairs
+   - More responsive collision feedback
+
+3. **Audio Improvements**
+   - Footstep sounds when moving on ground
+   - Throttled sound playback (400ms minimum between steps)
+   - Better sound feedback for all actions
+
+### Visual Enhancements
+1. **Block Rendering**
+   - Per-face brightness shading (top: 1.0, sides: 0.85-0.9, bottom: 0.6-0.7)
+   - Better block colors for visual distinction
+   - Improved lighting calculations
+
+2. **Water System**
+   - Updated water mesh rendering with better iteration
+   - Per-face brightness shading for water
+   - Improved transparency (0.6 opacity)
+   - Better water color (0x4488DD)
+
+3. **User Interface**
+   - Expandable inventory system using block ID array
+   - Better block selection with proper mapping
+   - Scroll wheel inventory navigation with pointer lock check
+   - Improved visual feedback
+
+### Code Quality
+1. **Structure & Organization**
+   - Better separation of concerns (UI/Game logic)
+   - Simplified terrain type selection
+   - Improved collision checking organization
+   - Better variable naming
+
+2. **Documentation**
+   - Updated README with all features
+   - Comprehensive IMPROVEMENTS.md
+   - Clear commit messages with detailed changelogs
+
+### New Block Types
+- Obsidian (0x2A2A3A)
+- Lava (0xFF6B1A)
+
+### Performance Metrics (Estimated)
+- FPS: 60+ on modern hardware
+- Memory: ~150-300 MB with optimizations
+- Max chunks: 256 (configurable)
+- Particle limit: 2000 (configurable)
+- Render distance: 8 chunks default (configurable)
+
 ## Latest Updates (Session 2)
 
 ### Core Improvements
