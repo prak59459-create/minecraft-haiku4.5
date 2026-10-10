@@ -2,6 +2,8 @@ export class ParticleSystem {
     constructor(scene) {
         this.scene = scene;
         this.particles = [];
+        this.ambientParticles = [];
+
         this.geometry = new THREE.BufferGeometry();
         this.material = new THREE.PointsMaterial({
             size: 0.2,
@@ -11,6 +13,36 @@ export class ParticleSystem {
         });
         this.points = new THREE.Points(this.geometry, this.material);
         this.scene.add(this.points);
+
+        this.ambientGeometry = new THREE.BufferGeometry();
+        this.ambientMaterial = new THREE.PointsMaterial({
+            size: 0.1,
+            sizeAttenuation: true,
+            transparent: true,
+            opacity: 0.3,
+            color: 0xCCCCCC
+        });
+        this.ambientPoints = new THREE.Points(this.ambientGeometry, this.ambientMaterial);
+        this.scene.add(this.ambientPoints);
+
+        this.initAmbientParticles();
+    }
+
+    initAmbientParticles() {
+        for (let i = 0; i < 100; i++) {
+            this.ambientParticles.push({
+                position: {
+                    x: Math.random() * 200 - 100,
+                    y: Math.random() * 200 - 100,
+                    z: Math.random() * 200 - 100
+                },
+                velocity: {
+                    x: (Math.random() - 0.5) * 0.01,
+                    y: (Math.random() - 0.5) * 0.005,
+                    z: (Math.random() - 0.5) * 0.01
+                }
+            });
+        }
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
@@ -48,7 +80,19 @@ export class ParticleSystem {
             }
         }
 
+        for (let i = 0; i < this.ambientParticles.length; i++) {
+            const p = this.ambientParticles[i];
+            p.position.x += p.velocity.x;
+            p.position.y += p.velocity.y;
+            p.position.z += p.velocity.z;
+
+            if (Math.abs(p.position.x) > 100) p.velocity.x *= -1;
+            if (Math.abs(p.position.y) > 100) p.velocity.y *= -0.5;
+            if (Math.abs(p.position.z) > 100) p.velocity.z *= -1;
+        }
+
         this.updateGeometry();
+        this.updateAmbientGeometry();
     }
 
     updateGeometry() {
@@ -77,5 +121,23 @@ export class ParticleSystem {
         this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         this.material.opacity = 0.8;
+    }
+
+    updateAmbientGeometry() {
+        if (this.ambientParticles.length === 0) {
+            this.ambientGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([]), 3));
+            return;
+        }
+
+        const positions = new Float32Array(this.ambientParticles.length * 3);
+
+        for (let i = 0; i < this.ambientParticles.length; i++) {
+            const p = this.ambientParticles[i];
+            positions[i * 3] = p.position.x;
+            positions[i * 3 + 1] = p.position.y;
+            positions[i * 3 + 2] = p.position.z;
+        }
+
+        this.ambientGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     }
 }

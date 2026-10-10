@@ -2,15 +2,24 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
-        this.createOutlineMaterial();
+        this.createOutlineMaterials();
     }
 
-    createOutlineMaterial() {
+    createOutlineMaterials() {
         this.material = new THREE.LineBasicMaterial({
             color: 0xFFFFFF,
             linewidth: 2,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.8,
+            fog: false
+        });
+
+        this.highlightMaterial = new THREE.LineBasicMaterial({
+            color: 0xFFFF00,
+            linewidth: 2,
+            transparent: true,
+            opacity: 1,
+            fog: false
         });
     }
 
@@ -19,12 +28,19 @@ export class BlockOutline {
             this.scene.remove(this.outline);
         }
 
+        const offset = 0.01;
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
 
         const positions = [
-            [x, y, z], [x + 1, y, z], [x + 1, y + 1, z], [x, y + 1, z],
-            [x, y, z + 1], [x + 1, y, z + 1], [x + 1, y + 1, z + 1], [x, y + 1, z + 1]
+            [x - offset, y - offset, z - offset],
+            [x + 1 + offset, y - offset, z - offset],
+            [x + 1 + offset, y + 1 + offset, z - offset],
+            [x - offset, y + 1 + offset, z - offset],
+            [x - offset, y - offset, z + 1 + offset],
+            [x + 1 + offset, y - offset, z + 1 + offset],
+            [x + 1 + offset, y + 1 + offset, z + 1 + offset],
+            [x - offset, y + 1 + offset, z + 1 + offset]
         ];
 
         const edges = [
@@ -41,7 +57,8 @@ export class BlockOutline {
 
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
 
-        this.outline = new THREE.LineSegments(geometry, this.material);
+        this.outline = new THREE.LineSegments(geometry, this.highlightMaterial);
+        this.outline.renderOrder = 999;
         this.scene.add(this.outline);
     }
 

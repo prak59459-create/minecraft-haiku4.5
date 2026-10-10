@@ -236,10 +236,17 @@ class MinecraftGame {
 
                     if (!color) {
                         color = new THREE.Color(BLOCK_COLORS[blockId]);
-                        const baseLight = 0.7;
-                        const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                        const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                        const brightness = baseLight + heightLight + varLight;
+
+                        const baseLight = 0.6;
+                        const heightLight = Math.max(0, (wy - 50) / 150) * 0.4;
+                        const varLight = Math.sin(wx * 0.3 + wz * 0.3 + wy * 0.05) * 0.15;
+
+                        let typeLight = 0.1;
+                        if (blockId === BLOCKS.GRASS) typeLight = 0.2;
+                        if (blockId === BLOCKS.SAND || blockId === BLOCKS.CLAY) typeLight = 0.15;
+                        if (blockId === BLOCKS.SNOW || blockId === BLOCKS.ICE) typeLight = 0.25;
+
+                        const brightness = Math.max(0.3, baseLight + heightLight + varLight + typeLight);
                         color.multiplyScalar(brightness);
                         colorCache.set(cacheKey, color);
                     }
