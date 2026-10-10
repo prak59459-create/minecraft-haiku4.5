@@ -59,11 +59,18 @@ class MinecraftGame {
         this.directionalLight.shadow.camera.top = 256;
         this.directionalLight.shadow.camera.bottom = -256;
         this.scene.add(this.directionalLight);
+
+        this.scene.fog = new THREE.Fog(0x87CEEB, 50, 500);
     }
 
     setupEventListeners() {
         window.addEventListener('resize', () => this.onWindowResize());
         document.addEventListener('mousedown', (e) => this.onMouseClick(e));
+        document.addEventListener('contextmenu', (e) => {
+            if (document.pointerLockElement === document.body) {
+                e.preventDefault();
+            }
+        });
     }
 
     setupPickBlock() {
@@ -82,7 +89,18 @@ class MinecraftGame {
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
+            if (e.key === 'r' || e.key === 'R') {
+                if (e.ctrlKey) {
+                    this.resetGame();
+                }
+            }
         });
+    }
+
+    resetGame() {
+        this.player.position = { x: 0, y: 100, z: 0 };
+        this.player.velocity = { x: 0, y: 0, z: 0 };
+        localStorage.removeItem('minecraftGameState');
     }
 
     onMouseClick(event) {
@@ -195,6 +213,7 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
+        const colorCache = {};
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let z = 0; z < CHUNK_SIZE; z++) {
@@ -206,13 +225,17 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const color = new THREE.Color(BLOCK_COLORS[blockId]);
-
-                    const baseLight = 0.65;
-                    const heightLight = Math.max(0, (wy - 40) / 120) * 0.25;
-                    const brightness = baseLight + heightLight;
-
-                    color.multiplyScalar(brightness);
+                    let color;
+                    if (!colorCache[blockId]) {
+                        color = new THREE.Color(BLOCK_COLORS[blockId]);
+                        const baseLight = 0.65;
+                        const heightLight = Math.max(0, (wy - 40) / 120) * 0.25;
+                        const brightness = baseLight + heightLight;
+                        color.multiplyScalar(brightness);
+                        colorCache[blockId] = color;
+                    } else {
+                        color = colorCache[blockId].clone();
+                    }
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
                 }
