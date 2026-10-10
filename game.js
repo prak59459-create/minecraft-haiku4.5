@@ -127,18 +127,19 @@ class MinecraftGame {
 
     raycastBlock() {
         const eyePos = this.player.getEyePosition();
-        const direction = new THREE.Vector3(
-            Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
-            Math.sin(this.gameCamera.rotation.x),
-            Math.cos(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x)
-        );
+        const dirX = Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x);
+        const dirY = Math.sin(this.gameCamera.rotation.x);
+        const dirZ = Math.cos(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x);
 
         let hit = null;
+        let prevBx = Math.floor(eyePos.x);
+        let prevBy = Math.floor(eyePos.y);
+        let prevBz = Math.floor(eyePos.z);
 
         for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
-            const x = eyePos.x + direction.x * dist;
-            const y = eyePos.y + direction.y * dist;
-            const z = eyePos.z + direction.z * dist;
+            const x = eyePos.x + dirX * dist;
+            const y = eyePos.y + dirY * dist;
+            const z = eyePos.z + dirZ * dist;
 
             const bx = Math.floor(x);
             const by = Math.floor(y);
@@ -146,15 +147,6 @@ class MinecraftGame {
 
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
-                const prevX = eyePos.x + direction.x * prevDist;
-                const prevY = eyePos.y + direction.y * prevDist;
-                const prevZ = eyePos.z + direction.z * prevDist;
-
-                const prevBx = Math.floor(prevX);
-                const prevBy = Math.floor(prevY);
-                const prevBz = Math.floor(prevZ);
-
                 let normal = { x: 0, y: 0, z: 0 };
                 if (prevBx !== bx) normal.x = prevBx < bx ? -1 : 1;
                 else if (prevBy !== by) normal.y = prevBy < by ? -1 : 1;
@@ -163,6 +155,9 @@ class MinecraftGame {
                 hit = { x: bx, y: by, z: bz, block, normal, dist };
                 break;
             }
+            prevBx = bx;
+            prevBy = by;
+            prevBz = bz;
         }
 
         if (!hit) {
@@ -195,6 +190,14 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
+        const FACES = [
+            { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
+            { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
+            { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]] },
+            { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]] },
+            { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
+            { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
+        ];
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -206,16 +209,30 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const color = new THREE.Color(BLOCK_COLORS[blockId]);
-
+                    const baseColor = BLOCK_COLORS[blockId];
                     const baseLight = 0.7;
                     const heightLight = (wy / WORLD_HEIGHT) * 0.3;
                     const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
                     const brightness = baseLight + heightLight + varLight;
 
-                    color.multiplyScalar(brightness);
+                    const r = Math.round(((baseColor >> 16) & 255) * brightness);
+                    const g = Math.round(((baseColor >> 8) & 255) * brightness);
+                    const b = Math.round((baseColor & 255) * brightness);
 
-                    this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
+                    for (const face of FACES) {
+                        const [dx, dy, dz] = face.dir;
+                        const neighbor = this.world.getBlock(wx + dx, wy + dy, wz + dz);
+                        if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+
+                        const startIndex = vertices.length / 3;
+                        for (const [vx, vy, vz] of face.verts) {
+                            vertices.push(wx + vx, wy + vy, wz + vz);
+                            colors.push(r, g, b);
+                        }
+
+                        indices.push(startIndex, startIndex + 1, startIndex + 2);
+                        indices.push(startIndex, startIndex + 2, startIndex + 3);
+                    }
                 }
             }
         }
@@ -243,45 +260,6 @@ class MinecraftGame {
         }
 
         return null;
-    }
-
-    addBlockFaces(vertices, colors, indices, x, y, z, blockId, color, chunk) {
-        let faceCount = 0;
-
-        const faces = [
-            { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
-            { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
-            { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]] },
-            { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]] },
-            { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
-            { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
-        ];
-
-        const r = Math.floor(color.r * 255);
-        const g = Math.floor(color.g * 255);
-        const b = Math.floor(color.b * 255);
-
-        for (const face of faces) {
-            const [dx, dy, dz] = face.dir;
-            const nx = x + dx;
-            const ny = y + dy;
-            const nz = z + dz;
-
-            const neighbor = this.world.getBlock(nx, ny, nz);
-            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
-
-            const startIndex = vertices.length / 3;
-            for (const [vx, vy, vz] of face.verts) {
-                vertices.push(x + vx, y + vy, z + vz);
-                colors.push(r, g, b);
-            }
-
-            indices.push(startIndex, startIndex + 1, startIndex + 2);
-            indices.push(startIndex, startIndex + 2, startIndex + 3);
-            faceCount++;
-        }
-
-        return faceCount > 0;
     }
 
     updateVisibleChunks() {

@@ -83,6 +83,15 @@ export class Player {
     checkCollisions() {
         const radius = PLAYER_WIDTH / 2;
         const height = PLAYER_HEIGHT;
+        const angleStep = Math.PI / 8;
+        const cosSteps = [];
+        const sinSteps = [];
+
+        for (let i = 0; i < 16; i++) {
+            const angle = i * angleStep;
+            cosSteps.push(Math.cos(angle));
+            sinSteps.push(Math.sin(angle));
+        }
 
         this.isOnGround = false;
 
@@ -94,14 +103,13 @@ export class Player {
         ];
 
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
-                const cx = this.position.x + Math.cos(angle) * point.radius;
+            for (let i = 0; i < 16; i++) {
+                const cx = this.position.x + cosSteps[i] * point.radius;
                 const cy = this.position.y + point.dy;
-                const cz = this.position.z + Math.sin(angle) * point.radius;
+                const cz = this.position.z + sinSteps[i] * point.radius;
 
-                const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
-                if (isBlockSolid(block)) {
-                    const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+                if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
+                    const moveLen = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.z * this.velocity.z);
                     if (moveLen > 0) {
                         const scale = 1.5 / moveLen;
                         this.position.x -= this.velocity.x * scale;
@@ -114,7 +122,8 @@ export class Player {
 
         if (this.velocity.y < 0) {
             let onGround = false;
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+            const angleStep2 = Math.PI / 6;
+            for (let angle = 0; angle < Math.PI * 2; angle += angleStep2) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.8;
                 const cy = this.position.y - 0.01;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.8;

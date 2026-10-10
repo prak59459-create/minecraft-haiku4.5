@@ -16,7 +16,10 @@ export class WaterRenderer {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x4A90E2);
+        const waterBase = 0x4A90E2;
+        const waterR = ((waterBase >> 16) & 255) / 255;
+        const waterG = ((waterBase >> 8) & 255) / 255;
+        const waterB = (waterBase & 255) / 255;
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -27,10 +30,6 @@ export class WaterRenderer {
                     const wx = chunk.x * CHUNK_SIZE + x;
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
-
-                    const neighbor = (dx, dy, dz) => {
-                        return this.world.getBlock(wx + dx, wy + dy, wz + dz);
-                    };
 
                     const faces = [
                         { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
@@ -43,16 +42,19 @@ export class WaterRenderer {
 
                     for (const face of faces) {
                         const [dx, dy, dz] = face.dir;
-                        const neighborBlock = neighbor(dx, dy, dz);
+                        const neighborBlock = this.world.getBlock(wx + dx, wy + dy, wz + dz);
 
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const brightness = 0.8 + Math.random() * 0.2;
+                        const r = Math.round(waterR * brightness * 255);
+                        const g = Math.round(waterG * brightness * 255);
+                        const b = Math.round(waterB * brightness * 255);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
+                            colors.push(r, g, b);
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
