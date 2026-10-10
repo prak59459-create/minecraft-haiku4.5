@@ -80,7 +80,9 @@ export class DebugDisplay {
         this.stats.drawCalls = game.chunkMeshes.size;
 
         if (performance.memory) {
-            this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
+            const used = performance.memory.usedJSHeapSize / 1048576;
+            const limit = performance.memory.jsHeapSizeLimit / 1048576;
+            this.stats.memory = `${used.toFixed(1)}/${limit.toFixed(0)}`;
         }
 
         this.render();

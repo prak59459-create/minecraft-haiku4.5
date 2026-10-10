@@ -6,6 +6,7 @@ export class UI {
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.fpsFrames = [];
         this.setupInventoryUI();
     }
 
@@ -45,13 +46,18 @@ export class UI {
         this.selectedBlock = index;
     }
 
-    updateHUD(playerPos, selectedBlock, fps) {
+    updateHUD(playerPos, selectedBlock, fps, isSprinting = false) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
 
-        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
+        const speedIndicator = isSprinting ? '🏃' : '🚶';
+        coordsEl.textContent = `${speedIndicator} X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
+
+        const fpsColor = fps > 50 ? '#00FF00' : fps > 30 ? '#FFFF00' : '#FF0000';
         fpsEl.textContent = `FPS: ${fps}`;
+        fpsEl.style.color = fpsColor;
+
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
     }
 
@@ -61,7 +67,15 @@ export class UI {
         this.lastTime = now;
 
         if (delta > 0) {
-            this.fpsCounter = Math.round(1000 / delta);
+            const currentFps = Math.round(1000 / delta);
+            this.fpsFrames.push(currentFps);
+
+            if (this.fpsFrames.length > 30) {
+                this.fpsFrames.shift();
+            }
+
+            const avgFps = Math.round(this.fpsFrames.reduce((a, b) => a + b, 0) / this.fpsFrames.length);
+            this.fpsCounter = avgFps;
         }
 
         return this.fpsCounter;
