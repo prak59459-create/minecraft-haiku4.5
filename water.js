@@ -85,5 +85,30 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+
+        if (this.waterMeshes.size > 0) {
+            const waveAmount = Math.sin(this.time * 2) * 0.02;
+            for (const mesh of this.waterMeshes.values()) {
+                if (mesh.material.opacity > 0.5) {
+                    mesh.material.opacity = 0.5 + Math.sin(this.time * 3) * 0.1;
+                }
+            }
+        }
+    }
+
+    addWaterChunk(chunkKey, chunk) {
+        if (this.waterMeshes.has(chunkKey)) return;
+        const mesh = this.buildWaterMesh(chunk);
+        if (mesh) {
+            this.scene.add(mesh);
+            this.waterMeshes.set(chunkKey, mesh);
+        }
+    }
+
+    removeWaterChunk(chunkKey) {
+        if (this.waterMeshes.has(chunkKey)) {
+            this.scene.remove(this.waterMeshes.get(chunkKey));
+            this.waterMeshes.delete(chunkKey);
+        }
     }
 }

@@ -6,6 +6,7 @@ export class UI {
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.blockSelectionCallback = null;
         this.setupInventoryUI();
     }
 
@@ -43,6 +44,15 @@ export class UI {
         slots[index].classList.add('selected');
 
         this.selectedBlock = index;
+
+        if (this.blockSelectionCallback) {
+            const blockId = parseInt(slots[index].dataset.block);
+            this.blockSelectionCallback(blockId);
+        }
+    }
+
+    setBlockSelectionCallback(callback) {
+        this.blockSelectionCallback = callback;
     }
 
     updateHUD(playerPos, selectedBlock, fps) {
