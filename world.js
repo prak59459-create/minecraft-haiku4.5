@@ -12,6 +12,36 @@ export function initPerlinNoise() {
     }
 }
 
+function generateCaves(chunk) {
+    if (!perlinNoise) return;
+
+    const CHUNK_SIZE = 16;
+    const WORLD_HEIGHT = 256;
+    const worldX = chunk.x * CHUNK_SIZE;
+    const worldZ = chunk.z * CHUNK_SIZE;
+
+    for (let x = 0; x < CHUNK_SIZE; x++) {
+        for (let z = 0; z < CHUNK_SIZE; z++) {
+            for (let y = 10; y < 80; y++) {
+                const wx = worldX + x;
+                const wy = y;
+                const wz = worldZ + z;
+
+                const caveNoise1 = perlinNoise.noise2D(wx * 0.08, wy * 0.1 + wz * 0.08);
+                const caveNoise2 = perlinNoise.noise2D(wx * 0.04, wy * 0.05 + wz * 0.04);
+                const caveValue = Math.abs(caveNoise1 * caveNoise2);
+
+                if (caveValue < 0.15) {
+                    const block = chunk.getBlock(x, y, z);
+                    if (block !== BLOCKS.WATER && block !== BLOCKS.BEDROCK) {
+                        chunk.setBlock(x, y, z, BLOCKS.AIR);
+                    }
+                }
+            }
+        }
+    }
+}
+
 export class Chunk {
     constructor(x, z) {
         this.x = x;
@@ -43,7 +73,7 @@ export class Chunk {
                 const wz = worldZ + z;
 
                 let height = getTerrainHeight(wx, wz);
-                let terrainType = getTerrainType(wx, wz);
+                let terrainType = getTerrainType(wx, wz, height);
 
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
                     if (y === 0) {
@@ -54,11 +84,19 @@ export class Chunk {
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
+                        } else if (terrainType === 'desert') {
+                            this.setBlock(x, y, z, BLOCKS.SAND);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
                     } else if (y < height) {
                         if (terrainType === 'sand') {
+                            this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.SNOW);
+                        } else if (terrainType === 'desert') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
                         } else if (terrainType === 'grass') {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
@@ -66,16 +104,21 @@ export class Chunk {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
                     } else if (y < 62) {
-                        this.setBlock(x, y, z, BLOCKS.WATER);
+                        if (terrainType === 'snow' && y > 58) {
+                            this.setBlock(x, y, z, BLOCKS.ICE);
+                        } else {
+                            this.setBlock(x, y, z, BLOCKS.WATER);
+                        }
                     }
                 }
 
-                if (height > 65) {
+                if ((terrainType === 'grass' || terrainType === 'forest') && height > 65) {
                     generateTree(this, x, z, height);
                 }
             }
         }
 
+        generateCaves(this);
         this.generated = true;
     }
 }
@@ -92,11 +135,22 @@ function getTerrainHeight(x, z) {
     return Math.max(20, Math.min(160, Math.floor(height)));
 }
 
-function getTerrainType(x, z) {
+function getTerrainType(x, z, height) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const moisture = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
+    if (height > 100) {
+        return 'snow';
+    } else if (temp < -0.2) {
+        return 'desert';
+    } else if (moisture > 0.3 && temp > 0.1) {
+        return 'forest';
+    } else if (temp < 0) {
+        return 'sand';
+    }
+
     return 'grass';
 }
 
