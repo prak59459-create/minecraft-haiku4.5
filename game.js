@@ -386,6 +386,8 @@ class MinecraftGame {
         const width = window.innerWidth;
         const height = window.innerHeight;
 
+        if (width === 0 || height === 0) return;
+
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(width, height);
