@@ -62,14 +62,17 @@ export class DebugDisplay {
 
         let vertices = 0;
         let triangles = 0;
+        let geometryMemory = 0;
         for (const mesh of game.chunkMeshes.values()) {
             if (mesh && mesh.geometry) {
                 const positions = mesh.geometry.getAttribute('position');
                 if (positions) {
                     vertices += positions.count;
+                    geometryMemory += positions.array.byteLength / 1024;
                     const index = mesh.geometry.getIndex();
                     if (index) {
                         triangles += index.count / 3;
+                        geometryMemory += index.array.byteLength / 1024;
                     }
                 }
             }
@@ -97,15 +100,24 @@ export class DebugDisplay {
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3: Toggle Debug',
+            'H: Show Help'
         ];
 
         this.container.innerHTML = lines.map(line => {
             if (line.startsWith('=')) return `<div>${line}</div>`;
             const parts = line.split(': ');
             if (parts.length === 2) {
-                return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
+                const value = parts[1];
+                let valueColor = '#FFFF00';
+                if (parts[0].includes('FPS')) {
+                    const fps = parseInt(value);
+                    if (fps >= 55) valueColor = '#00FF00';
+                    else if (fps >= 40) valueColor = '#FFFF00';
+                    else if (fps >= 25) valueColor = '#FF9900';
+                    else valueColor = '#FF0000';
+                }
+                return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: ${valueColor};">${value}</span></div>`;
             }
             return `<div>${line}</div>`;
         }).join('');

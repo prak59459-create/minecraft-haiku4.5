@@ -13,9 +13,15 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
+            powerPreference: 'high-performance'
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -32,13 +38,34 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.stats = {
+            totalBlocksDestroyed: 0,
+            totalBlocksPlaced: 0,
+            sessionTime: 0
+        };
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
+        this.spawnPlayer();
         this.animate();
+    }
+
+    spawnPlayer() {
+        let x = 0;
+        let z = 0;
+        let y = 100;
+
+        for (let i = 0; i < 10; i++) {
+            const height = this.world.getBlock(x, y, z);
+            if (height > 0) {
+                this.player.position.y = y + 2;
+                break;
+            }
+            y--;
+        }
     }
 
     setupLighting() {
@@ -96,6 +123,7 @@ class MinecraftGame {
         if (event.button === 0) {
             this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
             this.updateChunkMesh(hit.x, hit.y, hit.z);
+            this.stats.totalBlocksDestroyed++;
 
             const color = BLOCK_COLORS[hit.block] || 0x808080;
             this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
@@ -114,6 +142,7 @@ class MinecraftGame {
             if (!this.isPlayerOccupying(nx, ny, nz)) {
                 this.world.setBlock(nx, ny, nz, this.selectedBlockType);
                 this.updateChunkMesh(nx, ny, nz);
+                this.stats.totalBlocksPlaced++;
                 this.audioManager.playBlockSound('place');
             }
         }

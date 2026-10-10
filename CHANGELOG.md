@@ -1,5 +1,47 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Performance Optimization & Feature Enhancement (Session 3 Complete)
+
+### Performance Improvements
+- **Particle System**: Implemented object pooling with pre-allocated particle arrays to reduce garbage collection
+- **Mesh Generation**: Added color caching to avoid redundant color calculations during chunk mesh building
+- **Raycasting**: Optimized block selection with larger step distance and smart block tracking
+- **Chunk Loading**: Implemented circular render distance culling for better level-of-detail management
+- **Lighting**: Reduced shadow map resolution for better performance (2048 → 1024)
+- **Block Outline**: Added caching to prevent unnecessary geometry updates when looking at the same block
+
+### New Features & Content
+- **6 New Block Types**:
+  - Glass (transparent, decorative)
+  - Obsidian (deep dark blocks)
+  - Birch Log & Birch Leaves (new tree type)
+  - Spruce Log (new tree type)
+  - Mossy Cobblestone (variant block)
+- **Multiple Tree Types**: Oak, Birch, and Spruce trees with varied heights and foliage
+- **Cave System**: Perlin noise-based cave generation for more interesting terrain
+- **Enhanced Water**: Better visual quality with proper double-sided rendering and improved colors
+- **Audio Improvements**: Master volume control and better sound effect randomization
+
+### Visual Enhancements
+- **Day/Night Cycle**: Smooth color transitions with dynamic sun positioning
+- **FPS Indicator**: Color-coded FPS display (green ≥55, yellow ≥40, orange ≥25, red <25)
+- **Better Lighting**: Improved ambient light distribution and shadow quality
+- **Terrain Variety**: Better Perlin noise octaves for more natural and varied terrain
+
+### Code Quality & Optimization
+- Proper geometry disposal in block outline to prevent memory leaks
+- Better audio context error handling with initialization checks
+- Improved collision detection with block tracking to reduce redundant lookups
+- Better inventory wheel handling with pointer lock state verification
+- Color caching in mesh generation to reduce computational overhead
+
+### Technical Details
+- Particle pool size: 500 pre-allocated objects
+- Max particles: 2000 total
+- Circular render distance: 10 chunk radius
+- Shadow map: 1024x1024 (optimized from 2048x2048)
+- Color cache: Per-block-type per-height level
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features
