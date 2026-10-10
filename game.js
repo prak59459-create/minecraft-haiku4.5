@@ -229,9 +229,10 @@ class MinecraftGame {
                     const g = (colorVal >> 8) & 255;
                     const b = colorVal & 255;
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const brightness = Math.min(1, baseLight + heightLight);
+                    const baseLight = 0.65;
+                    const heightLight = (wy / WORLD_HEIGHT) * 0.2;
+                    const varLight = (Math.sin(wx * 0.3) + Math.sin(wz * 0.3)) * 0.05;
+                    const brightness = Math.min(1, baseLight + heightLight + varLight);
 
                     const br = Math.floor(r * brightness);
                     const bg = Math.floor(g * brightness);
@@ -254,7 +255,8 @@ class MinecraftGame {
                 wireframe: false,
                 flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 0
+                shininess: 10,
+                emissive: 0x000000
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = false;

@@ -65,9 +65,11 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.7,
-                side: THREE.FrontSide,
-                shininess: 100
+                opacity: 0.75,
+                side: THREE.DoubleSide,
+                shininess: 120,
+                emissive: 0x1a4d7a,
+                emissiveIntensity: 0.1
             });
 
             const mesh = new THREE.Mesh(geometry, material);
