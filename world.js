@@ -118,18 +118,20 @@ function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
     const caveNoise = getCaveNoise(x, y, z);
-    if (caveNoise < 0.35) return BLOCKS.AIR;
+    if (caveNoise < 0.33) return BLOCKS.AIR;
 
     let ore = BLOCKS.STONE;
-    const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
-    const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
-    const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
-    const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
+    const coalChance = perlinNoise.noise2D(x * 0.12 + y * 0.06, z * 0.12 + y * 0.06);
+    const ironChance = perlinNoise.noise2D(x * 0.1 + y * 0.04, z * 0.1 + y * 0.04);
+    const goldChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
+    const diamondChance = perlinNoise.noise2D(x * 0.05 + y * 0.02, z * 0.05 + y * 0.02);
+    const clayChance = perlinNoise.noise2D(x * 0.07 + y * 0.02, z * 0.07 + y * 0.02);
 
-    if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
-    if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
-    if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
-    if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    if (y < 180 && coalChance > 0.48) ore = BLOCKS.COAL_ORE;
+    if (y < 128 && ironChance > 0.58) ore = BLOCKS.IRON_ORE;
+    if (y < 96 && goldChance > 0.68) ore = BLOCKS.GOLD_ORE;
+    if (y < 48 && diamondChance > 0.72) ore = BLOCKS.DIAMOND_ORE;
+    if (y < 64 && y > 40 && clayChance > 0.65) ore = BLOCKS.CLAY;
 
     return ore;
 }
@@ -137,12 +139,18 @@ function getOreBlock(x, y, z) {
 function getCaveNoise(x, y, z) {
     if (!perlinNoise) return 1;
 
-    const cave1 = perlinNoise.noise2D(x * 0.05, z * 0.05) + perlinNoise.noise2D(x * 0.1, z * 0.1) * 0.5;
-    const cave2 = perlinNoise.noise2D(x * 0.03 + y * 0.02, z * 0.03 + y * 0.02);
-    const cave3 = perlinNoise.noise2D(x * 0.02 + y * 0.03, z * 0.02 + y * 0.03);
+    const largeScale = perlinNoise.noise2D(x * 0.04, z * 0.04);
+    const mediumScale = perlinNoise.noise2D(x * 0.08 + y * 0.02, z * 0.08 + y * 0.02);
+    const smallScale = perlinNoise.noise2D(x * 0.15 + y * 0.05, z * 0.15 + y * 0.05);
+    const verticalWave = Math.sin(y * 0.05) * 0.2 + Math.sin(x * 0.02) * 0.1 + Math.sin(z * 0.02) * 0.1;
 
-    const caveNoise = (cave1 + cave2 + cave3) / 3;
-    return caveNoise;
+    let caveSystem = (largeScale * 0.4 + mediumScale * 0.3 + smallScale * 0.2 + verticalWave * 0.1);
+
+    if (y < 30) {
+        caveSystem *= 0.7;
+    }
+
+    return caveSystem;
 }
 
 function generateTree(chunk, x, z, height) {
