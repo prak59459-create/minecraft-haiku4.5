@@ -2,11 +2,11 @@ import { BLOCKS, isBlockSolid } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
-const PLAYER_SPEED = 0.1;
-const PLAYER_SPRINT_SPEED = 0.15;
+const PLAYER_SPEED = 0.11;
+const PLAYER_SPRINT_SPEED = 0.16;
 const PLAYER_CROUCH_SPEED = 0.05;
-const GRAVITY = 0.02;
-const JUMP_POWER = 0.5;
+const GRAVITY = 0.022;
+const JUMP_POWER = 0.54;
 
 export class Player {
     constructor(world) {
@@ -25,8 +25,11 @@ export class Player {
     }
 
     setupKeyboardControls() {
+        let shiftPressed = false;
+
         document.addEventListener('keydown', (e) => {
-            this.keys[e.key.toLowerCase()] = true;
+            const key = e.key.toLowerCase();
+            this.keys[key] = true;
 
             if (e.key === ' ') {
                 e.preventDefault();
@@ -36,10 +39,19 @@ export class Player {
                     if (this.onJump) this.onJump();
                 }
             }
+
+            if (key === 'shift' && !shiftPressed) {
+                shiftPressed = true;
+                this.isCrouching = !this.isCrouching;
+            }
         });
 
         document.addEventListener('keyup', (e) => {
-            this.keys[e.key.toLowerCase()] = false;
+            const key = e.key.toLowerCase();
+            this.keys[key] = false;
+            if (key === 'shift') {
+                shiftPressed = false;
+            }
         });
     }
 
@@ -53,7 +65,8 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        const speed = this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPEED;
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -66,8 +79,7 @@ export class Player {
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
 
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+        this.isSprinting = !this.isCrouching && isMoving && this.isOnGround;
     }
 
     applyPhysics() {
@@ -83,18 +95,18 @@ export class Player {
     checkCollisions() {
         const radius = PLAYER_WIDTH / 2;
         const height = PLAYER_HEIGHT;
+        const checkAngles = [0, Math.PI / 4, Math.PI / 2, 3 * Math.PI / 4, Math.PI, 5 * Math.PI / 4, 3 * Math.PI / 2, 7 * Math.PI / 4];
 
         this.isOnGround = false;
 
         const checkPoints = [
-            { dy: 0.1, radius: radius * 0.9 },
-            { dy: height * 0.3, radius: radius * 0.9 },
-            { dy: height * 0.6, radius: radius * 0.9 },
-            { dy: height * 0.9, radius: radius * 0.7 }
+            { dy: 0.1, radius: radius * 0.95 },
+            { dy: height * 0.5, radius: radius * 0.9 },
+            { dy: height * 0.95, radius: radius * 0.85 }
         ];
 
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            for (const angle of checkAngles) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
                 const cz = this.position.z + Math.sin(angle) * point.radius;
@@ -102,8 +114,8 @@ export class Player {
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
                 if (isBlockSolid(block)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
-                    if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
+                    if (moveLen > 0.01) {
+                        const scale = 1.2 / moveLen;
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
@@ -114,10 +126,10 @@ export class Player {
 
         if (this.velocity.y < 0) {
             let onGround = false;
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.8;
-                const cy = this.position.y - 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.8;
+            for (const angle of checkAngles) {
+                const cx = this.position.x + Math.cos(angle) * radius * 0.85;
+                const cy = this.position.y - 0.05;
+                const cz = this.position.z + Math.sin(angle) * radius * 0.85;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     onGround = true;
@@ -128,13 +140,14 @@ export class Player {
             if (onGround) {
                 this.isOnGround = true;
                 this.velocity.y = 0;
+                this.position.y = Math.floor(this.position.y) + 0.1;
             }
         }
 
         if (this.velocity.y > 0) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+            for (const angle of checkAngles) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.9;
-                const cy = this.position.y + height + 0.01;
+                const cy = this.position.y + height + 0.05;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.9;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
@@ -151,9 +164,10 @@ export class Player {
     }
 
     getEyePosition() {
+        const eyeHeight = this.isCrouching ? PLAYER_HEIGHT * 0.6 : PLAYER_HEIGHT * 0.85;
         return {
             x: this.position.x,
-            y: this.position.y + PLAYER_HEIGHT * 0.85,
+            y: this.position.y + eyeHeight,
             z: this.position.z
         };
     }
@@ -162,21 +176,33 @@ export class Player {
 export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
+        this.targetRotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+            if (document.pointerLockElement !== document.body) return;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            this.targetRotation.y -= e.movementX * this.mouseSensitivity;
+            this.targetRotation.x -= e.movementY * this.mouseSensitivity;
+
+            this.targetRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.targetRotation.x));
+
+            this.rotation.x = this.targetRotation.x;
+            this.rotation.y = this.targetRotation.y;
         });
 
         document.addEventListener('click', () => {
             if (document.pointerLockElement !== document.body) {
                 document.body.requestPointerLock();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.pointerLockElement === document.body) {
+                document.exitPointerLock();
             }
         });
     }

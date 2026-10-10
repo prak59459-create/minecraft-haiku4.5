@@ -45,14 +45,29 @@ export class UI {
         this.selectedBlock = index;
     }
 
-    updateHUD(playerPos, selectedBlock, fps) {
+    updateHUD(playerPos, selectedBlock, fps, playerState = {}) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
+        const stateEl = document.getElementById('playerState');
 
         coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
         fpsEl.textContent = `FPS: ${fps}`;
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+
+        let stateText = '';
+        if (playerState.isCrouching) {
+            stateText = 'CROUCHING';
+        } else if (playerState.isSprinting) {
+            stateText = 'SPRINTING';
+        } else if (!playerState.isOnGround) {
+            stateText = 'FALLING';
+        }
+
+        if (stateEl && stateText) {
+            stateEl.textContent = stateText;
+            stateEl.style.color = playerState.isCrouching ? '#FF6B6B' : (playerState.isSprinting ? '#4ECDC4' : '#FFE66D');
+        }
     }
 
     updateFPS() {

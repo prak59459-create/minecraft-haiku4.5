@@ -14,19 +14,23 @@ export class ParticleSystem {
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
-        const particleCount = 8 + Math.floor(Math.random() * 8);
+        const particleCount = 6 + Math.floor(Math.random() * 6);
 
         for (let i = 0; i < particleCount; i++) {
+            const angle = (Math.PI * 2 * i) / particleCount;
+            const speed = 0.2 + Math.random() * 0.2;
+
             const particle = {
                 position: { x, y, z },
                 velocity: {
-                    x: (Math.random() - 0.5) * 0.3,
-                    y: Math.random() * 0.3,
-                    z: (Math.random() - 0.5) * 0.3
+                    x: Math.cos(angle) * speed,
+                    y: (Math.random() - 0.3) * 0.4 + 0.2,
+                    z: Math.sin(angle) * speed
                 },
                 life: 1,
-                maxLife: 0.8 + Math.random() * 0.4,
-                color: blockColor
+                maxLife: 0.5 + Math.random() * 0.5,
+                color: blockColor,
+                size: 0.3 + Math.random() * 0.2
             };
             this.particles.push(particle);
         }
@@ -60,6 +64,7 @@ export class ParticleSystem {
 
         const positions = new Float32Array(this.particles.length * 3);
         const colors = new Float32Array(this.particles.length * 3);
+        const tempColor = new THREE.Color();
 
         for (let i = 0; i < this.particles.length; i++) {
             const p = this.particles[i];
@@ -67,15 +72,13 @@ export class ParticleSystem {
             positions[i * 3 + 1] = p.position.y;
             positions[i * 3 + 2] = p.position.z;
 
-            const color = new THREE.Color(p.color);
-            const alpha = p.life / p.maxLife;
-            colors[i * 3] = color.r;
-            colors[i * 3 + 1] = color.g;
-            colors[i * 3 + 2] = color.b;
+            tempColor.setHex(p.color);
+            colors[i * 3] = tempColor.r;
+            colors[i * 3 + 1] = tempColor.g;
+            colors[i * 3 + 2] = tempColor.b;
         }
 
         this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        this.material.opacity = 0.8;
     }
 }
