@@ -2,19 +2,23 @@ export class ParticleSystem {
     constructor(scene) {
         this.scene = scene;
         this.particles = [];
+        this.maxParticles = 1000;
         this.geometry = new THREE.BufferGeometry();
         this.material = new THREE.PointsMaterial({
             size: 0.2,
             sizeAttenuation: true,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.8,
+            vertexColors: true
         });
         this.points = new THREE.Points(this.geometry, this.material);
         this.scene.add(this.points);
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
-        const particleCount = 8 + Math.floor(Math.random() * 8);
+        if (this.particles.length >= this.maxParticles) return;
+
+        const particleCount = Math.min(8 + Math.floor(Math.random() * 8), this.maxParticles - this.particles.length);
 
         for (let i = 0; i < particleCount; i++) {
             const particle = {
@@ -54,12 +58,12 @@ export class ParticleSystem {
     updateGeometry() {
         if (this.particles.length === 0) {
             this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([]), 3));
-            this.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array([]), 3));
+            this.geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array([]), 3, true));
             return;
         }
 
         const positions = new Float32Array(this.particles.length * 3);
-        const colors = new Float32Array(this.particles.length * 3);
+        const colors = new Uint8Array(this.particles.length * 3);
 
         for (let i = 0; i < this.particles.length; i++) {
             const p = this.particles[i];
@@ -68,14 +72,13 @@ export class ParticleSystem {
             positions[i * 3 + 2] = p.position.z;
 
             const color = new THREE.Color(p.color);
-            const alpha = p.life / p.maxLife;
-            colors[i * 3] = color.r;
-            colors[i * 3 + 1] = color.g;
-            colors[i * 3 + 2] = color.b;
+            colors[i * 3] = Math.floor(color.r * 255);
+            colors[i * 3 + 1] = Math.floor(color.g * 255);
+            colors[i * 3 + 2] = Math.floor(color.b * 255);
         }
 
         this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3, true));
         this.material.opacity = 0.8;
     }
 }

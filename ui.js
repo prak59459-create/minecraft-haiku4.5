@@ -55,6 +55,11 @@ export class UI {
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
     }
 
+    updateBlockDisplay(blockId) {
+        const blockEl = document.getElementById('blockInfo');
+        blockEl.textContent = BLOCK_NAMES[blockId] || 'Air';
+    }
+
     updateFPS() {
         const now = performance.now();
         const delta = now - this.lastTime;

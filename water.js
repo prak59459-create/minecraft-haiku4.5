@@ -17,6 +17,9 @@ export class WaterRenderer {
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
         const waterColor = new THREE.Color(0x4A90E2);
+        const r = Math.floor(waterColor.r * 200);
+        const g = Math.floor(waterColor.g * 200);
+        const b = Math.floor(waterColor.b * 200);
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -48,11 +51,10 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
+                            colors.push(r, g, b);
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -69,14 +71,18 @@ export class WaterRenderer {
             geometry.computeVertexNormals();
 
             const material = new THREE.MeshPhongMaterial({
-                vertexColors: true,
+                color: 0x4A90E2,
+                vertexColors: false,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.5,
+                side: THREE.DoubleSide,
+                emissive: 0x1a4d6d,
+                shininess: 5
             });
 
             const mesh = new THREE.Mesh(geometry, material);
+            mesh.receiveShadow = true;
             return mesh;
         }
 
