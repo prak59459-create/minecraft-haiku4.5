@@ -77,6 +77,10 @@ export class Player {
             this.velocity.y -= GRAVITY;
         }
 
+        const airResistance = 0.98;
+        this.velocity.x *= airResistance;
+        this.velocity.z *= airResistance;
+
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
         this.position.z += this.velocity.z;

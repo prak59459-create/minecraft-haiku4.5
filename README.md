@@ -18,11 +18,11 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Procedural Generation** - Infinite world generation using Perlin noise
 - **Multiple Biomes** - Grass, sand, and varied terrain types
 - **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
-  - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
+- **Multiple Block Types** (20 types):
+  - **Natural**: Stone, Grass, Dirt, Sand, Gravel, Bedrock
+  - **Trees**: Oak Log, Oak Leaves, Birch Log, Birch Leaves, Spruce Log
+  - **Special**: Glass (transparent), Obsidian, Mossy Cobblestone, Cobblestone, Water
+  - **Ores**: Coal Ore, Iron Ore, Gold Ore, Diamond Ore
 - **Ore Generation** - Procedural ore generation at various depths
 - **Tree Generation** - Natural tree placement in suitable terrain
 
@@ -182,12 +182,29 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 - [ ] Mob system
 - [ ] Crafting system
 
-## Performance Tips
+## Performance Optimization
 
-1. **Reduce Render Distance** - Modify `renderDistance` in game.js for better FPS
-2. **Lower Chunk Size** - Reduce `CHUNK_SIZE` for faster loading
-3. **Disable Shadows** - Comment out shadow mapping for faster rendering
-4. **Use Fullscreen** - Better GPU acceleration in fullscreen mode
+### Configuration Adjustments (config.json)
+1. **Render Distance** - Default 10, reduce to 6-8 for better FPS on slower devices
+2. **Shadow Map Size** - Default 1024, reduce to 512 for more performance
+3. **Particle Limit** - Default 2000, reduce for heavy GPU usage
+4. **Ray Cast Step Size** - Default 0.1, increase to 0.2 for faster block selection
+
+### Engine Optimizations Implemented
+- **Particle Pooling** - Eliminates garbage collection spikes
+- **Color Caching** - Pre-calculates colors per block type
+- **Circular Culling** - Only renders chunks within distance radius
+- **Smart Raycasting** - Tracks block position to skip redundant checks
+- **GPU Acceleration** - Uses high-performance GPU preference
+
+### Performance Tips
+
+1. **Reduce Render Distance** - Modify `renderDistance` in config.json (default 10)
+2. **Disable Shadows** - Set `shadowMapSize` to 0 in config.json
+3. **Lower Particle Limit** - Reduce `particleLimit` in config.json
+4. **Use Fullscreen Mode** - Better GPU acceleration in fullscreen
+5. **Close Background Apps** - Free up system resources
+6. **Update Graphics Drivers** - Ensure optimal WebGL support
 
 ## Troubleshooting
 
