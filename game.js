@@ -34,12 +34,14 @@ class MinecraftGame {
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
+        this.lastPlaceSound = 0;
         this.showDebug = false;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
         this.setupLighting();
         this.setupEventListeners();
+        this.setupInventorySync();
         this.setupPickBlock();
         this.animate();
     }
@@ -68,6 +70,15 @@ class MinecraftGame {
         document.addEventListener('mousedown', (e) => this.onMouseClick(e));
     }
 
+    setupInventorySync() {
+        document.addEventListener('inventoryChange', (e) => {
+            const blockId = parseInt(e.detail);
+            if (blockId && BLOCKS[Object.keys(BLOCKS).find(key => BLOCKS[key] === blockId)]) {
+                this.selectedBlockType = blockId;
+            }
+        });
+    }
+
     setupPickBlock() {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'c' || e.key === 'C') {
@@ -93,28 +104,31 @@ class MinecraftGame {
         const hit = this.raycastBlock();
         if (hit.block === BLOCKS.AIR) return;
 
+        const now = Date.now();
+
         if (event.button === 0) {
-            this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
-            this.updateChunkMesh(hit.x, hit.y, hit.z);
-
-            const color = BLOCK_COLORS[hit.block] || 0x808080;
-            this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
-
-            const now = Date.now();
             if (now - this.lastBreakSound > 50) {
+                this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
+                this.updateChunkMesh(hit.x, hit.y, hit.z);
+
+                const color = BLOCK_COLORS[hit.block] || 0x808080;
+                this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
                 this.audioManager.playBlockSound('break');
                 this.lastBreakSound = now;
             }
         } else if (event.button === 2) {
-            const norm = hit.normal;
-            const nx = hit.x + norm.x;
-            const ny = hit.y + norm.y;
-            const nz = hit.z + norm.z;
+            if (now - this.lastPlaceSound > 50) {
+                const norm = hit.normal;
+                const nx = hit.x + norm.x;
+                const ny = hit.y + norm.y;
+                const nz = hit.z + norm.z;
 
-            if (!this.isPlayerOccupying(nx, ny, nz)) {
-                this.world.setBlock(nx, ny, nz, this.selectedBlockType);
-                this.updateChunkMesh(nx, ny, nz);
-                this.audioManager.playBlockSound('place');
+                if (!this.isPlayerOccupying(nx, ny, nz)) {
+                    this.world.setBlock(nx, ny, nz, this.selectedBlockType);
+                    this.updateChunkMesh(nx, ny, nz);
+                    this.audioManager.playBlockSound('place');
+                    this.lastPlaceSound = now;
+                }
             }
         }
     }

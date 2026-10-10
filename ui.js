@@ -43,6 +43,10 @@ export class UI {
         slots[index].classList.add('selected');
 
         this.selectedBlock = index;
+        const blockId = parseInt(slots[index].dataset.block);
+
+        const event = new CustomEvent('inventoryChange', { detail: blockId });
+        document.dispatchEvent(event);
     }
 
     updateHUD(playerPos, selectedBlock, fps) {
