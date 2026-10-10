@@ -91,6 +91,15 @@ body {
     left: 3px;
 }
 
+.inventory-slot .slot-count {
+    color: rgba(255, 255, 100, 0.9);
+    font-weight: bold;
+    font-size: 10px;
+    position: absolute;
+    bottom: 2px;
+    right: 3px;
+}
+
 .inventory-slot .slot-block {
     width: 24px;
     height: 24px;

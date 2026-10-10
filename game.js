@@ -37,6 +37,32 @@ class MinecraftGame {
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
+        document.addEventListener('keydown', (e) => {
+            const num = parseInt(e.key);
+            if (num >= 1 && num <= 9) {
+                this.ui.selectBlock(num - 1);
+                this.selectedBlockType = this.ui.blocks[num - 1];
+            }
+        });
+
+        const slots = document.querySelectorAll('.inventory-slot');
+        slots.forEach((slot, index) => {
+            slot.addEventListener('click', () => {
+                this.ui.selectBlock(index);
+                this.selectedBlockType = this.ui.blocks[index];
+            });
+        });
+
+        document.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const direction = e.deltaY > 0 ? 1 : -1;
+            let newIndex = this.ui.selectedBlock + direction;
+            if (newIndex < 0) newIndex = 8;
+            if (newIndex > 8) newIndex = 0;
+            this.ui.selectBlock(newIndex);
+            this.selectedBlockType = this.ui.blocks[newIndex];
+        }, { passive: false });
+
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
@@ -65,10 +91,17 @@ class MinecraftGame {
 
     setupPickBlock() {
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'c' || e.key === 'C') {
+            const key = e.key.toLowerCase();
+            if (key === 'c') {
                 const hit = this.raycastBlock();
                 if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
-                    this.selectedBlockType = hit.block;
+                    for (let i = 0; i < this.ui.blocks.length; i++) {
+                        if (this.ui.blocks[i] === hit.block) {
+                            this.ui.selectBlock(i);
+                            this.selectedBlockType = hit.block;
+                            break;
+                        }
+                    }
                 }
             }
             if (e.key === 'F3') {
@@ -76,7 +109,7 @@ class MinecraftGame {
                 this.showDebug = !this.showDebug;
                 this.debugDisplay.toggle();
             }
-            if (e.key === 'h' || e.key === 'H') {
+            if (key === 'h') {
                 this.ui.toggleHelp();
             }
         });
@@ -318,9 +351,12 @@ class MinecraftGame {
     }
 
     onWindowResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(width, height);
     }
 
     getDistanceToChunk(cx, cz) {
@@ -338,12 +374,13 @@ class MinecraftGame {
         this.gameCamera.updateFromPlayer(this.player);
 
         const eyePos = this.player.getEyePosition();
-        this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
+        this.camera.position.copy(eyePos);
 
+        const cosX = Math.cos(this.gameCamera.rotation.x);
         const direction = new THREE.Vector3(
-            Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
+            Math.sin(this.gameCamera.rotation.y) * cosX,
             Math.sin(this.gameCamera.rotation.x),
-            Math.cos(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x)
+            Math.cos(this.gameCamera.rotation.y) * cosX
         );
         this.camera.lookAt(
             eyePos.x + direction.x,
@@ -354,7 +391,6 @@ class MinecraftGame {
         this.updateVisibleChunks();
         this.updateDayNightCycle();
         this.particleSystem.update();
-        this.waterRenderer.update();
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);
@@ -371,15 +407,15 @@ class MinecraftGame {
 
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
-        const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sinTime = Math.sin(time);
+        const sunY = sinTime * 120 + 100;
+        const sunIntensity = Math.max(0.2, sinTime + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
         this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
 
-        const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
-        this.scene.background = skyColor;
+        const lightness = 0.5 + sunIntensity * 0.3;
+        this.scene.background.setHSL(0.55 + sunIntensity * 0.05, 0.6, lightness);
     }
 }
 
