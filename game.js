@@ -226,6 +226,7 @@ class MinecraftGame {
         const vertices = [];
         const colors = [];
         const indices = [];
+        const normals = [];
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
@@ -261,7 +262,8 @@ class MinecraftGame {
                 vertexColors: true,
                 flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 10
+                shininess: 5,
+                emissiveIntensity: 0.2
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -350,7 +352,7 @@ class MinecraftGame {
         this.gameCamera.updateFromPlayer(this.player);
 
         const eyePos = this.player.getEyePosition();
-        this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
+        this.camera.position.copy(eyePos);
 
         const direction = this.getDirection();
         this.camera.lookAt(
