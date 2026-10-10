@@ -13,9 +13,10 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: false, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -29,16 +30,52 @@ class MinecraftGame {
 
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
-        this.raycastDistance = 6;
+        this.raycastDistance = 5.5;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.lastChunkUpdate = 0;
+        this.chunkUpdateInterval = 100;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
+        this.setupBlockSelection();
         this.animate();
+    }
+
+    setupBlockSelection() {
+        const slots = document.querySelectorAll('.inventory-slot');
+        slots.forEach((slot, index) => {
+            const blockId = parseInt(slot.dataset.block);
+            slot.addEventListener('click', () => {
+                this.selectedBlockType = blockId;
+                this.ui.selectBlock(index);
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            const num = parseInt(e.key);
+            if (num >= 1 && num <= 9) {
+                const slots = document.querySelectorAll('.inventory-slot');
+                const blockId = parseInt(slots[num - 1].dataset.block);
+                this.selectedBlockType = blockId;
+                this.ui.selectBlock(num - 1);
+            }
+        });
+
+        document.addEventListener('wheel', (e) => {
+            const slots = document.querySelectorAll('.inventory-slot');
+            const currentIndex = this.ui.selectedBlock;
+            const direction = e.deltaY > 0 ? 1 : -1;
+            let newIndex = currentIndex + direction;
+            if (newIndex < 0) newIndex = 8;
+            if (newIndex > 8) newIndex = 0;
+            const blockId = parseInt(slots[newIndex].dataset.block);
+            this.selectedBlockType = blockId;
+            this.ui.selectBlock(newIndex);
+        }, { passive: true });
     }
 
     setupLighting() {
@@ -69,6 +106,14 @@ class MinecraftGame {
                 const hit = this.raycastBlock();
                 if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
                     this.selectedBlockType = hit.block;
+                    const slots = document.querySelectorAll('.inventory-slot');
+                    for (let i = 0; i < slots.length; i++) {
+                        const blockId = parseInt(slots[i].dataset.block);
+                        if (blockId === this.selectedBlockType) {
+                            this.ui.selectBlock(i);
+                            break;
+                        }
+                    }
                 }
             }
             if (e.key === 'F3') {
@@ -347,6 +392,8 @@ class MinecraftGame {
     animate() {
         requestAnimationFrame(() => this.animate());
 
+        const now = performance.now();
+
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
 
@@ -364,7 +411,11 @@ class MinecraftGame {
             eyePos.z + direction.z
         );
 
-        this.updateVisibleChunks();
+        if (now - this.lastChunkUpdate > this.chunkUpdateInterval) {
+            this.updateVisibleChunks();
+            this.lastChunkUpdate = now;
+        }
+
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
