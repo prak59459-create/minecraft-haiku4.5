@@ -18,6 +18,7 @@ class MinecraftGame {
         this.renderer.setClearColor(0x87CEEB);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowMap;
+        this.renderer.setClearAlpha(1);
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -31,6 +32,14 @@ class MinecraftGame {
 
         this.chunkMeshes = new Map();
         this.chunksToRebuild = new Set();
+        this.chunkMaterial = new THREE.MeshPhongMaterial({
+            vertexColors: true,
+            wireframe: false,
+            flatShading: true,
+            side: THREE.FrontSide,
+            shininess: 0
+        });
+
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
@@ -192,9 +201,11 @@ class MinecraftGame {
         for (let dx = -1; dx <= 1; dx++) {
             for (let dz = -1; dz <= 1; dz++) {
                 const key = `${cx + dx},${cz + dz}`;
-                if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
+                const mesh = this.chunkMeshes.get(key);
+                if (mesh) {
+                    this.scene.remove(mesh);
                     this.chunkMeshes.delete(key);
+                    this.chunksToRebuild.add(key);
                 }
             }
         }
@@ -241,14 +252,7 @@ class MinecraftGame {
                 geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             }
 
-            const material = new THREE.MeshPhongMaterial({
-                vertexColors: true,
-                wireframe: false,
-                flatShading: true,
-                side: THREE.FrontSide,
-                shininess: 0
-            });
-            const mesh = new THREE.Mesh(geometry, material);
+            const mesh = new THREE.Mesh(geometry, this.chunkMaterial);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
             mesh.frustumCulled = true;
@@ -291,6 +295,7 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const RENDER_DIST = 8;
 
         if (Math.abs(this.lastChunkUpdateX - playerChunkX) > 0.5 || Math.abs(this.lastChunkUpdateZ - playerChunkZ) > 0.5) {
             this.world.updateChunksAround(this.player.position.x, this.player.position.z);
@@ -301,8 +306,10 @@ class MinecraftGame {
         const toRemove = [];
         for (const [key, mesh] of this.chunkMeshes) {
             const [cx, cz] = key.split(',').map(Number);
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (Math.abs(cx - playerChunkX) > RENDER_DIST || Math.abs(cz - playerChunkZ) > RENDER_DIST) {
                 this.scene.remove(mesh);
+                mesh.geometry.dispose();
+                mesh.material.dispose();
                 toRemove.push(key);
             }
         }
@@ -311,22 +318,35 @@ class MinecraftGame {
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) continue;
+            if (Math.abs(cx - playerChunkX) > RENDER_DIST || Math.abs(cz - playerChunkZ) > RENDER_DIST) continue;
 
-            if (!this.chunkMeshes.has(key)) {
+            if (!this.chunkMeshes.has(key) && !this.chunksToRebuild.has(key)) {
                 const mesh = this.buildChunkMesh(chunk);
                 if (mesh) {
                     this.scene.add(mesh);
                     this.chunkMeshes.set(key, mesh);
                 }
+            } else if (this.chunksToRebuild.has(key)) {
+                const mesh = this.buildChunkMesh(chunk);
+                if (mesh) {
+                    this.scene.add(mesh);
+                    this.chunkMeshes.set(key, mesh);
+                }
+                this.chunksToRebuild.delete(key);
             }
         }
     }
 
     onWindowResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const aspect = width / height;
+
+        if (Math.abs(this.camera.aspect - aspect) > 0.01) {
+            this.camera.aspect = aspect;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(width, height);
+        }
     }
 
     getDistanceToChunk(cx, cz) {
