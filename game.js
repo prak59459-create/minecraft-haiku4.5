@@ -85,9 +85,17 @@ class MinecraftGame {
                 const hit = this.raycastBlock();
                 if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
                     this.selectedBlockType = hit.block;
+                    if (this.ui.selectBlock) {
+                        for (let i = 0; i < 9; i++) {
+                            if (this.ui.blocks[i] === hit.block) {
+                                this.ui.selectBlock(i);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
-            if (e.key === 'F3') {
+            if (e.key === 'F3' || e.key === 'F12') {
                 e.preventDefault();
                 this.showDebug = !this.showDebug;
                 this.debugDisplay.toggle();
@@ -95,7 +103,34 @@ class MinecraftGame {
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
+            if (e.key === 'F11' || (e.ctrlKey && e.key === 'f')) {
+                e.preventDefault();
+                this.toggleFullscreen();
+            }
+            if (e.key === 'Escape') {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    this.exitPointerLock();
+                }
+            }
         });
+    }
+
+    toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {
+                console.log('Fullscreen request failed');
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    exitPointerLock() {
+        if (document.pointerLockElement) {
+            document.exitPointerLock();
+        }
     }
 
     onMouseClick(event) {
@@ -414,21 +449,25 @@ class MinecraftGame {
             }
         }
 
-        this.updateDayNightCycle();
-        this.particleSystem.update();
-        this.waterRenderer.update();
+        try {
+            this.updateDayNightCycle();
+            this.particleSystem.update();
+            this.waterRenderer.update();
 
-        const hit = this.raycastBlock();
-        this.blockOutline.update(hit);
+            const hit = this.raycastBlock();
+            this.blockOutline.update(hit);
 
-        const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+            const fps = this.ui.updateFPS();
+            this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
 
-        if (this.showDebug) {
-            this.debugDisplay.update(this);
+            if (this.showDebug) {
+                this.debugDisplay.update(this);
+            }
+
+            this.renderer.render(this.scene, this.camera);
+        } catch (error) {
+            console.error('Rendering error:', error);
         }
-
-        this.renderer.render(this.scene, this.camera);
     }
 
     updateDayNightCycle() {

@@ -261,8 +261,10 @@ export class World {
         const playerChunkZ = Math.floor(playerZ / CHUNK_SIZE);
 
         const chunksToKeep = new Set();
-        for (let dx = -this.renderDistance; dx <= this.renderDistance; dx++) {
-            for (let dz = -this.renderDistance; dz <= this.renderDistance; dz++) {
+        const keepDistance = this.renderDistance + 2;
+
+        for (let dx = -keepDistance; dx <= keepDistance; dx++) {
+            for (let dz = -keepDistance; dz <= keepDistance; dz++) {
                 const key = `${playerChunkX + dx},${playerChunkZ + dz}`;
                 chunksToKeep.add(key);
                 this.getChunk(playerChunkX + dx, playerChunkZ + dz);
@@ -276,7 +278,13 @@ export class World {
             }
         }
 
-        toDelete.forEach(key => this.chunks.delete(key));
+        toDelete.forEach(key => {
+            const chunk = this.chunks.get(key);
+            if (chunk) {
+                chunk.blocks = null;
+            }
+            this.chunks.delete(key);
+        });
     }
 }
 
