@@ -28,7 +28,7 @@ class MinecraftGame {
         this.blockOutline = new BlockOutline(this.scene);
 
         this.chunkMeshes = new Map();
-        this.selectedBlockType = BLOCKS.STONE;
+        this.selectedBlockType = this.ui.blocks[0];
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.lastFootstep = 0;
@@ -77,6 +77,12 @@ class MinecraftGame {
                 const hit = this.raycastBlock();
                 if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
                     this.selectedBlockType = hit.block;
+                    for (let i = 0; i < this.ui.blocks.length; i++) {
+                        if (this.ui.blocks[i] === hit.block) {
+                            this.ui.selectBlock(i);
+                            break;
+                        }
+                    }
                 }
             }
             if (e.key === 'F3') {
