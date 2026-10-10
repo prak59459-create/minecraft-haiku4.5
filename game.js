@@ -10,12 +10,26 @@ import { BlockOutline } from './blockoutline.js';
 
 class MinecraftGame {
     constructor() {
+        if (!window.THREE) {
+            throw new Error('Three.js is not loaded');
+        }
+
         this.canvas = document.getElementById('gameCanvas');
+        if (!this.canvas) {
+            throw new Error('Canvas element not found');
+        }
+
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: false, precision: 'lowp' });
+
+        try {
+            this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: false, precision: 'lowp' });
+        } catch (e) {
+            throw new Error('WebGL is not supported in this browser');
+        }
+
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(window.devicePixelRatio > 1 ? 1 : 0.75);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
         this.renderer.setClearColor(0x87CEEB);
         this.renderer.shadowMap.enabled = false;
 
@@ -87,6 +101,20 @@ class MinecraftGame {
     setupEventListeners() {
         window.addEventListener('resize', () => this.onWindowResize());
         document.addEventListener('mousedown', (e) => this.onMouseClick(e));
+        window.addEventListener('beforeunload', () => this.cleanup());
+    }
+
+    cleanup() {
+        this.chunkMeshes.forEach(mesh => {
+            if (mesh && mesh.geometry) {
+                mesh.geometry.dispose();
+            }
+            if (mesh && mesh.material) {
+                mesh.material.dispose();
+            }
+        });
+        this.chunkMeshes.clear();
+        this.renderer.dispose();
     }
 
     setupPickBlock() {
@@ -116,34 +144,38 @@ class MinecraftGame {
     }
 
     onMouseClick(event) {
-        if (document.pointerLockElement !== document.body) return;
+        if (document.pointerLockElement !== this.canvas && document.pointerLockElement !== document.body) return;
 
         const hit = this.raycastBlock();
-        if (hit.block === BLOCKS.AIR) return;
+        if (!hit || hit.block === BLOCKS.AIR) return;
 
-        if (event.button === 0) {
-            this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
-            this.updateChunkMesh(hit.x, hit.y, hit.z);
+        try {
+            if (event.button === 0) {
+                this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
+                this.updateChunkMesh(hit.x, hit.y, hit.z);
 
-            const color = BLOCK_COLORS[hit.block] || 0x808080;
-            this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
+                const color = BLOCK_COLORS[hit.block] || 0x808080;
+                this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
 
-            const now = Date.now();
-            if (now - this.lastBreakSound > 50) {
-                this.audioManager.playBlockSound('break');
-                this.lastBreakSound = now;
+                const now = Date.now();
+                if (now - this.lastBreakSound > 50) {
+                    this.audioManager.playBlockSound('break');
+                    this.lastBreakSound = now;
+                }
+            } else if (event.button === 2) {
+                const norm = hit.normal;
+                const nx = hit.x + norm.x;
+                const ny = hit.y + norm.y;
+                const nz = hit.z + norm.z;
+
+                if (!this.isPlayerOccupying(nx, ny, nz)) {
+                    this.world.setBlock(nx, ny, nz, this.selectedBlockType);
+                    this.updateChunkMesh(nx, ny, nz);
+                    this.audioManager.playBlockSound('place');
+                }
             }
-        } else if (event.button === 2) {
-            const norm = hit.normal;
-            const nx = hit.x + norm.x;
-            const ny = hit.y + norm.y;
-            const nz = hit.z + norm.z;
-
-            if (!this.isPlayerOccupying(nx, ny, nz)) {
-                this.world.setBlock(nx, ny, nz, this.selectedBlockType);
-                this.updateChunkMesh(nx, ny, nz);
-                this.audioManager.playBlockSound('place');
-            }
+        } catch (error) {
+            console.error('Error handling mouse click:', error);
         }
     }
 
@@ -419,4 +451,12 @@ class MinecraftGame {
     }
 }
 
-const game = new MinecraftGame();
+window.addEventListener('load', () => {
+    try {
+        window.game = new MinecraftGame();
+        console.log('Minecraft Clone initialized successfully');
+    } catch (error) {
+        console.error('Failed to initialize game:', error);
+        alert('Failed to initialize game. Please check the console for errors.');
+    }
+});

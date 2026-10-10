@@ -10,6 +10,10 @@ const JUMP_POWER = 0.5;
 
 export class Player {
     constructor(world) {
+        if (!world) {
+            throw new Error('World is required for Player initialization');
+        }
+
         this.world = world;
         this.position = { x: 0, y: 100, z: 0 };
         this.velocity = { x: 0, y: 0, z: 0 };
@@ -21,6 +25,8 @@ export class Player {
         this.isCrouching = false;
 
         this.keys = {};
+        this.onJump = null;
+
         this.setupKeyboardControls();
     }
 
@@ -173,6 +179,8 @@ export class Camera {
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
+            if (!e.movementX || !e.movementY) return;
+
             this.rotation.y -= e.movementX * this.mouseSensitivity;
             this.rotation.x -= e.movementY * this.mouseSensitivity;
 
@@ -180,8 +188,8 @@ export class Camera {
         });
 
         document.addEventListener('click', () => {
-            if (document.pointerLockElement !== document.body) {
-                document.body.requestPointerLock();
+            if (document.pointerLockElement !== document.body && document.pointerLockElement !== document.documentElement) {
+                document.body.requestPointerLock?.() || document.documentElement.requestPointerLock?.();
             }
         });
     }
