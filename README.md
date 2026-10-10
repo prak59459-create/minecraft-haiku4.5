@@ -15,16 +15,19 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Pick Block** - Press C to pick the block you're looking at
 
 ### World & Terrain
-- **Procedural Generation** - Infinite world generation using Perlin noise
-- **Multiple Biomes** - Grass, sand, and varied terrain types
+- **Procedural Generation** - Infinite world generation using Perlin noise with cave systems
+- **Advanced Biome System** - Forest, Sparse, Mountain, and Desert biomes with unique characteristics
 - **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
+- **Extended Block Types** (25+ block types):
+  - Stone, Grass, Dirt, Cobblestone, Gravel, Bedrock
+  - Oak, Spruce, Birch logs and leaves (3 tree types)
+  - Wood Planks (Oak, Spruce, Birch)
+  - Sand, Water, Lava, Clay
+  - Obsidian, Glowstone
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
-- **Ore Generation** - Procedural ore generation at various depths
-- **Tree Generation** - Natural tree placement in suitable terrain
+- **Ore Generation** - Height-aware procedural ore generation at various depths
+- **Tree Generation** - Biome-specific multi-type tree placement (Oak, Spruce, Birch)
+- **Cave Systems** - Procedural cave generation using 3D Perlin noise
 
 ### Physics & Collision
 - **Gravity System** - Realistic falling and landing
@@ -33,19 +36,25 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Block Highlight** - Visual feedback for the block you're looking at
 
 ### Visual Features
-- **3D Voxel Rendering** - Full 3D block-based world
-- **Dynamic Lighting** - Sun and ambient lighting system
-- **Day/Night Cycle** - Real-time sky color transitions
-- **Particle Effects** - Block destruction particles
-- **Water Rendering** - Semi-transparent water with proper face culling
+- **3D Voxel Rendering** - Full 3D block-based world with 16x16x256 chunks
+- **Advanced Lighting System**:
+  - Dynamic ambient occlusion hints for depth
+  - Height-based lighting gradients
+  - Per-vertex color variations
+- **Sophisticated Day/Night Cycle** - Real-time sky color transitions with twilight effects
+- **Skybox Rendering** - Dynamic sky that follows player camera
+- **Particle Effects** - Object-pooled block destruction particles (up to 2000)
+- **Liquid Rendering** - Semi-transparent water and lava with distinct visuals and emissive properties
+- **Block Highlighting** - Smooth white outline for targeted block
 
 ### Audio
 - **Procedural Sound Effects**:
-  - Block break sounds
-  - Block place sounds
-  - Jump sounds (prepared)
-  - Step sounds (prepared)
-- **Web Audio API** - Dynamic audio generation
+  - Block break sounds (descending pitch)
+  - Block place sounds (ascending pitch)
+  - Jump sounds (ascending sweep)
+  - Step sounds (random pitch variations)
+- **Web Audio API** - Real-time dynamic audio generation
+- **Sound Throttling** - Prevents audio spam with minimum intervals
 
 ### User Interface
 - **HUD Display** - Real-time coordinates, FPS, and block info
@@ -54,10 +63,14 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Help Panel** - In-game control instructions (Press H)
 
 ### Performance Optimization
-- **Chunk-based Rendering** - Only visible chunks are rendered
-- **Indexed Geometry** - Efficient mesh generation with indices
-- **Vertex Colors** - Per-vertex coloring for variations
+- **Chunk-based Rendering** - Only visible chunks within render distance are rendered
+- **Indexed Geometry** - Efficient mesh generation with BufferGeometry and indices
+- **Vertex Colors** - Per-vertex coloring for efficient lighting and variations
 - **Memory Management** - Automatic chunk cleanup for distant areas
+- **Particle Pooling** - Object reuse system for particle effects (reduces GC pressure)
+- **Optimized Raycasting** - Double step size (0.1) for 50% faster block detection
+- **Collision Optimization** - Reduced collision check points while maintaining accuracy
+- **Frustum Culling** - GPU-based culling for off-screen chunks
 
 ## Controls
 
@@ -152,8 +165,11 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 
 ### Biomes
 
-- **Grass Biome** - Natural terrain with trees and water
-- **Sand Biome** - Desert-like areas with sand blocks
+- **Grass Biome** - Natural terrain with oak trees and water
+- **Forest Biome** - Dense vegetation with multiple tree types (oak, spruce)
+- **Sparse Biome** - Elevated terrain with few trees and mountains
+- **Desert Biome** - Sandy terrain with minimal vegetation
+- **Biome Transitions** - Smooth transitions between biomes based on noise functions
 
 ### Ore Distribution
 
@@ -170,17 +186,30 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 - **Clean Separation** - Game logic, rendering, and physics separate
 - **Extensible** - Easy to add new block types or biomes
 
+### Completed Features
+
+- [x] Multiple tree types (Oak, Spruce, Birch)
+- [x] Extended block types (25+ blocks)
+- [x] Cave generation system
+- [x] Multiple biomes with distinct characteristics
+- [x] Day/night cycle with twilight effects
+- [x] Particle pooling for optimization
+- [x] Water and Lava rendering
+- [x] Sound effects for all actions
+- [x] Debug display with detailed stats
+
 ### Future Enhancements
 
+- [ ] Texture mapping for blocks
 - [ ] Inventory UI with multiple stacks
 - [ ] Creative mode with unlimited blocks
 - [ ] Survival mode with health/hunger
-- [ ] Multiplayer support
-- [ ] Texture mapping for blocks
-- [ ] Advanced weather systems
-- [ ] More biome types
-- [ ] Mob system
+- [ ] Advanced weather systems (rain, snow)
+- [ ] Mob system with AI
 - [ ] Crafting system
+- [ ] Multi-player support
+- [ ] Redstone mechanics
+- [ ] Nether/End dimensions
 
 ## Performance Tips
 

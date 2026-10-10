@@ -47,18 +47,34 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5 + sunIntensity * 0.3);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -200;
+        directionalLight.shadow.camera.right = 200;
+        directionalLight.shadow.camera.top = 200;
+        directionalLight.shadow.camera.bottom = -200;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
+
+        this.setupSkybox();
+    }
+
+    setupSkybox() {
+        const skyGeometry = new THREE.SphereGeometry(1000, 32, 32);
+        const skyMaterial = new THREE.MeshBasicMaterial({
+            color: 0x87CEEB,
+            side: THREE.BackSide
+        });
+        this.skybox = new THREE.Mesh(skyGeometry, skyMaterial);
+        this.scene.add(this.skybox);
     }
 
     setupEventListeners() {
@@ -365,6 +381,10 @@ class MinecraftGame {
         const eyePos = this.player.getEyePosition();
         this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
 
+        if (this.skybox) {
+            this.skybox.position.copy(this.camera.position);
+        }
+
         const direction = new THREE.Vector3(
             Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
             Math.sin(this.gameCamera.rotation.x),
@@ -400,11 +420,27 @@ class MinecraftGame {
         const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
 
         this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.intensity = 0.4 + sunIntensity * 0.35;
 
-        const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        let skyColor = new THREE.Color();
+        const sunAngle = Math.sin(time);
+
+        if (sunAngle > 0.2) {
+            skyColor.setHSL(0.6, 0.5, 0.5 + sunIntensity * 0.35);
+        } else if (sunAngle > -0.2) {
+            const twilightColor = new THREE.Color(0xFF9955);
+            const skyBlue = new THREE.Color(0x87CEEB);
+            const t = (sunAngle + 0.2) / 0.4;
+            skyColor.lerpColors(twilightColor, skyBlue, t);
+        } else {
+            skyColor.setHSL(0.65, 0.3, 0.1 + sunIntensity * 0.15);
+        }
+
         this.scene.background = skyColor;
+
+        if (this.skybox) {
+            this.skybox.material.color.copy(skyColor);
+        }
     }
 }
 
