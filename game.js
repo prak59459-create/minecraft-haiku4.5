@@ -217,8 +217,9 @@ class MinecraftGame {
 
                     const baseLight = 0.75;
                     const heightLight = Math.min(0.25, (wy / WORLD_HEIGHT) * 0.35);
-                    const varLight = Math.sin(wx * 0.3 + wz * 0.3) * 0.08;
-                    const brightness = baseLight + heightLight + varLight;
+                    const varLight = (Math.sin(wx * 0.3 + wz * 0.3) * 0.05) + (Math.sin(wx * 0.7) * 0.03);
+                    const blockVariation = Math.sin(wx * 0.1 + wz * 0.1 + wy * 0.05) * 0.04;
+                    const brightness = baseLight + heightLight + varLight + blockVariation;
 
                     color.multiplyScalar(brightness);
 
@@ -348,7 +349,16 @@ class MinecraftGame {
         this.gameCamera.updateFromPlayer(this.player);
 
         const eyePos = this.player.getEyePosition();
-        this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);
+        let camX = eyePos.x;
+        let camY = eyePos.y;
+        let camZ = eyePos.z;
+
+        if (this.player.isSprinting && this.player.isOnGround) {
+            const bobAmount = Math.sin(this.player.bobPhase * 2) * 0.02;
+            camY += bobAmount;
+        }
+
+        this.camera.position.set(camX, camY, camZ);
 
         const direction = new THREE.Vector3(
             Math.sin(this.gameCamera.rotation.y) * Math.cos(this.gameCamera.rotation.x),
@@ -365,6 +375,7 @@ class MinecraftGame {
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
+        this.updateFootsteps();
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);
@@ -377,6 +388,18 @@ class MinecraftGame {
         }
 
         this.renderer.render(this.scene, this.camera);
+    }
+
+    updateFootsteps() {
+        const moveSpeed = Math.sqrt(this.player.velocity.x ** 2 + this.player.velocity.z ** 2);
+        if (moveSpeed > 0.02 && this.player.isOnGround) {
+            const now = Date.now();
+            const stepInterval = this.player.isSprinting ? 200 : 400;
+            if (now - this.player.lastStepTime > stepInterval) {
+                this.audioManager.playStepSound();
+                this.player.lastStepTime = now;
+            }
+        }
     }
 
     updateDayNightCycle() {

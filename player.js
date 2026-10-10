@@ -23,6 +23,7 @@ export class Player {
         this.keys = {};
         this.bobPhase = 0;
         this.lastMoveSpeed = 0;
+        this.lastStepTime = 0;
         this.setupKeyboardControls();
     }
 

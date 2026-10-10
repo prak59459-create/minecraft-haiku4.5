@@ -5,11 +5,24 @@ const CHUNK_HEIGHT = 256;
 const WORLD_HEIGHT = 256;
 
 let perlinNoise;
+const heightCache = new Map();
 
 export function initPerlinNoise() {
     if (typeof SimplexNoise !== 'undefined') {
         perlinNoise = new SimplexNoise();
     }
+}
+
+function getCachedTerrainHeight(x, z) {
+    const key = `${x},${z}`;
+    if (!heightCache.has(key)) {
+        if (heightCache.size > 10000) {
+            const firstKey = heightCache.keys().next().value;
+            heightCache.delete(firstKey);
+        }
+        heightCache.set(key, getTerrainHeight(x, z));
+    }
+    return heightCache.get(key);
 }
 
 export class Chunk {
@@ -42,7 +55,7 @@ export class Chunk {
                 const wx = worldX + x;
                 const wz = worldZ + z;
 
-                let height = getTerrainHeight(wx, wz);
+                let height = getCachedTerrainHeight(wx, wz);
                 let terrainType = getTerrainType(wx, wz);
 
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
