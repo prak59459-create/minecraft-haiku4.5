@@ -16,17 +16,19 @@ export class WaterRenderer {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x4A90E2);
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
                     const blockId = chunk.getBlock(x, y, z);
-                    if (blockId !== BLOCKS.WATER) continue;
+                    if (blockId !== BLOCKS.WATER && blockId !== BLOCKS.LAVA) continue;
 
                     const wx = chunk.x * CHUNK_SIZE + x;
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
+
+                    const isLava = blockId === BLOCKS.LAVA;
+                    const baseColor = isLava ? new THREE.Color(0xFF4500) : new THREE.Color(0x4A90E2);
 
                     const neighbor = (dx, dy, dz) => {
                         return this.world.getBlock(wx + dx, wy + dy, wz + dz);
@@ -45,10 +47,11 @@ export class WaterRenderer {
                         const [dx, dy, dz] = face.dir;
                         const neighborBlock = neighbor(dx, dy, dz);
 
-                        if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
+                        if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER && neighborBlock !== BLOCKS.LAVA) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const variation = isLava ? (0.7 + Math.random() * 0.3) : (0.8 + Math.random() * 0.2);
+                        const color = baseColor.clone().multiplyScalar(variation);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
@@ -72,8 +75,10 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.7,
+                emissive: 0x1a1a1a,
+                side: THREE.FrontSide,
+                shininess: 10
             });
 
             const mesh = new THREE.Mesh(geometry, material);
