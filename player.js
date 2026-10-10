@@ -95,18 +95,18 @@ export class Player {
     checkCollisions() {
         const radius = PLAYER_WIDTH / 2;
         const height = PLAYER_HEIGHT;
+        const checkAngles = [0, Math.PI / 4, Math.PI / 2, 3 * Math.PI / 4, Math.PI, 5 * Math.PI / 4, 3 * Math.PI / 2, 7 * Math.PI / 4];
 
         this.isOnGround = false;
 
         const checkPoints = [
-            { dy: 0.1, radius: radius * 0.9 },
-            { dy: height * 0.3, radius: radius * 0.9 },
-            { dy: height * 0.6, radius: radius * 0.9 },
-            { dy: height * 0.9, radius: radius * 0.7 }
+            { dy: 0.1, radius: radius * 0.95 },
+            { dy: height * 0.5, radius: radius * 0.9 },
+            { dy: height * 0.95, radius: radius * 0.85 }
         ];
 
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            for (const angle of checkAngles) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
                 const cz = this.position.z + Math.sin(angle) * point.radius;
@@ -114,8 +114,8 @@ export class Player {
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
                 if (isBlockSolid(block)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
-                    if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
+                    if (moveLen > 0.01) {
+                        const scale = 1.2 / moveLen;
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
@@ -126,10 +126,10 @@ export class Player {
 
         if (this.velocity.y < 0) {
             let onGround = false;
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.8;
-                const cy = this.position.y - 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.8;
+            for (const angle of checkAngles) {
+                const cx = this.position.x + Math.cos(angle) * radius * 0.85;
+                const cy = this.position.y - 0.05;
+                const cz = this.position.z + Math.sin(angle) * radius * 0.85;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     onGround = true;
@@ -140,13 +140,14 @@ export class Player {
             if (onGround) {
                 this.isOnGround = true;
                 this.velocity.y = 0;
+                this.position.y = Math.floor(this.position.y) + 0.1;
             }
         }
 
         if (this.velocity.y > 0) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+            for (const angle of checkAngles) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.9;
-                const cy = this.position.y + height + 0.01;
+                const cy = this.position.y + height + 0.05;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.9;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
@@ -174,21 +175,33 @@ export class Player {
 export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
+        this.targetRotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+            if (document.pointerLockElement !== document.body) return;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            this.targetRotation.y -= e.movementX * this.mouseSensitivity;
+            this.targetRotation.x -= e.movementY * this.mouseSensitivity;
+
+            this.targetRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.targetRotation.x));
+
+            this.rotation.x = this.targetRotation.x;
+            this.rotation.y = this.targetRotation.y;
         });
 
         document.addEventListener('click', () => {
             if (document.pointerLockElement !== document.body) {
                 document.body.requestPointerLock();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.pointerLockElement === document.body) {
+                document.exitPointerLock();
             }
         });
     }

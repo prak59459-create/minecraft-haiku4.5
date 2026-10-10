@@ -51,8 +51,15 @@ body {
     z-index: 10;
 }
 
-#coords, #fps, #blockInfo {
+#coords, #fps, #blockInfo, #playerState {
     margin-bottom: 5px;
+}
+
+#playerState {
+    font-weight: bold;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 #inventory {

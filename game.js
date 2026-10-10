@@ -12,7 +12,7 @@ class MinecraftGame {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: false });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
@@ -70,6 +70,13 @@ class MinecraftGame {
     setupEventListeners() {
         window.addEventListener('resize', () => this.onWindowResize());
         document.addEventListener('mousedown', (e) => this.onMouseClick(e));
+
+        document.addEventListener('pointerlockchange', () => {
+            if (document.pointerLockElement !== document.body) {
+                this.gameCamera.rotation.x = 0;
+                this.gameCamera.rotation.y = 0;
+            }
+        });
     }
 
     setupPickBlock() {
@@ -371,7 +378,11 @@ class MinecraftGame {
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps, {
+            isCrouching: this.player.isCrouching,
+            isSprinting: this.player.isSprinting,
+            isOnGround: this.player.isOnGround
+        });
 
         if (this.showDebug) {
             this.debugDisplay.update(this);
