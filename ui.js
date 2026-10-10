@@ -61,7 +61,8 @@ export class UI {
         this.lastTime = now;
 
         if (delta > 0) {
-            this.fpsCounter = Math.round(1000 / delta);
+            const fps = Math.round(1000 / delta);
+            this.fpsCounter = Math.max(0, Math.min(240, fps));
         }
 
         return this.fpsCounter;

@@ -13,9 +13,12 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -62,7 +65,18 @@ class MinecraftGame {
 
     setupEventListeners() {
         window.addEventListener('resize', () => this.onWindowResize());
-        document.addEventListener('mousedown', (e) => this.onMouseClick(e));
+        document.addEventListener('mousedown', (e) => {
+            if (document.pointerLockElement !== document.body) {
+                document.body.requestPointerLock();
+            } else {
+                this.onMouseClick(e);
+            }
+        });
+        document.addEventListener('pointerlockchange', () => {
+            if (document.pointerLockElement === document.body) {
+                console.log('Pointer locked');
+            }
+        });
     }
 
     setupPickBlock() {
@@ -208,10 +222,10 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.75;
+                    const heightLight = (wy / WORLD_HEIGHT) * 0.2;
+                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.05;
+                    const brightness = Math.max(0.5, baseLight + heightLight + varLight);
 
                     color.multiplyScalar(brightness);
 
@@ -226,14 +240,13 @@ class MinecraftGame {
             if (indices.length > 0) {
                 geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             }
-            geometry.computeVertexNormals();
 
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
+                flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 20
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
