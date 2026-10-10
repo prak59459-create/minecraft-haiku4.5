@@ -13,9 +13,14 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
+            powerPreference: 'high-performance'
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.sortObjects = false;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -34,6 +39,7 @@ class MinecraftGame {
         this.showDebug = false;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
+        this.player.onStep = () => this.audioManager.playStepSound();
 
         this.setupLighting();
         this.setupEventListeners();
@@ -52,9 +58,14 @@ class MinecraftGame {
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -200;
+        directionalLight.shadow.camera.right = 200;
+        directionalLight.shadow.camera.top = 200;
+        directionalLight.shadow.camera.bottom = -200;
+        directionalLight.shadow.bias = -0.0001;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -134,8 +145,12 @@ class MinecraftGame {
         );
 
         let hit = null;
+        const step = 0.01;
+        let prevBx = Math.floor(eyePos.x);
+        let prevBy = Math.floor(eyePos.y);
+        let prevBz = Math.floor(eyePos.z);
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = step; dist <= this.raycastDistance; dist += step) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -144,24 +159,20 @@ class MinecraftGame {
             const by = Math.floor(y);
             const bz = Math.floor(z);
 
-            const block = this.world.getBlock(bx, by, bz);
-            if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
-                const prevX = eyePos.x + direction.x * prevDist;
-                const prevY = eyePos.y + direction.y * prevDist;
-                const prevZ = eyePos.z + direction.z * prevDist;
+            if (bx !== prevBx || by !== prevBy || bz !== prevBz) {
+                const block = this.world.getBlock(bx, by, bz);
+                if (isBlockSolid(block)) {
+                    let normal = { x: 0, y: 0, z: 0 };
+                    if (prevBx !== bx) normal.x = prevBx < bx ? -1 : 1;
+                    else if (prevBy !== by) normal.y = prevBy < by ? -1 : 1;
+                    else if (prevBz !== bz) normal.z = prevBz < bz ? -1 : 1;
 
-                const prevBx = Math.floor(prevX);
-                const prevBy = Math.floor(prevY);
-                const prevBz = Math.floor(prevZ);
-
-                let normal = { x: 0, y: 0, z: 0 };
-                if (prevBx !== bx) normal.x = prevBx < bx ? -1 : 1;
-                else if (prevBy !== by) normal.y = prevBy < by ? -1 : 1;
-                else if (prevBz !== bz) normal.z = prevBz < bz ? -1 : 1;
-
-                hit = { x: bx, y: by, z: bz, block, normal, dist };
-                break;
+                    hit = { x: bx, y: by, z: bz, block, normal, dist };
+                    break;
+                }
+                prevBx = bx;
+                prevBy = by;
+                prevBz = bz;
             }
         }
 
@@ -182,6 +193,10 @@ class MinecraftGame {
                 if (this.chunkMeshes.has(key)) {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
+                }
+                if (this.waterRenderer.waterMeshes.has(key)) {
+                    this.scene.remove(this.waterRenderer.waterMeshes.get(key));
+                    this.waterRenderer.waterMeshes.delete(key);
                 }
             }
         }
@@ -208,12 +223,13 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.6;
+                    const heightLight = (wy / WORLD_HEIGHT) * 0.35;
+                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.15;
+                    const sunIntensity = Math.max(0.3, Math.sin(Date.now() * 0.00001) + 0.5);
+                    const brightness = baseLight + heightLight + varLight + sunIntensity * 0.05;
 
-                    color.multiplyScalar(brightness);
+                    color.multiplyScalar(Math.min(1, brightness));
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
                 }
@@ -298,6 +314,10 @@ class MinecraftGame {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
                 }
+                if (this.waterRenderer.waterMeshes.has(key)) {
+                    this.scene.remove(this.waterRenderer.waterMeshes.get(key));
+                    this.waterRenderer.waterMeshes.delete(key);
+                }
                 continue;
             }
 
@@ -306,6 +326,14 @@ class MinecraftGame {
                 if (mesh) {
                     this.scene.add(mesh);
                     this.chunkMeshes.set(key, mesh);
+                }
+            }
+
+            if (!this.waterRenderer.waterMeshes.has(key)) {
+                const waterMesh = this.waterRenderer.buildWaterMesh(chunk);
+                if (waterMesh) {
+                    this.scene.add(waterMesh);
+                    this.waterRenderer.waterMeshes.set(key, waterMesh);
                 }
             }
         }
