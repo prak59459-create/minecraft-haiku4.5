@@ -83,11 +83,11 @@ export class Chunk {
 function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
-    let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    let height = 64;
+    height += perlinNoise.noise2D(x * 0.0025, z * 0.0025) * 40;
+    height += perlinNoise.noise2D(x * 0.01, z * 0.01) * 20;
+    height += perlinNoise.noise2D(x * 0.03, z * 0.03) * 10;
+    height += perlinNoise.noise2D(x * 0.08, z * 0.08) * 5;
 
     return Math.max(20, Math.min(160, Math.floor(height)));
 }
@@ -203,13 +203,16 @@ export class World {
     updateChunksAround(playerX, playerZ) {
         const playerChunkX = Math.floor(playerX / CHUNK_SIZE);
         const playerChunkZ = Math.floor(playerZ / CHUNK_SIZE);
+        const keepDist = this.renderDistance + 2;
 
         const chunksToKeep = new Set();
-        for (let dx = -this.renderDistance; dx <= this.renderDistance; dx++) {
-            for (let dz = -this.renderDistance; dz <= this.renderDistance; dz++) {
+        for (let dx = -keepDist; dx <= keepDist; dx++) {
+            for (let dz = -keepDist; dz <= keepDist; dz++) {
                 const key = `${playerChunkX + dx},${playerChunkZ + dz}`;
                 chunksToKeep.add(key);
-                this.getChunk(playerChunkX + dx, playerChunkZ + dz);
+                if (Math.abs(dx) <= this.renderDistance && Math.abs(dz) <= this.renderDistance) {
+                    this.getChunk(playerChunkX + dx, playerChunkZ + dz);
+                }
             }
         }
 

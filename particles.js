@@ -54,12 +54,12 @@ export class ParticleSystem {
     updateGeometry() {
         if (this.particles.length === 0) {
             this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([]), 3));
-            this.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array([]), 3));
+            this.geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array([]), 3, true));
             return;
         }
 
         const positions = new Float32Array(this.particles.length * 3);
-        const colors = new Float32Array(this.particles.length * 3);
+        const colors = new Uint8Array(this.particles.length * 3);
 
         for (let i = 0; i < this.particles.length; i++) {
             const p = this.particles[i];
@@ -67,15 +67,18 @@ export class ParticleSystem {
             positions[i * 3 + 1] = p.position.y;
             positions[i * 3 + 2] = p.position.z;
 
-            const color = new THREE.Color(p.color);
-            const alpha = p.life / p.maxLife;
-            colors[i * 3] = color.r;
-            colors[i * 3 + 1] = color.g;
-            colors[i * 3 + 2] = color.b;
+            const colorVal = p.color;
+            const r = (colorVal >> 16) & 255;
+            const g = (colorVal >> 8) & 255;
+            const b = colorVal & 255;
+            const alpha = Math.floor((p.life / p.maxLife) * 255);
+
+            colors[i * 3] = r;
+            colors[i * 3 + 1] = g;
+            colors[i * 3 + 2] = b;
         }
 
         this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        this.material.opacity = 0.8;
+        this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3, true));
     }
 }
