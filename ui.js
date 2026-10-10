@@ -2,8 +2,9 @@ import { BLOCK_NAMES } from './blocks.js';
 
 export class UI {
     constructor() {
+        this.selectedIndex = 0;
         this.selectedBlock = 1;
-        this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        this.blocks = [];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
         this.setupInventoryUI();
@@ -11,8 +12,10 @@ export class UI {
 
     setupInventoryUI() {
         const slots = document.querySelectorAll('.inventory-slot');
+        this.blocks = Array.from(slots).map(slot => parseInt(slot.dataset.block));
+        this.selectedBlock = this.blocks[0];
+
         slots.forEach((slot, index) => {
-            const blockId = parseInt(slot.dataset.block);
             slot.addEventListener('click', () => {
                 this.selectBlock(index);
             });
@@ -26,23 +29,26 @@ export class UI {
         });
 
         document.addEventListener('wheel', (e) => {
+            if (document.pointerLockElement !== document.body) return;
             e.preventDefault();
             const direction = e.deltaY > 0 ? 1 : -1;
-            let newIndex = this.selectedBlock + direction;
-            if (newIndex < 0) newIndex = 8;
-            if (newIndex > 8) newIndex = 0;
+            let newIndex = this.selectedIndex + direction;
+            const slotCount = document.querySelectorAll('.inventory-slot').length;
+            if (newIndex < 0) newIndex = slotCount - 1;
+            if (newIndex >= slotCount) newIndex = 0;
             this.selectBlock(newIndex);
         }, { passive: false });
     }
 
     selectBlock(index) {
-        if (index < 0 || index > 8) return;
-
         const slots = document.querySelectorAll('.inventory-slot');
+        if (index < 0 || index >= slots.length) return;
+
         slots.forEach(slot => slot.classList.remove('selected'));
         slots[index].classList.add('selected');
 
-        this.selectedBlock = index;
+        this.selectedIndex = index;
+        this.selectedBlock = this.blocks[index];
     }
 
     updateHUD(playerPos, selectedBlock, fps) {
@@ -52,7 +58,7 @@ export class UI {
 
         coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
         fpsEl.textContent = `FPS: ${fps}`;
-        blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+        blockEl.textContent = BLOCK_NAMES[this.selectedBlock] || 'Air';
     }
 
     updateFPS() {

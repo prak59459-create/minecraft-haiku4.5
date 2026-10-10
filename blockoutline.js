@@ -2,6 +2,9 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.lastX = null;
+        this.lastY = null;
+        this.lastZ = null;
         this.createOutlineMaterial();
     }
 
@@ -15,6 +18,10 @@ export class BlockOutline {
     }
 
     setSelectedBlock(x, y, z) {
+        if (this.lastX === x && this.lastY === y && this.lastZ === z) {
+            return;
+        }
+
         if (this.outline) {
             this.scene.remove(this.outline);
         }
@@ -43,6 +50,10 @@ export class BlockOutline {
 
         this.outline = new THREE.LineSegments(geometry, this.material);
         this.scene.add(this.outline);
+
+        this.lastX = x;
+        this.lastY = y;
+        this.lastZ = z;
     }
 
     clear() {
@@ -50,13 +61,18 @@ export class BlockOutline {
             this.scene.remove(this.outline);
             this.outline = null;
         }
+        this.lastX = null;
+        this.lastY = null;
+        this.lastZ = null;
     }
 
     update(raycastHit) {
         if (raycastHit && raycastHit.block !== 0) {
             this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z);
         } else {
-            this.clear();
+            if (this.outline) {
+                this.clear();
+            }
         }
     }
 }
