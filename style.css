@@ -91,6 +91,15 @@ body {
     left: 3px;
 }
 
+.inventory-slot .slot-count {
+    color: rgba(255, 255, 100, 0.9);
+    font-weight: bold;
+    font-size: 10px;
+    position: absolute;
+    bottom: 2px;
+    right: 3px;
+}
+
 .inventory-slot .slot-block {
     width: 24px;
     height: 24px;
@@ -139,15 +148,46 @@ body {
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;
+        top: 5px;
+        left: 5px;
     }
 
     .inventory-slot {
         width: 35px;
         height: 35px;
         font-size: 12px;
+        gap: 1px;
+    }
+
+    .inventory-slot .slot-number {
+        font-size: 9px;
+        top: 1px;
+        left: 2px;
+    }
+
+    .inventory-slot .slot-block {
+        width: 18px;
+        height: 18px;
+    }
+
+    .inventory-slot .slot-count {
+        font-size: 8px;
+        bottom: 1px;
+        right: 2px;
     }
 
     #help {
         font-size: 9px;
+        bottom: 65px;
+    }
+
+    #inventory {
+        bottom: 10px;
+        gap: 3px;
+    }
+
+    #debug-display {
+        font-size: 9px;
+        padding: 8px;
     }
 }

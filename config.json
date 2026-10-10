@@ -18,13 +18,16 @@
   },
   "raycast": {
     "distance": 6,
-    "stepSize": 0.05
+    "stepSize": 0.1
   },
   "graphics": {
-    "renderScale": 1.0,
-    "shadowMapSize": 2048,
-    "particleLimit": 2000,
-    "fpsTarget": 60
+    "renderScale": 0.75,
+    "shadowMapSize": 1024,
+    "particleLimit": 1000,
+    "fpsTarget": 60,
+    "shadowsEnabled": false,
+    "antialiasing": false,
+    "flatShading": true
   },
   "terrain": {
     "chunkSize": 16,
