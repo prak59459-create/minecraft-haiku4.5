@@ -54,6 +54,8 @@ export class Chunk {
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'gravel') {
+                            this.setBlock(x, y, z, BLOCKS.GRAVEL);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
@@ -62,6 +64,8 @@ export class Chunk {
                             this.setBlock(x, y, z, BLOCKS.SAND);
                         } else if (terrainType === 'grass') {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
+                        } else if (terrainType === 'gravel') {
+                            this.setBlock(x, y, z, BLOCKS.GRAVEL);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
@@ -83,20 +87,24 @@ export class Chunk {
 function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
-    let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    let height = 64;
+    height += perlinNoise.noise2D(x * 0.002, z * 0.002) * 40;
+    height += perlinNoise.noise2D(x * 0.01, z * 0.01) * 20;
+    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 10;
+    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 5;
+    height += perlinNoise.noise2D(x * 0.2, z * 0.2) * 2;
 
-    return Math.max(20, Math.min(160, Math.floor(height)));
+    return Math.max(15, Math.min(160, Math.floor(height)));
 }
 
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
+    const moisture = perlinNoise.noise2D(x * 0.01, z * 0.01);
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+
+    if (moisture > 0.4) return 'sand';
+    if (temp < -0.2) return 'gravel';
     return 'grass';
 }
 
@@ -104,15 +112,22 @@ function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
     let ore = BLOCKS.STONE;
-    const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
-    const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
-    const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
-    const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
+    const depth = 256 - y;
 
-    if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
-    if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
-    if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
-    if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    const coalChance = perlinNoise.noise2D(x * 0.15 + y * 0.08, z * 0.15 + y * 0.08);
+    const ironChance = perlinNoise.noise2D(x * 0.12 + y * 0.05, z * 0.12 + y * 0.05);
+    const goldChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
+    const diamondChance = perlinNoise.noise2D(x * 0.05 + y * 0.02, z * 0.05 + y * 0.02);
+
+    if (y < 160 && coalChance > 0.3 + depth * 0.001) ore = BLOCKS.COAL_ORE;
+    if (y < 120 && ironChance > 0.4 + depth * 0.0015) ore = BLOCKS.IRON_ORE;
+    if (y < 80 && goldChance > 0.55 + depth * 0.002) ore = BLOCKS.GOLD_ORE;
+    if (y < 40 && diamondChance > 0.65 + depth * 0.002) ore = BLOCKS.DIAMOND_ORE;
+
+    if (ore === BLOCKS.STONE && y < 20 && depth > 200) {
+        const obsidianChance = perlinNoise.noise2D(x * 0.03, z * 0.03);
+        if (obsidianChance > 0.7) ore = BLOCKS.OBSIDIAN;
+    }
 
     return ore;
 }
@@ -122,10 +137,12 @@ function generateTree(chunk, x, z, height) {
 
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
-    const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
-    if (treeChance < 0.5) return;
+    const seed = Math.sin(worldX * 12.9898 + worldZ * 78.233) * 43758.5453;
+    const treeChance = seed - Math.floor(seed);
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    if (treeChance < 0.4) return;
+
+    const trunkHeight = 5 + Math.floor(Math.random() * 6);
     const y = height;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
@@ -136,13 +153,13 @@ function generateTree(chunk, x, z, height) {
         }
     }
 
-    const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    const foliageStart = y + trunkHeight - 4;
+    const foliageRadius = 3 + Math.floor(Math.random() * 2);
 
-    for (let dy = 0; dy < foliageRadius + 2; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
-        for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
-            for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
+    for (let dy = 0; dy < foliageRadius + 3; dy++) {
+        const radiusAtLevel = Math.max(1, Math.round(foliageRadius - Math.floor(dy / 1.3)));
+        for (let angle = 0; angle < Math.PI * 2; angle += 0.35) {
+            for (let dist = 0.5; dist <= radiusAtLevel; dist += 0.6) {
                 const dx = Math.round(Math.cos(angle) * dist);
                 const dz = Math.round(Math.sin(angle) * dist);
                 const fx = x + dx;
@@ -150,7 +167,8 @@ function generateTree(chunk, x, z, height) {
                 const fy = foliageStart + dy;
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
-                    if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
+                    const block = chunk.getBlock(fx, fy, fz);
+                    if (block === BLOCKS.AIR || block === BLOCKS.OAK_LEAVES) {
                         chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
                     }
                 }
@@ -163,6 +181,7 @@ export class World {
     constructor(renderDistance = 8) {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
+        this.maxChunks = 256;
         initPerlinNoise();
     }
 
@@ -221,6 +240,17 @@ export class World {
         }
 
         toDelete.forEach(key => this.chunks.delete(key));
+
+        if (this.chunks.size > this.maxChunks) {
+            const extra = this.chunks.size - this.maxChunks;
+            let removed = 0;
+            for (const [key] of this.chunks) {
+                if (!chunksToKeep.has(key) && removed < extra) {
+                    this.chunks.delete(key);
+                    removed++;
+                }
+            }
+        }
     }
 }
 

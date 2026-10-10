@@ -2,49 +2,77 @@ export class ParticleSystem {
     constructor(scene) {
         this.scene = scene;
         this.particles = [];
+        this.particlePool = [];
+        this.maxParticles = 2000;
         this.geometry = new THREE.BufferGeometry();
         this.material = new THREE.PointsMaterial({
-            size: 0.2,
+            size: 0.25,
             sizeAttenuation: true,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.8,
+            depthWrite: false
         });
         this.points = new THREE.Points(this.geometry, this.material);
         this.scene.add(this.points);
     }
 
+    getParticle() {
+        if (this.particlePool.length > 0) {
+            return this.particlePool.pop();
+        }
+        return {
+            position: { x: 0, y: 0, z: 0 },
+            velocity: { x: 0, y: 0, z: 0 },
+            life: 1,
+            maxLife: 1,
+            color: 0xffffff
+        };
+    }
+
+    releaseParticle(p) {
+        if (this.particlePool.length < this.maxParticles * 2) {
+            this.particlePool.push(p);
+        }
+    }
+
     addBlockBreakParticles(x, y, z, blockColor) {
-        const particleCount = 8 + Math.floor(Math.random() * 8);
+        if (this.particles.length >= this.maxParticles) return;
+
+        const particleCount = Math.min(12, 8 + Math.floor(Math.random() * 8));
 
         for (let i = 0; i < particleCount; i++) {
-            const particle = {
-                position: { x, y, z },
-                velocity: {
-                    x: (Math.random() - 0.5) * 0.3,
-                    y: Math.random() * 0.3,
-                    z: (Math.random() - 0.5) * 0.3
-                },
-                life: 1,
-                maxLife: 0.8 + Math.random() * 0.4,
-                color: blockColor
-            };
+            if (this.particles.length >= this.maxParticles) break;
+
+            const particle = this.getParticle();
+            particle.position.x = x;
+            particle.position.y = y;
+            particle.position.z = z;
+            particle.velocity.x = (Math.random() - 0.5) * 0.4;
+            particle.velocity.y = Math.random() * 0.35;
+            particle.velocity.z = (Math.random() - 0.5) * 0.4;
+            particle.life = 1;
+            particle.maxLife = 0.8 + Math.random() * 0.4;
+            particle.color = blockColor;
             this.particles.push(particle);
         }
     }
 
     update() {
-        const gravity = 0.01;
+        const gravity = 0.015;
 
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
             p.velocity.y -= gravity;
+            p.velocity.x *= 0.98;
+            p.velocity.z *= 0.98;
             p.position.x += p.velocity.x;
             p.position.y += p.velocity.y;
             p.position.z += p.velocity.z;
             p.life -= 1 / 60;
 
             if (p.life <= 0) {
-                this.particles.splice(i, 1);
+                const particle = this.particles.splice(i, 1)[0];
+                this.releaseParticle(particle);
             }
         }
 
