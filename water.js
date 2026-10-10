@@ -85,5 +85,36 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+
+        for (const mesh of this.waterMeshes.values()) {
+            if (mesh && mesh.material) {
+                const waveOffset = Math.sin(this.time * 2) * 0.02;
+                mesh.position.y += waveOffset * 0.1;
+            }
+        }
+    }
+
+    updateWaterMeshes(world) {
+        const chunksToRender = new Map();
+        for (const [key, chunk] of world.chunks) {
+            chunksToRender.set(key, chunk);
+        }
+
+        for (const key of this.waterMeshes.keys()) {
+            if (!chunksToRender.has(key)) {
+                this.scene.remove(this.waterMeshes.get(key));
+                this.waterMeshes.delete(key);
+            }
+        }
+
+        for (const [key, chunk] of chunksToRender) {
+            if (!this.waterMeshes.has(key)) {
+                const mesh = this.buildWaterMesh(chunk);
+                if (mesh) {
+                    this.scene.add(mesh);
+                    this.waterMeshes.set(key, mesh);
+                }
+            }
+        }
     }
 }

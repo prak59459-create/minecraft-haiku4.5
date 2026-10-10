@@ -163,6 +163,7 @@ export class World {
     constructor(renderDistance = 8) {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
+        this.maxChunks = 256;
         initPerlinNoise();
     }
 
@@ -221,6 +222,17 @@ export class World {
         }
 
         toDelete.forEach(key => this.chunks.delete(key));
+
+        if (this.chunks.size > this.maxChunks) {
+            const extra = this.chunks.size - this.maxChunks;
+            let removed = 0;
+            for (const [key] of this.chunks) {
+                if (!chunksToKeep.has(key) && removed < extra) {
+                    this.chunks.delete(key);
+                    removed++;
+                }
+            }
+        }
     }
 }
 

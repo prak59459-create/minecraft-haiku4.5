@@ -31,7 +31,9 @@ class MinecraftGame {
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
+        this.lastFootstep = 0;
         this.showDebug = false;
+        this.isMoving = false;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -55,6 +57,10 @@ class MinecraftGame {
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -300;
+        directionalLight.shadow.camera.right = 300;
+        directionalLight.shadow.camera.top = 300;
+        directionalLight.shadow.camera.bottom = -300;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -134,8 +140,11 @@ class MinecraftGame {
         );
 
         let hit = null;
+        let prevBx = Math.floor(eyePos.x);
+        let prevBy = Math.floor(eyePos.y);
+        let prevBz = Math.floor(eyePos.z);
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = 0.1; dist <= this.raycastDistance; dist += 0.1) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -144,17 +153,10 @@ class MinecraftGame {
             const by = Math.floor(y);
             const bz = Math.floor(z);
 
+            if (bx === prevBx && by === prevBy && bz === prevBz) continue;
+
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
-                const prevX = eyePos.x + direction.x * prevDist;
-                const prevY = eyePos.y + direction.y * prevDist;
-                const prevZ = eyePos.z + direction.z * prevDist;
-
-                const prevBx = Math.floor(prevX);
-                const prevBy = Math.floor(prevY);
-                const prevBz = Math.floor(prevZ);
-
                 let normal = { x: 0, y: 0, z: 0 };
                 if (prevBx !== bx) normal.x = prevBx < bx ? -1 : 1;
                 else if (prevBy !== by) normal.y = prevBy < by ? -1 : 1;
@@ -163,6 +165,10 @@ class MinecraftGame {
                 hit = { x: bx, y: by, z: bz, block, normal, dist };
                 break;
             }
+
+            prevBx = bx;
+            prevBy = by;
+            prevBz = bz;
         }
 
         if (!hit) {
@@ -197,8 +203,8 @@ class MinecraftGame {
         const WORLD_HEIGHT = 256;
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
-            for (let y = 1; y < WORLD_HEIGHT; y++) {
-                for (let z = 0; z < CHUNK_SIZE; z++) {
+            for (let z = 0; z < CHUNK_SIZE; z++) {
+                for (let y = 1; y < WORLD_HEIGHT; y++) {
                     const blockId = chunk.getBlock(x, y, z);
                     if (blockId === BLOCKS.AIR) continue;
 
@@ -249,17 +255,13 @@ class MinecraftGame {
         let faceCount = 0;
 
         const faces = [
-            { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
-            { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
-            { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]] },
-            { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]] },
-            { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
-            { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
+            { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]], brightness: 0.8 },
+            { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]], brightness: 0.8 },
+            { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]], brightness: 1.0 },
+            { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]], brightness: 0.6 },
+            { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]], brightness: 0.85 },
+            { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]], brightness: 0.85 }
         ];
-
-        const r = Math.floor(color.r * 255);
-        const g = Math.floor(color.g * 255);
-        const b = Math.floor(color.b * 255);
 
         for (const face of faces) {
             const [dx, dy, dz] = face.dir;
@@ -269,6 +271,11 @@ class MinecraftGame {
 
             const neighbor = this.world.getBlock(nx, ny, nz);
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+
+            const faceColor = color.clone().multiplyScalar(face.brightness);
+            const r = Math.floor(faceColor.r * 255);
+            const g = Math.floor(faceColor.g * 255);
+            const b = Math.floor(faceColor.b * 255);
 
             const startIndex = vertices.length / 3;
             for (const [vx, vy, vz] of face.verts) {
@@ -349,9 +356,19 @@ class MinecraftGame {
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
+        this.waterRenderer.updateWaterMeshes(this.world);
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);
+
+        this.isMoving = Math.abs(this.player.velocity.x) > 0.01 || Math.abs(this.player.velocity.z) > 0.01;
+        if (this.isMoving && this.player.isOnGround) {
+            const now = Date.now();
+            if (now - this.lastFootstep > 400) {
+                this.audioManager.playStepSound();
+                this.lastFootstep = now;
+            }
+        }
 
         const fps = this.ui.updateFPS();
         this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
