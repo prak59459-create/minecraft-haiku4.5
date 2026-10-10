@@ -105,13 +105,14 @@ export class Player {
 
         const checkPoints = [
             { dy: 0.1, radius: radius * 0.9 },
-            { dy: height * 0.3, radius: radius * 0.9 },
-            { dy: height * 0.6, radius: radius * 0.9 },
-            { dy: height * 0.9, radius: radius * 0.7 }
+            { dy: height * 0.25, radius: radius * 0.9 },
+            { dy: height * 0.5, radius: radius * 0.9 },
+            { dy: height * 0.75, radius: radius * 0.85 },
+            { dy: height * 0.95, radius: radius * 0.7 }
         ];
 
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
                 const cz = this.position.z + Math.sin(angle) * point.radius;
@@ -120,11 +121,39 @@ export class Player {
                 if (isBlockSolid(block)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
                     if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
+                        const scale = 1.2 / moveLen;
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
                     break;
+                }
+            }
+        }
+
+        if (this.velocity.x !== 0 || this.velocity.z !== 0) {
+            for (let step = 0; step < 2; step++) {
+                const stepHeight = 0.5 + step * 0.3;
+                const testX = this.position.x;
+                const testY = this.position.y + stepHeight;
+                const testZ = this.position.z;
+
+                let canStepUp = true;
+                for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+                    const cx = testX + Math.cos(angle) * radius;
+                    const cz = testZ + Math.sin(angle) * radius;
+                    const block = this.world.getBlock(Math.floor(cx), Math.floor(testY), Math.floor(cz));
+                    if (isBlockSolid(block)) {
+                        canStepUp = false;
+                        break;
+                    }
+                }
+
+                if (canStepUp) {
+                    const blockBelow = this.world.getBlock(Math.floor(testX), Math.floor(testY - 0.1), Math.floor(testZ));
+                    if (isBlockSolid(blockBelow)) {
+                        this.position.y = testY;
+                        break;
+                    }
                 }
             }
         }
