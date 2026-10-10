@@ -2,6 +2,8 @@ export class ParticleSystem {
     constructor(scene) {
         this.scene = scene;
         this.particles = [];
+        this.particlePool = [];
+        this.maxParticles = 2000;
         this.geometry = new THREE.BufferGeometry();
         this.material = new THREE.PointsMaterial({
             size: 0.2,
@@ -13,21 +15,34 @@ export class ParticleSystem {
         this.scene.add(this.points);
     }
 
+    allocateParticle() {
+        if (this.particles.length >= this.maxParticles) return null;
+        if (this.particlePool.length > 0) {
+            return this.particlePool.pop();
+        }
+        return {};
+    }
+
+    releaseParticle(particle) {
+        this.particlePool.push(particle);
+    }
+
     addBlockBreakParticles(x, y, z, blockColor) {
         const particleCount = 8 + Math.floor(Math.random() * 8);
 
         for (let i = 0; i < particleCount; i++) {
-            const particle = {
-                position: { x, y, z },
-                velocity: {
-                    x: (Math.random() - 0.5) * 0.3,
-                    y: Math.random() * 0.3,
-                    z: (Math.random() - 0.5) * 0.3
-                },
-                life: 1,
-                maxLife: 0.8 + Math.random() * 0.4,
-                color: blockColor
+            const particle = this.allocateParticle();
+            if (!particle) break;
+
+            particle.position = { x, y, z };
+            particle.velocity = {
+                x: (Math.random() - 0.5) * 0.3,
+                y: Math.random() * 0.3,
+                z: (Math.random() - 0.5) * 0.3
             };
+            particle.life = 1;
+            particle.maxLife = 0.8 + Math.random() * 0.4;
+            particle.color = blockColor;
             this.particles.push(particle);
         }
     }
@@ -44,7 +59,8 @@ export class ParticleSystem {
             p.life -= 1 / 60;
 
             if (p.life <= 0) {
-                this.particles.splice(i, 1);
+                const dead = this.particles.splice(i, 1)[0];
+                this.releaseParticle(dead);
             }
         }
 

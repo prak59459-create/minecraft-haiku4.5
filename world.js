@@ -91,7 +91,16 @@ export class Chunk {
 function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
-    let height = 65;
+    const biomeNoise = perlinNoise.noise2D(x * 0.001, z * 0.001);
+    let baseHeight = 65;
+
+    if (biomeNoise < -0.2) {
+        baseHeight = 50;
+    } else if (biomeNoise > 0.3) {
+        baseHeight = 90;
+    }
+
+    let height = baseHeight;
     height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
     height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
     height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
@@ -127,15 +136,17 @@ function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
     let ore = BLOCKS.STONE;
+    const relativeY = y / 256;
+
     const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
     const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
     const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
     const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
 
     if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
-    if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
-    if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
-    if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    else if (y < 120 && ironChance > 0.58) ore = BLOCKS.IRON_ORE;
+    else if (y < 80 && goldChance > 0.68) ore = BLOCKS.GOLD_ORE;
+    else if (y < 40 && diamondChance > 0.72) ore = BLOCKS.DIAMOND_ORE;
 
     return ore;
 }

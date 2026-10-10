@@ -17,12 +17,13 @@ export class WaterRenderer {
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
         const waterColor = new THREE.Color(0x4A90E2);
+        const lavaColor = new THREE.Color(0xFF4500);
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
                     const blockId = chunk.getBlock(x, y, z);
-                    if (blockId !== BLOCKS.WATER) continue;
+                    if (blockId !== BLOCKS.WATER && blockId !== BLOCKS.LAVA) continue;
 
                     const wx = chunk.x * CHUNK_SIZE + x;
                     const wy = y;
@@ -41,18 +42,25 @@ export class WaterRenderer {
                         { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
                     ];
 
+                    const isLava = blockId === BLOCKS.LAVA;
+                    const baseColor = isLava ? lavaColor : waterColor;
+                    const opacity = isLava ? 0.7 : 0.6;
+
                     for (const face of faces) {
                         const [dx, dy, dz] = face.dir;
                         const neighborBlock = neighbor(dx, dy, dz);
 
-                        if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
+                        if (neighborBlock !== BLOCKS.AIR &&
+                            neighborBlock !== BLOCKS.WATER &&
+                            neighborBlock !== BLOCKS.LAVA) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const colorVar = isLava ? 0.3 : 0.2;
+                        const color = baseColor.clone().multiplyScalar((1 - colorVar) + Math.random() * colorVar);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
+                            colors.push(Math.floor(color.r * 255), Math.floor(color.g * 255), Math.floor(color.b * 255));
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -72,8 +80,10 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: opacity,
+                side: THREE.FrontSide,
+                emissive: new THREE.Color(0xFF4500),
+                emissiveIntensity: 0.1
             });
 
             const mesh = new THREE.Mesh(geometry, material);
