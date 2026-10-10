@@ -170,6 +170,7 @@ export class Player {
         if (this.position.y < -10) {
             this.position.y = 100;
             this.velocity.y = 0;
+            if (this.onFallOff) this.onFallOff();
         }
     }
 
