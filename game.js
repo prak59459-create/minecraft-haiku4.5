@@ -59,9 +59,14 @@ class MinecraftGame {
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -256;
+        directionalLight.shadow.camera.right = 256;
+        directionalLight.shadow.camera.top = 256;
+        directionalLight.shadow.camera.bottom = -256;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
+        this.scene.fog = new THREE.Fog(0x87CEEB, 300, 1000);
     }
 
     setupEventListeners() {
@@ -353,6 +358,7 @@ class MinecraftGame {
             eyePos.z + direction.z
         );
 
+        this.checkUnderwaterEye(eyePos);
         this.updateVisibleChunks();
         this.updateDayNightCycle();
         this.particleSystem.update();
@@ -371,6 +377,23 @@ class MinecraftGame {
         this.renderer.render(this.scene, this.camera);
     }
 
+    checkUnderwaterEye(eyePos) {
+        const block = this.world.getBlock(Math.floor(eyePos.x), Math.floor(eyePos.y), Math.floor(eyePos.z));
+        const isUnderwater = block === BLOCKS.WATER;
+
+        if (isUnderwater) {
+            this.scene.fog.far = 80;
+            this.scene.background = new THREE.Color(0x1a5f7f);
+        } else {
+            this.scene.fog.far = 300;
+            const time = Date.now() * 0.00002;
+            const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+            const skyColor = new THREE.Color();
+            skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+            this.scene.background = skyColor;
+        }
+    }
+
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
@@ -378,10 +401,6 @@ class MinecraftGame {
 
         this.directionalLight.position.set(200, sunY, 200);
         this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
-
-        const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
-        this.scene.background = skyColor;
     }
 }
 
