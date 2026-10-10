@@ -32,8 +32,18 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.stats = {
+            blocksDestroyed: 0,
+            blocksPlaced: 0,
+            jumpsPerformed: 0,
+            distanceTraveled: 0,
+            lastPosition: this.player.position
+        };
 
-        this.player.onJump = () => this.audioManager.playJumpSound();
+        this.player.onJump = () => {
+            this.audioManager.playJumpSound();
+            this.stats.jumpsPerformed++;
+        };
 
         this.setupLighting();
         this.setupEventListeners();
@@ -118,6 +128,7 @@ class MinecraftGame {
         if (event.button === 0) {
             this.world.setBlock(hit.x, hit.y, hit.z, BLOCKS.AIR);
             this.updateChunkMesh(hit.x, hit.y, hit.z);
+            this.stats.blocksDestroyed++;
 
             const color = BLOCK_COLORS[hit.block] || 0x808080;
             this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
@@ -136,6 +147,7 @@ class MinecraftGame {
             if (!this.isPlayerOccupying(nx, ny, nz)) {
                 this.world.setBlock(nx, ny, nz, this.selectedBlockType);
                 this.updateChunkMesh(nx, ny, nz);
+                this.stats.blocksPlaced++;
                 this.audioManager.playBlockSound('place');
             }
         }
@@ -364,6 +376,15 @@ class MinecraftGame {
 
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
+
+        const dx = this.player.position.x - this.stats.lastPosition.x;
+        const dy = this.player.position.y - this.stats.lastPosition.y;
+        const dz = this.player.position.z - this.stats.lastPosition.z;
+        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (dist > 0.01) {
+            this.stats.distanceTraveled += dist;
+            this.stats.lastPosition = { x: this.player.position.x, y: this.player.position.y, z: this.player.position.z };
+        }
 
         const eyePos = this.player.getEyePosition();
         this.camera.position.set(eyePos.x, eyePos.y, eyePos.z);

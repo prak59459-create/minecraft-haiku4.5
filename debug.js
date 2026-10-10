@@ -8,7 +8,11 @@ export class DebugDisplay {
             triangles: 0,
             drawCalls: 0,
             particles: 0,
-            memory: 0
+            memory: 0,
+            blocksDestroyed: 0,
+            blocksPlaced: 0,
+            jumps: 0,
+            distance: 0
         };
         this.createDisplay();
     }
@@ -59,6 +63,10 @@ export class DebugDisplay {
         this.stats.fps = game.ui.fpsCounter;
         this.stats.chunks = game.world.chunks.size;
         this.stats.particles = game.particleSystem.particles.length;
+        this.stats.blocksDestroyed = game.stats.blocksDestroyed;
+        this.stats.blocksPlaced = game.stats.blocksPlaced;
+        this.stats.jumps = game.stats.jumpsPerformed;
+        this.stats.distance = game.stats.distanceTraveled.toFixed(1);
 
         let vertices = 0;
         let triangles = 0;
@@ -104,6 +112,10 @@ export class DebugDisplay {
             `Draw Calls: ${this.stats.drawCalls}`,
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
+            '--- STATS ---',
+            `Blocks: ✗${this.stats.blocksDestroyed} ✓${this.stats.blocksPlaced}`,
+            `Jumps: ${this.stats.jumps}`,
+            `Distance: ${this.stats.distance}m`,
             '==================',
             'F3: Toggle | H: Help'
         ];
