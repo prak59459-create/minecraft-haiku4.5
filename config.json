@@ -3,7 +3,8 @@
     "renderDistance": 8,
     "seedOffset": 0,
     "waterLevel": 62,
-    "bedrockLevel": 0
+    "bedrockLevel": 0,
+    "chunkCacheClearInterval": 3000
   },
   "player": {
     "speed": 0.1,
@@ -24,19 +25,29 @@
     "renderScale": 1.0,
     "shadowMapSize": 2048,
     "particleLimit": 2000,
-    "fpsTarget": 60
+    "fpsTarget": 60,
+    "enableFog": true,
+    "antialiasing": true
   },
   "terrain": {
     "chunkSize": 16,
     "maxHeight": 160,
     "minHeight": 20,
     "seaLevel": 62,
-    "treeFrequency": 0.5
+    "treeFrequency": 0.5,
+    "caveFrequency": 0.4
   },
   "audio": {
     "enabled": true,
     "masterVolume": 0.5,
     "soundFx": true,
-    "music": false
+    "music": false,
+    "stepSounds": true,
+    "blockSounds": true
+  },
+  "performance": {
+    "enableWorkers": false,
+    "enableCompression": true,
+    "maxChunksPerUpdate": 4
   }
 }
