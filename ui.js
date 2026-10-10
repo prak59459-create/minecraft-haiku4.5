@@ -13,7 +13,12 @@ export class UI {
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach((slot, index) => {
             const blockId = parseInt(slot.dataset.block);
-            slot.addEventListener('click', () => {
+            slot.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.selectBlock(index);
+            });
+            slot.addEventListener('touchstart', (e) => {
+                e.preventDefault();
                 this.selectBlock(index);
             });
         });
@@ -21,17 +26,20 @@ export class UI {
         document.addEventListener('keydown', (e) => {
             const num = parseInt(e.key);
             if (num >= 1 && num <= 9) {
+                e.preventDefault();
                 this.selectBlock(num - 1);
             }
         });
 
         document.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const direction = e.deltaY > 0 ? 1 : -1;
-            let newIndex = this.selectedBlock + direction;
-            if (newIndex < 0) newIndex = 8;
-            if (newIndex > 8) newIndex = 0;
-            this.selectBlock(newIndex);
+            if (document.pointerLockElement === document.body) {
+                e.preventDefault();
+                const direction = e.deltaY > 0 ? 1 : -1;
+                let newIndex = this.selectedBlock + direction;
+                if (newIndex < 0) newIndex = 8;
+                if (newIndex > 8) newIndex = 0;
+                this.selectBlock(newIndex);
+            }
         }, { passive: false });
     }
 
