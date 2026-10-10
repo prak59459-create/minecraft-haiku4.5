@@ -60,8 +60,10 @@ export class Chunk {
                     } else if (y < height) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
+                        } else if (terrainType === 'mycelium') {
+                            this.setBlock(x, y, z, BLOCKS.MYCELIUM);
+                        } else if (terrainType === 'moss') {
+                            this.setBlock(x, y, z, BLOCKS.MOSS_BLOCK);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
@@ -87,7 +89,8 @@ function getTerrainHeight(x, z) {
     height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
     height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
     height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 5;
+    height += perlinNoise.noise2D(x * 0.2, z * 0.2) * 2;
 
     return Math.max(20, Math.min(160, Math.floor(height)));
 }
@@ -96,7 +99,11 @@ function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
+    const humidity = perlinNoise.noise2D(x * 0.025, z * 0.025);
+
     if (temp < -0.3) return 'sand';
+    if (temp > 0.4 && humidity < -0.2) return 'mycelium';
+    if (humidity > 0.4) return 'moss';
     return 'grass';
 }
 

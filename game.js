@@ -37,6 +37,8 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.gameTime = 0;
+        this.startTime = Date.now();
 
         this.player.onJump = () => this.audioManager.playJumpSound();
         this.player.onStep = () => this.audioManager.playStepSound();
@@ -287,9 +289,21 @@ class MinecraftGame {
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
+
+            let faceColor = color.clone();
+            if (dy === -1) {
+                faceColor.multiplyScalar(0.7);
+            } else if (dy === 1) {
+                faceColor.multiplyScalar(1.1);
+            }
+
+            const fr = Math.floor(faceColor.r * 255);
+            const fg = Math.floor(faceColor.g * 255);
+            const fb = Math.floor(faceColor.b * 255);
+
             for (const [vx, vy, vz] of face.verts) {
                 vertices.push(x + vx, y + vy, z + vz);
-                colors.push(r, g, b);
+                colors.push(fr, fg, fb);
             }
 
             indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -400,7 +414,10 @@ class MinecraftGame {
         this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        const hue = 0.6 + Math.sin(time) * 0.1;
+        const saturation = 0.4 + sunIntensity * 0.2;
+        const lightness = 0.5 + sunIntensity * 0.4;
+        skyColor.setHSL(hue, saturation, lightness);
         this.scene.background = skyColor;
     }
 }

@@ -108,6 +108,7 @@ export class Player {
             { dy: height * 0.9, radius: radius * 0.7 }
         ];
 
+        let collision = false;
         for (const point of checkPoints) {
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
@@ -116,14 +117,19 @@ export class Player {
 
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
                 if (isBlockSolid(block)) {
-                    const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
-                    if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
-                        this.position.x -= this.velocity.x * scale;
-                        this.position.z -= this.velocity.z * scale;
-                    }
+                    collision = true;
                     break;
                 }
+            }
+            if (collision) break;
+        }
+
+        if (collision) {
+            const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+            if (moveLen > 0) {
+                const scale = 1.5 / moveLen;
+                this.position.x -= this.velocity.x * scale;
+                this.position.z -= this.velocity.z * scale;
             }
         }
 
