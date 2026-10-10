@@ -2,12 +2,14 @@ import { BLOCK_NAMES } from './blocks.js';
 
 export class UI {
     constructor() {
-        this.selectedBlock = 1;
+        this.selectedBlock = 0;
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
         this.blockSelectionCallback = null;
+        this.isHelpVisible = false;
         this.setupInventoryUI();
+        this.setupHotkey();
     }
 
     setupInventoryUI() {
@@ -53,6 +55,21 @@ export class UI {
 
     setBlockSelectionCallback(callback) {
         this.blockSelectionCallback = callback;
+    }
+
+    setupHotkey() {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'e' || e.key === 'E') {
+                this.toggleInventory();
+            }
+        });
+    }
+
+    toggleInventory() {
+        const inventory = document.getElementById('inventory');
+        if (inventory) {
+            inventory.style.display = inventory.style.display === 'none' ? 'flex' : 'none';
+        }
     }
 
     updateHUD(playerPos, selectedBlock, fps) {

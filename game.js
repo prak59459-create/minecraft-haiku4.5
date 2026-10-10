@@ -13,9 +13,17 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
+            powerPreference: 'high-performance',
+            precision: 'mediump'
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowMap;
+        this.renderer.outputEncoding = THREE.sRGBEncoding;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -311,22 +319,28 @@ class MinecraftGame {
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
         const visibleKeys = new Set();
+        const visibleKeysArray = [];
         for (let dx = -renderDistance; dx <= renderDistance; dx++) {
             for (let dz = -renderDistance; dz <= renderDistance; dz++) {
                 const key = `${playerChunkX + dx},${playerChunkZ + dz}`;
                 visibleKeys.add(key);
+                const distance = Math.abs(dx) + Math.abs(dz);
+                visibleKeysArray.push({ key, distance });
             }
         }
 
         for (const [key] of this.chunkMeshes) {
             if (!visibleKeys.has(key)) {
-                this.scene.remove(this.chunkMeshes.get(key));
+                const mesh = this.chunkMeshes.get(key);
+                if (mesh) this.scene.remove(mesh);
                 this.chunkMeshes.delete(key);
             }
         }
 
+        visibleKeysArray.sort((a, b) => a.distance - b.distance);
+
         let updateCount = 0;
-        for (const key of visibleKeys) {
+        for (const { key } of visibleKeysArray) {
             if (!this.chunkMeshes.has(key) && this.world.chunks.has(key)) {
                 if (updateCount >= this.maxChunkUpdatesPerFrame) break;
                 const chunk = this.world.chunks.get(key);
