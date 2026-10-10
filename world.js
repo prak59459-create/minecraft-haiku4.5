@@ -7,6 +7,7 @@ const WORLD_HEIGHT = 256;
 let perlinNoise;
 const heightCache = new Map();
 const typeCache = new Map();
+const caveCache = new Map();
 
 export function initPerlinNoise() {
     if (typeof SimplexNoise !== 'undefined') {
@@ -51,8 +52,12 @@ export class Chunk {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
                     } else if (y < height - 4) {
-                        const block = getOreBlock(wx, y, wz);
-                        this.setBlock(x, y, z, block);
+                        if (isCaveBlock(wx, y, wz)) {
+                            this.setBlock(x, y, z, BLOCKS.AIR);
+                        } else {
+                            const block = getOreBlock(wx, y, wz);
+                            this.setBlock(x, y, z, block);
+                        }
                     } else if (y < height - 1) {
                         if (y < 60 && terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.CLAY);
@@ -116,6 +121,26 @@ function getTerrainType(x, z) {
 
     typeCache.set(cacheKey, type);
     return type;
+}
+
+function isCaveBlock(x, y, z) {
+    if (!perlinNoise) return false;
+
+    const cacheKey = `${x},${y},${z}`;
+    if (caveCache.has(cacheKey)) return caveCache.get(cacheKey);
+
+    if (y < 10 || y > 120) {
+        caveCache.set(cacheKey, false);
+        return false;
+    }
+
+    const caveNoise1 = perlinNoise.noise3D ? perlinNoise.noise3D(x * 0.08, y * 0.05, z * 0.08) : 0;
+    const caveNoise2 = perlinNoise.noise2D(x * 0.04 + y * 0.04, z * 0.04) * Math.sin(y * 0.02);
+    const caveValue = caveNoise1 + caveNoise2;
+
+    const isCave = caveValue > 0.6 && Math.random() > 0.3;
+    caveCache.set(cacheKey, isCave);
+    return isCave;
 }
 
 function getOreBlock(x, y, z) {

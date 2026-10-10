@@ -107,7 +107,7 @@ class MinecraftGame {
             this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
 
             const now = Date.now();
-            if (now - this.lastBreakSound > 50) {
+            if (now - this.lastBreakSound > 40) {
                 this.audioManager.playBlockSound('break');
                 this.lastBreakSound = now;
             }
@@ -117,10 +117,14 @@ class MinecraftGame {
             const ny = hit.y + norm.y;
             const nz = hit.z + norm.z;
 
-            if (!this.isPlayerOccupying(nx, ny, nz)) {
+            if (!this.isPlayerOccupying(nx, ny, nz) && this.selectedBlockType !== BLOCKS.AIR) {
                 this.world.setBlock(nx, ny, nz, this.selectedBlockType);
                 this.updateChunkMesh(nx, ny, nz);
-                this.audioManager.playBlockSound('place');
+                const now = Date.now();
+                if (now - this.lastPlaceSound > 40) {
+                    this.audioManager.playBlockSound('place');
+                    this.lastPlaceSound = now;
+                }
             }
         }
     }
@@ -219,14 +223,15 @@ class MinecraftGame {
                     const wz = chunk.z * CHUNK_SIZE + z;
 
                     const baseColor = BLOCK_COLORS[blockId];
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.65;
+                    const heightLight = Math.min(0.35, (wy / WORLD_HEIGHT) * 0.4);
+                    const varLight = (Math.sin(wx * 0.3 + wz * 0.3) + Math.cos(wx * 0.5 + wz * 0.5)) * 0.08;
+                    const depthVary = Math.sin(wx * 0.1) * Math.cos(wz * 0.1) * 0.05;
+                    const brightness = baseLight + heightLight + varLight + depthVary;
 
-                    const r = Math.round(((baseColor >> 16) & 255) * brightness);
-                    const g = Math.round(((baseColor >> 8) & 255) * brightness);
-                    const b = Math.round((baseColor & 255) * brightness);
+                    const r = Math.round(Math.min(255, ((baseColor >> 16) & 255) * brightness));
+                    const g = Math.round(Math.min(255, ((baseColor >> 8) & 255) * brightness));
+                    const b = Math.round(Math.min(255, (baseColor & 255) * brightness));
 
                     for (const face of FACES) {
                         const [dx, dy, dz] = face.dir;

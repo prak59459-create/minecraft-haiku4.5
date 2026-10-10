@@ -85,7 +85,18 @@ export class WaterRenderer {
         return null;
     }
 
-    update() {
-        this.time += 0.016;
+    update(time) {
+        this.time = time * 0.001;
+    }
+
+    getWaterColor(baseColor, brightness, worldTime) {
+        const wave = Math.sin(worldTime * 0.5) * 0.1 + 0.1;
+        const finalBrightness = brightness * (0.8 + wave);
+
+        const r = Math.round(((baseColor >> 16) & 255) * finalBrightness);
+        const g = Math.round(((baseColor >> 8) & 255) * finalBrightness * 1.05);
+        const b = Math.round((baseColor & 255) * finalBrightness * 1.1);
+
+        return (r << 16) | (g << 8) | b;
     }
 }
