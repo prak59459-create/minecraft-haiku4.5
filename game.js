@@ -201,6 +201,19 @@ class MinecraftGame {
         }
     }
 
+    getLocalTerrainHeight(chunk, x, z) {
+        const wx = chunk.x * 16 + x;
+        const wz = chunk.z * 16 + z;
+
+        for (let y = 255; y >= 1; y--) {
+            const block = chunk.getBlock(x, y, z);
+            if (block !== BLOCKS.AIR) {
+                return y;
+            }
+        }
+        return 64;
+    }
+
     buildChunkMesh(chunk) {
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
@@ -209,10 +222,15 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
+        const SURFACE_LEVEL = 64;
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
-            for (let y = 1; y < WORLD_HEIGHT; y++) {
-                for (let z = 0; z < CHUNK_SIZE; z++) {
+            for (let z = 0; z < CHUNK_SIZE; z++) {
+                const localHeight = this.getLocalTerrainHeight(chunk, x, z);
+                const startY = Math.max(1, localHeight - 10);
+                const endY = Math.min(WORLD_HEIGHT, localHeight + 20);
+
+                for (let y = startY; y < endY; y++) {
                     const blockId = chunk.getBlock(x, y, z);
                     if (blockId === BLOCKS.AIR) continue;
 
@@ -303,13 +321,25 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const RENDER_DISTANCE = 10;
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
-        for (const [key, chunk] of this.world.chunks) {
-            const [cx, cz] = key.split(',').map(Number);
+        const chunkKeys = Array.from(this.world.chunks.keys());
+        const sortedKeys = chunkKeys.sort((keyA, keyB) => {
+            const [cx1, cz1] = keyA.split(',').map(Number);
+            const [cx2, cz2] = keyB.split(',').map(Number);
+            const dist1 = Math.abs(cx1 - playerChunkX) + Math.abs(cz1 - playerChunkZ);
+            const dist2 = Math.abs(cx2 - playerChunkX) + Math.abs(cz2 - playerChunkZ);
+            return dist1 - dist2;
+        });
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+        for (const key of sortedKeys) {
+            const [cx, cz] = key.split(',').map(Number);
+            const distX = Math.abs(cx - playerChunkX);
+            const distZ = Math.abs(cz - playerChunkZ);
+
+            if (distX > RENDER_DISTANCE || distZ > RENDER_DISTANCE) {
                 if (this.chunkMeshes.has(key)) {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
@@ -318,6 +348,7 @@ class MinecraftGame {
             }
 
             if (!this.chunkMeshes.has(key)) {
+                const chunk = this.world.chunks.get(key);
                 const mesh = this.buildChunkMesh(chunk);
                 if (mesh) {
                     this.scene.add(mesh);
@@ -380,16 +411,26 @@ class MinecraftGame {
     }
 
     updateDayNightCycle() {
-        const time = Date.now() * 0.00002;
+        const time = Date.now() * 0.00001;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
+        const sunX = Math.cos(time) * 150;
+        const sunZ = Math.sin(time * 0.7) * 100;
 
-        this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.position.set(sunX, sunY, sunZ);
+        this.directionalLight.intensity = 0.6 + sunIntensity * 0.35;
+
+        const skyHue = 0.55 + Math.sin(time * 0.5) * 0.1;
+        const skySaturation = 0.5 + sunIntensity * 0.1;
+        const skyLightness = 0.45 + sunIntensity * 0.3;
 
         const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        skyColor.setHSL(skyHue, skySaturation, skyLightness);
         this.scene.background = skyColor;
+
+        this.scene.fog.color = skyColor;
+        this.scene.fog.near = 100;
+        this.scene.fog.far = 200;
     }
 }
 

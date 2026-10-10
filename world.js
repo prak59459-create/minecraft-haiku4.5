@@ -165,9 +165,10 @@ function generateTree(chunk, x, z, height) {
 }
 
 export class World {
-    constructor(renderDistance = 8) {
+    constructor(renderDistance = 10) {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
+        this.loadDistance = renderDistance + 3;
         initPerlinNoise();
     }
 
@@ -210,11 +211,16 @@ export class World {
         const playerChunkZ = Math.floor(playerZ / CHUNK_SIZE);
 
         const chunksToKeep = new Set();
-        for (let dx = -this.renderDistance; dx <= this.renderDistance; dx++) {
-            for (let dz = -this.renderDistance; dz <= this.renderDistance; dz++) {
-                const key = `${playerChunkX + dx},${playerChunkZ + dz}`;
-                chunksToKeep.add(key);
-                this.getChunk(playerChunkX + dx, playerChunkZ + dz);
+        const distLimit = this.loadDistance;
+
+        for (let dx = -distLimit; dx <= distLimit; dx++) {
+            for (let dz = -distLimit; dz <= distLimit; dz++) {
+                const dist = Math.max(Math.abs(dx), Math.abs(dz));
+                if (dist <= distLimit) {
+                    const key = `${playerChunkX + dx},${playerChunkZ + dz}`;
+                    chunksToKeep.add(key);
+                    this.getChunk(playerChunkX + dx, playerChunkZ + dz);
+                }
             }
         }
 
