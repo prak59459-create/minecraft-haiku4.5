@@ -19,6 +19,8 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.creativeMode = false;
+        this.isFlying = false;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -45,26 +47,40 @@ export class Player {
 
     update() {
         this.handleMovement();
-        this.applyPhysics();
-        this.checkCollisions();
+        if (this.creativeMode) {
+            this.applyCreativePhysics();
+        } else {
+            this.applyPhysics();
+            this.checkCollisions();
+        }
     }
 
     handleMovement() {
         let moveX = 0;
         let moveZ = 0;
+        let moveY = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const speed = this.creativeMode ? (this.keys['shift'] ? 0.3 : 0.15) : (this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED);
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
         if (this.keys['a']) moveX -= speed;
         if (this.keys['d']) moveX += speed;
 
+        if (this.creativeMode) {
+            if (this.keys[' ']) moveY += speed;
+            if (this.keys['control']) moveY -= speed;
+        }
+
         const cosY = Math.cos(this.rotation.y);
         const sinY = Math.sin(this.rotation.y);
 
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
+
+        if (this.creativeMode) {
+            this.velocity.y = moveY;
+        }
 
         this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
         this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
@@ -78,6 +94,13 @@ export class Player {
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
         this.position.z += this.velocity.z;
+    }
+
+    applyCreativePhysics() {
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y;
+        this.position.z += this.velocity.z;
+        this.isOnGround = true;
     }
 
     checkCollisions() {
@@ -147,6 +170,7 @@ export class Player {
         if (this.position.y < -10) {
             this.position.y = 100;
             this.velocity.y = 0;
+            if (this.onFallOff) this.onFallOff();
         }
     }
 

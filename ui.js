@@ -45,13 +45,30 @@ export class UI {
         this.selectedBlock = index;
     }
 
-    updateHUD(playerPos, selectedBlock, fps) {
+    setSelectedBlockDirect(blockId) {
+        const slots = document.querySelectorAll('.inventory-slot');
+        let found = false;
+
+        for (let i = 0; i < slots.length; i++) {
+            if (parseInt(slots[i].dataset.block) === blockId) {
+                this.selectBlock(i);
+                found = true;
+                break;
+            }
+        }
+
+        if (!found && slots.length > 0) {
+            this.selectBlock(0);
+        }
+    }
+
+    updateHUD(playerPos, selectedBlock, fps, creativeMode = false) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
 
         coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
-        fpsEl.textContent = `FPS: ${fps}`;
+        fpsEl.textContent = `FPS: ${fps}${creativeMode ? ' (Creative)' : ''}`;
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
     }
 

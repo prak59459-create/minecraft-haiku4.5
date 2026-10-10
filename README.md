@@ -13,16 +13,17 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Block Placement** - Right-click to place blocks
 - **Block Selection** - Use 1-9 or scroll wheel to switch between blocks
 - **Pick Block** - Press C to pick the block you're looking at
+- **Creative Mode** - Press G to toggle flight mode with unlimited blocks
 
 ### World & Terrain
 - **Procedural Generation** - Infinite world generation using Perlin noise
 - **Multiple Biomes** - Grass, sand, and varied terrain types
 - **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
-  - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
+- **Multiple Block Types** (17 types):
+  - Building: Stone, Grass, Dirt, Cobblestone, Gravel
+  - Natural: Oak Log, Oak Leaves, Sand, Water, Bedrock
+  - Ores: Coal Ore, Iron Ore, Gold Ore, Diamond Ore
+  - Special: Obsidian, Mycelium, Podzol
 - **Ore Generation** - Procedural ore generation at various depths
 - **Tree Generation** - Natural tree placement in suitable terrain
 
@@ -75,8 +76,10 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 | **1-9** | Select Block Slot |
 | **Scroll Wheel** | Change Selected Block |
 | **C** | Pick Block (Pick the block you're looking at) |
+| **G** | Toggle Creative Mode (Flight) |
 | **H** | Toggle Help |
 | **F3** | Toggle Debug Info |
+| **Ctrl** (Creative) | Move Down |
 
 ## Getting Started
 
@@ -104,11 +107,18 @@ http://localhost:8000
 
 ## How to Play
 
+### Survival Mode
 1. **Explore** - Walk around and explore the procedurally generated world
 2. **Gather Blocks** - Left-click to destroy blocks and collect them
 3. **Build** - Select a block from your inventory (1-9 keys) and right-click to place it
 4. **Navigate** - Use WASD to move and mouse to look around
 5. **Survive** - Manage gravity and avoid falling into water or off cliffs
+
+### Creative Mode
+1. **Toggle** - Press G to enter Creative Mode (no falling damage, flight enabled)
+2. **Fly** - Use Space to move up, Ctrl to move down
+3. **Speed** - Hold Shift while flying for faster movement
+4. **Build Freely** - Unlimited block placement without restrictions
 
 ## Technical Details
 
