@@ -83,6 +83,11 @@ export class DebugDisplay {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
         }
 
+        this.playerPos = game.player.position;
+        this.playerVel = game.player.velocity;
+        this.isGrounded = game.player.isOnGround;
+        this.isSprinting = game.player.isSprinting;
+
         this.render();
     }
 
@@ -96,13 +101,21 @@ export class DebugDisplay {
             `Draw Calls: ${this.stats.drawCalls}`,
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
+            '--- PLAYER ---',
+            `X: ${this.playerPos?.x.toFixed(1) || 0}`,
+            `Y: ${this.playerPos?.y.toFixed(1) || 0}`,
+            `Z: ${this.playerPos?.z.toFixed(1) || 0}`,
+            `VelX: ${this.playerVel?.x.toFixed(2) || 0}`,
+            `VelY: ${this.playerVel?.y.toFixed(2) || 0}`,
+            `VelZ: ${this.playerVel?.z.toFixed(2) || 0}`,
+            `Grounded: ${this.isGrounded ? 'Yes' : 'No'}`,
+            `Sprinting: ${this.isSprinting ? 'Yes' : 'No'}`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3=Toggle | H=Help'
         ];
 
         this.container.innerHTML = lines.map(line => {
-            if (line.startsWith('=')) return `<div>${line}</div>`;
+            if (line.startsWith('=') || line.startsWith('-')) return `<div>${line}</div>`;
             const parts = line.split(': ');
             if (parts.length === 2) {
                 return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;

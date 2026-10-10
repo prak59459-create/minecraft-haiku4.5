@@ -2,15 +2,16 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.time = 0;
         this.createOutlineMaterial();
     }
 
     createOutlineMaterial() {
         this.material = new THREE.LineBasicMaterial({
             color: 0xFFFFFF,
-            linewidth: 2,
+            linewidth: 3,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9
         });
     }
 
@@ -53,6 +54,10 @@ export class BlockOutline {
     }
 
     update(raycastHit) {
+        this.time += 0.016;
+        const pulseOpacity = 0.7 + Math.sin(this.time * 3) * 0.2;
+        this.material.opacity = pulseOpacity;
+
         if (raycastHit && raycastHit.block !== 0) {
             this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z);
         } else {

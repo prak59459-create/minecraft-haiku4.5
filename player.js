@@ -21,6 +21,8 @@ export class Player {
         this.isCrouching = false;
 
         this.keys = {};
+        this.bobPhase = 0;
+        this.lastMoveSpeed = 0;
         this.setupKeyboardControls();
     }
 
@@ -151,9 +153,17 @@ export class Player {
     }
 
     getEyePosition() {
+        const moveSpeed = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+        if (moveSpeed > 0.01) {
+            this.bobPhase += moveSpeed * 0.15;
+        }
+
+        const bobHeight = Math.sin(this.bobPhase) * (this.isSprinting ? 0.08 : 0.04);
+        const eyeHeight = PLAYER_HEIGHT * 0.85 + bobHeight;
+
         return {
             x: this.position.x,
-            y: this.position.y + PLAYER_HEIGHT * 0.85,
+            y: this.position.y + eyeHeight,
             z: this.position.z
         };
     }
