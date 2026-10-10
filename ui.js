@@ -43,6 +43,12 @@ export class UI {
         slots[index].classList.add('selected');
 
         this.selectedBlock = index;
+
+        const slotEl = slots[index];
+        slotEl.style.animation = 'none';
+        setTimeout(() => {
+            slotEl.style.animation = 'pulse 0.3s ease-out';
+        }, 10);
     }
 
     updateHUD(playerPos, selectedBlock, fps) {
