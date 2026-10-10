@@ -20,6 +20,9 @@ export class Player {
         this.isSprinting = false;
         this.isCrouching = false;
 
+        this.lastStepX = 0;
+        this.lastStepZ = 0;
+
         this.keys = {};
         this.setupKeyboardControls();
     }
@@ -47,13 +50,34 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        this.checkStepSound();
+    }
+
+    checkStepSound() {
+        if (this.isOnGround && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'])) {
+            const dx = this.position.x - this.lastStepX;
+            const dz = this.position.z - this.lastStepZ;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+
+            if (distance > (this.isSprinting ? 0.8 : 0.5)) {
+                if (this.onStep) this.onStep();
+                this.lastStepX = this.position.x;
+                this.lastStepZ = this.position.z;
+            }
+        }
     }
 
     handleMovement() {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        const isShiftHeld = this.keys['shift'];
+
+        const isCrouchActive = isShiftHeld && this.isOnGround;
+        const isSprintActive = isShiftHeld && !isCrouchActive && this.isOnGround && this.keys['w'];
+
+        const speed = isSprintActive ? PLAYER_SPRINT_SPEED : (isCrouchActive ? PLAYER_CROUCH_SPEED : PLAYER_SPEED);
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -66,8 +90,8 @@ export class Player {
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
 
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+        this.isSprinting = isSprintActive;
+        this.isCrouching = isCrouchActive;
     }
 
     applyPhysics() {
