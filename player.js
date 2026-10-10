@@ -11,7 +11,7 @@ const JUMP_POWER = 0.5;
 export class Player {
     constructor(world) {
         this.world = world;
-        this.position = { x: 0, y: 100, z: 0 };
+        this.position = { x: 50, y: 120, z: 50 };
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
 
@@ -19,6 +19,7 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.lastShiftPressed = false;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -36,10 +37,21 @@ export class Player {
                     if (this.onJump) this.onJump();
                 }
             }
+
+            if (e.key === 'Shift') {
+                if (!this.lastShiftPressed) {
+                    this.isCrouching = !this.isCrouching;
+                }
+                this.lastShiftPressed = true;
+            }
         });
 
         document.addEventListener('keyup', (e) => {
             this.keys[e.key.toLowerCase()] = false;
+
+            if (e.key === 'Shift') {
+                this.lastShiftPressed = false;
+            }
         });
     }
 
@@ -53,7 +65,8 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        const speed = this.isCrouching ? PLAYER_CROUCH_SPEED : (this.keys['shift'] && isMoving ? PLAYER_SPRINT_SPEED : PLAYER_SPEED);
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -66,8 +79,7 @@ export class Player {
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
 
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+        this.isSprinting = !this.isCrouching && this.keys['shift'] && isMoving;
     }
 
     applyPhysics() {
@@ -82,19 +94,18 @@ export class Player {
 
     checkCollisions() {
         const radius = PLAYER_WIDTH / 2;
-        const height = PLAYER_HEIGHT;
+        const height = this.isCrouching ? PLAYER_HEIGHT * 0.7 : PLAYER_HEIGHT;
 
         this.isOnGround = false;
 
         const checkPoints = [
-            { dy: 0.1, radius: radius * 0.9 },
-            { dy: height * 0.3, radius: radius * 0.9 },
-            { dy: height * 0.6, radius: radius * 0.9 },
+            { dy: 0.1, radius: radius * 0.85 },
+            { dy: height * 0.5, radius: radius * 0.85 },
             { dy: height * 0.9, radius: radius * 0.7 }
         ];
 
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
                 const cz = this.position.z + Math.sin(angle) * point.radius;
@@ -114,7 +125,7 @@ export class Player {
 
         if (this.velocity.y < 0) {
             let onGround = false;
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.8;
                 const cy = this.position.y - 0.01;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.8;
@@ -132,7 +143,7 @@ export class Player {
         }
 
         if (this.velocity.y > 0) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.9;
                 const cy = this.position.y + height + 0.01;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.9;

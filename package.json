@@ -1,7 +1,7 @@
 {
   "name": "minecraft-haiku4.5",
-  "version": "1.0.0",
-  "description": "3D Minecraft clone built with Three.js",
+  "version": "1.1.0",
+  "description": "Optimized 3D Minecraft clone built with Three.js",
   "type": "module",
   "main": "index.html",
   "scripts": {
