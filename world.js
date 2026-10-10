@@ -65,7 +65,7 @@ export class Chunk {
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
-                    } else if (y < 62) {
+                    } else if (y <= 62) {
                         this.setBlock(x, y, z, BLOCKS.WATER);
                     }
                 }
@@ -124,35 +124,40 @@ function generateTree(chunk, x, z, height) {
 
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
-    const treeChance = perlinNoise.noise2D(worldX * 0.015, worldZ * 0.015);
-    if (treeChance < 0.6) return;
+    const treeChance = perlinNoise.noise2D(worldX * 0.012, worldZ * 0.012);
+    if (treeChance < 0.65) return;
 
-    const trunkHeight = 5 + Math.floor(Math.random() * 3);
-    const y = height;
+    const baseHeight = height;
+    const trunkHeight = 6 + Math.floor(Math.random() * 4);
+    const y = baseHeight;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
-            if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
+            const blockAtPos = chunk.getBlock(x, y + i, z);
+            if (blockAtPos === BLOCKS.AIR || blockAtPos === BLOCKS.OAK_LEAVES) {
                 chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
             }
         }
     }
 
-    const foliageStart = y + Math.max(0, trunkHeight - 4);
-    const foliageRadius = 3 + Math.floor(Math.random() * 2);
+    const foliageStart = Math.max(y + 1, y + trunkHeight - 5);
+    const foliageRadius = 4 + Math.floor(Math.random() * 2);
 
-    for (let dy = 0; dy < foliageRadius + 1; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 2));
+    for (let dy = 0; dy < foliageRadius; dy++) {
+        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 2.5));
+        const layerHeight = foliageStart + dy;
+
         for (let dx = -radiusAtLevel; dx <= radiusAtLevel; dx++) {
             for (let dz = -radiusAtLevel; dz <= radiusAtLevel; dz++) {
-                if (dx * dx + dz * dz <= radiusAtLevel * radiusAtLevel) {
+                const distSq = dx * dx + dz * dz;
+                if (distSq <= radiusAtLevel * radiusAtLevel + 1) {
                     const fx = x + dx;
                     const fz = z + dz;
-                    const fy = foliageStart + dy;
 
-                    if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
-                        if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
-                            chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                    if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && layerHeight >= 0 && layerHeight < WORLD_HEIGHT) {
+                        const blockAtPos = chunk.getBlock(fx, layerHeight, fz);
+                        if (blockAtPos === BLOCKS.AIR) {
+                            chunk.setBlock(fx, layerHeight, fz, BLOCKS.OAK_LEAVES);
                         }
                     }
                 }
