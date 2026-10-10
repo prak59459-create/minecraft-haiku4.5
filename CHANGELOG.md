@@ -1,5 +1,35 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Performance Optimization & Enhancements (Session 3)
+
+### Performance Improvements
+- **Optimized collision detection** - Reduced collision checks from 16 to 4 cardinal points
+- **Efficient raycasting** - Adaptive step sizing with block-change detection
+- **Chunk mesh optimization** - Color caching to reduce Three.Color allocations
+- **Memory management** - Proper geometry disposal and resource cleanup
+- **Terrain caching** - LRU cache for height values (512 entries)
+- **Chunk update throttling** - Update visibility every 3 frames instead of every frame
+- **Particle system optimization** - Flat object properties and Uint8Array colors
+- **Audio throttling** - Prevent overlapping block sounds (50ms minimum interval)
+- **Rendering optimization** - Disabled shadow mapping, flat shading for terrain, reduced pixel ratio
+
+### Gameplay Enhancements
+- **Swimming mechanics** - Reduced gravity (0.2x) and water jumping (0.6x power)
+- **Improved crouch toggle** - Control key for proper toggle instead of holding Shift
+- **Better movement physics** - Separated direction normalization from speed scaling
+- **Terrain generation improvements** - Better ore distribution with depth modulation, optimized tree generation
+
+### Visual Improvements
+- **Block outline caching** - Reuse geometry, skip updates for same block
+- **Better water rendering** - Optimized vertex colors and reduced block limits
+- **Flat shading for terrain** - Cleaner voxel look with better performance
+
+### UI/Control Improvements
+- **Numeric key integration** - Direct 1-9 key binding to block selection
+- **Scroll wheel support** - Smooth block switching
+- **Pick block sync** - C key properly syncs selected block with UI
+- **Improved frame timing** - Better FPS counter and performance monitoring
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features
