@@ -18,7 +18,7 @@ export class Chunk {
         this.z = z;
         this.blocks = new Uint8Array(CHUNK_SIZE * WORLD_HEIGHT * CHUNK_SIZE);
         this.generated = false;
-        this.mesh = null;
+        this.dirty = false;
     }
 
     getBlock(x, y, z) {
@@ -28,7 +28,10 @@ export class Chunk {
 
     setBlock(x, y, z, blockId) {
         const idx = x + y * CHUNK_SIZE + z * CHUNK_SIZE * WORLD_HEIGHT;
-        this.blocks[idx] = blockId;
+        if (this.blocks[idx] !== blockId) {
+            this.blocks[idx] = blockId;
+            this.dirty = true;
+        }
     }
 
     generate() {
@@ -205,6 +208,8 @@ export class World {
         const playerChunkZ = Math.floor(playerZ / CHUNK_SIZE);
 
         const chunksToKeep = new Set();
+        const unloadDistance = this.renderDistance + 2;
+
         for (let dx = -this.renderDistance; dx <= this.renderDistance; dx++) {
             for (let dz = -this.renderDistance; dz <= this.renderDistance; dz++) {
                 const key = `${playerChunkX + dx},${playerChunkZ + dz}`;
@@ -213,14 +218,15 @@ export class World {
             }
         }
 
-        const toDelete = [];
         for (const [key] of this.chunks) {
             if (!chunksToKeep.has(key)) {
-                toDelete.push(key);
+                const [cx, cz] = key.split(',').map(Number);
+                const dist = Math.max(Math.abs(cx - playerChunkX), Math.abs(cz - playerChunkZ));
+                if (dist > unloadDistance) {
+                    this.chunks.delete(key);
+                }
             }
         }
-
-        toDelete.forEach(key => this.chunks.delete(key));
     }
 }
 
