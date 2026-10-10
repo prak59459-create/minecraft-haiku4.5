@@ -46,12 +46,13 @@ export class UI {
         this.selectedBlock = index;
     }
 
-    updateHUD(playerPos, selectedBlock, fps) {
+    updateHUD(playerPos, selectedBlock, fps, isSprinting = false) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
 
-        coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
+        const speedIndicator = isSprinting ? '🏃' : '🚶';
+        coordsEl.textContent = `${speedIndicator} X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
 
         const fpsColor = fps > 50 ? '#00FF00' : fps > 30 ? '#FFFF00' : '#FF0000';
         fpsEl.textContent = `FPS: ${fps}`;
