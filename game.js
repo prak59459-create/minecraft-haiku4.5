@@ -46,16 +46,19 @@ class MinecraftGame {
         const sunY = Math.sin(time) * 100 + 100;
         const sunIntensity = Math.max(0.3, Math.sin(time) + 0.5);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
-        this.scene.add(ambientLight);
+        this.ambientLight = new THREE.AmbientLight(0xffffff, 0.4 + sunIntensity * 0.15);
+        this.scene.add(this.ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5 + sunIntensity * 0.3);
         directionalLight.position.set(150, sunY, 150);
-        directionalLight.castShadow = true;
+        directionalLight.castShadow = false;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
         this.scene.add(directionalLight);
+
+        const hemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0x4a7c4e, 0.4);
+        this.scene.add(hemisphereLight);
 
         this.directionalLight = directionalLight;
     }
