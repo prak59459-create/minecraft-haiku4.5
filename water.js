@@ -85,5 +85,12 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+
+        for (const [key, mesh] of this.waterMeshes) {
+            if (mesh && mesh.material) {
+                const wave = Math.sin(this.time * 2) * 0.05 + 0.95;
+                mesh.material.opacity = 0.5 + Math.sin(this.time) * 0.1;
+            }
+        }
     }
 }

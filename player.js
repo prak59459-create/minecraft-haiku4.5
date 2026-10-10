@@ -21,6 +21,8 @@ export class Player {
         this.isCrouching = false;
 
         this.keys = {};
+        this.lastStepTime = 0;
+        this.lastStepDistance = 0;
         this.setupKeyboardControls();
     }
 
@@ -68,6 +70,19 @@ export class Player {
 
         this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
         this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+
+        if (this.isOnGround && (moveX !== 0 || moveZ !== 0)) {
+            const dist = Math.sqrt(moveX * moveX + moveZ * moveZ);
+            this.lastStepDistance += dist;
+            const now = Date.now();
+            const stepInterval = this.isSprinting ? 350 : 500;
+
+            if (this.lastStepDistance > 0.5 && now - this.lastStepTime > stepInterval) {
+                if (this.onStep) this.onStep();
+                this.lastStepTime = now;
+                this.lastStepDistance = 0;
+            }
+        }
     }
 
     applyPhysics() {

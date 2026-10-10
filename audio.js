@@ -7,8 +7,14 @@ export class AudioManager {
     }
 
     initAudioContext() {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.audioContext = audioContext;
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.audioContext = audioContext;
+            this.initialized = true;
+        } catch (e) {
+            console.warn('Audio context not available:', e);
+            this.initialized = false;
+        }
     }
 
     playBlockSound(type = 'break') {
