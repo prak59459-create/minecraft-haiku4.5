@@ -164,9 +164,10 @@ export class Player {
     }
 
     getEyePosition() {
+        const eyeHeight = this.isCrouching ? PLAYER_HEIGHT * 0.6 : PLAYER_HEIGHT * 0.85;
         return {
             x: this.position.x,
-            y: this.position.y + PLAYER_HEIGHT * 0.85,
+            y: this.position.y + eyeHeight,
             z: this.position.z
         };
     }

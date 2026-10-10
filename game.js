@@ -34,6 +34,8 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.lastChunkUpdateTime = 0;
+        this.chunkUpdateInterval = 50;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -112,7 +114,7 @@ class MinecraftGame {
             this.particleSystem.addBlockBreakParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, color);
 
             const now = Date.now();
-            if (now - this.lastBreakSound > 50) {
+            if (now - this.lastBreakSound > 75) {
                 this.audioManager.playBlockSound('break');
                 this.lastBreakSound = now;
             }
@@ -122,7 +124,8 @@ class MinecraftGame {
             const ny = hit.y + norm.y;
             const nz = hit.z + norm.z;
 
-            if (!this.isPlayerOccupying(nx, ny, nz)) {
+            const blockAtTarget = this.world.getBlock(nx, ny, nz);
+            if (blockAtTarget === BLOCKS.AIR && !this.isPlayerOccupying(nx, ny, nz)) {
                 this.world.setBlock(nx, ny, nz, this.selectedBlockType);
                 this.updateChunkMesh(nx, ny, nz);
                 this.audioManager.playBlockSound('place');
@@ -351,6 +354,8 @@ class MinecraftGame {
     animate() {
         requestAnimationFrame(() => this.animate());
 
+        const now = performance.now();
+
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
 
@@ -369,7 +374,11 @@ class MinecraftGame {
             eyePos.z + direction.z
         );
 
-        this.updateVisibleChunks();
+        if (now - this.lastChunkUpdateTime > this.chunkUpdateInterval) {
+            this.updateVisibleChunks();
+            this.lastChunkUpdateTime = now;
+        }
+
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
