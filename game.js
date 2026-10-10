@@ -424,4 +424,29 @@ class MinecraftGame {
     }
 }
 
-const game = new MinecraftGame();
+let game;
+
+try {
+    game = new MinecraftGame();
+    console.log('Minecraft Haiku 4.5 - Game initialized successfully');
+} catch (error) {
+    console.error('Failed to initialize game:', error);
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        color: #ff0000;
+        padding: 20px;
+        border: 2px solid #ff0000;
+        font-family: monospace;
+        font-size: 14px;
+        max-width: 600px;
+        white-space: pre-wrap;
+        z-index: 1000;
+    `;
+    errorDiv.textContent = `Game Initialization Error:\n\n${error.message}\n\nStack:\n${error.stack}`;
+    document.body.appendChild(errorDiv);
+}

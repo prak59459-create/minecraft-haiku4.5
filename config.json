@@ -14,29 +14,40 @@
     "mouseSensitivity": 0.003,
     "eyeHeight": 0.85,
     "height": 1.8,
-    "width": 0.6
+    "width": 0.6,
+    "maxSpeed": 0.15
   },
   "raycast": {
     "distance": 6,
-    "stepSize": 0.05
+    "stepSize": 0.1
   },
   "graphics": {
     "renderScale": 1.0,
     "shadowMapSize": 2048,
     "particleLimit": 2000,
-    "fpsTarget": 60
+    "fpsTarget": 60,
+    "fogDistance": 300,
+    "underwaterFogDistance": 80
   },
   "terrain": {
     "chunkSize": 16,
     "maxHeight": 160,
     "minHeight": 20,
     "seaLevel": 62,
-    "treeFrequency": 0.5
+    "treeFrequency": 0.5,
+    "caveFrequency": 0.1
   },
   "audio": {
     "enabled": true,
     "masterVolume": 0.5,
     "soundFx": true,
-    "music": false
+    "music": false,
+    "soundDelay": 50
+  },
+  "performance": {
+    "enableStats": true,
+    "chunkUpdateFrequency": 0.5,
+    "maxParticles": 2000,
+    "useCompressedTextures": false
   }
 }
