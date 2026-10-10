@@ -54,19 +54,29 @@ export class Chunk {
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
+                        } else if (terrainType === 'cold') {
+                            this.setBlock(x, y, z, BLOCKS.GRAVEL);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
                     } else if (y < height) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
+                        } else if (terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.SNOW);
+                        } else if (terrainType === 'cold') {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
                     } else if (y < 62) {
-                        this.setBlock(x, y, z, BLOCKS.WATER);
+                        if (terrainType === 'cold' || terrainType === 'snow') {
+                            this.setBlock(x, y, z, BLOCKS.ICE);
+                        } else {
+                            this.setBlock(x, y, z, BLOCKS.WATER);
+                        }
                     }
                 }
 
@@ -96,7 +106,11 @@ function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const moisture = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
+    if (temp < -0.5) return 'snow';
+    if (temp < -0.2) return 'cold';
+    if (temp > 0.4 || (temp > 0.1 && moisture < -0.3)) return 'sand';
     return 'grass';
 }
 

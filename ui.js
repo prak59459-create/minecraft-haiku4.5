@@ -3,6 +3,7 @@ import { BLOCK_NAMES } from './blocks.js';
 export class UI {
     constructor() {
         this.selectedBlock = 1;
+        this.selectedSlotIndex = 0;
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
@@ -14,35 +15,38 @@ export class UI {
         slots.forEach((slot, index) => {
             const blockId = parseInt(slot.dataset.block);
             slot.addEventListener('click', () => {
-                this.selectBlock(index);
+                this.selectBlock(index, blockId);
             });
         });
 
         document.addEventListener('keydown', (e) => {
             const num = parseInt(e.key);
             if (num >= 1 && num <= 9) {
-                this.selectBlock(num - 1);
+                const blockId = parseInt(document.querySelectorAll('.inventory-slot')[num - 1].dataset.block);
+                this.selectBlock(num - 1, blockId);
             }
         });
 
         document.addEventListener('wheel', (e) => {
             e.preventDefault();
             const direction = e.deltaY > 0 ? 1 : -1;
-            let newIndex = this.selectedBlock + direction;
+            let newIndex = this.selectedSlotIndex + direction;
             if (newIndex < 0) newIndex = 8;
             if (newIndex > 8) newIndex = 0;
-            this.selectBlock(newIndex);
+            const blockId = parseInt(document.querySelectorAll('.inventory-slot')[newIndex].dataset.block);
+            this.selectBlock(newIndex, blockId);
         }, { passive: false });
     }
 
-    selectBlock(index) {
+    selectBlock(index, blockId) {
         if (index < 0 || index > 8) return;
 
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach(slot => slot.classList.remove('selected'));
         slots[index].classList.add('selected');
 
-        this.selectedBlock = index;
+        this.selectedSlotIndex = index;
+        this.selectedBlock = blockId;
     }
 
     updateHUD(playerPos, selectedBlock, fps) {
