@@ -82,7 +82,12 @@ export class Chunk {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
                     } else if (y < 62) {
-                        this.setBlock(x, y, z, BLOCKS.WATER);
+                        const iceChance = perlinNoise.noise2D(wx * 0.08, wz * 0.08);
+                        if (height < 40 && iceChance > 0.6) {
+                            this.setBlock(x, y, z, BLOCKS.ICE);
+                        } else {
+                            this.setBlock(x, y, z, BLOCKS.WATER);
+                        }
                     }
                 }
 
@@ -125,17 +130,18 @@ function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
     let ore = BLOCKS.STONE;
-    const depthFactor = y / 120;
 
     const coalChance = perlinNoise.noise2D(x * 0.12 + y * 0.06, z * 0.12 + y * 0.06);
     const ironChance = perlinNoise.noise2D(x * 0.10 + y * 0.04, z * 0.10 + y * 0.04);
     const goldChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
     const diamondChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
+    const obsidianChance = perlinNoise.noise2D(x * 0.05 + y * 0.01, z * 0.05 + y * 0.01);
 
     if (y < 160 && coalChance > 0.45) ore = BLOCKS.COAL_ORE;
     else if (y < 100 && ironChance > 0.55) ore = BLOCKS.IRON_ORE;
     else if (y < 60 && goldChance > 0.65) ore = BLOCKS.GOLD_ORE;
     else if (y < 35 && diamondChance > 0.70) ore = BLOCKS.DIAMOND_ORE;
+    else if (y < 20 && obsidianChance > 0.75) ore = BLOCKS.OBSIDIAN;
     else if (y < 80 && y > 30 && perlinNoise.noise2D(x * 0.15, z * 0.15) > 0.6) ore = BLOCKS.GRAVEL;
 
     return ore;
