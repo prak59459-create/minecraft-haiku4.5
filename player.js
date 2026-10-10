@@ -7,6 +7,7 @@ const PLAYER_SPRINT_SPEED = 0.15;
 const PLAYER_CROUCH_SPEED = 0.05;
 const GRAVITY = 0.02;
 const JUMP_POWER = 0.5;
+const WATER_SLOWDOWN = 0.4;
 
 export class Player {
     constructor(world) {
@@ -14,11 +15,13 @@ export class Player {
         this.position = { x: 0, y: 100, z: 0 };
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
+        this.lastPos = { x: 0, y: 0, z: 0 };
 
         this.isOnGround = false;
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.lastStepTime = 0;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -44,16 +47,59 @@ export class Player {
     }
 
     update() {
+        this.lastPos.x = this.position.x;
+        this.lastPos.y = this.position.y;
+        this.lastPos.z = this.position.z;
+
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        this.checkWater();
+        this.emitStepSounds();
+    }
+
+    emitStepSounds() {
+        if (!this.isOnGround) return;
+
+        const dist = Math.sqrt(
+            (this.position.x - this.lastPos.x) ** 2 +
+            (this.position.z - this.lastPos.z) ** 2
+        );
+
+        const stepInterval = this.isSprinting ? 200 : 300;
+        const now = performance.now();
+
+        if (dist > 0.05 && now - this.lastStepTime > stepInterval) {
+            if (this.onStep) this.onStep();
+            this.lastStepTime = now;
+        }
+    }
+
+    checkWater() {
+        const eyePos = this.getEyePosition();
+        const block = this.world.getBlock(Math.floor(eyePos.x), Math.floor(eyePos.y), Math.floor(eyePos.z));
+
+        if (block === BLOCKS.WATER) {
+            this.velocity.x *= WATER_SLOWDOWN;
+            this.velocity.z *= WATER_SLOWDOWN;
+            if (this.velocity.y < 0) {
+                this.velocity.y *= 0.8;
+            }
+        }
     }
 
     handleMovement() {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+
+        let speed = PLAYER_SPEED;
+        if (this.isSprinting) {
+            speed = PLAYER_SPRINT_SPEED;
+        } else if (this.isCrouching) {
+            speed = PLAYER_CROUCH_SPEED;
+        }
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -66,8 +112,11 @@ export class Player {
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
 
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+        if (this.isCrouching && this.keys['shift'] && !isMoving) {
+            this.isCrouching = false;
+        } else if (!this.isCrouching && this.keys['shift'] && isMoving) {
+            this.isSprinting = true;
+        }
     }
 
     applyPhysics() {
@@ -167,11 +216,38 @@ export class Camera {
     }
 
     setupMouseControls() {
-        document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+        let lastTouchX = 0;
+        let lastTouchY = 0;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+        document.addEventListener('mousemove', (e) => {
+            if (document.pointerLockElement === document.body) {
+                this.rotation.y -= e.movementX * this.mouseSensitivity;
+                this.rotation.x -= e.movementY * this.mouseSensitivity;
+                this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            }
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                const deltaX = touch.clientX - lastTouchX;
+                const deltaY = touch.clientY - lastTouchY;
+
+                this.rotation.y -= deltaX * this.mouseSensitivity * 0.5;
+                this.rotation.x -= deltaY * this.mouseSensitivity * 0.5;
+                this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+
+                lastTouchX = touch.clientX;
+                lastTouchY = touch.clientY;
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                lastTouchX = touch.clientX;
+                lastTouchY = touch.clientY;
+            }
         });
 
         document.addEventListener('click', () => {
