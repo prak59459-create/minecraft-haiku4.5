@@ -37,6 +37,7 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.lastFrameTime = performance.now();
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -343,9 +344,13 @@ class MinecraftGame {
     animate() {
         requestAnimationFrame(() => this.animate());
 
-        const frameStart = performance.now();
+        const now = performance.now();
+        const deltaTime = Math.min((now - this.lastFrameTime) / 16.67, 2);
+        this.lastFrameTime = now;
 
-        this.player.update();
+        for (let i = 0; i < Math.max(1, Math.floor(deltaTime)); i++) {
+            this.player.update();
+        }
         this.gameCamera.updateFromPlayer(this.player);
 
         const eyePos = this.player.getEyePosition();
