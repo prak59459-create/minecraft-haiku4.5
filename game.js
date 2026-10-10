@@ -35,6 +35,8 @@ class MinecraftGame {
         this.debugDisplay = new DebugDisplay();
         this.blockOutline = new BlockOutline(this.scene);
 
+        this.setupFog();
+
         this.chunkMeshes = new Map();
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
@@ -76,6 +78,14 @@ class MinecraftGame {
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
+    }
+
+    setupFog() {
+        const fogColor = 0x87CEEB;
+        const fogNear = 50;
+        const fogFar = 400;
+        this.scene.fog = new THREE.Fog(fogColor, fogFar, fogNear);
+        this.fogColor = new THREE.Color(fogColor);
     }
 
     setupEventListeners() {
@@ -425,18 +435,29 @@ class MinecraftGame {
         this.directionalLight.intensity = 0.4 + sunIntensity * 0.4;
 
         let skyColor = new THREE.Color();
+        let fogColor = new THREE.Color();
+
         if (sunAngle > 0.1) {
             skyColor.setHSL(0.6, 0.5, 0.5 + sunIntensity * 0.35);
+            fogColor.setHSL(0.6, 0.4, 0.6 + sunIntensity * 0.2);
         } else if (sunAngle > -0.2) {
             const t = (sunAngle + 0.2) / 0.3;
             const dayColor = new THREE.Color().setHSL(0.6, 0.5, 0.7);
             const nightColor = new THREE.Color().setHSL(0.7, 0.2, 0.15);
             skyColor.copy(dayColor).lerp(nightColor, 1 - t);
+
+            const dayFogColor = new THREE.Color().setHSL(0.6, 0.4, 0.7);
+            const nightFogColor = new THREE.Color().setHSL(0.7, 0.2, 0.2);
+            fogColor.copy(dayFogColor).lerp(nightFogColor, 1 - t);
         } else {
             skyColor.setHSL(0.7, 0.2, 0.15);
+            fogColor.setHSL(0.7, 0.2, 0.1);
         }
 
         this.scene.background = skyColor;
+        if (this.scene.fog) {
+            this.scene.fog.color = fogColor;
+        }
     }
 }
 
