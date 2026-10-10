@@ -3,24 +3,33 @@ export class AudioManager {
         this.audioContext = null;
         this.initialized = false;
         this.soundCache = new Map();
+        this.lastBlockSoundTime = 0;
         this.initAudioContext();
     }
 
     initAudioContext() {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.audioContext = audioContext;
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            this.audioContext = new AudioCtx();
+            this.initialized = true;
+        } catch (e) {
+            console.warn('AudioContext not supported');
+            this.audioContext = null;
+        }
     }
 
     playBlockSound(type = 'break') {
         if (!this.audioContext) return;
 
-        const audioContext = this.audioContext;
-        const now = audioContext.currentTime;
-        const osc = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+        const now = this.audioContext.currentTime;
+        if (now - this.lastBlockSoundTime < 0.05) return;
+        this.lastBlockSoundTime = now;
+
+        const osc = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
 
         osc.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        gainNode.connect(this.audioContext.destination);
 
         if (type === 'break') {
             osc.frequency.setValueAtTime(400, now);

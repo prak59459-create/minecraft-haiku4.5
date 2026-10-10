@@ -35,6 +35,11 @@ class MinecraftGame {
         this.lastBreakSound = 0;
         this.showDebug = false;
 
+        this.updateCounter = 0;
+        this.chunkUpdateInterval = 3;
+        this.lastFpsCheck = performance.now();
+        this.frameCount = 0;
+
         this.player.onJump = () => this.audioManager.playJumpSound();
 
         this.setupLighting();
@@ -366,6 +371,12 @@ class MinecraftGame {
     animate() {
         requestAnimationFrame(() => this.animate());
 
+        this.frameCount++;
+        const now = performance.now();
+        if (now - this.lastFpsCheck > 100) {
+            this.lastFpsCheck = now;
+        }
+
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
 
@@ -383,7 +394,10 @@ class MinecraftGame {
             eyePos.z + direction.z
         );
 
-        this.updateVisibleChunks();
+        if (this.updateCounter++ % this.chunkUpdateInterval === 0) {
+            this.updateVisibleChunks();
+        }
+
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
