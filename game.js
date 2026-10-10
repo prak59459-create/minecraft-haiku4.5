@@ -36,6 +36,9 @@ class MinecraftGame {
         this.debugDisplay = new DebugDisplay();
         this.blockOutline = new BlockOutline(this.scene);
 
+        this.lastTime = performance.now();
+        this.deltaTime = 0;
+
         this.chunkMeshes = new Map();
         this.blockTypes = [
             BLOCKS.STONE,
@@ -358,6 +361,12 @@ class MinecraftGame {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+        if (window.devicePixelRatio > 2) {
+            this.renderer.setPixelRatio(1.5);
+        } else {
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+        }
     }
 
     getDistanceToChunk(cx, cz) {
@@ -370,6 +379,15 @@ class MinecraftGame {
 
     animate() {
         requestAnimationFrame(() => this.animate());
+
+        const now = performance.now();
+        this.deltaTime = (now - this.lastTime) / 1000;
+        this.lastTime = now;
+
+        const maxDeltaTime = 0.05;
+        if (this.deltaTime > maxDeltaTime) {
+            this.deltaTime = maxDeltaTime;
+        }
 
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);

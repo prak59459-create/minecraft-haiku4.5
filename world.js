@@ -180,12 +180,13 @@ export class World {
 
     getChunk(cx, cz) {
         const key = `${cx},${cz}`;
-        if (!this.chunks.has(key)) {
-            const chunk = new Chunk(cx, cz);
+        let chunk = this.chunks.get(key);
+        if (!chunk) {
+            chunk = new Chunk(cx, cz);
             chunk.generate();
             this.chunks.set(key, chunk);
         }
-        return this.chunks.get(key);
+        return chunk;
     }
 
     getBlock(x, y, z) {
