@@ -209,6 +209,7 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
+        const colorCache = new Map();
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -220,14 +221,18 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const color = new THREE.Color(BLOCK_COLORS[blockId]);
+                    const cacheKey = `${blockId}_${wy}`;
+                    let color = colorCache.get(cacheKey);
 
-                    const baseLight = 0.75;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.2;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.05;
-                    const brightness = Math.max(0.5, baseLight + heightLight + varLight);
-
-                    color.multiplyScalar(brightness);
+                    if (!color) {
+                        color = new THREE.Color(BLOCK_COLORS[blockId]);
+                        const baseLight = 0.75;
+                        const heightLight = (wy / WORLD_HEIGHT) * 0.2;
+                        const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.05;
+                        const brightness = Math.max(0.5, baseLight + heightLight + varLight);
+                        color.multiplyScalar(brightness);
+                        colorCache.set(cacheKey, color);
+                    }
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
                 }
