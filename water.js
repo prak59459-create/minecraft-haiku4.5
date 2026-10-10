@@ -95,7 +95,10 @@ export class WaterRenderer {
 
             if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
                 if (this.waterMeshes.has(key)) {
-                    this.scene.remove(this.waterMeshes.get(key));
+                    const mesh = this.waterMeshes.get(key);
+                    this.scene.remove(mesh);
+                    if (mesh.geometry) mesh.geometry.dispose();
+                    if (mesh.material) mesh.material.dispose();
                     this.waterMeshes.delete(key);
                 }
                 continue;

@@ -15,16 +15,18 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Pick Block** - Press C to pick the block you're looking at
 
 ### World & Terrain
-- **Procedural Generation** - Infinite world generation using Perlin noise
-- **Multiple Biomes** - Grass, sand, and varied terrain types
-- **Chunk System** - Dynamic chunk loading and unloading for performance
+- **Procedural Generation** - Infinite world generation using multi-octave Perlin noise
+- **Multiple Biomes** - Grass, sand, snow, and clay terrain types
+- **Cave Generation** - Natural caves carved through terrain at various depths
+- **Chunk System** - Dynamic chunk loading and unloading with priority-based rendering
 - **Multiple Block Types**:
   - Stone, Grass, Dirt, Cobblestone
   - Oak Log, Oak Leaves
   - Sand, Water, Gravel, Bedrock
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
-- **Ore Generation** - Procedural ore generation at various depths
-- **Tree Generation** - Natural tree placement in suitable terrain
+  - Obsidian, Ice, Snow, Clay
+- **Ore Generation** - Advanced procedural ore generation with biome-specific variations
+- **Tree Generation** - Large varied trees with natural proportions and foliage
 
 ### Physics & Collision
 - **Gravity System** - Realistic falling and landing
@@ -33,11 +35,14 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Block Highlight** - Visual feedback for the block you're looking at
 
 ### Visual Features
-- **3D Voxel Rendering** - Full 3D block-based world
-- **Dynamic Lighting** - Sun and ambient lighting system
-- **Day/Night Cycle** - Real-time sky color transitions
-- **Particle Effects** - Block destruction particles
-- **Water Rendering** - Semi-transparent water with proper face culling
+- **3D Voxel Rendering** - Full 3D block-based world with optimized face culling
+- **Enhanced Lighting** - Multi-directional lighting with face-specific shading
+- **Dynamic Day/Night Cycle** - Real-time sky and lighting transitions throughout day
+- **Fog System** - Depth fog for performance optimization and visual continuity
+- **Particle Effects** - Physics-based block destruction particles with damping
+- **Water Rendering** - Semi-transparent water with wave animations and proper reflection
+- **Block Selection Outline** - Glowing outline with shadow effect for better visibility
+- **Improved Crosshair** - Enhanced targeting reticle with directional indicators
 
 ### Audio
 - **Procedural Sound Effects**:
@@ -54,10 +59,14 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Help Panel** - In-game control instructions (Press H)
 
 ### Performance Optimization
-- **Chunk-based Rendering** - Only visible chunks are rendered
-- **Indexed Geometry** - Efficient mesh generation with indices
-- **Vertex Colors** - Per-vertex coloring for variations
-- **Memory Management** - Automatic chunk cleanup for distant areas
+- **Chunk-based Rendering** - Priority-based chunk loading around player
+- **Smart Vertical Culling** - Only render blocks around terrain surface
+- **Indexed Geometry** - Efficient mesh generation with indexed vertices
+- **Vertex Colors** - Per-vertex coloring with directional shading for depth
+- **Memory Management** - Proper resource disposal with geometry cleanup
+- **Frustum Culling** - Automatic frustum culling for off-screen objects
+- **FPS Optimization** - Rolling average FPS calculation with color-coded display
+- **Shadow Mapping** - Optimized shadow camera for realistic lighting
 
 ## Controls
 
@@ -75,8 +84,8 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 | **1-9** | Select Block Slot |
 | **Scroll Wheel** | Change Selected Block |
 | **C** | Pick Block (Pick the block you're looking at) |
-| **H** | Toggle Help |
-| **F3** | Toggle Debug Info |
+| **H** | Toggle Help Menu |
+| **F3** | Toggle Debug Display |
 
 ## Getting Started
 
@@ -152,8 +161,11 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 
 ### Biomes
 
-- **Grass Biome** - Natural terrain with trees and water
-- **Sand Biome** - Desert-like areas with sand blocks
+- **Grass Biome** - Lush terrain with trees, natural variation, and water
+- **Sand Biome** - Desert-like areas with sand blocks and natural dunes
+- **Snow Biome** - Cold regions with snow-covered peaks and ice
+- **Clay Biome** - Wetland areas with clay blocks, often near water
+- **Mixed Terrain** - Dynamic biome transitions based on temperature and humidity
 
 ### Ore Distribution
 
