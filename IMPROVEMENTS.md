@@ -1,5 +1,96 @@
 # Minecraft Clone - Improvements and Optimizations
 
+## Latest Updates (Session 3 - Current)
+
+### Performance Optimizations
+
+#### 1. Raycasting Algorithm
+- **Smarter Block Detection**: Optimized raycasting to only check blocks when entering a new voxel
+- **Reduced Checks**: Skip unnecessary neighbor checks during iteration
+- **Better Precision**: Maintains accuracy while improving performance
+
+#### 2. Particle System
+- **Object Pooling**: Implement reusable particle pool (up to 500 particles)
+- **Memory Efficiency**: Reduced garbage collection pressure
+- **Better Management**: Automatic particle recycling and cleanup
+
+#### 3. Renderer Optimizations
+- **GPU Preference**: Enable high-performance GPU preference
+- **Object Sorting**: Disable automatic scene object sorting for better throughput
+- **Camera Settings**: Optimized near/far clip planes and fog parameters
+- **Shadow Maps**: Reduced from 2048x2048 to 1024x1024 with improved camera configuration
+- **Frustum Culling**: Better mesh culling configuration
+
+#### 4. Rendering Pipeline
+- **Fog System**: Added distance fog for better depth perception and performance
+- **Better Material Properties**: Optimized material settings and shading
+- **Light Optimization**: Better ambient light calculations with sun intensity variation
+
+### New Features
+
+#### 1. Extended Block Types (5 new blocks)
+- **Copper Ore**: Mid-tier resource (appears at depths < 130)
+- **Lapis Ore**: Valuable ore (depths < 100)
+- **Emerald Ore**: Rare ore (depths < 60)
+- **Mycelium**: Special grass variant in specific biomes
+- **Moss Block**: Environmental block for varied terrain
+
+#### 2. Enhanced Terrain Generation
+- **Biome System**: Mycelium and moss blocks spawn in specific biomes
+- **Better Terrain Variation**: Added extra octave for finer detail
+- **Ore Distribution**: Improved ore generation with depth-based rarity
+- **More Terrain Features**: Enhanced variation for more interesting landscapes
+
+#### 3. Audio System Improvements
+- **Step Sounds**: Adaptive footstep sounds when player walks
+- **Speed Variation**: Faster step sounds when sprinting
+- **Error Handling**: Graceful audio initialization with browser fallback
+- **Better Sound Management**: Improved audio context creation and error handling
+
+#### 4. Water System Integration
+- **Full Integration**: Water renderer properly integrated into game loop
+- **Wave Effects**: Animated water with opacity variation
+- **Automatic Updates**: Water meshes update with terrain changes
+- **Better Visibility**: Improved water rendering pipeline
+
+#### 5. Visual Enhancements
+- **Dynamic Sky**: Time-based sky color transitions
+- **Face Shading**: Ambient occlusion hints (darker bottoms, brighter tops)
+- **Better Lighting**: Improved height-based brightness calculations
+- **Block Outline**: Enhanced block selection highlighting with better visibility
+- **Visual Depth**: Improved material properties for better perception
+
+### Code Quality Improvements
+
+#### 1. Collision Detection
+- **Refactored Logic**: Cleaner collision checking with early break conditions
+- **Better Performance**: Optimized loop structure
+- **Improved Clarity**: Better code organization
+
+#### 2. Memory Management
+- **Particle Pooling**: Reduced memory allocations and GC pressure
+- **Chunk Management**: Better unloading of distant chunks
+- **Resource Cleanup**: Proper disposal of geometries and materials
+
+#### 3. Error Handling
+- **Audio Context**: Try-catch for initialization
+- **Graceful Degradation**: Works without audio if initialization fails
+- **Better Logging**: More informative error messages
+
+#### 4. FPS Monitoring
+- **Smoothed Metrics**: 500ms averaging window for stable FPS counter
+- **Better Accuracy**: Frame counting instead of delta time calculation
+- **Performance Insights**: More reliable performance metrics
+
+### Configuration & Customization
+
+- Existing config.json system utilized for:
+  - Render distance control
+  - Shadow quality settings
+  - Particle limits
+  - Audio settings
+  - Player movement parameters
+
 ## Latest Updates (Session 2)
 
 ### Core Improvements

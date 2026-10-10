@@ -1,5 +1,44 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Optimizations & Enhancements (Session 3 Current)
+
+### Performance Improvements
+- Optimized raycasting algorithm with smarter voxel traversal
+- Implemented particle object pooling system (500 particle pool)
+- Enhanced renderer with GPU performance preference
+- Reduced shadow map resolution with improved camera configuration
+- Added fog system for better depth perception and rendering performance
+- Optimized object sorting and rendering pipeline
+
+### New Content
+- Added 5 new block types:
+  - Copper Ore (depth-based distribution)
+  - Lapis Ore (mid-depth ore)
+  - Emerald Ore (rare deep ore)
+  - Mycelium blocks (special biome grass)
+  - Moss blocks (environmental variation)
+- Enhanced terrain generation with biome-based block placement
+- Improved ore distribution system with depth-based rarity
+
+### Audio Features
+- Implemented step sounds with sprint variation
+- Better audio initialization with error handling
+- Improved sound management and resource cleanup
+
+### Visual Enhancements
+- Dynamic sky color transitions based on time of day
+- Face shading with AO hints (darker bottoms, brighter tops)
+- Improved block outline visibility and rendering
+- Better lighting calculations with sun intensity integration
+- Water animation with opacity variation
+
+### Code Quality
+- Refactored collision detection for better performance
+- Improved memory management with particle pooling
+- Better error handling throughout audio system
+- Smoother FPS monitoring with 500ms averaging window
+- Cleaner collision checking logic with early breaks
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features
