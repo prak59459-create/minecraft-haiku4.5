@@ -16,6 +16,12 @@ export class UI {
             slot.addEventListener('click', () => {
                 this.selectBlock(index);
             });
+            slot.addEventListener('mouseenter', () => {
+                this.showBlockTooltip(slot, blockId);
+            });
+            slot.addEventListener('mouseleave', () => {
+                this.hideBlockTooltip();
+            });
         });
 
         document.addEventListener('keydown', (e) => {
@@ -26,6 +32,7 @@ export class UI {
         });
 
         document.addEventListener('wheel', (e) => {
+            if (document.pointerLockElement !== document.body) return;
             e.preventDefault();
             const direction = e.deltaY > 0 ? 1 : -1;
             let newIndex = this.selectedBlock + direction;
@@ -33,6 +40,36 @@ export class UI {
             if (newIndex > 8) newIndex = 0;
             this.selectBlock(newIndex);
         }, { passive: false });
+    }
+
+    showBlockTooltip(slot, blockId) {
+        let tooltip = document.getElementById('blockTooltip');
+        if (!tooltip) {
+            tooltip = document.createElement('div');
+            tooltip.id = 'blockTooltip';
+            tooltip.style.position = 'absolute';
+            tooltip.style.bottom = '70px';
+            tooltip.style.left = '50%';
+            tooltip.style.transform = 'translateX(-50%)';
+            tooltip.style.background = 'rgba(0, 0, 0, 0.8)';
+            tooltip.style.color = '#fff';
+            tooltip.style.padding = '6px 10px';
+            tooltip.style.borderRadius = '4px';
+            tooltip.style.fontSize = '12px';
+            tooltip.style.whiteSpace = 'nowrap';
+            tooltip.style.pointerEvents = 'none';
+            tooltip.style.zIndex = '20';
+            document.getElementById('ui').appendChild(tooltip);
+        }
+        tooltip.textContent = BLOCK_NAMES[blockId] || 'Unknown';
+        tooltip.style.display = 'block';
+    }
+
+    hideBlockTooltip() {
+        const tooltip = document.getElementById('blockTooltip');
+        if (tooltip) {
+            tooltip.style.display = 'none';
+        }
     }
 
     selectBlock(index) {

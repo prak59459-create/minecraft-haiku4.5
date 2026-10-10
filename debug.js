@@ -83,29 +83,33 @@ export class DebugDisplay {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
         }
 
+        this.playerPos = game.player.position;
+        this.playerChunk = {
+            x: Math.floor(game.player.position.x / 16),
+            z: Math.floor(game.player.position.z / 16)
+        };
+
         this.render();
     }
 
     render() {
         const lines = [
-            '=== DEBUG INFO ===',
-            `FPS: ${this.stats.fps}`,
-            `Chunks: ${this.stats.chunks}`,
-            `Vertices: ${this.stats.vertices.toLocaleString()}`,
-            `Triangles: ${this.stats.triangles.toLocaleString()}`,
-            `Draw Calls: ${this.stats.drawCalls}`,
-            `Particles: ${this.stats.particles}`,
-            `Memory: ${this.stats.memory} MB`,
-            '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            '╔═ DEBUG INFO ═╗',
+            `│ FPS: ${this.stats.fps}`.padEnd(16) + '│',
+            `│ Chunks: ${this.stats.chunks}`.padEnd(16) + '│',
+            `│ Draw Calls: ${this.stats.drawCalls}`.padEnd(16) + '│',
+            `│ Vertices: ${(this.stats.vertices / 1000).toFixed(1)}K`.padEnd(16) + '│',
+            `│ Triangles: ${(this.stats.triangles / 1000).toFixed(1)}K`.padEnd(16) + '│',
+            `│ Particles: ${this.stats.particles}`.padEnd(16) + '│',
+            `│ Memory: ${this.stats.memory}MB`.padEnd(16) + '│',
+            `│ Pos: ${this.playerPos.x.toFixed(1)}, ${this.playerPos.y.toFixed(1)}, ${this.playerPos.z.toFixed(1)}`.padEnd(42) + '│',
+            `│ Chunk: ${this.playerChunk.x}, ${this.playerChunk.z}`.padEnd(16) + '│',
+            '╚═══════════════╝'
         ];
 
         this.container.innerHTML = lines.map(line => {
-            if (line.startsWith('=')) return `<div>${line}</div>`;
-            const parts = line.split(': ');
-            if (parts.length === 2) {
-                return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
+            if (line.startsWith('╔') || line.startsWith('╚') || line.includes('═')) {
+                return `<div style="color: #00FF00;">${line}</div>`;
             }
             return `<div>${line}</div>`;
         }).join('');
