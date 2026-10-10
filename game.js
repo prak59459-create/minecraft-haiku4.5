@@ -234,10 +234,11 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.65;
+                    const heightLight = (wy / WORLD_HEIGHT) * 0.4;
+                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.08;
+                    const depthDarkness = Math.max(0, 1 - (wy / 80)) * 0.2;
+                    const brightness = baseLight + heightLight + varLight - depthDarkness;
 
                     color.multiplyScalar(brightness);
 

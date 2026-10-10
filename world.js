@@ -51,8 +51,16 @@ export class Chunk {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
                     } else if (y < height - 4) {
-                        const block = getOreBlock(wx, y, wz);
-                        this.setBlock(x, y, z, block);
+                        const caveValue = perlinNoise.noise3D ?
+                            perlinNoise.noise3D(wx * 0.1, y * 0.05, wz * 0.1) :
+                            perlinNoise.noise2D(wx * 0.1, wz * 0.1);
+
+                        if (caveValue > 0.6 && y > 10 && y < 120) {
+                            this.setBlock(x, y, z, BLOCKS.AIR);
+                        } else {
+                            const block = getOreBlock(wx, y, wz);
+                            this.setBlock(x, y, z, block);
+                        }
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
@@ -98,7 +106,12 @@ function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const moisture = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
+    if (temp < -0.4) return 'sand';
+    if (temp < -0.2) return 'sand';
+    if (temp > 0.5 && moisture < -0.3) return 'sand';
+    if (moisture > 0.4) return 'grass';
     return 'grass';
 }
 
