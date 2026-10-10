@@ -60,6 +60,7 @@ export class ParticleSystem {
 
         const positions = new Float32Array(this.particles.length * 3);
         const colors = new Float32Array(this.particles.length * 3);
+        const tempColor = new THREE.Color();
 
         for (let i = 0; i < this.particles.length; i++) {
             const p = this.particles[i];
@@ -67,15 +68,13 @@ export class ParticleSystem {
             positions[i * 3 + 1] = p.position.y;
             positions[i * 3 + 2] = p.position.z;
 
-            const color = new THREE.Color(p.color);
-            const alpha = p.life / p.maxLife;
-            colors[i * 3] = color.r;
-            colors[i * 3 + 1] = color.g;
-            colors[i * 3 + 2] = color.b;
+            tempColor.setHex(p.color);
+            colors[i * 3] = tempColor.r;
+            colors[i * 3 + 1] = tempColor.g;
+            colors[i * 3 + 2] = tempColor.b;
         }
 
         this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        this.material.opacity = 0.8;
     }
 }
