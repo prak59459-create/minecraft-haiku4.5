@@ -1,6 +1,6 @@
 import { World, CHUNK_SIZE_EXPORT, WORLD_HEIGHT_EXPORT } from './world.js';
 import { Player, Camera } from './player.js';
-import { BLOCKS, BLOCK_COLORS, isBlockSolid } from './blocks.js';
+import { BLOCKS, BLOCK_COLORS, BLOCK_NAMES, isBlockSolid } from './blocks.js';
 import { UI } from './ui.js';
 import { ParticleSystem } from './particles.js';
 import { WaterRenderer } from './water.js';
@@ -10,14 +10,21 @@ import { BlockOutline } from './blockoutline.js';
 
 class MinecraftGame {
     constructor() {
-        this.canvas = document.getElementById('gameCanvas');
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-        this.renderer.setClearColor(0x87CEEB);
-        this.renderer.shadowMap.enabled = false;
+        try {
+            this.canvas = document.getElementById('gameCanvas');
+            if (!this.canvas) throw new Error('Canvas element not found');
+
+            this.scene = new THREE.Scene();
+            this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+            this.renderer.setClearColor(0x87CEEB);
+            this.renderer.shadowMap.enabled = false;
+        } catch (error) {
+            console.error('Failed to initialize game:', error);
+            throw error;
+        }
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -30,7 +37,17 @@ class MinecraftGame {
         this.blockOutline = new BlockOutline(this.scene);
 
         this.chunkMeshes = new Map();
-        this.blockTypes = [0, BLOCKS.STONE, BLOCKS.GRASS, BLOCKS.DIRT, BLOCKS.COBBLESTONE, BLOCKS.OAK_LOG, BLOCKS.OAK_LEAVES, BLOCKS.SAND, BLOCKS.WATER];
+        this.blockTypes = [
+            BLOCKS.STONE,
+            BLOCKS.GRASS,
+            BLOCKS.DIRT,
+            BLOCKS.COBBLESTONE,
+            BLOCKS.OAK_LOG,
+            BLOCKS.OAK_LEAVES,
+            BLOCKS.SAND,
+            BLOCKS.WATER,
+            BLOCKS.GRAVEL
+        ];
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
@@ -89,9 +106,12 @@ class MinecraftGame {
                 const hit = this.raycastBlock();
                 if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
                     this.selectedBlockType = hit.block;
+                    const blockName = BLOCK_NAMES[hit.block] || 'Unknown';
+                    const hud = document.getElementById('blockInfo');
+                    if (hud) hud.textContent = blockName;
                 }
             }
-            if (e.key === 'F3') {
+            if (e.key === 'F3' || e.key === 'f3') {
                 e.preventDefault();
                 this.showDebug = !this.showDebug;
                 this.debugDisplay.toggle();
@@ -414,4 +434,13 @@ class MinecraftGame {
     }
 }
 
-const game = new MinecraftGame();
+try {
+    const game = new MinecraftGame();
+    console.log('Minecraft Clone initialized successfully');
+    console.log('Controls: WASD to move, Mouse to look, Space to jump, Shift to sprint/crouch');
+    console.log('Left click to break blocks, Right click to place blocks, 1-9 to select blocks');
+    console.log('Press C to pick block, H for help, F3 for debug info');
+} catch (error) {
+    console.error('Failed to start game:', error);
+    document.body.innerHTML = '<div style="color: red; padding: 20px; font-family: monospace;">Error: Failed to start Minecraft Clone. Check console for details.</div>';
+}
