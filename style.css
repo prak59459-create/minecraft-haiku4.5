@@ -35,9 +35,15 @@ body {
     width: 20px;
     height: 20px;
     margin: -10px 0 0 -10px;
-    border: 2px solid rgba(255, 255, 255, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.9);
     border-radius: 50%;
-    box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 8px rgba(255, 255, 100, 0.6);
+    animation: crosshairPulse 1.5s infinite;
+}
+
+@keyframes crosshairPulse {
+    0%, 100% { opacity: 0.9; }
+    50% { opacity: 0.6; }
 }
 
 #hud {

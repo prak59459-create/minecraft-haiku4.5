@@ -16,10 +16,10 @@ export class WaterRenderer {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x4A90E2);
+        const waterColor = new THREE.Color(0x3B7FDB);
 
-        for (let x = 0; x < CHUNK_SIZE; x++) {
-            for (let y = 1; y < WORLD_HEIGHT; y++) {
+        for (let y = 1; y < WORLD_HEIGHT; y++) {
+            for (let x = 0; x < CHUNK_SIZE; x++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
                     const blockId = chunk.getBlock(x, y, z);
                     if (blockId !== BLOCKS.WATER) continue;
@@ -33,12 +33,12 @@ export class WaterRenderer {
                     };
 
                     const faces = [
-                        { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
-                        { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
-                        { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]] },
-                        { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]] },
-                        { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
-                        { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
+                        { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]], light: 0.85 },
+                        { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]], light: 0.85 },
+                        { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]], light: 1.0 },
+                        { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]], light: 0.7 },
+                        { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]], light: 0.9 },
+                        { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]], light: 0.9 }
                     ];
 
                     for (const face of faces) {
@@ -48,11 +48,12 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const variation = 0.95 + Math.random() * 0.1;
+                        const color = waterColor.clone().multiplyScalar(variation * face.light);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
+                            colors.push(Math.floor(color.r * 255), Math.floor(color.g * 255), Math.floor(color.b * 255));
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -72,11 +73,13 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.65,
+                side: THREE.DoubleSide,
+                shininess: 60
             });
 
             const mesh = new THREE.Mesh(geometry, material);
+            mesh.renderOrder = 1;
             return mesh;
         }
 
