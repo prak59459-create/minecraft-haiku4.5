@@ -18,24 +18,32 @@ export class AudioManager {
         const now = audioContext.currentTime;
         const osc = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
+        const filter = audioContext.createBiquadFilter();
 
-        osc.connect(gainNode);
+        osc.connect(filter);
+        filter.connect(gainNode);
         gainNode.connect(audioContext.destination);
 
         if (type === 'break') {
-            osc.frequency.setValueAtTime(400, now);
-            osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+            const startFreq = 350 + Math.random() * 100;
+            osc.frequency.setValueAtTime(startFreq, now);
+            osc.frequency.exponentialRampToValueAtTime(80 + Math.random() * 40, now + 0.12);
+            gainNode.gain.setValueAtTime(0.25, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+            filter.type = 'highpass';
+            filter.frequency.setValueAtTime(200, now);
+            osc.start(now);
+            osc.stop(now + 0.12);
+        } else if (type === 'place') {
+            const startFreq = 500 + Math.random() * 150;
+            osc.frequency.setValueAtTime(startFreq, now);
+            osc.frequency.exponentialRampToValueAtTime(250, now + 0.1);
             gainNode.gain.setValueAtTime(0.2, now);
             gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            filter.type = 'highpass';
+            filter.frequency.setValueAtTime(150, now);
             osc.start(now);
             osc.stop(now + 0.1);
-        } else if (type === 'place') {
-            osc.frequency.setValueAtTime(600, now);
-            osc.frequency.exponentialRampToValueAtTime(200, now + 0.08);
-            gainNode.gain.setValueAtTime(0.15, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-            osc.start(now);
-            osc.stop(now + 0.08);
         }
     }
 
