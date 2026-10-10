@@ -83,36 +83,44 @@ export class Chunk {
 function getTerrainHeight(x, z) {
     if (!perlinNoise) return 60;
 
-    let height = 65;
-    height += perlinNoise.noise2D(x * 0.005, z * 0.005) * 30;
-    height += perlinNoise.noise2D(x * 0.02, z * 0.02) * 15;
-    height += perlinNoise.noise2D(x * 0.05, z * 0.05) * 8;
-    height += perlinNoise.noise2D(x * 0.1, z * 0.1) * 4;
+    let height = 70;
+    height += perlinNoise.noise2D(x * 0.003, z * 0.003) * 40;
+    height += perlinNoise.noise2D(x * 0.01, z * 0.01) * 20;
+    height += perlinNoise.noise2D(x * 0.03, z * 0.03) * 10;
+    height += perlinNoise.noise2D(x * 0.08, z * 0.08) * 5;
 
-    return Math.max(20, Math.min(160, Math.floor(height)));
+    return Math.max(25, Math.min(180, Math.floor(height)));
 }
 
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
-    const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const temp = perlinNoise.noise2D(x * 0.01, z * 0.01);
+    const moisture = perlinNoise.noise2D(x * 0.015, z * 0.015);
+
+    if (temp < -0.4) return 'sand';
+    if (moisture > 0.6) return 'wet_grass';
     return 'grass';
 }
 
 function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
-    let ore = BLOCKS.STONE;
-    const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
-    const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);
-    const goldChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
-    const diamondChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
+    const caveChance = perlinNoise.noise2D(x * 0.05, z * 0.05) + perlinNoise.noise2D(x * 0.1, z * 0.1) * 0.5;
+    if (caveChance > 0.3) return BLOCKS.AIR;
 
-    if (y < 160 && coalChance > 0.5) ore = BLOCKS.COAL_ORE;
-    if (y < 120 && ironChance > 0.6) ore = BLOCKS.IRON_ORE;
-    if (y < 80 && goldChance > 0.7) ore = BLOCKS.GOLD_ORE;
-    if (y < 40 && diamondChance > 0.75) ore = BLOCKS.DIAMOND_ORE;
+    let ore = BLOCKS.STONE;
+    const coalChance = perlinNoise.noise2D(x * 0.12 + y * 0.08, z * 0.12 + y * 0.08);
+    const ironChance = perlinNoise.noise2D(x * 0.1 + y * 0.06, z * 0.1 + y * 0.06);
+    const goldChance = perlinNoise.noise2D(x * 0.08 + y * 0.04, z * 0.08 + y * 0.04);
+    const diamondChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
+
+    const depthFactor = y / WORLD_HEIGHT;
+
+    if (y < 200 && coalChance > 0.55 - depthFactor * 0.1) ore = BLOCKS.COAL_ORE;
+    else if (y < 120 && ironChance > 0.65 - depthFactor * 0.15) ore = BLOCKS.IRON_ORE;
+    else if (y < 80 && goldChance > 0.72 - depthFactor * 0.15) ore = BLOCKS.GOLD_ORE;
+    else if (y < 50 && diamondChance > 0.78 - depthFactor * 0.1) ore = BLOCKS.DIAMOND_ORE;
 
     return ore;
 }
@@ -123,35 +131,37 @@ function generateTree(chunk, x, z, height) {
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
-    if (treeChance < 0.5) return;
+    if (treeChance < 0.4) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    const treeType = perlinNoise.noise2D(worldX * 0.01, worldZ * 0.01);
+    const trunkHeight = treeType < 0 ? (5 + Math.floor(Math.random() * 6)) : (4 + Math.floor(Math.random() * 3));
     const y = height;
+    const logBlock = treeType < 0 ? BLOCKS.BIRCH_LOG : (treeType < 0.3 ? BLOCKS.SPRUCE_LOG : BLOCKS.OAK_LOG);
+    const leafBlock = treeType < 0 ? BLOCKS.BIRCH_LEAVES : (treeType < 0.3 ? BLOCKS.OAK_LEAVES : BLOCKS.OAK_LEAVES);
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
             if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
-                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
+                chunk.setBlock(x, y + i, z, logBlock);
             }
         }
     }
 
-    const foliageStart = y + trunkHeight - 3;
+    const foliageStart = y + Math.max(2, trunkHeight - 4);
     const foliageRadius = 2 + Math.floor(Math.random() * 2);
 
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
-        for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
-            for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
-                const dx = Math.round(Math.cos(angle) * dist);
-                const dz = Math.round(Math.sin(angle) * dist);
+        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.3));
+        for (let dx = -radiusAtLevel; dx <= radiusAtLevel; dx++) {
+            for (let dz = -radiusAtLevel; dz <= radiusAtLevel; dz++) {
+                if (dx * dx + dz * dz > radiusAtLevel * radiusAtLevel) continue;
                 const fx = x + dx;
                 const fz = z + dz;
                 const fy = foliageStart + dy;
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
                     if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
-                        chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                        chunk.setBlock(fx, fy, fz, leafBlock);
                     }
                 }
             }
@@ -200,13 +210,14 @@ export class World {
         chunk.setBlock(lx, y, lz, blockId);
     }
 
-    updateChunksAround(playerX, playerZ) {
+    updateChunksAround(playerX, playerZ, distance = null) {
         const playerChunkX = Math.floor(playerX / CHUNK_SIZE);
         const playerChunkZ = Math.floor(playerZ / CHUNK_SIZE);
+        const renderDist = distance !== null ? distance : this.renderDistance;
 
         const chunksToKeep = new Set();
-        for (let dx = -this.renderDistance; dx <= this.renderDistance; dx++) {
-            for (let dz = -this.renderDistance; dz <= this.renderDistance; dz++) {
+        for (let dx = -renderDist; dx <= renderDist; dx++) {
+            for (let dz = -renderDist; dz <= renderDist; dz++) {
                 const key = `${playerChunkX + dx},${playerChunkZ + dz}`;
                 chunksToKeep.add(key);
                 this.getChunk(playerChunkX + dx, playerChunkZ + dz);
