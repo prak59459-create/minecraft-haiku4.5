@@ -34,20 +34,24 @@ export class ParticleSystem {
 
     update() {
         const gravity = 0.01;
+        const lifeDecay = 1 / 60;
+        let aliveCount = 0;
 
-        for (let i = this.particles.length - 1; i >= 0; i--) {
+        for (let i = 0; i < this.particles.length; i++) {
             const p = this.particles[i];
             p.velocity.y -= gravity;
             p.position.x += p.velocity.x;
             p.position.y += p.velocity.y;
             p.position.z += p.velocity.z;
-            p.life -= 1 / 60;
+            p.life -= lifeDecay;
 
-            if (p.life <= 0) {
-                this.particles.splice(i, 1);
+            if (p.life > 0) {
+                this.particles[aliveCount] = p;
+                aliveCount++;
             }
         }
 
+        this.particles.length = aliveCount;
         this.updateGeometry();
     }
 
@@ -68,7 +72,6 @@ export class ParticleSystem {
             positions[i * 3 + 2] = p.position.z;
 
             const color = new THREE.Color(p.color);
-            const alpha = p.life / p.maxLife;
             colors[i * 3] = color.r;
             colors[i * 3 + 1] = color.g;
             colors[i * 3 + 2] = color.b;
@@ -76,6 +79,5 @@ export class ParticleSystem {
 
         this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         this.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        this.material.opacity = 0.8;
     }
 }
