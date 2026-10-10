@@ -8,7 +8,7 @@ export class BlockOutline {
     createOutlineMaterial() {
         this.material = new THREE.LineBasicMaterial({
             color: 0xFFFFFF,
-            linewidth: 2,
+            linewidth: 1,
             transparent: true,
             opacity: 0.8
         });
