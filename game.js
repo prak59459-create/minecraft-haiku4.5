@@ -295,9 +295,9 @@ class MinecraftGame {
             { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
         ];
 
-        const r = Math.floor(color.r * 255);
-        const g = Math.floor(color.g * 255);
-        const b = Math.floor(color.b * 255);
+        const r = Math.floor(Math.max(0, Math.min(255, color.r * 255)));
+        const g = Math.floor(Math.max(0, Math.min(255, color.g * 255)));
+        const b = Math.floor(Math.max(0, Math.min(255, color.b * 255)));
 
         for (const face of faces) {
             const [dx, dy, dz] = face.dir;

@@ -4,6 +4,10 @@ export class UI {
     constructor() {
         this.selectedBlock = 1;
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        this.blockCounts = {};
+        for (const block of this.blocks) {
+            this.blockCounts[block] = 64;
+        }
         this.fpsCounter = 0;
         this.lastTime = performance.now();
         this.fpsHistory = [];

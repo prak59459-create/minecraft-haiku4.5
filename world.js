@@ -54,14 +54,17 @@ export class Chunk {
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'wet_grass') {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
                     } else if (y < height) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
+                        } else if (terrainType === 'wet_grass') {
+                            const dirtChance = perlinNoise.noise2D(wx * 0.05, wz * 0.05);
+                            this.setBlock(x, y, z, dirtChance > 0.3 ? BLOCKS.GRASS : BLOCKS.MOSSY_COBBLESTONE);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
@@ -70,7 +73,7 @@ export class Chunk {
                     }
                 }
 
-                if (height > 65) {
+                if (height > 60 && height < 150) {
                     generateTree(this, x, z, height);
                 }
             }
