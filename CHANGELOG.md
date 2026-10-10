@@ -1,5 +1,63 @@
 # Changelog - Minecraft Clone (Haiku 4.5)
 
+## Version 1.1.0 - Advanced Optimizations & Gameplay Enhancement (Session 3)
+
+### New Features
+
+#### Gameplay Enhancements
+- **Cave Generation**: Procedural cave systems using 3D Perlin noise for exploration
+- **Step Climbing**: Improved player movement that climbs over blocks naturally
+- **Better Biome System**: Temperature and moisture-based terrain variation
+- **Lava Blocks**: Full support for lava rendering and interaction
+
+#### Block Types (11 new blocks added)
+- **Tree Variants**: Birch Log/Leaves, Spruce Log/Leaves (3 tree types total)
+- **Stone Variants**: Granite, Diorite, Andesite for terrain variety
+- **Other Blocks**: Clay, Obsidian, Lava, Brick
+
+#### Level of Detail (LOD) System
+- LOD0: Full detail for nearby chunks
+- LOD1: Reduced geometry for medium distance
+- LOD2: Minimal detail for far chunks
+- Extends render distance from 8 to 12 chunks
+- Flat shading and no shadows for distant terrain
+
+### Performance Optimizations
+
+#### Memory Management
+- Automatic chunk mesh cleanup every 30 frames
+- Prevents memory leaks in long play sessions
+- Distance-based mesh removal for chunks beyond 14 units
+
+#### Rendering
+- LOD system reduces vertex/triangle count for distant chunks
+- Better frustum culling configuration
+- Optimized shadow mapping
+
+#### Terrain
+- Multiple tree species with randomized placement
+- Better ore distribution with depth awareness
+- Improved cave generation parameters
+
+### Audio System Improvements
+- Richer block sounds with frequency modulation
+- Multi-harmonic jump sound for better feedback
+- Enhanced step sounds with pitch variation
+- Filter-based audio processing
+
+### Visual Improvements
+- Enhanced lighting with depth-based darkness
+- Better shadow rendering in underground areas
+- Improved crosshair with gradient effect
+- More dynamic particle system
+
+### Technical Updates
+- Chunk structure tracks LOD level
+- Biome system considers moisture levels
+- Cave generation through noise functions
+- Better collision detection with ground climbing
+- Audio context with biquad filtering
+
 ## Version 1.0.0 - Initial Release (Session 2 Complete)
 
 ### New Features
