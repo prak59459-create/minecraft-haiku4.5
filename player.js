@@ -19,6 +19,7 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.isInWater = false;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -71,13 +72,29 @@ export class Player {
     }
 
     applyPhysics() {
-        if (!this.isOnGround) {
-            this.velocity.y -= GRAVITY;
+        this.checkWater();
+
+        if (this.isInWater) {
+            this.velocity.y *= 0.98;
+            this.velocity.y -= GRAVITY * 0.3;
+            if (this.keys[' ']) {
+                this.velocity.y = 0.15;
+            }
+        } else {
+            if (!this.isOnGround) {
+                this.velocity.y -= GRAVITY;
+            }
         }
 
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
         this.position.z += this.velocity.z;
+    }
+
+    checkWater() {
+        const eyePos = this.position.y + PLAYER_HEIGHT * 0.85;
+        const block = this.world.getBlock(Math.floor(this.position.x), Math.floor(eyePos), Math.floor(this.position.z));
+        this.isInWater = block === BLOCKS.WATER;
     }
 
     checkCollisions() {
