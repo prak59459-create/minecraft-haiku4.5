@@ -2,6 +2,7 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.animationTime = 0;
         this.createOutlineMaterial();
     }
 
@@ -22,9 +23,12 @@ export class BlockOutline {
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
 
+        const offset = 0.01;
         const positions = [
-            [x, y, z], [x + 1, y, z], [x + 1, y + 1, z], [x, y + 1, z],
-            [x, y, z + 1], [x + 1, y, z + 1], [x + 1, y + 1, z + 1], [x, y + 1, z + 1]
+            [x - offset, y - offset, z - offset], [x + 1 + offset, y - offset, z - offset],
+            [x + 1 + offset, y + 1 + offset, z - offset], [x - offset, y + 1 + offset, z - offset],
+            [x - offset, y - offset, z + 1 + offset], [x + 1 + offset, y - offset, z + 1 + offset],
+            [x + 1 + offset, y + 1 + offset, z + 1 + offset], [x - offset, y + 1 + offset, z + 1 + offset]
         ];
 
         const edges = [
@@ -42,7 +46,9 @@ export class BlockOutline {
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
 
         this.outline = new THREE.LineSegments(geometry, this.material);
+        this.outline.renderOrder = 999;
         this.scene.add(this.outline);
+        this.animationTime = 0;
     }
 
     clear() {
@@ -53,6 +59,10 @@ export class BlockOutline {
     }
 
     update(raycastHit) {
+        this.animationTime += 0.02;
+        const pulse = 0.4 + Math.sin(this.animationTime * 3) * 0.3;
+        this.material.opacity = pulse;
+
         if (raycastHit && raycastHit.block !== 0) {
             this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z);
         } else {
