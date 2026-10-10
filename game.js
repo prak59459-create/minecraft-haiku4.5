@@ -33,6 +33,8 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.loadGameState();
+        this.setupAutoSave();
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -396,6 +398,36 @@ class MinecraftGame {
         const skyColor = new THREE.Color();
         skyColor.setHSL(hue, saturation, lightness);
         this.scene.background = skyColor;
+    }
+
+    loadGameState() {
+        try {
+            const saved = localStorage.getItem('minecraftGameState');
+            if (saved) {
+                const state = JSON.parse(saved);
+                this.player.position = { ...state.position };
+                this.player.velocity = { x: 0, y: 0, z: 0 };
+            }
+        } catch (e) {
+            console.warn('Could not load game state');
+        }
+    }
+
+    saveGameState() {
+        try {
+            const state = {
+                position: { ...this.player.position },
+                timestamp: Date.now()
+            };
+            localStorage.setItem('minecraftGameState', JSON.stringify(state));
+        } catch (e) {
+            console.warn('Could not save game state');
+        }
+    }
+
+    setupAutoSave() {
+        setInterval(() => this.saveGameState(), 30000);
+        window.addEventListener('beforeunload', () => this.saveGameState());
     }
 }
 
