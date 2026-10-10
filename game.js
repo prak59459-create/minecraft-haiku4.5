@@ -34,6 +34,7 @@ class MinecraftGame {
         this.showDebug = false;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
+        this.player.onStep = () => this.audioManager.playStepSound();
 
         this.setupLighting();
         this.setupEventListeners();
@@ -134,8 +135,10 @@ class MinecraftGame {
         );
 
         let hit = null;
+        const stepSize = 0.1;
+        let prevBlock = BLOCKS.AIR;
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = stepSize; dist <= this.raycastDistance; dist += stepSize) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -145,8 +148,8 @@ class MinecraftGame {
             const bz = Math.floor(z);
 
             const block = this.world.getBlock(bx, by, bz);
-            if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
+            if (isBlockSolid(block) && prevBlock === BLOCKS.AIR) {
+                const prevDist = Math.max(stepSize, dist - stepSize);
                 const prevX = eyePos.x + direction.x * prevDist;
                 const prevY = eyePos.y + direction.y * prevDist;
                 const prevZ = eyePos.z + direction.z * prevDist;
@@ -163,6 +166,7 @@ class MinecraftGame {
                 hit = { x: bx, y: by, z: bz, block, normal, dist };
                 break;
             }
+            prevBlock = block;
         }
 
         if (!hit) {
@@ -208,10 +212,15 @@ class MinecraftGame {
 
                     const color = new THREE.Color(BLOCK_COLORS[blockId]);
 
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
+                    const baseLight = 0.6;
+                    const heightLight = (wy / WORLD_HEIGHT) * 0.4;
+                    const varLight = Math.sin(wx * 0.3 + wz * 0.3 + wy * 0.1) * 0.1;
+
+                    let aoLight = 0;
+                    const neighbors = this.countSolidNeighbors(wx, wy, wz);
+                    aoLight = (6 - neighbors) * 0.03;
+
+                    const brightness = Math.min(1.0, baseLight + heightLight + varLight + aoLight);
 
                     color.multiplyScalar(brightness);
 
@@ -233,7 +242,7 @@ class MinecraftGame {
                 wireframe: false,
                 flatShading: false,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 25
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -243,6 +252,20 @@ class MinecraftGame {
         }
 
         return null;
+    }
+
+    countSolidNeighbors(x, y, z) {
+        let count = 0;
+        const neighbors = [
+            [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]
+        ];
+
+        for (const [dx, dy, dz] of neighbors) {
+            if (isBlockSolid(this.world.getBlock(x + dx, y + dy, z + dz))) {
+                count++;
+            }
+        }
+        return count;
     }
 
     addBlockFaces(vertices, colors, indices, x, y, z, blockId, color, chunk) {

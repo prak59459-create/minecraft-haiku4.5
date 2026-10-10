@@ -50,17 +50,25 @@ export class Chunk {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
                     } else if (y < height - 4) {
                         const block = getOreBlock(wx, y, wz);
-                        this.setBlock(x, y, z, block);
+                        if (isCaveBlock(wx, y, wz)) {
+                            this.setBlock(x, y, z, BLOCKS.AIR);
+                        } else {
+                            this.setBlock(x, y, z, block);
+                        }
                     } else if (y < height - 1) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
+                        } else if (terrainType === 'forest') {
+                            this.setBlock(x, y, z, BLOCKS.DIRT);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.DIRT);
                         }
                     } else if (y < height) {
                         if (terrainType === 'sand') {
                             this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
+                        } else if (terrainType === 'forest') {
+                            this.setBlock(x, y, z, BLOCKS.GRASS);
+                        } else if (terrainType === 'sparse') {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         } else {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
@@ -71,7 +79,7 @@ export class Chunk {
                 }
 
                 if (height > 65) {
-                    generateTree(this, x, z, height);
+                    generateTree(this, x, z, height, terrainType);
                 }
             }
         }
@@ -96,8 +104,23 @@ function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
     const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
+    const humidity = perlinNoise.noise2D(x * 0.01 + 1000, z * 0.01 + 1000);
+
     if (temp < -0.3) return 'sand';
+    if (temp < 0 && humidity > 0.5) return 'forest';
+    if (temp > 0.5) return 'sparse';
     return 'grass';
+}
+
+function isCaveBlock(x, y, z) {
+    if (!perlinNoise) return false;
+    if (y < 20 || y > 120) return false;
+
+    const caveNoise = perlinNoise.noise3D ?
+        perlinNoise.noise3D(x * 0.05, y * 0.05, z * 0.05) :
+        perlinNoise.noise2D(x * 0.05 + y * 0.05, z * 0.05);
+
+    return caveNoise > 0.6;
 }
 
 function getOreBlock(x, y, z) {
@@ -117,27 +140,47 @@ function getOreBlock(x, y, z) {
     return ore;
 }
 
-function generateTree(chunk, x, z, height) {
+function generateTree(chunk, x, z, height, terrainType) {
     if (!perlinNoise) return;
 
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
     const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
-    if (treeChance < 0.5) return;
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    let treeThreshold = 0.5;
+    if (terrainType === 'forest') treeThreshold = 0.2;
+    if (terrainType === 'sparse') treeThreshold = 0.7;
+
+    if (treeChance < treeThreshold) return;
+
+    const treeType = perlinNoise.noise2D(worldX * 0.03, worldZ * 0.03) > 0 ? 'oak' :
+                     perlinNoise.noise2D(worldX * 0.04, worldZ * 0.04) > 0 ? 'spruce' : 'birch';
+
+    const trunkHeight = treeType === 'spruce' ? 6 + Math.floor(Math.random() * 5) : 4 + Math.floor(Math.random() * 4);
     const y = height;
+
+    let logBlock, leavesBlock;
+    if (treeType === 'oak') {
+        logBlock = BLOCKS.OAK_LOG;
+        leavesBlock = BLOCKS.OAK_LEAVES;
+    } else if (treeType === 'spruce') {
+        logBlock = BLOCKS.SPRUCE_LOG;
+        leavesBlock = BLOCKS.SPRUCE_LEAVES;
+    } else {
+        logBlock = BLOCKS.BIRCH_LOG;
+        leavesBlock = BLOCKS.BIRCH_LEAVES;
+    }
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
         if (x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE) {
             if (chunk.getBlock(x, y + i, z) === BLOCKS.AIR) {
-                chunk.setBlock(x, y + i, z, BLOCKS.OAK_LOG);
+                chunk.setBlock(x, y + i, z, logBlock);
             }
         }
     }
 
-    const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    const foliageStart = y + trunkHeight - (treeType === 'spruce' ? 4 : 3);
+    const foliageRadius = treeType === 'spruce' ? 2 : 2 + Math.floor(Math.random() * 2);
 
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
         const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
@@ -151,7 +194,7 @@ function generateTree(chunk, x, z, height) {
 
                 if (fx >= 0 && fx < CHUNK_SIZE && fz >= 0 && fz < CHUNK_SIZE && fy >= 0 && fy < WORLD_HEIGHT) {
                     if (chunk.getBlock(fx, fy, fz) === BLOCKS.AIR) {
-                        chunk.setBlock(fx, fy, fz, BLOCKS.OAK_LEAVES);
+                        chunk.setBlock(fx, fy, fz, leavesBlock);
                     }
                 }
             }
