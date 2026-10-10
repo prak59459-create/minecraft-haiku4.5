@@ -33,6 +33,7 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.cycleTime = 0;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -221,7 +222,9 @@ class MinecraftGame {
 
                     color.multiplyScalar(brightness);
 
-                    this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
+                    if (blockId !== BLOCKS.WATER && blockId !== BLOCKS.LAVA) {
+                        this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
+                    }
                 }
             }
         }
@@ -277,7 +280,7 @@ class MinecraftGame {
             const nz = z + dz;
 
             const neighbor = this.world.getBlock(nx, ny, nz);
-            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER && neighbor !== BLOCKS.LAVA) continue;
 
             const startIndex = vertices.length / 3;
             for (const [vx, vy, vz] of face.verts) {
@@ -377,7 +380,8 @@ class MinecraftGame {
     }
 
     updateDayNightCycle() {
-        const time = Date.now() * 0.00002;
+        this.cycleTime += 0.00002;
+        const time = this.cycleTime;
         const sunY = Math.sin(time) * 120 + 100;
         const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
 
@@ -392,9 +396,13 @@ class MinecraftGame {
         let skyLightness = 0.45 + sunIntensity * 0.35;
 
         if (sunIntensity < 0.35) {
-            skyHue = 0.75;
-            skySaturation = 0.3;
-            skyLightness = 0.2 + sunIntensity * 0.3;
+            skyHue = 0.8 + Math.sin(time * 2) * 0.05;
+            skySaturation = 0.4 + Math.sin(time * 3) * 0.15;
+            skyLightness = 0.15 + sunIntensity * 0.25;
+        } else if (sunIntensity > 0.8) {
+            const sunsetFade = (sunIntensity - 0.8) / 0.2;
+            skyHue = 0.6 - sunsetFade * 0.15;
+            skySaturation = 0.4 + sunsetFade * 0.3;
         }
 
         const skyColor = new THREE.Color();
