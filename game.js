@@ -13,9 +13,11 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: false, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio > 1 ? 1 : 0.75);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = false;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -51,10 +53,10 @@ class MinecraftGame {
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
         directionalLight.position.set(150, sunY, 150);
-        directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
-        directionalLight.shadow.camera.far = 500;
+        directionalLight.castShadow = false;
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
+        directionalLight.shadow.camera.far = 400;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
@@ -66,11 +68,27 @@ class MinecraftGame {
     }
 
     setupPickBlock() {
+        const blockIds = [0, BLOCKS.STONE, BLOCKS.GRASS, BLOCKS.DIRT, BLOCKS.COBBLESTONE, BLOCKS.OAK_LOG, BLOCKS.OAK_LEAVES, BLOCKS.SAND, BLOCKS.WATER, BLOCKS.GRAVEL];
+
         document.addEventListener('keydown', (e) => {
+            const num = parseInt(e.key);
+            if (num >= 1 && num <= 9) {
+                if (blockIds[num]) {
+                    this.selectedBlockType = blockIds[num];
+                    this.ui.selectBlock(num - 1);
+                }
+            }
+
             if (e.key === 'c' || e.key === 'C') {
                 const hit = this.raycastBlock();
                 if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
                     this.selectedBlockType = hit.block;
+                    for (let i = 0; i < blockIds.length; i++) {
+                        if (blockIds[i] === hit.block) {
+                            this.ui.selectBlock(i - 1);
+                            break;
+                        }
+                    }
                 }
             }
             if (e.key === 'F3') {
@@ -81,6 +99,16 @@ class MinecraftGame {
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
+        });
+
+        document.addEventListener('wheel', (e) => {
+            const blockIds = [0, BLOCKS.STONE, BLOCKS.GRASS, BLOCKS.DIRT, BLOCKS.COBBLESTONE, BLOCKS.OAK_LOG, BLOCKS.OAK_LEAVES, BLOCKS.SAND, BLOCKS.WATER, BLOCKS.GRAVEL];
+            const direction = e.deltaY > 0 ? 1 : -1;
+            let newIndex = this.ui.selectedBlock + direction;
+            if (newIndex < 0) newIndex = 8;
+            if (newIndex > 8) newIndex = 0;
+            this.ui.selectBlock(newIndex);
+            this.selectedBlockType = blockIds[newIndex + 1];
         });
     }
 
@@ -134,8 +162,12 @@ class MinecraftGame {
         );
 
         let hit = null;
+        let prevBx = Math.floor(eyePos.x);
+        let prevBy = Math.floor(eyePos.y);
+        let prevBz = Math.floor(eyePos.z);
+        const stepSize = 0.1;
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = stepSize; dist <= this.raycastDistance; dist += stepSize) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -144,24 +176,20 @@ class MinecraftGame {
             const by = Math.floor(y);
             const bz = Math.floor(z);
 
-            const block = this.world.getBlock(bx, by, bz);
-            if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
-                const prevX = eyePos.x + direction.x * prevDist;
-                const prevY = eyePos.y + direction.y * prevDist;
-                const prevZ = eyePos.z + direction.z * prevDist;
+            if (bx !== prevBx || by !== prevBy || bz !== prevBz) {
+                const block = this.world.getBlock(bx, by, bz);
+                if (isBlockSolid(block)) {
+                    let normal = { x: 0, y: 0, z: 0 };
+                    if (prevBx !== bx) normal.x = prevBx < bx ? -1 : 1;
+                    else if (prevBy !== by) normal.y = prevBy < by ? -1 : 1;
+                    else if (prevBz !== bz) normal.z = prevBz < bz ? -1 : 1;
 
-                const prevBx = Math.floor(prevX);
-                const prevBy = Math.floor(prevY);
-                const prevBz = Math.floor(prevZ);
-
-                let normal = { x: 0, y: 0, z: 0 };
-                if (prevBx !== bx) normal.x = prevBx < bx ? -1 : 1;
-                else if (prevBy !== by) normal.y = prevBy < by ? -1 : 1;
-                else if (prevBz !== bz) normal.z = prevBz < bz ? -1 : 1;
-
-                hit = { x: bx, y: by, z: bz, block, normal, dist };
-                break;
+                    hit = { x: bx, y: by, z: bz, block, normal, dist };
+                    break;
+                }
+                prevBx = bx;
+                prevBy = by;
+                prevBz = bz;
             }
         }
 
@@ -180,7 +208,10 @@ class MinecraftGame {
             for (let dz = -1; dz <= 1; dz++) {
                 const key = `${cx + dx},${cz + dz}`;
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
+                    const oldMesh = this.chunkMeshes.get(key);
+                    this.scene.remove(oldMesh);
+                    oldMesh.geometry.dispose();
+                    oldMesh.material.dispose();
                     this.chunkMeshes.delete(key);
                 }
             }
@@ -196,6 +227,23 @@ class MinecraftGame {
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
 
+        const colorCache = new Map();
+        const getColorId = (blockId, wy) => {
+            const key = blockId * 256 + wy;
+            if (!colorCache.has(key)) {
+                const color = new THREE.Color(BLOCK_COLORS[blockId]);
+                const baseLight = 0.7;
+                const heightLight = (wy / WORLD_HEIGHT) * 0.3;
+                const brightness = baseLight + heightLight;
+                color.multiplyScalar(brightness);
+                const r = Math.floor(color.r * 255);
+                const g = Math.floor(color.g * 255);
+                const b = Math.floor(color.b * 255);
+                colorCache.set(key, [r, g, b]);
+            }
+            return colorCache.get(key);
+        };
+
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
                 for (let z = 0; z < CHUNK_SIZE; z++) {
@@ -206,16 +254,8 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const color = new THREE.Color(BLOCK_COLORS[blockId]);
-
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
-
-                    color.multiplyScalar(brightness);
-
-                    this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
+                    const [r, g, b] = getColorId(blockId, wy);
+                    this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, r, g, b, chunk);
                 }
             }
         }
@@ -226,18 +266,17 @@ class MinecraftGame {
             if (indices.length > 0) {
                 geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             }
-            geometry.computeVertexNormals();
 
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
+                flatShading: true,
                 side: THREE.FrontSide,
-                shininess: 30
+                shininess: 10
             });
             const mesh = new THREE.Mesh(geometry, material);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
+            mesh.castShadow = false;
+            mesh.receiveShadow = false;
             mesh.frustumCulled = true;
             return mesh;
         }
@@ -245,9 +284,7 @@ class MinecraftGame {
         return null;
     }
 
-    addBlockFaces(vertices, colors, indices, x, y, z, blockId, color, chunk) {
-        let faceCount = 0;
-
+    addBlockFaces(vertices, colors, indices, x, y, z, blockId, r, g, b, chunk) {
         const faces = [
             { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
             { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
@@ -257,17 +294,9 @@ class MinecraftGame {
             { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
         ];
 
-        const r = Math.floor(color.r * 255);
-        const g = Math.floor(color.g * 255);
-        const b = Math.floor(color.b * 255);
-
         for (const face of faces) {
             const [dx, dy, dz] = face.dir;
-            const nx = x + dx;
-            const ny = y + dy;
-            const nz = z + dz;
-
-            const neighbor = this.world.getBlock(nx, ny, nz);
+            const neighbor = this.world.getBlock(x + dx, y + dy, z + dz);
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
@@ -278,10 +307,7 @@ class MinecraftGame {
 
             indices.push(startIndex, startIndex + 1, startIndex + 2);
             indices.push(startIndex, startIndex + 2, startIndex + 3);
-            faceCount++;
         }
-
-        return faceCount > 0;
     }
 
     updateVisibleChunks() {
@@ -290,22 +316,34 @@ class MinecraftGame {
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
-        for (const [key, chunk] of this.world.chunks) {
+        const renderDist = 8;
+        const meshDist = 12;
+        const existingMeshKeys = new Set(this.chunkMeshes.keys());
+
+        for (const key of existingMeshKeys) {
             const [cx, cz] = key.split(',').map(Number);
+            const distSq = (cx - playerChunkX) ** 2 + (cz - playerChunkZ) ** 2;
+            const maxDist = meshDist * meshDist;
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
-                if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
-                }
-                continue;
+            if (distSq > maxDist) {
+                this.scene.remove(this.chunkMeshes.get(key));
+                this.chunkMeshes.delete(key);
             }
+        }
 
-            if (!this.chunkMeshes.has(key)) {
-                const mesh = this.buildChunkMesh(chunk);
-                if (mesh) {
-                    this.scene.add(mesh);
-                    this.chunkMeshes.set(key, mesh);
+        for (let dx = -renderDist; dx <= renderDist; dx++) {
+            for (let dz = -renderDist; dz <= renderDist; dz++) {
+                const cx = playerChunkX + dx;
+                const cz = playerChunkZ + dz;
+                const key = `${cx},${cz}`;
+
+                const chunk = this.world.getChunk(cx, cz);
+                if (chunk && !this.chunkMeshes.has(key)) {
+                    const mesh = this.buildChunkMesh(chunk);
+                    if (mesh) {
+                        this.scene.add(mesh);
+                        this.chunkMeshes.set(key, mesh);
+                    }
                 }
             }
         }
