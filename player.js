@@ -52,8 +52,10 @@ export class Player {
     handleMovement() {
         let moveX = 0;
         let moveZ = 0;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        this.isSprinting = this.keys['shift'] && isMoving;
+        const speed = this.isSprinting ? PLAYER_SPRINT_SPEED : (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPEED);
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -65,9 +67,6 @@ export class Player {
 
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
-
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
     }
 
     applyPhysics() {
@@ -86,6 +85,10 @@ export class Player {
 
         this.isOnGround = false;
 
+        const radiusAngles = [0, Math.PI/4, Math.PI/2, 3*Math.PI/4, Math.PI, 5*Math.PI/4, 3*Math.PI/2, 7*Math.PI/4];
+        const cosAngles = radiusAngles.map(a => Math.cos(a));
+        const sinAngles = radiusAngles.map(a => Math.sin(a));
+
         const checkPoints = [
             { dy: 0.1, radius: radius * 0.9 },
             { dy: height * 0.3, radius: radius * 0.9 },
@@ -93,11 +96,12 @@ export class Player {
             { dy: height * 0.9, radius: radius * 0.7 }
         ];
 
+        let collided = false;
         for (const point of checkPoints) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
-                const cx = this.position.x + Math.cos(angle) * point.radius;
+            for (let i = 0; i < cosAngles.length; i++) {
+                const cx = this.position.x + cosAngles[i] * point.radius;
                 const cy = this.position.y + point.dy;
-                const cz = this.position.z + Math.sin(angle) * point.radius;
+                const cz = this.position.z + sinAngles[i] * point.radius;
 
                 const block = this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz));
                 if (isBlockSolid(block)) {
@@ -107,17 +111,21 @@ export class Player {
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
+                    collided = true;
                     break;
                 }
             }
+            if (collided) break;
         }
 
         if (this.velocity.y < 0) {
             let onGround = false;
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.8;
+            const groundAngles = [0, Math.PI/3, 2*Math.PI/3, Math.PI, 4*Math.PI/3, 5*Math.PI/3];
+            for (let i = 0; i < groundAngles.length; i++) {
+                const ang = groundAngles[i];
+                const cx = this.position.x + Math.cos(ang) * radius * 0.8;
                 const cy = this.position.y - 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.8;
+                const cz = this.position.z + Math.sin(ang) * radius * 0.8;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     onGround = true;
@@ -132,10 +140,12 @@ export class Player {
         }
 
         if (this.velocity.y > 0) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.9;
+            const ceilingAngles = [0, Math.PI/3, 2*Math.PI/3, Math.PI, 4*Math.PI/3, 5*Math.PI/3];
+            for (let i = 0; i < ceilingAngles.length; i++) {
+                const ang = ceilingAngles[i];
+                const cx = this.position.x + Math.cos(ang) * radius * 0.9;
                 const cy = this.position.y + height + 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.9;
+                const cz = this.position.z + Math.sin(ang) * radius * 0.9;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     this.velocity.y = 0;
