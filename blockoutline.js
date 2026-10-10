@@ -8,13 +8,14 @@ export class BlockOutline {
     createOutlineMaterial() {
         this.material = new THREE.LineBasicMaterial({
             color: 0xFFFFFF,
-            linewidth: 2,
+            linewidth: 3,
             transparent: true,
-            opacity: 0.8
+            opacity: 1.0,
+            fog: false
         });
     }
 
-    setSelectedBlock(x, y, z) {
+    setSelectedBlock(x, y, z, blockType) {
         if (this.outline) {
             this.scene.remove(this.outline);
         }
@@ -54,7 +55,7 @@ export class BlockOutline {
 
     update(raycastHit) {
         if (raycastHit && raycastHit.block !== 0) {
-            this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z);
+            this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z, raycastHit.block);
         } else {
             this.clear();
         }
