@@ -62,6 +62,7 @@ export class DebugDisplay {
 
         let vertices = 0;
         let triangles = 0;
+        let waterMeshes = 0;
         for (const mesh of game.chunkMeshes.values()) {
             if (mesh && mesh.geometry) {
                 const positions = mesh.geometry.getAttribute('position');
@@ -75,9 +76,13 @@ export class DebugDisplay {
             }
         }
 
-        this.stats.vertices = vertices;
-        this.stats.triangles = triangles;
-        this.stats.drawCalls = game.chunkMeshes.size;
+        for (const mesh of game.waterRenderer.waterMeshes.values()) {
+            if (mesh) waterMeshes++;
+        }
+
+        this.stats.vertices = Math.floor(vertices);
+        this.stats.triangles = Math.floor(triangles);
+        this.stats.drawCalls = game.chunkMeshes.size + waterMeshes;
 
         if (performance.memory) {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);

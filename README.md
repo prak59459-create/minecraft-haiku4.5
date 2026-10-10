@@ -21,31 +21,37 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Multiple Block Types**:
   - Stone, Grass, Dirt, Cobblestone
   - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
+  - Sand, Water, Gravel, Bedrock, Obsidian, Lava
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
-- **Ore Generation** - Procedural ore generation at various depths
-- **Tree Generation** - Natural tree placement in suitable terrain
+- **Ore Generation** - Depth-aware procedural ore generation with realistic distribution
+- **Tree Generation** - Natural tree placement with larger, more impressive trees
+- **Biome Variety** - Grass, Sand, and Gravel biomes with distinct characteristics
 
 ### Physics & Collision
-- **Gravity System** - Realistic falling and landing
-- **Collision Detection** - Precise player-block collision detection
-- **Raycasting** - Accurate block selection and targeting
+- **Gravity System** - Realistic falling with terminal velocity
+- **Collision Detection** - Precise multi-point collision system with improved accuracy
+- **Raycasting** - Optimized block selection with spatial awareness
 - **Block Highlight** - Visual feedback for the block you're looking at
+- **Terminal Velocity** - Prevents infinite acceleration when falling
+- **Step-Up Logic** - Better handling of walking on uneven terrain
 
 ### Visual Features
-- **3D Voxel Rendering** - Full 3D block-based world
-- **Dynamic Lighting** - Sun and ambient lighting system
+- **3D Voxel Rendering** - Full 3D block-based world with optimized meshes
+- **Dynamic Lighting** - Sun and ambient lighting with per-face shading
 - **Day/Night Cycle** - Real-time sky color transitions
-- **Particle Effects** - Block destruction particles
-- **Water Rendering** - Semi-transparent water with proper face culling
+- **Particle Effects** - Block destruction particles with object pooling
+- **Water Rendering** - Transparent water with improved visuals and face culling
+- **Smooth Camera** - Interpolated camera movement for better feel
+- **Block Shading** - Different brightness for different block faces (top/bottom/sides)
 
 ### Audio
 - **Procedural Sound Effects**:
-  - Block break sounds
+  - Block break sounds with frequency modulation
   - Block place sounds
-  - Jump sounds (prepared)
-  - Step sounds (prepared)
-- **Web Audio API** - Dynamic audio generation
+  - Jump sounds
+  - Footstep sounds when moving on ground
+- **Web Audio API** - Dynamic audio generation without external files
+- **Throttled Playback** - Prevents audio spam with intelligent timing
 
 ### User Interface
 - **HUD Display** - Real-time coordinates, FPS, and block info
