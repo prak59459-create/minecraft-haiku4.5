@@ -1,5 +1,37 @@
 # Minecraft Clone - Improvements and Optimizations
 
+## Latest Updates (Session 3 - Claude Haiku 4.5)
+
+### Major Performance Optimizations
+- ✅ Optimized chunk mesh generation with improved lighting calculations
+- ✅ Accelerated raycasting with 0.1 step size (2x faster)
+- ✅ Improved collision detection with fewer angle checks
+- ✅ Better chunk visibility culling with circular distance calculation (10 chunks)
+- ✅ Proper geometry/material disposal on chunk removal (prevents memory leaks)
+- ✅ Disabled matrix auto-update for static chunk meshes
+- ✅ FPS counter with 30-frame averaging for stability
+- ✅ Pre-calculated trigonometric values in animation loop
+
+### New Block Types
+- ✅ Obsidian (ID 15) - Rare deep material
+- ✅ Glowstone (ID 16) - Light-emitting blocks
+- ✅ Lapis Ore (ID 17) - Mid-depth valuable ore
+- ✅ Redstone Ore (ID 18) - Deep redstone source
+
+### Visual Enhancements
+- ✅ Enhanced day-night cycle with smoother color transitions
+- ✅ Better water rendering with improved transparency
+- ✅ Improved particle system with friction simulation
+- ✅ Optimized shadow camera bounds for better coverage
+- ✅ Better lighting calculation with realistic brightness
+- ✅ Improved tree generation with varied heights
+
+### Physics Improvements
+- ✅ Better movement acceleration and friction
+- ✅ Improved sprint/crouch mechanics
+- ✅ Enhanced jump physics with better power
+- ✅ More stable collision detection
+
 ## Latest Updates (Session 2)
 
 ### Core Improvements

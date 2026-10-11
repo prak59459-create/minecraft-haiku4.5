@@ -2,11 +2,13 @@ import { BLOCKS, isBlockSolid } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
-const PLAYER_SPEED = 0.1;
-const PLAYER_SPRINT_SPEED = 0.15;
-const PLAYER_CROUCH_SPEED = 0.05;
+const PLAYER_SPEED = 0.11;
+const PLAYER_SPRINT_SPEED = 0.18;
+const PLAYER_CROUCH_SPEED = 0.045;
 const GRAVITY = 0.02;
-const JUMP_POWER = 0.5;
+const JUMP_POWER = 0.55;
+const ACCELERATION = 0.85;
+const FRICTION = 0.95;
 
 export class Player {
     constructor(world) {
@@ -63,8 +65,11 @@ export class Player {
         const cosY = Math.cos(this.rotation.y);
         const sinY = Math.sin(this.rotation.y);
 
-        this.velocity.x = moveX * cosY - moveZ * sinY;
-        this.velocity.z = moveX * sinY + moveZ * cosY;
+        const targetVelX = moveX * cosY - moveZ * sinY;
+        const targetVelZ = moveX * sinY + moveZ * cosY;
+
+        this.velocity.x = this.velocity.x * FRICTION + targetVelX * ACCELERATION;
+        this.velocity.z = this.velocity.z * FRICTION + targetVelZ * ACCELERATION;
 
         this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
         this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
