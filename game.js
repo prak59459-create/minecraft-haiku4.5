@@ -9,6 +9,7 @@ import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
 import { WorldSave } from './worldsave.js';
 import { Inventory } from './inventory.js';
+import { GameMode } from './gamemode.js';
 
 class MinecraftGame {
     constructor() {
@@ -23,6 +24,7 @@ class MinecraftGame {
         this.player = new Player(this.world);
         this.gameCamera = new Camera();
         this.inventory = new Inventory();
+        this.gameMode = new GameMode(this.inventory);
         this.ui = new UI(this.inventory);
         this.particleSystem = new ParticleSystem(this.scene);
         this.waterRenderer = new WaterRenderer(this.scene, this.world);
@@ -122,6 +124,11 @@ class MinecraftGame {
                 e.preventDefault();
                 this.saveWorld();
             }
+            if ((e.key === 'T' || e.key === 't') && e.ctrlKey) {
+                e.preventDefault();
+                const newMode = this.gameMode.toggleMode();
+                console.log(`Switched to ${newMode} mode`);
+            }
 
             const num = parseInt(e.key);
             if (num >= 1 && num <= 9) {
@@ -159,9 +166,12 @@ class MinecraftGame {
             const ny = hit.y + norm.y;
             const nz = hit.z + norm.z;
 
-            if (!this.isPlayerOccupying(nx, ny, nz) && this.inventory.hasBlock(this.selectedBlockType)) {
+            const canPlace = this.gameMode.isCreative() || this.inventory.hasBlock(this.selectedBlockType);
+            if (!this.isPlayerOccupying(nx, ny, nz) && canPlace) {
                 this.world.setBlock(nx, ny, nz, this.selectedBlockType);
-                this.inventory.removeBlock(this.selectedBlockType, 1);
+                if (this.gameMode.isSurvival()) {
+                    this.inventory.removeBlock(this.selectedBlockType, 1);
+                }
                 this.updateChunkMesh(nx, ny, nz);
                 this.audioManager.playBlockSound('place');
             }
