@@ -13,6 +13,7 @@ export class WaterRenderer {
         const vertices = [];
         const colors = [];
         const indices = [];
+        const uvs = [];
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
@@ -48,11 +49,14 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const baseColor = waterColor.clone();
+                        const wave = Math.sin(wx * 0.2 + this.time) * 0.1 + 0.9;
+                        const color = baseColor.multiplyScalar(wave);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
                             colors.push(color.r, color.g, color.b);
+                            uvs.push((wx + vx) * 0.1, (wz + vz) * 0.1);
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -65,6 +69,7 @@ export class WaterRenderer {
         if (vertices.length > 0) {
             geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
+            geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
             geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             geometry.computeVertexNormals();
 
@@ -72,8 +77,10 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.65,
+                side: THREE.DoubleSide,
+                shininess: 100,
+                reflectivity: 0.3
             });
 
             const mesh = new THREE.Mesh(geometry, material);
