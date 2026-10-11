@@ -113,14 +113,14 @@ export class Player {
 
         this.isOnGround = false;
 
-        const checkPoints = [
-            { dy: 0.1, radius: radius * 0.9 },
-            { dy: height * 0.3, radius: radius * 0.9 },
-            { dy: height * 0.6, radius: radius * 0.9 },
+        const horizontalCheckPoints = [
+            { dy: 0.1, radius: radius * 0.95 },
+            { dy: height * 0.3, radius: radius * 0.95 },
+            { dy: height * 0.6, radius: radius * 0.95 },
             { dy: height * 0.9, radius: radius * 0.7 }
         ];
 
-        for (const point of checkPoints) {
+        for (const point of horizontalCheckPoints) {
             for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
                 const cx = this.position.x + Math.cos(angle) * point.radius;
                 const cy = this.position.y + point.dy;
@@ -130,7 +130,7 @@ export class Player {
                 if (isBlockSolid(block)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
                     if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
+                        const scale = 1.3 / moveLen;
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
                     }
@@ -141,10 +141,10 @@ export class Player {
 
         if (this.velocity.y < 0) {
             let onGround = false;
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-                const cx = this.position.x + Math.cos(angle) * radius * 0.8;
-                const cy = this.position.y - 0.01;
-                const cz = this.position.z + Math.sin(angle) * radius * 0.8;
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+                const cx = this.position.x + Math.cos(angle) * radius * 0.85;
+                const cy = this.position.y - 0.02;
+                const cz = this.position.z + Math.sin(angle) * radius * 0.85;
 
                 if (isBlockSolid(this.world.getBlock(Math.floor(cx), Math.floor(cy), Math.floor(cz)))) {
                     onGround = true;
@@ -159,7 +159,7 @@ export class Player {
         }
 
         if (this.velocity.y > 0) {
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
                 const cx = this.position.x + Math.cos(angle) * radius * 0.9;
                 const cy = this.position.y + height + 0.01;
                 const cz = this.position.z + Math.sin(angle) * radius * 0.9;
@@ -171,7 +171,7 @@ export class Player {
             }
         }
 
-        if (this.position.y < -10) {
+        if (this.position.y < -20) {
             this.position.y = 100;
             this.velocity.y = 0;
         }
@@ -189,16 +189,20 @@ export class Player {
 export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
+        this.targetRotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
+        this.smoothing = 0.1;
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
-            this.rotation.y -= e.movementX * this.mouseSensitivity;
-            this.rotation.x -= e.movementY * this.mouseSensitivity;
+            if (document.pointerLockElement !== document.body) return;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            this.targetRotation.y -= e.movementX * this.mouseSensitivity;
+            this.targetRotation.x -= e.movementY * this.mouseSensitivity;
+
+            this.targetRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.targetRotation.x));
         });
 
         document.addEventListener('click', () => {
@@ -209,6 +213,9 @@ export class Camera {
     }
 
     updateFromPlayer(player) {
+        this.rotation.x += (this.targetRotation.x - this.rotation.x) * this.smoothing;
+        this.rotation.y += (this.targetRotation.y - this.rotation.y) * this.smoothing;
+
         player.rotation.x = this.rotation.x;
         player.rotation.y = this.rotation.y;
     }

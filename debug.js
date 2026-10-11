@@ -8,8 +8,12 @@ export class DebugDisplay {
             triangles: 0,
             drawCalls: 0,
             particles: 0,
-            memory: 0
+            memory: 0,
+            position: { x: 0, y: 0, z: 0 },
+            blockType: 'Air',
+            renderDistance: 8
         };
+        this.frameTimings = [];
         this.createDisplay();
     }
 
@@ -59,6 +63,12 @@ export class DebugDisplay {
         this.stats.fps = game.ui.fpsCounter;
         this.stats.chunks = game.world.chunks.size;
         this.stats.particles = game.particleSystem.particles.length;
+        this.stats.position = {
+            x: game.player.position.x.toFixed(2),
+            y: game.player.position.y.toFixed(2),
+            z: game.player.position.z.toFixed(2)
+        };
+        this.stats.renderDistance = game.world.renderDistance;
 
         let vertices = 0;
         let triangles = 0;
@@ -88,26 +98,35 @@ export class DebugDisplay {
 
     render() {
         const lines = [
-            '=== DEBUG INFO ===',
+            '=== MINECRAFT CLONE DEBUG ===',
             `FPS: ${this.stats.fps}`,
-            `Chunks: ${this.stats.chunks}`,
+            `Pos: (${this.stats.position.x}, ${this.stats.position.y}, ${this.stats.position.z})`,
+            '',
+            '=== RENDERING ===',
+            `Chunks: ${this.stats.chunks} (R: ${this.stats.renderDistance})`,
+            `Meshes: ${this.stats.drawCalls}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
-            `Draw Calls: ${this.stats.drawCalls}`,
-            `Particles: ${this.stats.particles}`,
-            `Memory: ${this.stats.memory} MB`,
-            '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            '',
+            '=== PARTICLES ===',
+            `Count: ${this.stats.particles}`,
+            '',
+            '=== MEMORY ===',
+            `Heap: ${this.stats.memory} MB`,
+            '',
+            'F3: Toggle | H: Help'
         ];
 
         this.container.innerHTML = lines.map(line => {
-            if (line.startsWith('=')) return `<div>${line}</div>`;
+            if (line.startsWith('===')) {
+                return `<div style="color: #00FF00; font-weight: bold;">${line}</div>`;
+            }
+            if (line === '') return `<div>&nbsp;</div>`;
             const parts = line.split(': ');
             if (parts.length === 2) {
                 return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
             }
-            return `<div>${line}</div>`;
+            return `<div style="color: #888888;">${line}</div>`;
         }).join('');
     }
 }
