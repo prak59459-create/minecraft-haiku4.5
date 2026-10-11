@@ -136,10 +136,13 @@ function generateTree(chunk, x, z, height) {
 
     const worldX = chunk.x * CHUNK_SIZE + x;
     const worldZ = chunk.z * CHUNK_SIZE + z;
-    const treeChance = perlinNoise.noise2D(worldX * 0.02, worldZ * 0.02);
-    if (treeChance < 0.5) return;
+    const treeChance = perlinNoise.noise2D(worldX * 0.015, worldZ * 0.015);
+    const spruceChance = perlinNoise.noise2D(worldX * 0.01, worldZ * 0.01);
 
-    const trunkHeight = 4 + Math.floor(Math.random() * 4);
+    if (treeChance < 0.4) return;
+
+    const isSpruce = spruceChance > 0.5 && height > 100;
+    const trunkHeight = isSpruce ? (6 + Math.floor(Math.random() * 4)) : (4 + Math.floor(Math.random() * 4));
     const y = height;
 
     for (let i = 0; i < trunkHeight && y + i < WORLD_HEIGHT; i++) {
@@ -150,11 +153,11 @@ function generateTree(chunk, x, z, height) {
         }
     }
 
-    const foliageStart = y + trunkHeight - 3;
-    const foliageRadius = 2 + Math.floor(Math.random() * 2);
+    const foliageStart = y + trunkHeight - (isSpruce ? 4 : 3);
+    const foliageRadius = isSpruce ? (3 + Math.floor(Math.random() * 2)) : (2 + Math.floor(Math.random() * 2));
 
     for (let dy = 0; dy < foliageRadius + 2; dy++) {
-        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / 1.5));
+        const radiusAtLevel = Math.max(1, foliageRadius - Math.floor(dy / (isSpruce ? 1 : 1.5)));
         for (let angle = 0; angle < Math.PI * 2; angle += 0.4) {
             for (let dist = 0; dist <= radiusAtLevel; dist += 0.7) {
                 const dx = Math.round(Math.cos(angle) * dist);

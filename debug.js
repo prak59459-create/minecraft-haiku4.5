@@ -97,17 +97,23 @@ export class DebugDisplay {
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3: Debug toggle',
+            'H: Show help',
+            'C: Pick block',
+            '1-9: Select block'
         ];
 
         this.container.innerHTML = lines.map(line => {
             if (line.startsWith('=')) return `<div>${line}</div>`;
             const parts = line.split(': ');
-            if (parts.length === 2) {
-                return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
+            if (parts.length === 2 && !line.includes('-')) {
+                const value = parts[1];
+                let color = '#FFFF00';
+                if (this.stats.fps > 50) color = '#00FF00';
+                if (this.stats.fps < 30) color = '#FF0000';
+                return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: ${color};">${value}</span></div>`;
             }
-            return `<div>${line}</div>`;
+            return `<div style="color: #BBBBBB; font-size: 9px;">${line}</div>`;
         }).join('');
     }
 }

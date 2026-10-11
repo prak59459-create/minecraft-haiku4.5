@@ -16,22 +16,34 @@ export class UI {
             slot.addEventListener('click', () => {
                 this.selectBlock(index);
             });
+
+            slot.addEventListener('mouseenter', () => {
+                slot.title = BLOCK_NAMES[blockId] || 'Unknown';
+            });
         });
 
         document.addEventListener('keydown', (e) => {
             const num = parseInt(e.key);
             if (num >= 1 && num <= 9) {
                 this.selectBlock(num - 1);
+                e.preventDefault();
             }
         });
 
+        let wheelTimeout;
         document.addEventListener('wheel', (e) => {
+            if (document.pointerLockElement !== document.body) return;
+
             e.preventDefault();
+            clearTimeout(wheelTimeout);
+
             const direction = e.deltaY > 0 ? 1 : -1;
             let newIndex = this.selectedBlock + direction;
             if (newIndex < 0) newIndex = 8;
             if (newIndex > 8) newIndex = 0;
             this.selectBlock(newIndex);
+
+            wheelTimeout = setTimeout(() => {}, 100);
         }, { passive: false });
     }
 
