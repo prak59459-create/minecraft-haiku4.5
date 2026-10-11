@@ -15,17 +15,17 @@ export class Config {
     static getDefaults() {
         return {
             world: {
-                renderDistance: 8,
+                renderDistance: 10,
                 seedOffset: 0,
                 waterLevel: 62,
                 bedrockLevel: 0
             },
             player: {
-                speed: 0.1,
-                sprintSpeed: 0.15,
-                crouchSpeed: 0.05,
-                jumpPower: 0.5,
-                gravity: 0.02,
+                speed: 0.12,
+                sprintSpeed: 0.18,
+                crouchSpeed: 0.06,
+                jumpPower: 0.55,
+                gravity: 0.025,
                 mouseSensitivity: 0.003,
                 eyeHeight: 0.85,
                 height: 1.8,
@@ -33,24 +33,28 @@ export class Config {
             },
             raycast: {
                 distance: 6,
-                stepSize: 0.05
+                stepSize: 0.02
             },
             graphics: {
                 renderScale: 1.0,
                 shadowMapSize: 2048,
-                particleLimit: 2000,
-                fpsTarget: 60
+                particleLimit: 512,
+                fpsTarget: 60,
+                adaptiveQuality: true,
+                maxChunksPerFrame: 4
             },
             terrain: {
                 chunkSize: 16,
                 maxHeight: 160,
                 minHeight: 20,
                 seaLevel: 62,
-                treeFrequency: 0.5
+                treeFrequency: 0.5,
+                caveFrequency: 0.35,
+                oreRarity: 0.5
             },
             audio: {
                 enabled: true,
-                masterVolume: 0.5,
+                masterVolume: 0.3,
                 soundFx: true,
                 music: false
             }

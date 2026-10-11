@@ -13,9 +13,11 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -32,6 +34,8 @@ class MinecraftGame {
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
+        this.frameCount = 0;
+        this.lastFpsTime = Date.now();
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -134,8 +138,9 @@ class MinecraftGame {
         );
 
         let hit = null;
+        let stepSize = 0.02;
 
-        for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
+        for (let dist = stepSize; dist <= this.raycastDistance; dist += stepSize) {
             const x = eyePos.x + direction.x * dist;
             const y = eyePos.y + direction.y * dist;
             const z = eyePos.z + direction.z * dist;
@@ -146,7 +151,7 @@ class MinecraftGame {
 
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
-                const prevDist = Math.max(0.05, dist - 0.05);
+                const prevDist = Math.max(stepSize, dist - stepSize);
                 const prevX = eyePos.x + direction.x * prevDist;
                 const prevY = eyePos.y + direction.y * prevDist;
                 const prevZ = eyePos.z + direction.z * prevDist;
@@ -266,6 +271,7 @@ class MinecraftGame {
         const r = Math.floor(color.r * 255);
         const g = Math.floor(color.g * 255);
         const b = Math.floor(color.b * 255);
+        const isTransparent = BLOCKS.OAK_LEAVES === blockId || BLOCKS.SPRUCE_LEAVES === blockId || BLOCKS.BIRCH_LEAVES === blockId;
 
         for (const face of faces) {
             const [dx, dy, dz] = face.dir;
@@ -274,7 +280,9 @@ class MinecraftGame {
             const nz = z + dz;
 
             const neighbor = this.world.getBlock(nx, ny, nz);
-            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+
+            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER && neighbor !== blockId) continue;
+            if (!isTransparent && isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
             for (const [vx, vy, vz] of face.verts) {
@@ -293,7 +301,21 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
-        const renderDistance = 10;
+
+        const fps = this.ui.fpsCounter || 60;
+        let renderDistance = 10;
+        let maxChunksPerFrame = 4;
+
+        if (fps < 30) {
+            renderDistance = 8;
+            maxChunksPerFrame = 2;
+        } else if (fps < 45) {
+            renderDistance = 9;
+            maxChunksPerFrame = 3;
+        } else if (fps > 55) {
+            renderDistance = 11;
+            maxChunksPerFrame = 5;
+        }
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
@@ -334,7 +356,7 @@ class MinecraftGame {
             return dista - distb;
         });
 
-        chunksToLoad.slice(0, 4).forEach(key => {
+        chunksToLoad.slice(0, maxChunksPerFrame).forEach(key => {
             const chunk = this.world.chunks.get(key);
             if (chunk) {
                 const mesh = this.buildChunkMesh(chunk);
@@ -401,14 +423,28 @@ class MinecraftGame {
     updateDayNightCycle() {
         const time = Date.now() * 0.00002;
         const sunY = Math.sin(time) * 120 + 100;
-        const sunIntensity = Math.max(0.2, Math.sin(time) + 0.5);
+        const sunIntensity = Math.max(0.15, Math.sin(time) + 0.5);
+        const sunAngle = time % (Math.PI * 2);
 
-        this.directionalLight.position.set(200, sunY, 200);
-        this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
+        this.directionalLight.position.set(
+            Math.cos(sunAngle) * 250,
+            sunY,
+            Math.sin(sunAngle) * 250
+        );
+        this.directionalLight.intensity = 0.6 + sunIntensity * 0.35;
 
-        const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        let skyColor = new THREE.Color();
+        if (sunIntensity > 0.3) {
+            skyColor.setHSL(0.58, 0.6, 0.4 + sunIntensity * 0.4);
+        } else {
+            skyColor.setHSL(0.75, 0.3, 0.1 + sunIntensity * 0.2);
+        }
         this.scene.background = skyColor;
+
+        const ambientLight = this.scene.children.find(obj => obj instanceof THREE.AmbientLight);
+        if (ambientLight) {
+            ambientLight.intensity = 0.3 + sunIntensity * 0.15;
+        }
     }
 }
 
