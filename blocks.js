@@ -19,7 +19,9 @@ export const BLOCKS = {
     BRICKS: 17,
     SMOOTH_STONE: 18,
     CLAY: 19,
-    OBSIDIAN: 20
+    OBSIDIAN: 20,
+    SNOW: 21,
+    SANDSTONE: 22
 };
 
 export const BLOCK_NAMES = {
@@ -43,7 +45,9 @@ export const BLOCK_NAMES = {
     17: 'Bricks',
     18: 'Smooth Stone',
     19: 'Clay',
-    20: 'Obsidian'
+    20: 'Obsidian',
+    21: 'Snow',
+    22: 'Sandstone'
 };
 
 export const BLOCK_COLORS = {
@@ -67,7 +71,9 @@ export const BLOCK_COLORS = {
     17: 0xB44C3C,
     18: 0x707070,
     19: 0xB5A89B,
-    20: 0x0A0E27
+    20: 0x0A0E27,
+    21: 0xF0F8FF,
+    22: 0xDEB887
 };
 
 export const SOLID_BLOCKS = new Set([
@@ -88,7 +94,9 @@ export const SOLID_BLOCKS = new Set([
     BLOCKS.BRICKS,
     BLOCKS.SMOOTH_STONE,
     BLOCKS.CLAY,
-    BLOCKS.OBSIDIAN
+    BLOCKS.OBSIDIAN,
+    BLOCKS.SNOW,
+    BLOCKS.SANDSTONE
 ]);
 
 export const TRANSPARENT_BLOCKS = new Set([

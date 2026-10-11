@@ -53,20 +53,9 @@ export class Chunk {
                     } else if (y < height - 4) {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
-                    } else if (y < height - 1) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.DIRT);
-                        }
                     } else if (y < height) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        }
+                        const block = getBiomeBlocks(terrainType, y, height);
+                        this.setBlock(x, y, z, block);
                     } else if (y < 62) {
                         this.setBlock(x, y, z, BLOCKS.WATER);
                     }
@@ -109,9 +98,47 @@ function isCaveBlock(x, y, z) {
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
-    const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const temperature = perlinNoise.noise2D(x * 0.01, z * 0.01);
+    const humidity = perlinNoise.noise2D(x * 0.02 + 10000, z * 0.02 + 10000);
+
+    if (temperature < -0.4) return 'snow';
+    if (temperature < -0.1) return 'rocky';
+    if (humidity > 0.4 && temperature > -0.1) return 'forest';
+    if (temperature > 0.2) return 'sand';
     return 'grass';
+}
+
+function getBiomeBlocks(terrainType, y, height) {
+    const diff = height - y;
+
+    if (terrainType === 'snow') {
+        if (diff === 0) return BLOCKS.SNOW;
+        if (diff === 1) return BLOCKS.SNOW;
+        if (diff < 5) return BLOCKS.STONE;
+        return BLOCKS.STONE;
+    }
+
+    if (terrainType === 'rocky') {
+        if (diff === 0) return BLOCKS.STONE;
+        if (diff < 4) return BLOCKS.STONE;
+        return BLOCKS.STONE;
+    }
+
+    if (terrainType === 'forest') {
+        if (diff === 0) return BLOCKS.GRASS;
+        if (diff === 1) return BLOCKS.DIRT;
+        return BLOCKS.DIRT;
+    }
+
+    if (terrainType === 'sand') {
+        if (diff === 0) return BLOCKS.SAND;
+        if (diff < 3) return BLOCKS.SAND;
+        return BLOCKS.SANDSTONE;
+    }
+
+    if (diff === 0) return BLOCKS.GRASS;
+    if (diff === 1) return BLOCKS.DIRT;
+    return BLOCKS.DIRT;
 }
 
 function getOreBlock(x, y, z) {
