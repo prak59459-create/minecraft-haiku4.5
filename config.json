@@ -1,6 +1,6 @@
 {
   "world": {
-    "renderDistance": 8,
+    "renderDistance": 10,
     "seedOffset": 0,
     "waterLevel": 62,
     "bedrockLevel": 0
@@ -24,14 +24,16 @@
     "renderScale": 1.0,
     "shadowMapSize": 2048,
     "particleLimit": 2000,
-    "fpsTarget": 60
+    "fpsTarget": 60,
+    "enableDynamicShadows": true
   },
   "terrain": {
     "chunkSize": 16,
-    "maxHeight": 160,
+    "maxHeight": 180,
     "minHeight": 20,
     "seaLevel": 62,
-    "treeFrequency": 0.5
+    "treeFrequency": 0.5,
+    "caveFrequency": 0.6
   },
   "audio": {
     "enabled": true,

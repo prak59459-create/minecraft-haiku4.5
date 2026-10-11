@@ -20,6 +20,11 @@ export class Player {
         this.isSprinting = false;
         this.isCrouching = false;
 
+        this.health = 20;
+        this.fallDistance = 0;
+        this.lastStepSound = 0;
+        this.lastPosition = { x: 0, y: 100, z: 0 };
+
         this.keys = {};
         this.setupKeyboardControls();
     }
@@ -47,6 +52,25 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        this.updateSounds();
+    }
+
+    updateSounds() {
+        if (!this.isOnGround) return;
+
+        const distMoved = Math.sqrt(
+            Math.pow(this.position.x - this.lastPosition.x, 2) +
+            Math.pow(this.position.z - this.lastPosition.z, 2)
+        );
+
+        if (distMoved > 0.15) {
+            const now = Date.now();
+            if (now - this.lastStepSound > 300) {
+                if (this.onStep) this.onStep();
+                this.lastStepSound = now;
+            }
+            this.lastPosition = { x: this.position.x, z: this.position.z };
+        }
     }
 
     handleMovement() {
@@ -73,6 +97,7 @@ export class Player {
     applyPhysics() {
         if (!this.isOnGround) {
             this.velocity.y -= GRAVITY;
+            this.fallDistance += Math.abs(this.velocity.y);
         }
 
         this.position.x += this.velocity.x;
@@ -128,6 +153,13 @@ export class Player {
             if (onGround) {
                 this.isOnGround = true;
                 this.velocity.y = 0;
+
+                if (this.fallDistance > 3) {
+                    const damage = Math.floor((this.fallDistance - 3) * 2);
+                    this.takeDamage(damage);
+                    if (this.onFall) this.onFall(damage);
+                }
+                this.fallDistance = 0;
             }
         }
 
@@ -148,6 +180,17 @@ export class Player {
             this.position.y = 100;
             this.velocity.y = 0;
         }
+    }
+
+    takeDamage(amount) {
+        this.health = Math.max(0, this.health - amount);
+        if (this.health === 0 && this.onDeath) {
+            this.onDeath();
+        }
+    }
+
+    heal(amount) {
+        this.health = Math.min(20, this.health + amount);
     }
 
     getEyePosition() {

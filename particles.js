@@ -32,6 +32,25 @@ export class ParticleSystem {
         }
     }
 
+    addDustParticles(x, y, z, color) {
+        const particleCount = 4 + Math.floor(Math.random() * 4);
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = {
+                position: { x, y, z },
+                velocity: {
+                    x: (Math.random() - 0.5) * 0.2,
+                    y: Math.random() * 0.15,
+                    z: (Math.random() - 0.5) * 0.2
+                },
+                life: 1,
+                maxLife: 0.5 + Math.random() * 0.3,
+                color: color
+            };
+            this.particles.push(particle);
+        }
+    }
+
     update() {
         const gravity = 0.01;
 

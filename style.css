@@ -136,6 +136,34 @@ body {
     margin: 3px 0;
 }
 
+#health {
+    position: absolute;
+    bottom: 75px;
+    right: 10px;
+    color: #ff4444;
+    font-size: 14px;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    z-index: 10;
+}
+
+.health-bar {
+    display: flex;
+    gap: 2px;
+    margin-top: 3px;
+}
+
+.health-point {
+    width: 8px;
+    height: 8px;
+    background: #ff4444;
+    border: 1px solid rgba(255, 68, 68, 0.7);
+}
+
+.health-point.empty {
+    background: rgba(255, 68, 68, 0.3);
+}
+
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;

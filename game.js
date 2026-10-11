@@ -28,12 +28,16 @@ class MinecraftGame {
         this.blockOutline = new BlockOutline(this.scene);
 
         this.chunkMeshes = new Map();
-        this.selectedBlockType = BLOCKS.STONE;
+        this.selectedBlockType = this.ui.blocks[0];
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
 
         this.player.onJump = () => this.audioManager.playJumpSound();
+        this.player.onStep = () => this.audioManager.playStepSound();
+        this.player.onFall = (damage) => {
+            if (damage > 0) this.particleSystem.addDustParticles(this.player.position.x, this.player.position.y, this.player.position.z, 0xAAAAAA);
+        };
 
         this.setupLighting();
         this.setupEventListeners();
@@ -55,9 +59,15 @@ class MinecraftGame {
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -300;
+        directionalLight.shadow.camera.right = 300;
+        directionalLight.shadow.camera.top = 300;
+        directionalLight.shadow.camera.bottom = -300;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
+
+        this.scene.fog = new THREE.Fog(0x87CEEB, 100, 500);
     }
 
     setupEventListeners() {
@@ -109,7 +119,7 @@ class MinecraftGame {
             const nz = hit.z + norm.z;
 
             if (!this.isPlayerOccupying(nx, ny, nz)) {
-                this.world.setBlock(nx, ny, nz, this.selectedBlockType);
+                this.world.setBlock(nx, ny, nz, this.ui.getSelectedBlockId());
                 this.updateChunkMesh(nx, ny, nz);
                 this.audioManager.playBlockSound('place');
             }
@@ -195,6 +205,7 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
+        const colorCache = new Map();
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -206,14 +217,19 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const color = new THREE.Color(BLOCK_COLORS[blockId]);
-
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
-
-                    color.multiplyScalar(brightness);
+                    const cacheKey = blockId + '_' + wy;
+                    let color;
+                    if (colorCache.has(cacheKey)) {
+                        color = colorCache.get(cacheKey);
+                    } else {
+                        color = new THREE.Color(BLOCK_COLORS[blockId]);
+                        const baseLight = 0.7;
+                        const heightLight = (wy / WORLD_HEIGHT) * 0.3;
+                        const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
+                        const brightness = baseLight + heightLight + varLight;
+                        color.multiplyScalar(brightness);
+                        colorCache.set(cacheKey, color);
+                    }
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
                 }
@@ -231,7 +247,7 @@ class MinecraftGame {
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
                 wireframe: false,
-                flatShading: false,
+                flatShading: true,
                 side: THREE.FrontSide,
                 shininess: 30
             });
@@ -354,7 +370,7 @@ class MinecraftGame {
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+        this.ui.updateHUD(this.player.position, this.ui.getSelectedBlockId(), fps, this.player.health);
 
         if (this.showDebug) {
             this.debugDisplay.update(this);
@@ -371,9 +387,17 @@ class MinecraftGame {
         this.directionalLight.position.set(200, sunY, 200);
         this.directionalLight.intensity = 0.5 + sunIntensity * 0.3;
 
-        const skyColor = new THREE.Color();
-        skyColor.setHSL(0.6, 0.4, 0.5 + sunIntensity * 0.3);
+        let skyColor = new THREE.Color();
+
+        if (sunIntensity > 0.4) {
+            skyColor.setHSL(0.6, 0.6, 0.4 + sunIntensity * 0.4);
+        } else {
+            const nightProgress = (0.4 - sunIntensity) / 0.4;
+            skyColor.setHSL(0.7 - nightProgress * 0.15, 0.2 + nightProgress * 0.1, 0.1 + nightProgress * 0.15);
+        }
+
         this.scene.background = skyColor;
+        this.scene.fog.color = skyColor;
     }
 }
 

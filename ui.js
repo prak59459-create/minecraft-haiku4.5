@@ -2,8 +2,8 @@ import { BLOCK_NAMES } from './blocks.js';
 
 export class UI {
     constructor() {
-        this.selectedBlock = 1;
-        this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        this.selectedBlock = 0;
+        this.blocks = [1, 2, 3, 7, 5, 6, 8, 11, 14];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
         this.setupInventoryUI();
@@ -45,14 +45,33 @@ export class UI {
         this.selectedBlock = index;
     }
 
-    updateHUD(playerPos, selectedBlock, fps) {
+    getSelectedBlockId() {
+        return this.blocks[this.selectedBlock];
+    }
+
+    updateHUD(playerPos, selectedBlock, fps, health) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
         const blockEl = document.getElementById('blockInfo');
+        const healthValueEl = document.getElementById('healthValue');
+        const healthBarEl = document.getElementById('healthBar');
 
         coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
         fpsEl.textContent = `FPS: ${fps}`;
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+
+        if (healthValueEl) {
+            healthValueEl.textContent = Math.max(0, health);
+        }
+
+        if (healthBarEl) {
+            healthBarEl.innerHTML = '';
+            for (let i = 0; i < 20; i++) {
+                const point = document.createElement('div');
+                point.className = 'health-point' + (i >= health ? ' empty' : '');
+                healthBarEl.appendChild(point);
+            }
+        }
     }
 
     updateFPS() {
