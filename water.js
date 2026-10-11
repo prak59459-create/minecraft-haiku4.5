@@ -89,4 +89,14 @@ export class WaterRenderer {
     update() {
         this.time += 0.016;
     }
+
+    dispose() {
+        for (const mesh of this.waterMeshes.values()) {
+            if (mesh && mesh.geometry) {
+                mesh.geometry.dispose();
+                if (mesh.material) mesh.material.dispose();
+            }
+        }
+        this.waterMeshes.clear();
+    }
 }

@@ -200,8 +200,6 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const opaqueIndices = [];
-        const transparentIndices = [];
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -228,11 +226,13 @@ class MinecraftGame {
         }
 
         if (vertices.length > 0) {
+            const vertexCount = vertices.length / 3;
             geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
             if (indices.length > 0) {
                 geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             }
+            geometry.computeBoundingSphere();
 
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
@@ -245,6 +245,8 @@ class MinecraftGame {
             mesh.castShadow = true;
             mesh.receiveShadow = true;
             mesh.frustumCulled = true;
+            mesh.matrixAutoUpdate = false;
+            mesh.updateMatrix();
             return mesh;
         }
 
@@ -309,7 +311,10 @@ class MinecraftGame {
 
         for (const key of this.chunkMeshes.keys()) {
             if (!visibleChunks.has(key)) {
-                this.scene.remove(this.chunkMeshes.get(key));
+                const mesh = this.chunkMeshes.get(key);
+                this.scene.remove(mesh);
+                if (mesh.geometry) mesh.geometry.dispose();
+                if (mesh.material) mesh.material.dispose();
                 this.chunkMeshes.delete(key);
             }
         }
