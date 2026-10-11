@@ -1,21 +1,26 @@
 import { BLOCK_NAMES } from './blocks.js';
 
 export class UI {
-    constructor() {
+    constructor(inventory = null) {
         this.selectedBlock = 1;
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.inventory = inventory;
         this.setupInventoryUI();
     }
 
     setupInventoryUI() {
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach((slot, index) => {
-            const blockId = parseInt(slot.dataset.block);
             slot.addEventListener('click', () => {
                 this.selectBlock(index);
             });
+
+            const countSpan = document.createElement('span');
+            countSpan.className = 'slot-count';
+            countSpan.textContent = '0';
+            slot.appendChild(countSpan);
         });
 
         document.addEventListener('keydown', (e) => {
@@ -53,6 +58,27 @@ export class UI {
         coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
         fpsEl.textContent = `FPS: ${fps}`;
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
+
+        this.updateInventoryDisplay();
+    }
+
+    updateInventoryDisplay() {
+        if (!this.inventory) return;
+
+        const slots = document.querySelectorAll('.inventory-slot');
+        slots.forEach((slot, index) => {
+            const slotData = this.inventory.getSlot(index);
+            const countSpan = slot.querySelector('.slot-count');
+
+            if (countSpan) {
+                if (slotData.count > 0) {
+                    countSpan.textContent = slotData.count;
+                    countSpan.style.display = 'block';
+                } else {
+                    countSpan.style.display = 'none';
+                }
+            }
+        });
     }
 
     updateFPS() {

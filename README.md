@@ -9,22 +9,26 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 - **Mouse Look** - Free camera control with mouse
 - **Space Jump** - Jump and gravity physics
 - **Shift Sprint/Crouch** - Sprint for speed or crouch for stealth
-- **Block Destruction** - Left-click to destroy blocks
-- **Block Placement** - Right-click to place blocks
+- **Block Destruction** - Left-click to destroy blocks (adds to inventory)
+- **Block Placement** - Right-click to place blocks (consumes inventory)
 - **Block Selection** - Use 1-9 or scroll wheel to switch between blocks
-- **Pick Block** - Press C to pick the block you're looking at
+- **Pick Block** - Press C to pick the block you're looking at into inventory
+- **Survival Mode** - Limited resources, realistic gameplay
+- **Creative Mode** - Infinite blocks, unlimited building (Ctrl+T)
 
 ### World & Terrain
 - **Procedural Generation** - Infinite world generation using Perlin noise
-- **Multiple Biomes** - Grass, sand, and varied terrain types
-- **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
-  - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
-- **Ore Generation** - Procedural ore generation at various depths
-- **Tree Generation** - Natural tree placement in suitable terrain
+- **Multiple Biomes** - 5 distinct biomes: Snow, Rocky, Forest, Sand, Grassland
+- **Cave Systems** - Natural cave networks at mid-levels using 3D noise
+- **Chunk System** - Dynamic chunk loading/unloading with LOD support
+- **22 Block Types**:
+  - Building: Stone, Grass, Dirt, Cobblestone, Oak Log, Oak Leaves, Sand
+  - Crafted: Oak Planks, Bricks, Smooth Stone
+  - Materials: Clay, Water, Lava, Gravel, Bedrock, Snow, Sandstone, Obsidian
+  - Ores: Coal, Iron, Gold, Diamond
+- **Ore Generation** - Depth-based ore distribution
+- **Tree Generation** - Natural tree placement matching terrain
+- **Chunk LOD** - Simplified geometry for distant chunks (performance)
 
 ### Physics & Collision
 - **Gravity System** - Realistic falling and landing
@@ -49,9 +53,13 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 ### User Interface
 - **HUD Display** - Real-time coordinates, FPS, and block info
-- **Block Inventory** - Visual block selector with 9 slots
+- **Block Inventory** - Visual block selector with 9 quick-access slots
+- **Inventory System** - 36-slot inventory with block stacking (64 max per stack)
+- **Inventory Display** - Shows block counts in inventory slots
 - **Crosshair** - Center screen targeting reticle
 - **Help Panel** - In-game control instructions (Press H)
+- **Block Highlight** - White wireframe around selected block
+- **Mode Indicator** - Shows current game mode (Creative/Survival)
 
 ### Performance Optimization
 - **Chunk-based Rendering** - Only visible chunks are rendered
@@ -68,15 +76,17 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 | **S** | Move Backward |
 | **D** | Move Right |
 | **Space** | Jump |
-| **Shift** | Sprint / Crouch |
-| **Mouse** | Look Around (Click to enable) |
-| **Left-Click** | Destroy Block |
-| **Right-Click** | Place Block |
+| **Shift** | Sprint (while moving) / Crouch (while standing) |
+| **Mouse** | Look Around (Click to enable pointer lock) |
+| **Left-Click** | Destroy Block (adds to inventory) |
+| **Right-Click** | Place Block (consumes inventory) |
 | **1-9** | Select Block Slot |
 | **Scroll Wheel** | Change Selected Block |
-| **C** | Pick Block (Pick the block you're looking at) |
-| **H** | Toggle Help |
-| **F3** | Toggle Debug Info |
+| **C** | Pick Block (copy block type to inventory) |
+| **H** | Toggle Help Panel |
+| **F3** | Toggle Debug Info (FPS, chunks, etc.) |
+| **F5** | Save World |
+| **Ctrl+T** | Toggle Creative/Survival Mode |
 
 ## Getting Started
 
@@ -152,8 +162,11 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 
 ### Biomes
 
-- **Grass Biome** - Natural terrain with trees and water
-- **Sand Biome** - Desert-like areas with sand blocks
+- **Grassland Biome** - Natural terrain with trees, water, and standard blocks
+- **Forest Biome** - Dense vegetation, more trees and leaves
+- **Snow Biome** - Cold regions with snow blocks and stone
+- **Rocky Biome** - Mountain-like terrain with mostly stone
+- **Sand Biome** - Desert areas with sand and sandstone blocks
 
 ### Ore Distribution
 
@@ -170,17 +183,30 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 - **Clean Separation** - Game logic, rendering, and physics separate
 - **Extensible** - Easy to add new block types or biomes
 
+### Latest Session Updates (Session 3)
+
+✅ **Completed:**
+- [x] Inventory system with block stacking
+- [x] World save/load functionality
+- [x] Creative mode with unlimited blocks
+- [x] Biome system (5 biomes)
+- [x] Cave generation
+- [x] 8 new block types
+- [x] Chunk LOD system
+- [x] Inventory UI with counts
+
 ### Future Enhancements
 
-- [ ] Inventory UI with multiple stacks
-- [ ] Creative mode with unlimited blocks
-- [ ] Survival mode with health/hunger
+- [ ] Crafting system
+- [ ] Health and hunger system (survival mode)
 - [ ] Multiplayer support
 - [ ] Texture mapping for blocks
-- [ ] Advanced weather systems
-- [ ] More biome types
-- [ ] Mob system
-- [ ] Crafting system
+- [ ] Advanced weather systems (rain, snow)
+- [ ] Mob system with AI
+- [ ] More biome types (jungle, tundra, etc.)
+- [ ] Animated water and lava
+- [ ] Nether/Dimension system
+- [ ] Enchantment system
 
 ## Performance Tips
 

@@ -53,7 +53,23 @@ export class Player {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        const isShiftPressed = this.keys['shift'];
+
+        if (isMoving) {
+            if (isShiftPressed) {
+                this.isSprinting = true;
+                this.isCrouching = false;
+            } else {
+                this.isSprinting = false;
+                this.isCrouching = false;
+            }
+        } else {
+            this.isSprinting = false;
+            this.isCrouching = isShiftPressed;
+        }
+
+        const speed = this.isSprinting ? PLAYER_SPRINT_SPEED : (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPEED);
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -65,9 +81,6 @@ export class Player {
 
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
-
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
     }
 
     applyPhysics() {

@@ -48,23 +48,14 @@ export class Chunk {
                 for (let y = 0; y < WORLD_HEIGHT; y++) {
                     if (y === 0) {
                         this.setBlock(x, y, z, BLOCKS.BEDROCK);
+                    } else if (isCaveBlock(wx, y, wz)) {
+                        this.setBlock(x, y, z, BLOCKS.AIR);
                     } else if (y < height - 4) {
                         const block = getOreBlock(wx, y, wz);
                         this.setBlock(x, y, z, block);
-                    } else if (y < height - 1) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.DIRT);
-                        }
                     } else if (y < height) {
-                        if (terrainType === 'sand') {
-                            this.setBlock(x, y, z, BLOCKS.SAND);
-                        } else if (terrainType === 'grass') {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        } else {
-                            this.setBlock(x, y, z, BLOCKS.GRASS);
-                        }
+                        const block = getBiomeBlocks(terrainType, y, height);
+                        this.setBlock(x, y, z, block);
                     } else if (y < 62) {
                         this.setBlock(x, y, z, BLOCKS.WATER);
                     }
@@ -92,12 +83,62 @@ function getTerrainHeight(x, z) {
     return Math.max(20, Math.min(160, Math.floor(height)));
 }
 
+function isCaveBlock(x, y, z) {
+    if (!perlinNoise) return false;
+    if (y < 10 || y > 120) return false;
+
+    const caveScale = 0.02;
+    const caveNoise1 = perlinNoise.noise3D(x * caveScale, y * caveScale, z * caveScale);
+    const caveNoise2 = perlinNoise.noise3D(x * caveScale * 2, y * caveScale * 2, z * caveScale * 2) * 0.5;
+
+    const caveThreshold = -0.2;
+    return (caveNoise1 + caveNoise2) < caveThreshold;
+}
+
 function getTerrainType(x, z) {
     if (!perlinNoise) return 'grass';
 
-    const temp = perlinNoise.noise2D(x * 0.02, z * 0.02);
-    if (temp < -0.3) return 'sand';
+    const temperature = perlinNoise.noise2D(x * 0.01, z * 0.01);
+    const humidity = perlinNoise.noise2D(x * 0.02 + 10000, z * 0.02 + 10000);
+
+    if (temperature < -0.4) return 'snow';
+    if (temperature < -0.1) return 'rocky';
+    if (humidity > 0.4 && temperature > -0.1) return 'forest';
+    if (temperature > 0.2) return 'sand';
     return 'grass';
+}
+
+function getBiomeBlocks(terrainType, y, height) {
+    const diff = height - y;
+
+    if (terrainType === 'snow') {
+        if (diff === 0) return BLOCKS.SNOW;
+        if (diff === 1) return BLOCKS.SNOW;
+        if (diff < 5) return BLOCKS.STONE;
+        return BLOCKS.STONE;
+    }
+
+    if (terrainType === 'rocky') {
+        if (diff === 0) return BLOCKS.STONE;
+        if (diff < 4) return BLOCKS.STONE;
+        return BLOCKS.STONE;
+    }
+
+    if (terrainType === 'forest') {
+        if (diff === 0) return BLOCKS.GRASS;
+        if (diff === 1) return BLOCKS.DIRT;
+        return BLOCKS.DIRT;
+    }
+
+    if (terrainType === 'sand') {
+        if (diff === 0) return BLOCKS.SAND;
+        if (diff < 3) return BLOCKS.SAND;
+        return BLOCKS.SANDSTONE;
+    }
+
+    if (diff === 0) return BLOCKS.GRASS;
+    if (diff === 1) return BLOCKS.DIRT;
+    return BLOCKS.DIRT;
 }
 
 function getOreBlock(x, y, z) {
