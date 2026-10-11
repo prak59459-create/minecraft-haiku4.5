@@ -51,7 +51,11 @@ export class UI {
         const blockEl = document.getElementById('blockInfo');
 
         coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
+
+        const fpsColor = fps >= 55 ? '#00FF00' : fps >= 30 ? '#FFFF00' : '#FF0000';
         fpsEl.textContent = `FPS: ${fps}`;
+        fpsEl.style.color = fpsColor;
+
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
     }
 

@@ -39,10 +39,37 @@ class MinecraftGame {
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
+        this.loadSavedState();
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
         this.animate();
+    }
+
+    loadSavedState() {
+        try {
+            const saved = localStorage.getItem('minecraft-state');
+            if (saved) {
+                const state = JSON.parse(saved);
+                this.player.position = state.playerPos || this.player.position;
+                this.selectedBlockType = state.selectedBlock || BLOCKS.STONE;
+            }
+        } catch (e) {
+            console.warn('Failed to load saved state:', e);
+        }
+    }
+
+    saveSavedState() {
+        try {
+            const state = {
+                playerPos: this.player.position,
+                selectedBlock: this.selectedBlockType,
+                savedAt: Date.now()
+            };
+            localStorage.setItem('minecraft-state', JSON.stringify(state));
+        } catch (e) {
+            console.warn('Failed to save state:', e);
+        }
     }
 
     setupLighting() {
@@ -67,6 +94,9 @@ class MinecraftGame {
     setupEventListeners() {
         window.addEventListener('resize', () => this.onWindowResize());
         document.addEventListener('mousedown', (e) => this.onMouseClick(e));
+        window.addEventListener('beforeunload', () => this.saveSavedState());
+
+        setInterval(() => this.saveSavedState(), 30000);
     }
 
     setupPickBlock() {
