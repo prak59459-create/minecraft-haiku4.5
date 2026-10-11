@@ -131,6 +131,7 @@ class MinecraftGame {
         );
 
         let hit = null;
+        let lastBlockPos = null;
 
         for (let dist = 0.05; dist <= this.raycastDistance; dist += 0.05) {
             const x = eyePos.x + direction.x * dist;
@@ -140,6 +141,10 @@ class MinecraftGame {
             const bx = Math.floor(x);
             const by = Math.floor(y);
             const bz = Math.floor(z);
+
+            const blockKey = `${bx},${by},${bz}`;
+            if (lastBlockPos === blockKey) continue;
+            lastBlockPos = blockKey;
 
             const block = this.world.getBlock(bx, by, bz);
             if (isBlockSolid(block)) {
@@ -274,6 +279,8 @@ class MinecraftGame {
         const g = Math.floor(color.g * 255);
         const b = Math.floor(color.b * 255);
 
+        const isTransparent = blockId === BLOCKS.OAK_LEAVES;
+
         for (const face of faces) {
             const [dx, dy, dz] = face.dir;
             const nx = x + dx;
@@ -281,7 +288,19 @@ class MinecraftGame {
             const nz = z + dz;
 
             const neighbor = this.world.getBlock(nx, ny, nz);
-            if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
+
+            let shouldRender = true;
+            if (isBlockSolid(neighbor)) {
+                if (neighbor === BLOCKS.WATER) {
+                    shouldRender = true;
+                } else if (isTransparent) {
+                    shouldRender = neighbor !== BLOCKS.OAK_LEAVES;
+                } else {
+                    shouldRender = false;
+                }
+            }
+
+            if (!shouldRender) continue;
 
             const startIndex = vertices.length / 3;
             for (const [vx, vy, vz] of face.verts) {
@@ -383,6 +402,14 @@ class MinecraftGame {
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);
+
+        if (this.player.shouldPlayStepSound()) {
+            const now = Date.now();
+            if (now - this.player.lastStepSoundTime > 400) {
+                this.audioManager.playStepSound();
+                this.player.lastStepSoundTime = now;
+            }
+        }
 
         const fps = this.ui.updateFPS();
         this.ui.updateHUD(this.player.position, this.ui.getSelectedBlockType(), fps);

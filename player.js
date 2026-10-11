@@ -21,6 +21,7 @@ export class Player {
         this.isCrouching = false;
 
         this.keys = {};
+        this.lastStepSoundTime = 0;
         this.setupKeyboardControls();
     }
 
@@ -47,6 +48,11 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+    }
+
+    shouldPlayStepSound() {
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        return isMoving && this.isOnGround;
     }
 
     handleMovement() {
