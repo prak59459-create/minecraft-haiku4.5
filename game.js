@@ -426,4 +426,24 @@ class MinecraftGame {
     }
 }
 
-const game = new MinecraftGame();
+window.addEventListener('DOMContentLoaded', () => {
+    try {
+        window.game = new MinecraftGame();
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) {
+            loadingEl.style.display = 'none';
+        }
+        console.log('Game initialized successfully');
+    } catch (error) {
+        console.error('Failed to initialize game:', error);
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) {
+            loadingEl.innerHTML = '<h2>Error Loading Game</h2><p>Check browser console for details</p>';
+        }
+        alert('Error initializing game. Check console for details.');
+    }
+});
+
+window.addEventListener('error', (event) => {
+    console.error('Runtime error:', event.error);
+});
