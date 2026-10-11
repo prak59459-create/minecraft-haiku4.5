@@ -42,7 +42,20 @@ class MinecraftGame {
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
+        this.findSpawnLocation();
         this.animate();
+    }
+
+    findSpawnLocation() {
+        let spawnY = 100;
+        for (let y = 100; y > 0; y--) {
+            const block = this.world.getBlock(0, y, 0);
+            if (isBlockSolid(block)) {
+                spawnY = y + 2;
+                break;
+            }
+        }
+        this.player.position.y = spawnY;
     }
 
     setupLighting() {
