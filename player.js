@@ -177,16 +177,20 @@ export class Player {
 export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
-        this.mouseSensitivity = 0.003;
+        this.mouseSensitivity = 0.0035;
+        this.minPitch = -Math.PI / 2;
+        this.maxPitch = Math.PI / 2;
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
+            if (document.pointerLockElement !== document.body) return;
+
             this.rotation.y -= e.movementX * this.mouseSensitivity;
             this.rotation.x -= e.movementY * this.mouseSensitivity;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            this.rotation.x = Math.max(this.minPitch, Math.min(this.maxPitch, this.rotation.x));
         });
 
         document.addEventListener('click', () => {
@@ -194,10 +198,20 @@ export class Camera {
                 document.body.requestPointerLock();
             }
         });
+
+        document.addEventListener('pointerlockchange', () => {
+            if (document.pointerLockElement !== document.body) {
+                document.body.style.cursor = 'pointer';
+            }
+        });
     }
 
     updateFromPlayer(player) {
         player.rotation.x = this.rotation.x;
         player.rotation.y = this.rotation.y;
+    }
+
+    setMouseSensitivity(sensitivity) {
+        this.mouseSensitivity = Math.max(0.0001, Math.min(0.01, sensitivity));
     }
 }

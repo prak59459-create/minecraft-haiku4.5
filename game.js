@@ -13,9 +13,12 @@ class MinecraftGame {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -38,6 +41,7 @@ class MinecraftGame {
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
+        this.setupKeyboardShortcuts();
         this.animate();
     }
 
@@ -78,6 +82,11 @@ class MinecraftGame {
                     this.selectedBlockType = hit.block;
                 }
             }
+        });
+    }
+
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
             if (e.key === 'F3') {
                 e.preventDefault();
                 this.showDebug = !this.showDebug;
@@ -85,6 +94,15 @@ class MinecraftGame {
             }
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
+            }
+            if (e.key === '0') {
+                this.gameCamera.setMouseSensitivity(0.003);
+            }
+            if (e.key === '+' || e.key === '=') {
+                this.gameCamera.setMouseSensitivity(Math.min(0.01, this.gameCamera.mouseSensitivity + 0.0005));
+            }
+            if (e.key === '-' || e.key === '_') {
+                this.gameCamera.setMouseSensitivity(Math.max(0.0001, this.gameCamera.mouseSensitivity - 0.0005));
             }
         });
     }
