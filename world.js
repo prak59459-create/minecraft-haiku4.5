@@ -70,7 +70,10 @@ export class Chunk {
                             this.setBlock(x, y, z, BLOCKS.GRASS);
                         }
                     } else if (y < 62) {
-                        this.setBlock(x, y, z, BLOCKS.WATER);
+                        const waveNoise = perlinNoise.noise2D(wx * 0.05, wz * 0.05);
+                        if (waveNoise > 0.4) {
+                            this.setBlock(x, y, z, BLOCKS.WATER);
+                        }
                     }
                 }
 
@@ -108,6 +111,14 @@ function getTerrainType(x, z) {
 
 function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
+
+    const caveNoise1 = perlinNoise.noise2D(x * 0.04, z * 0.04 + y * 0.1);
+    const caveNoise2 = perlinNoise.noise2D(x * 0.02 + y * 0.05, z * 0.02);
+    const caveStrength = (caveNoise1 + caveNoise2) / 2;
+
+    if (caveStrength > 0.6 && y > 10 && y < 120) {
+        return BLOCKS.AIR;
+    }
 
     let ore = BLOCKS.STONE;
     const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
