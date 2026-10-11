@@ -85,5 +85,28 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+        this.updateVisibleWaterChunks();
+    }
+
+    updateVisibleWaterChunks() {
+        const visibleKeys = new Set();
+
+        for (const [key, chunk] of this.world.chunks) {
+            if (!this.waterMeshes.has(key)) {
+                const mesh = this.buildWaterMesh(chunk);
+                if (mesh) {
+                    this.scene.add(mesh);
+                    this.waterMeshes.set(key, mesh);
+                }
+            }
+            visibleKeys.add(key);
+        }
+
+        for (const [key, mesh] of this.waterMeshes) {
+            if (!visibleKeys.has(key)) {
+                this.scene.remove(mesh);
+                this.waterMeshes.delete(key);
+            }
+        }
     }
 }
