@@ -107,19 +107,24 @@ function getOreBlock(x, y, z) {
     if (!perlinNoise) return BLOCKS.STONE;
 
     let ore = BLOCKS.STONE;
-    const yNorm = y / 160;
 
     const coalChance = perlinNoise.noise2D(x * 0.08 + y * 0.04, z * 0.08 + y * 0.04);
     const ironChance = perlinNoise.noise2D(x * 0.06 + y * 0.02, z * 0.06 + y * 0.02);
     const goldChance = perlinNoise.noise2D(x * 0.05 + y * 0.015, z * 0.05 + y * 0.015);
     const diamondChance = perlinNoise.noise2D(x * 0.03 + y * 0.008, z * 0.03 + y * 0.008);
     const gravelChance = perlinNoise.noise2D(x * 0.1 + y * 0.06, z * 0.1 + y * 0.06);
+    const lapisChance = perlinNoise.noise2D(x * 0.04 + y * 0.01, z * 0.04 + y * 0.01);
+    const redstoneChance = perlinNoise.noise2D(x * 0.07 + y * 0.03, z * 0.07 + y * 0.03);
+    const obsidianChance = perlinNoise.noise2D(x * 0.02 + y * 0.005, z * 0.02 + y * 0.005);
 
-    if (y < 160 && coalChance > 0.45) ore = BLOCKS.COAL_ORE;
-    else if (y < 100 && ironChance > 0.55) ore = BLOCKS.IRON_ORE;
-    else if (y < 60 && goldChance > 0.65) ore = BLOCKS.GOLD_ORE;
-    else if (y < 35 && diamondChance > 0.7) ore = BLOCKS.DIAMOND_ORE;
-    else if (y < 50 && gravelChance > 0.6) ore = BLOCKS.GRAVEL;
+    if (y < 160 && coalChance > 0.42) ore = BLOCKS.COAL_ORE;
+    else if (y < 100 && ironChance > 0.52) ore = BLOCKS.IRON_ORE;
+    else if (y < 60 && goldChance > 0.63) ore = BLOCKS.GOLD_ORE;
+    else if (y < 35 && diamondChance > 0.68) ore = BLOCKS.DIAMOND_ORE;
+    else if (y < 30 && lapisChance > 0.6) ore = BLOCKS.LAPIS_ORE;
+    else if (y < 25 && redstoneChance > 0.58) ore = BLOCKS.REDSTONE_ORE;
+    else if (y < 15 && obsidianChance > 0.75) ore = BLOCKS.OBSIDIAN;
+    else if (y < 50 && gravelChance > 0.58) ore = BLOCKS.GRAVEL;
 
     return ore;
 }

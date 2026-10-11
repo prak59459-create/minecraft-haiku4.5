@@ -6,6 +6,8 @@ export class UI {
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.frameCount = 0;
+        this.fpsUpdateInterval = 30;
         this.setupInventoryUI();
     }
 
@@ -57,11 +59,15 @@ export class UI {
 
     updateFPS() {
         const now = performance.now();
-        const delta = now - this.lastTime;
-        this.lastTime = now;
+        this.frameCount++;
 
-        if (delta > 0) {
-            this.fpsCounter = Math.round(1000 / delta);
+        if (this.frameCount >= this.fpsUpdateInterval) {
+            const delta = now - this.lastTime;
+            if (delta > 0) {
+                this.fpsCounter = Math.round((this.frameCount * 1000) / delta);
+            }
+            this.lastTime = now;
+            this.frameCount = 0;
         }
 
         return this.fpsCounter;
