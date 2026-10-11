@@ -6,6 +6,39 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.waterMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 },
+                waterColor: { value: new THREE.Color(0x4A90E2) }
+            },
+            vertexShader: `
+                varying vec3 vPos;
+                varying float vWave;
+                uniform float time;
+
+                void main() {
+                    vPos = position;
+                    float wave = sin(position.x * 0.3 + time * 2.0) * 0.1 + sin(position.z * 0.3 + time * 1.5) * 0.1;
+                    vec3 newPos = position + vec3(0, wave, 0);
+                    vWave = wave;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 waterColor;
+                uniform float time;
+                varying vec3 vPos;
+                varying float vWave;
+
+                void main() {
+                    float brightness = 0.7 + sin(time * 2.0) * 0.15;
+                    vec3 color = waterColor * brightness;
+                    gl_FragColor = vec4(color, 0.6);
+                }
+            `,
+            transparent: true,
+            side: THREE.FrontSide
+        });
     }
 
     buildWaterMesh(chunk) {
@@ -48,7 +81,7 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
+                        const color = waterColor.clone().multiplyScalar(0.85 + Math.random() * 0.15);
 
                         for (const [vx, vy, vz] of face.verts) {
                             vertices.push(wx + vx, wy + vy, wz + vz);
@@ -72,8 +105,9 @@ export class WaterRenderer {
                 vertexColors: true,
                 wireframe: false,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
+                opacity: 0.65,
+                side: THREE.FrontSide,
+                emissive: 0x1a4d7a
             });
 
             const mesh = new THREE.Mesh(geometry, material);
@@ -85,5 +119,8 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+        if (this.waterMaterial.uniforms) {
+            this.waterMaterial.uniforms.time.value = this.time;
+        }
     }
 }
