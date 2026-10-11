@@ -21,6 +21,7 @@ export class Player {
         this.isCrouching = false;
 
         this.keys = {};
+        this.lastStepSoundTime = 0;
         this.setupKeyboardControls();
     }
 
@@ -49,11 +50,26 @@ export class Player {
         this.checkCollisions();
     }
 
+    shouldPlayStepSound() {
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+        return isMoving && this.isOnGround;
+    }
+
     handleMovement() {
         let moveX = 0;
         let moveZ = 0;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+
+        if (this.keys['shift'] && isMoving) {
+            this.isSprinting = true;
+            this.isCrouching = false;
+        } else {
+            this.isSprinting = false;
+            this.isCrouching = false;
+        }
+
+        const speed = this.isSprinting ? PLAYER_SPRINT_SPEED : (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPEED);
 
         if (this.keys['w']) moveZ -= speed;
         if (this.keys['s']) moveZ += speed;
@@ -65,9 +81,6 @@ export class Player {
 
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
-
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
     }
 
     applyPhysics() {
@@ -103,9 +116,13 @@ export class Player {
                 if (isBlockSolid(block)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
                     if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
+                        const scale = 1.5 / Math.max(moveLen, 0.1);
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
+                    } else {
+                        const angle2 = Math.atan2(cz - this.position.z, cx - this.position.x);
+                        this.position.x -= Math.cos(angle2) * 0.2;
+                        this.position.z -= Math.sin(angle2) * 0.2;
                     }
                     break;
                 }

@@ -17,6 +17,7 @@ export class BlockOutline {
     setSelectedBlock(x, y, z) {
         if (this.outline) {
             this.scene.remove(this.outline);
+            if (this.outline.geometry) this.outline.geometry.dispose();
         }
 
         const geometry = new THREE.BufferGeometry();
