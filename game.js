@@ -372,7 +372,7 @@ class MinecraftGame {
         this.blockOutline.update(hit);
 
         const fps = this.ui.updateFPS();
-        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps);
+        this.ui.updateHUD(this.player.position, this.selectedBlockType, fps, this.player.flyMode);
 
         if (this.showDebug) {
             this.debugDisplay.update(this);

@@ -62,6 +62,8 @@ export class DebugDisplay {
 
         let vertices = 0;
         let triangles = 0;
+        let meshCount = 0;
+
         for (const mesh of game.chunkMeshes.values()) {
             if (mesh && mesh.geometry) {
                 const positions = mesh.geometry.getAttribute('position');
@@ -71,43 +73,56 @@ export class DebugDisplay {
                     if (index) {
                         triangles += index.count / 3;
                     }
+                    meshCount++;
                 }
             }
         }
 
         this.stats.vertices = vertices;
-        this.stats.triangles = triangles;
-        this.stats.drawCalls = game.chunkMeshes.size;
+        this.stats.triangles = Math.round(triangles);
+        this.stats.drawCalls = meshCount;
 
         if (performance.memory) {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
         }
 
+        this.additionalStats = {
+            playerPos: game.player.position,
+            flyMode: game.player.flyMode,
+            onGround: game.player.isOnGround,
+            loadedChunks: game.world.chunks.size,
+            renderedChunks: meshCount
+        };
+
         this.render();
     }
 
     render() {
+        const pos = this.additionalStats?.playerPos || { x: 0, y: 0, z: 0 };
         const lines = [
-            '=== DEBUG INFO ===',
+            '=== MINECRAFT CLONE ===',
             `FPS: ${this.stats.fps}`,
-            `Chunks: ${this.stats.chunks}`,
+            `Chunks: ${this.stats.chunks} Rendered: ${this.stats.drawCalls}`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
-            `Draw Calls: ${this.stats.drawCalls}`,
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
-            '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            '',
+            `Pos: ${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)}`,
+            `Mode: ${this.additionalStats?.flyMode ? 'FLIGHT' : 'SURVIVAL'}`,
+            `Ground: ${this.additionalStats?.onGround ? 'YES' : 'NO'}`,
+            '=======================',
+            'F3 to toggle'
         ];
 
         this.container.innerHTML = lines.map(line => {
             if (line.startsWith('=')) return `<div>${line}</div>`;
+            if (line === '') return `<div style="height: 2px;"></div>`;
             const parts = line.split(': ');
             if (parts.length === 2) {
                 return `<div><span style="color: #00FF00;">${parts[0]}:</span> <span style="color: #FFFF00;">${parts[1]}</span></div>`;
             }
-            return `<div>${line}</div>`;
+            return `<div style="color: #88FF88;">${line}</div>`;
         }).join('');
     }
 }
