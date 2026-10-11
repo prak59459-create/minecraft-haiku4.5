@@ -199,6 +199,9 @@ export class World {
     constructor(renderDistance = 8) {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
+        this.chunkQueue = [];
+        this.chunksPerFrame = 2;
+        this.isGenerating = false;
         initPerlinNoise();
     }
 
@@ -210,6 +213,20 @@ export class World {
             this.chunks.set(key, chunk);
         }
         return this.chunks.get(key);
+    }
+
+    queueChunkGeneration(cx, cz) {
+        const key = `${cx},${cz}`;
+        if (!this.chunks.has(key) && !this.chunkQueue.find(c => `${c.x},${c.z}` === key)) {
+            this.chunkQueue.push({ x: cx, z: cz });
+        }
+    }
+
+    processChunkQueue() {
+        for (let i = 0; i < Math.min(this.chunksPerFrame, this.chunkQueue.length); i++) {
+            const { x, z } = this.chunkQueue.shift();
+            this.getChunk(x, z);
+        }
     }
 
     getBlock(x, y, z) {
@@ -243,9 +260,14 @@ export class World {
         const chunksToKeep = new Set();
         for (let dx = -this.renderDistance; dx <= this.renderDistance; dx++) {
             for (let dz = -this.renderDistance; dz <= this.renderDistance; dz++) {
-                const key = `${playerChunkX + dx},${playerChunkZ + dz}`;
+                const cx = playerChunkX + dx;
+                const cz = playerChunkZ + dz;
+                const key = `${cx},${cz}`;
                 chunksToKeep.add(key);
-                this.getChunk(playerChunkX + dx, playerChunkZ + dz);
+
+                if (!this.chunks.has(key)) {
+                    this.queueChunkGeneration(cx, cz);
+                }
             }
         }
 
@@ -257,6 +279,7 @@ export class World {
         }
 
         toDelete.forEach(key => this.chunks.delete(key));
+        this.processChunkQueue();
     }
 }
 
