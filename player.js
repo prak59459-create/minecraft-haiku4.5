@@ -1,4 +1,4 @@
-import { BLOCKS, isBlockSolid } from './blocks.js';
+import { BLOCKS, isBlockSolid, BLOCK_COLORS } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
@@ -7,6 +7,8 @@ const PLAYER_SPRINT_SPEED = 0.15;
 const PLAYER_CROUCH_SPEED = 0.05;
 const GRAVITY = 0.02;
 const JUMP_POWER = 0.5;
+const CAMERA_BOB_STRENGTH = 0.02;
+const CAMERA_BOB_SPEED = 4;
 
 export class Player {
     constructor(world) {
@@ -21,6 +23,8 @@ export class Player {
         this.isCrouching = false;
 
         this.keys = {};
+        this.cameraBob = 0;
+        this.lastStepTime = 0;
         this.setupKeyboardControls();
     }
 
@@ -87,8 +91,20 @@ export class Player {
     }
 
     applyPhysics() {
+        const eyeBlock = this.world.getBlock(
+            Math.floor(this.position.x),
+            Math.floor(this.position.y + PLAYER_HEIGHT * 0.85),
+            Math.floor(this.position.z)
+        );
+
+        const isInWater = eyeBlock === BLOCKS.WATER;
+
         if (!this.isOnGround) {
-            this.velocity.y -= GRAVITY;
+            this.velocity.y -= isInWater ? GRAVITY * 0.3 : GRAVITY;
+        }
+
+        if (isInWater && this.keys[' ']) {
+            this.velocity.y = 0.15;
         }
 
         this.position.x += this.velocity.x;
@@ -180,6 +196,7 @@ export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
+        this.bobTime = 0;
         this.setupMouseControls();
     }
 
@@ -201,5 +218,15 @@ export class Camera {
     updateFromPlayer(player) {
         player.rotation.x = this.rotation.x;
         player.rotation.y = this.rotation.y;
+
+        const isMoving = player.isOnGround && (this.rotation.x || this.rotation.y);
+        if (isMoving) {
+            this.bobTime += 1 / 60;
+            const bobAmount = Math.sin(this.bobTime * CAMERA_BOB_SPEED) * CAMERA_BOB_STRENGTH;
+            player.cameraBob = bobAmount;
+        } else {
+            this.bobTime = 0;
+            player.cameraBob = 0;
+        }
     }
 }
