@@ -15,7 +15,13 @@ export const BLOCKS = {
     GOLD_ORE: 13,
     DIAMOND_ORE: 14,
     SNOW: 15,
-    SNOW_GRASS: 16
+    SNOW_GRASS: 16,
+    SPRUCE_LOG: 17,
+    SPRUCE_LEAVES: 18,
+    BIRCH_LOG: 19,
+    BIRCH_LEAVES: 20,
+    OBSIDIAN: 21,
+    EMERALD_ORE: 22
 };
 
 export const BLOCK_NAMES = {
@@ -35,7 +41,13 @@ export const BLOCK_NAMES = {
     13: 'Gold Ore',
     14: 'Diamond Ore',
     15: 'Snow',
-    16: 'Snow Grass'
+    16: 'Snow Grass',
+    17: 'Spruce Log',
+    18: 'Spruce Leaves',
+    19: 'Birch Log',
+    20: 'Birch Leaves',
+    21: 'Obsidian',
+    22: 'Emerald Ore'
 };
 
 export const BLOCK_COLORS = {
@@ -55,7 +67,13 @@ export const BLOCK_COLORS = {
     13: 0xFFD700,
     14: 0x00CED1,
     15: 0xF0F8FF,
-    16: 0xF5FFFA
+    16: 0xF5FFFA,
+    17: 0x5C4033,
+    18: 0x1B4D2D,
+    19: 0xA0826D,
+    20: 0x90EE90,
+    21: 0x0A0A0A,
+    22: 0x00B050
 };
 
 export const SOLID_BLOCKS = new Set([
@@ -73,7 +91,13 @@ export const SOLID_BLOCKS = new Set([
     BLOCKS.GOLD_ORE,
     BLOCKS.DIAMOND_ORE,
     BLOCKS.SNOW,
-    BLOCKS.SNOW_GRASS
+    BLOCKS.SNOW_GRASS,
+    BLOCKS.SPRUCE_LOG,
+    BLOCKS.SPRUCE_LEAVES,
+    BLOCKS.BIRCH_LOG,
+    BLOCKS.BIRCH_LEAVES,
+    BLOCKS.OBSIDIAN,
+    BLOCKS.EMERALD_ORE
 ]);
 
 export const TRANSPARENT_BLOCKS = new Set([

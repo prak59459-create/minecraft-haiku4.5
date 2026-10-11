@@ -19,6 +19,7 @@ export class Player {
         this.canJump = false;
         this.isSprinting = false;
         this.isCrouching = false;
+        this.flyMode = false;
 
         this.keys = {};
         this.setupKeyboardControls();
@@ -52,33 +53,51 @@ export class Player {
     handleMovement() {
         let moveX = 0;
         let moveZ = 0;
+        let moveY = 0;
 
         const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
 
-        if (this.keys['shift'] && isMoving) {
-            this.isSprinting = !this.isCrouching;
-            this.isCrouching = !this.isSprinting;
+        if (this.flyMode) {
+            const speed = this.keys['shift'] ? PLAYER_SPRINT_SPEED : PLAYER_SPEED;
+            if (this.keys['w']) moveZ -= speed;
+            if (this.keys['s']) moveZ += speed;
+            if (this.keys['a']) moveX -= speed;
+            if (this.keys['d']) moveX += speed;
+            if (this.keys[' ']) moveY += speed;
+            if (this.keys['control'] || this.keys['ctrl']) moveY -= speed;
+
+            const cosY = Math.cos(this.rotation.y);
+            const sinY = Math.sin(this.rotation.y);
+
+            this.velocity.x = moveX * cosY - moveZ * sinY;
+            this.velocity.z = moveX * sinY + moveZ * cosY;
+            this.velocity.y = moveY;
         } else {
-            this.isSprinting = false;
-            this.isCrouching = false;
+            if (this.keys['shift'] && isMoving) {
+                this.isSprinting = !this.isCrouching;
+                this.isCrouching = !this.isSprinting;
+            } else {
+                this.isSprinting = false;
+                this.isCrouching = false;
+            }
+
+            const speed = this.isSprinting ? PLAYER_SPRINT_SPEED : (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPEED);
+
+            if (this.keys['w']) moveZ -= speed;
+            if (this.keys['s']) moveZ += speed;
+            if (this.keys['a']) moveX -= speed;
+            if (this.keys['d']) moveX += speed;
+
+            const cosY = Math.cos(this.rotation.y);
+            const sinY = Math.sin(this.rotation.y);
+
+            this.velocity.x = moveX * cosY - moveZ * sinY;
+            this.velocity.z = moveX * sinY + moveZ * cosY;
         }
-
-        const speed = this.isSprinting ? PLAYER_SPRINT_SPEED : (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPEED);
-
-        if (this.keys['w']) moveZ -= speed;
-        if (this.keys['s']) moveZ += speed;
-        if (this.keys['a']) moveX -= speed;
-        if (this.keys['d']) moveX += speed;
-
-        const cosY = Math.cos(this.rotation.y);
-        const sinY = Math.sin(this.rotation.y);
-
-        this.velocity.x = moveX * cosY - moveZ * sinY;
-        this.velocity.z = moveX * sinY + moveZ * cosY;
     }
 
     applyPhysics() {
-        if (!this.isOnGround) {
+        if (!this.flyMode && !this.isOnGround) {
             this.velocity.y -= GRAVITY;
         }
 
@@ -163,6 +182,13 @@ export class Player {
             y: this.position.y + PLAYER_HEIGHT * 0.85,
             z: this.position.z
         };
+    }
+
+    toggleFlyMode() {
+        this.flyMode = !this.flyMode;
+        if (this.flyMode) {
+            this.velocity.y = 0;
+        }
     }
 }
 

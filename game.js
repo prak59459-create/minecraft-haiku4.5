@@ -79,6 +79,7 @@ class MinecraftGame {
                 const hit = this.raycastBlock();
                 if (hit.block !== BLOCKS.AIR && hit.block !== BLOCKS.WATER) {
                     this.selectedBlockType = hit.block;
+                    this.ui.updateFPS();
                 }
             }
             if (e.key === 'F3') {
@@ -88,6 +89,10 @@ class MinecraftGame {
             }
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
+            }
+            if (e.key === ' ' && e.ctrlKey) {
+                e.preventDefault();
+                this.player.toggleFlyMode();
             }
         });
     }
