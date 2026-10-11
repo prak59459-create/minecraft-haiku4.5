@@ -37,12 +37,14 @@ class MinecraftGame {
         this.lastStepSound = 0;
         this.showDebug = false;
         this.lastPlayerPos = { x: 0, y: 0, z: 0 };
+        this.spawnPos = { x: 0, y: 100, z: 0 };
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
         this.setupLighting();
         this.setupEventListeners();
         this.setupPickBlock();
+        this.findSpawnLocation();
         this.animate();
     }
 
@@ -333,9 +335,12 @@ class MinecraftGame {
     }
 
     onWindowResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(width, height);
     }
 
     getDistanceToChunk(cx, cz) {
@@ -363,6 +368,19 @@ class MinecraftGame {
         this.lastPlayerPos.x = pos.x;
         this.lastPlayerPos.y = pos.y;
         this.lastPlayerPos.z = pos.z;
+    }
+
+    findSpawnLocation() {
+        for (let y = 100; y < 150; y++) {
+            const blockBelow = this.world.getBlock(0, y - 1, 0);
+            if (isBlockSolid(blockBelow) && blockBelow !== BLOCKS.WATER) {
+                this.spawnPos = { x: 0, y, z: 0 };
+                this.player.position.x = 0;
+                this.player.position.y = y;
+                this.player.position.z = 0;
+                break;
+            }
+        }
     }
 
     animate() {

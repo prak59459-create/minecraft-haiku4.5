@@ -150,9 +150,13 @@ export class Player {
             }
         }
 
-        if (this.position.y < -10) {
+        if (this.position.y < -5) {
             this.position.y = 100;
+            this.position.x = 0;
+            this.position.z = 0;
             this.velocity.y = 0;
+            this.velocity.x = 0;
+            this.velocity.z = 0;
         }
     }
 
@@ -182,21 +186,30 @@ export class Camera {
     constructor() {
         this.rotation = { x: 0, y: 0 };
         this.mouseSensitivity = 0.003;
+        this.locked = false;
         this.setupMouseControls();
     }
 
     setupMouseControls() {
         document.addEventListener('mousemove', (e) => {
+            if (document.pointerLockElement !== document.body) return;
+
             this.rotation.y -= e.movementX * this.mouseSensitivity;
             this.rotation.x -= e.movementY * this.mouseSensitivity;
 
-            this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
+            const maxPitch = Math.PI / 2.5;
+            this.rotation.x = Math.max(-maxPitch, Math.min(maxPitch, this.rotation.x));
         });
 
         document.addEventListener('click', () => {
             if (document.pointerLockElement !== document.body) {
                 document.body.requestPointerLock();
+                this.locked = true;
             }
+        });
+
+        document.addEventListener('pointerlockchange', () => {
+            this.locked = document.pointerLockElement === document.body;
         });
     }
 
