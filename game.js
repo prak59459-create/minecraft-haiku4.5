@@ -7,15 +7,22 @@ import { WaterRenderer } from './water.js';
 import { AudioManager } from './audio.js';
 import { DebugDisplay } from './debug.js';
 import { BlockOutline } from './blockoutline.js';
+import { Config } from './config.js';
 
 class MinecraftGame {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.05, 1024);
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
+            powerPreference: 'high-performance'
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x87CEEB);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
         this.world = new World();
         this.player = new Player(this.world);
@@ -29,7 +36,7 @@ class MinecraftGame {
 
         this.chunkMeshes = new Map();
         this.waterMeshes = new Map();
-        this.raycastDistance = 6;
+        this.raycastDistance = Config.get('raycast.distance') || 6;
         this.lastBreakSound = 0;
         this.showDebug = false;
 
@@ -47,12 +54,17 @@ class MinecraftGame {
         this.ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(this.ambientLight);
 
+        const shadowMapSize = Config.get('graphics.shadowMapSize') || 2048;
         this.directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
         this.directionalLight.position.set(150, 100, 150);
         this.directionalLight.castShadow = true;
-        this.directionalLight.shadow.mapSize.width = 2048;
-        this.directionalLight.shadow.mapSize.height = 2048;
+        this.directionalLight.shadow.mapSize.width = shadowMapSize;
+        this.directionalLight.shadow.mapSize.height = shadowMapSize;
         this.directionalLight.shadow.camera.far = 500;
+        this.directionalLight.shadow.camera.left = -256;
+        this.directionalLight.shadow.camera.right = 256;
+        this.directionalLight.shadow.camera.top = 256;
+        this.directionalLight.shadow.camera.bottom = -256;
         this.scene.add(this.directionalLight);
     }
 

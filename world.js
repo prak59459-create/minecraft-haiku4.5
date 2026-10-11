@@ -162,9 +162,9 @@ function generateTree(chunk, x, z, height) {
 }
 
 export class World {
-    constructor(renderDistance = 8) {
+    constructor(renderDistance = null) {
         this.chunks = new Map();
-        this.renderDistance = renderDistance;
+        this.renderDistance = renderDistance || 8;
         initPerlinNoise();
     }
 
