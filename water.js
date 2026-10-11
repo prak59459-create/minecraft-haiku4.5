@@ -6,17 +6,58 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.createWaterShader();
+    }
+
+    createWaterShader() {
+        this.waterShaderMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 },
+                waterColor: { value: new THREE.Color(0x4A90E2) }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                varying vec3 vPosition;
+                uniform float time;
+
+                void main() {
+                    vUv = uv;
+                    vPosition = position;
+
+                    vec3 pos = position;
+                    pos.y += sin(position.x * 0.5 + time) * 0.05;
+                    pos.y += cos(position.z * 0.5 + time) * 0.05;
+
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float time;
+                uniform vec3 waterColor;
+                varying vec2 vUv;
+                varying vec3 vPosition;
+
+                void main() {
+                    float wave = sin(vPosition.x * 0.5 + time) * 0.5 + 0.5;
+                    wave += cos(vPosition.z * 0.5 + time) * 0.5;
+
+                    vec3 color = waterColor * (0.7 + wave * 0.2);
+                    gl_FragColor = vec4(color, 0.6);
+                }
+            `,
+            side: THREE.FrontSide,
+            transparent: true
+        });
     }
 
     buildWaterMesh(chunk) {
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
-        const colors = [];
+        const uvs = [];
         const indices = [];
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x4A90E2);
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -33,12 +74,12 @@ export class WaterRenderer {
                     };
 
                     const faces = [
-                        { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
-                        { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
-                        { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]] },
-                        { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]] },
-                        { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
-                        { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
+                        { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]], uvs: [[0, 0], [1, 0], [1, 1], [0, 1]] },
+                        { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]], uvs: [[0, 0], [1, 0], [1, 1], [0, 1]] },
+                        { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]], uvs: [[0, 0], [1, 0], [1, 1], [0, 1]] },
+                        { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]], uvs: [[0, 0], [1, 0], [1, 1], [0, 1]] },
+                        { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]], uvs: [[0, 0], [1, 0], [1, 1], [0, 1]] },
+                        { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]], uvs: [[0, 0], [1, 0], [1, 1], [0, 1]] }
                     ];
 
                     for (const face of faces) {
@@ -48,11 +89,10 @@ export class WaterRenderer {
                         if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
 
                         const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
-
-                        for (const [vx, vy, vz] of face.verts) {
+                        for (let i = 0; i < face.verts.length; i++) {
+                            const [vx, vy, vz] = face.verts[i];
                             vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
+                            uvs.push(...face.uvs[i]);
                         }
 
                         indices.push(startIndex, startIndex + 1, startIndex + 2);
@@ -64,19 +104,11 @@ export class WaterRenderer {
 
         if (vertices.length > 0) {
             geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
-            geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
+            geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
             geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             geometry.computeVertexNormals();
 
-            const material = new THREE.MeshPhongMaterial({
-                vertexColors: true,
-                wireframe: false,
-                transparent: true,
-                opacity: 0.6,
-                side: THREE.FrontSide
-            });
-
-            const mesh = new THREE.Mesh(geometry, material);
+            const mesh = new THREE.Mesh(geometry, this.waterShaderMaterial);
             return mesh;
         }
 
@@ -85,5 +117,6 @@ export class WaterRenderer {
 
     update() {
         this.time += 0.016;
+        this.waterShaderMaterial.uniforms.time.value = this.time;
     }
 }

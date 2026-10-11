@@ -195,6 +195,7 @@ class MinecraftGame {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
+        const colorCache = new Map();
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -206,14 +207,19 @@ class MinecraftGame {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const color = new THREE.Color(BLOCK_COLORS[blockId]);
-
-                    const baseLight = 0.7;
-                    const heightLight = (wy / WORLD_HEIGHT) * 0.3;
-                    const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
-                    const brightness = baseLight + heightLight + varLight;
-
-                    color.multiplyScalar(brightness);
+                    let color;
+                    const cacheKey = `${blockId}-${wy}`;
+                    if (colorCache.has(cacheKey)) {
+                        color = colorCache.get(cacheKey);
+                    } else {
+                        color = new THREE.Color(BLOCK_COLORS[blockId]);
+                        const baseLight = 0.7;
+                        const heightLight = (wy / WORLD_HEIGHT) * 0.3;
+                        const varLight = Math.sin(wx * 0.5 + wz * 0.5) * 0.1;
+                        const brightness = baseLight + heightLight + varLight;
+                        color.multiplyScalar(brightness);
+                        colorCache.set(cacheKey, color);
+                    }
 
                     this.addBlockFaces(vertices, colors, indices, wx, wy, wz, blockId, color, chunk);
                 }
@@ -287,28 +293,57 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const renderDistance = 10;
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const chunksToLoad = [];
+        const chunksToUnload = [];
+
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const distance = Math.max(Math.abs(cx - playerChunkX), Math.abs(cz - playerChunkZ));
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (distance > renderDistance) {
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
+                    chunksToUnload.push(key);
                 }
                 continue;
             }
 
             if (!this.chunkMeshes.has(key)) {
+                chunksToLoad.push(key);
+            }
+        }
+
+        chunksToUnload.forEach(key => {
+            const mesh = this.chunkMeshes.get(key);
+            if (mesh) {
+                this.scene.remove(mesh);
+                if (mesh.geometry) mesh.geometry.dispose();
+                if (mesh.material) mesh.material.dispose();
+            }
+            this.chunkMeshes.delete(key);
+        });
+
+        chunksToLoad.sort((a, b) => {
+            const [ax, az] = a.split(',').map(Number);
+            const [bx, bz] = b.split(',').map(Number);
+            const dista = Math.abs(ax - playerChunkX) + Math.abs(az - playerChunkZ);
+            const distb = Math.abs(bx - playerChunkX) + Math.abs(bz - playerChunkZ);
+            return dista - distb;
+        });
+
+        chunksToLoad.slice(0, 4).forEach(key => {
+            const chunk = this.world.chunks.get(key);
+            if (chunk) {
                 const mesh = this.buildChunkMesh(chunk);
                 if (mesh) {
                     this.scene.add(mesh);
                     this.chunkMeshes.set(key, mesh);
                 }
             }
-        }
+        });
     }
 
     onWindowResize() {
