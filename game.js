@@ -47,6 +47,8 @@ class MinecraftGame {
     }
 
     findSpawnLocation() {
+        this.world.updateChunksAround(0, 0);
+
         let spawnY = 100;
         for (let y = 100; y > 0; y--) {
             const block = this.world.getBlock(0, y, 0);
@@ -56,6 +58,8 @@ class MinecraftGame {
             }
         }
         this.player.position.y = spawnY;
+        this.player.position.x = 0.5;
+        this.player.position.z = 0.5;
     }
 
     setupLighting() {
@@ -92,8 +96,12 @@ class MinecraftGame {
             BLOCKS.GRAVEL
         ];
 
+        this.blockOrder = blockOrder;
+        this.selectedBlockType = blockOrder[0];
+
         this.ui.onBlockSelect = (blockId) => {
             this.selectedBlockType = blockId;
+            this.ui.updateHUD(this.player.position, blockId, this.ui.fpsCounter);
         };
 
         document.addEventListener('keydown', (e) => {
@@ -103,6 +111,8 @@ class MinecraftGame {
                     const idx = blockOrder.indexOf(hit.block);
                     if (idx >= 0) {
                         this.ui.selectBlock(idx);
+                    } else {
+                        this.selectedBlockType = hit.block;
                     }
                 }
             }
@@ -399,6 +409,10 @@ class MinecraftGame {
     animate() {
         requestAnimationFrame(() => this.animate());
 
+        const now = performance.now();
+        const deltaTime = now - (this.lastFrameTime || now);
+        this.lastFrameTime = now;
+
         this.player.update();
         this.gameCamera.updateFromPlayer(this.player);
 
@@ -432,6 +446,7 @@ class MinecraftGame {
         }
 
         this.renderer.render(this.scene, this.camera);
+        this.frameCount++;
     }
 
     updateDayNightCycle() {
