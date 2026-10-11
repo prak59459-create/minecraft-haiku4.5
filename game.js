@@ -374,9 +374,14 @@ class MinecraftGame {
     }
 
     onWindowResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(width, height);
+
+        this.ui.updateFPS();
     }
 
     getDistanceToChunk(cx, cz) {
@@ -431,6 +436,18 @@ class MinecraftGame {
         }
 
         this.renderer.render(this.scene, this.camera);
+    }
+
+    getPlayerBlockPosition() {
+        const px = Math.floor(this.player.position.x);
+        const py = Math.floor(this.player.position.y);
+        const pz = Math.floor(this.player.position.z);
+        return { x: px, y: py, z: pz };
+    }
+
+    isPlayerInWater() {
+        const pos = this.getPlayerBlockPosition();
+        return this.world.getBlock(pos.x, pos.y, pos.z) === BLOCKS.WATER;
     }
 
     updateDayNightCycle() {

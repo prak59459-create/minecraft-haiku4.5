@@ -116,9 +116,13 @@ export class Player {
                 if (isBlockSolid(block)) {
                     const moveLen = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
                     if (moveLen > 0) {
-                        const scale = 1.5 / moveLen;
+                        const scale = 1.5 / Math.max(moveLen, 0.1);
                         this.position.x -= this.velocity.x * scale;
                         this.position.z -= this.velocity.z * scale;
+                    } else {
+                        const angle2 = Math.atan2(cz - this.position.z, cx - this.position.x);
+                        this.position.x -= Math.cos(angle2) * 0.2;
+                        this.position.z -= Math.sin(angle2) * 0.2;
                     }
                     break;
                 }
