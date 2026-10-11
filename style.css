@@ -136,6 +136,49 @@ body {
     margin: 3px 0;
 }
 
+@keyframes pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+#crosshair {
+    animation: pulse 2s infinite;
+}
+
+.inventory-slot.selected:hover {
+    box-shadow: 0 0 16px rgba(255, 255, 100, 0.9);
+}
+
+#help {
+    animation: slideDown 0.3s ease;
+}
+
+#help.show {
+    animation: slideUp 0.3s ease reverse;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+    }
+}
+
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;

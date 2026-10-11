@@ -2,16 +2,21 @@ import { BLOCKS, isBlockSolid } from './blocks.js';
 
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_WIDTH = 0.6;
-const PLAYER_SPEED = 0.1;
-const PLAYER_SPRINT_SPEED = 0.15;
-const PLAYER_CROUCH_SPEED = 0.05;
-const GRAVITY = 0.02;
-const JUMP_POWER = 0.5;
+const PLAYER_SPEED = 0.12;
+const PLAYER_SPRINT_SPEED = 0.18;
+const PLAYER_CROUCH_SPEED = 0.06;
+const GRAVITY = 0.025;
+const JUMP_POWER = 0.55;
+const AIR_FRICTION = 0.98;
+const GROUND_FRICTION = 0.85;
 
 export class Player {
     constructor(world) {
         this.world = world;
-        this.position = { x: 0, y: 100, z: 0 };
+        const spawnX = Math.random() * 256 - 128;
+        const spawnZ = Math.random() * 256 - 128;
+        const spawnY = this.findSpawnHeight(spawnX, spawnZ);
+        this.position = { x: spawnX, y: spawnY + 2, z: spawnZ };
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
 
@@ -22,6 +27,16 @@ export class Player {
 
         this.keys = {};
         this.setupKeyboardControls();
+    }
+
+    findSpawnHeight(x, z) {
+        for (let y = 256; y > 0; y--) {
+            const block = this.world.getBlock(Math.floor(x), y - 1, Math.floor(z));
+            if (isBlockSolid(block)) {
+                return y;
+            }
+        }
+        return 100;
     }
 
     setupKeyboardControls() {
@@ -63,8 +78,12 @@ export class Player {
         const cosY = Math.cos(this.rotation.y);
         const sinY = Math.sin(this.rotation.y);
 
-        this.velocity.x = moveX * cosY - moveZ * sinY;
-        this.velocity.z = moveX * sinY + moveZ * cosY;
+        const newVelX = moveX * cosY - moveZ * sinY;
+        const newVelZ = moveX * sinY + moveZ * cosY;
+
+        const friction = this.isOnGround ? GROUND_FRICTION : AIR_FRICTION;
+        this.velocity.x = this.velocity.x * friction + newVelX * (1 - friction);
+        this.velocity.z = this.velocity.z * friction + newVelZ * (1 - friction);
 
         this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
         this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);

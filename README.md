@@ -1,15 +1,15 @@
 # Minecraft Clone - Haiku 4.5
 
-A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaScript. Experience procedural terrain generation, block destruction and placement, and an immersive 3D environment.
+A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaScript. Experience procedural terrain generation, block destruction and placement, and an immersive 3D environment with optimized performance.
 
 ## Features
 
 ### Core Gameplay
-- **WASD Movement** - Move through the world naturally
-- **Mouse Look** - Free camera control with mouse
-- **Space Jump** - Jump and gravity physics
+- **WASD Movement** - Smooth movement with friction-based physics
+- **Mouse Look** - Free camera control with mouse (click to lock pointer)
+- **Space Jump** - Jump and gravity physics with proper inertia
 - **Shift Sprint/Crouch** - Sprint for speed or crouch for stealth
-- **Block Destruction** - Left-click to destroy blocks
+- **Block Destruction** - Left-click to destroy blocks with particles
 - **Block Placement** - Right-click to place blocks
 - **Block Selection** - Use 1-9 or scroll wheel to switch between blocks
 - **Pick Block** - Press C to pick the block you're looking at
@@ -17,35 +17,39 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 ### World & Terrain
 - **Procedural Generation** - Infinite world generation using Perlin noise
 - **Multiple Biomes** - Grass, sand, and varied terrain types
-- **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
+- **Chunk System** - Dynamic chunk loading/unloading with priority queue
+- **Extended Block Types** (22 total):
+  - Stone, Grass, Dirt, Cobblestone, Mossy Cobblestone
+  - Oak/Spruce/Birch Logs and Leaves
+  - Oak Planks, Sand, Water, Gravel, Bedrock
   - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
+  - Lava, Obsidian
 - **Ore Generation** - Procedural ore generation at various depths
-- **Tree Generation** - Natural tree placement in suitable terrain
+- **Tree Generation** - Multiple tree types with variable heights
+- **Cave Systems** - Procedurally generated caves for exploration
 
 ### Physics & Collision
-- **Gravity System** - Realistic falling and landing
-- **Collision Detection** - Precise player-block collision detection
-- **Raycasting** - Accurate block selection and targeting
-- **Block Highlight** - Visual feedback for the block you're looking at
+- **Advanced Gravity System** - Realistic falling with air friction
+- **Collision Detection** - Multi-point collision detection
+- **Raycasting** - Optimized block selection with adaptive step size
+- **Block Highlight** - Visual outline for the block you're looking at
+- **Inertia System** - Smooth acceleration and deceleration
 
 ### Visual Features
 - **3D Voxel Rendering** - Full 3D block-based world
-- **Dynamic Lighting** - Sun and ambient lighting system
-- **Day/Night Cycle** - Real-time sky color transitions
-- **Particle Effects** - Block destruction particles
-- **Water Rendering** - Semi-transparent water with proper face culling
+- **Dynamic Lighting** - Advanced sun and ambient lighting
+- **Day/Night Cycle** - Real-time sky color transitions with proper lighting
+- **Particle Effects** - Optimized block destruction particles with pooling
+- **Water Rendering** - Shader-based water with wave animation
+- **Color Caching** - Optimized block color lighting
+- **Adaptive Quality** - Dynamic render distance based on FPS
 
 ### Audio
 - **Procedural Sound Effects**:
-  - Block break sounds
-  - Block place sounds
-  - Jump sounds (prepared)
-  - Step sounds (prepared)
-- **Web Audio API** - Dynamic audio generation
+  - Block break and place sounds
+  - Jump and step sounds
+- **Web Audio API** - Dynamic audio generation with master volume control
+- **Sound Pooling** - Efficient oscillator management
 
 ### User Interface
 - **HUD Display** - Real-time coordinates, FPS, and block info
