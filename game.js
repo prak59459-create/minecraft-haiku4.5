@@ -183,13 +183,21 @@ class MinecraftGame {
         const cx = Math.floor(x / 16);
         const cz = Math.floor(z / 16);
 
+        const affectedChunks = new Set();
         for (let dx = -1; dx <= 1; dx++) {
             for (let dz = -1; dz <= 1; dz++) {
                 const key = `${cx + dx},${cz + dz}`;
-                if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
-                    this.chunkMeshes.delete(key);
-                }
+                affectedChunks.add(key);
+            }
+        }
+
+        for (const key of affectedChunks) {
+            if (this.chunkMeshes.has(key)) {
+                const mesh = this.chunkMeshes.get(key);
+                this.scene.remove(mesh);
+                if (mesh.geometry) mesh.geometry.dispose();
+                if (mesh.material) mesh.material.dispose();
+                this.chunkMeshes.delete(key);
             }
         }
     }
@@ -303,15 +311,19 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const RENDER_DISTANCE = 8;
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (Math.abs(cx - playerChunkX) > RENDER_DISTANCE || Math.abs(cz - playerChunkZ) > RENDER_DISTANCE) {
                 if (this.chunkMeshes.has(key)) {
-                    this.scene.remove(this.chunkMeshes.get(key));
+                    const mesh = this.chunkMeshes.get(key);
+                    this.scene.remove(mesh);
+                    if (mesh.geometry) mesh.geometry.dispose();
+                    if (mesh.material) mesh.material.dispose();
                     this.chunkMeshes.delete(key);
                 }
                 continue;
