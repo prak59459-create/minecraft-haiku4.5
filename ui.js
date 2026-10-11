@@ -45,6 +45,10 @@ export class UI {
         this.selectedBlock = index;
     }
 
+    getSelectedBlockType() {
+        return this.blocks[this.selectedBlock];
+    }
+
     updateHUD(playerPos, selectedBlock, fps) {
         const coordsEl = document.getElementById('coords');
         const fpsEl = document.getElementById('fps');
