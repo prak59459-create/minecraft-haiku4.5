@@ -21,6 +21,12 @@ export class Player {
         this.isCrouching = false;
 
         this.keys = {};
+        this.lastStepPosition = { x: 0, z: 0 };
+        this.stepDistance = 0.5;
+        this.lastStepTime = 0;
+        this.stepSoundDelay = 300;
+
+        this.onStep = null;
         this.setupKeyboardControls();
     }
 
@@ -47,6 +53,27 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        this.handleStepSounds();
+    }
+
+    handleStepSounds() {
+        if (!this.isOnGround) return;
+
+        const dx = this.position.x - this.lastStepPosition.x;
+        const dz = this.position.z - this.lastStepPosition.z;
+        const distance = Math.sqrt(dx * dx + dz * dz);
+
+        const isMoving = this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'];
+
+        if (isMoving && distance > this.stepDistance) {
+            const now = Date.now();
+            if (now - this.lastStepTime > this.stepSoundDelay) {
+                if (this.onStep) this.onStep();
+                this.lastStepTime = now;
+            }
+            this.lastStepPosition.x = this.position.x;
+            this.lastStepPosition.z = this.position.z;
+        }
     }
 
     handleMovement() {

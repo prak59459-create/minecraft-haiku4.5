@@ -2,30 +2,24 @@ import { BLOCK_NAMES } from './blocks.js';
 
 export class UI {
     constructor() {
-        this.selectedBlock = 1;
-        this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        this.selectedBlock = 0;
+        this.blockOrder = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.onBlockSelect = null;
         this.setupInventoryUI();
     }
 
     setupInventoryUI() {
         const slots = document.querySelectorAll('.inventory-slot');
         slots.forEach((slot, index) => {
-            const blockId = parseInt(slot.dataset.block);
             slot.addEventListener('click', () => {
                 this.selectBlock(index);
             });
         });
 
-        document.addEventListener('keydown', (e) => {
-            const num = parseInt(e.key);
-            if (num >= 1 && num <= 9) {
-                this.selectBlock(num - 1);
-            }
-        });
-
         document.addEventListener('wheel', (e) => {
+            if (document.pointerLockElement !== document.body) return;
             e.preventDefault();
             const direction = e.deltaY > 0 ? 1 : -1;
             let newIndex = this.selectedBlock + direction;
@@ -42,6 +36,20 @@ export class UI {
         slots.forEach(slot => slot.classList.remove('selected'));
         slots[index].classList.add('selected');
 
+        this.selectedBlock = index;
+        const blockId = this.blockOrder[index];
+        if (this.onBlockSelect) {
+            this.onBlockSelect(blockId, index);
+        }
+    }
+
+    updateInventorySelection(index) {
+        if (index < 0 || index > 8) return;
+        const slots = document.querySelectorAll('.inventory-slot');
+        slots.forEach(slot => slot.classList.remove('selected'));
+        if (slots[index]) {
+            slots[index].classList.add('selected');
+        }
         this.selectedBlock = index;
     }
 
