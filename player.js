@@ -47,6 +47,15 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+
+        if (this.isOnGround && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d'])) {
+            if (!this.lastStepTime) this.lastStepTime = 0;
+            const now = Date.now();
+            if (now - this.lastStepTime > 300) {
+                if (this.onStep) this.onStep();
+                this.lastStepTime = now;
+            }
+        }
     }
 
     handleMovement() {

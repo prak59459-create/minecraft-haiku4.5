@@ -14,18 +14,20 @@ export class ParticleSystem {
     }
 
     addBlockBreakParticles(x, y, z, blockColor) {
-        const particleCount = 8 + Math.floor(Math.random() * 8);
+        const particleCount = 10 + Math.floor(Math.random() * 10);
 
         for (let i = 0; i < particleCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 0.1 + Math.random() * 0.2;
             const particle = {
                 position: { x, y, z },
                 velocity: {
-                    x: (Math.random() - 0.5) * 0.3,
-                    y: Math.random() * 0.3,
-                    z: (Math.random() - 0.5) * 0.3
+                    x: Math.cos(angle) * speed,
+                    y: 0.1 + Math.random() * 0.3,
+                    z: Math.sin(angle) * speed
                 },
                 life: 1,
-                maxLife: 0.8 + Math.random() * 0.4,
+                maxLife: 0.6 + Math.random() * 0.6,
                 color: blockColor
             };
             this.particles.push(particle);
@@ -33,11 +35,15 @@ export class ParticleSystem {
     }
 
     update() {
-        const gravity = 0.01;
+        const gravity = 0.015;
+        const damping = 0.99;
 
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
             p.velocity.y -= gravity;
+            p.velocity.x *= damping;
+            p.velocity.z *= damping;
+
             p.position.x += p.velocity.x;
             p.position.y += p.velocity.y;
             p.position.z += p.velocity.z;
