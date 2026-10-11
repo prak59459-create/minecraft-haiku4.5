@@ -81,6 +81,12 @@ class MinecraftGame {
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
             }
+            if (e.key === '+' || e.key === '=') {
+                this.raycastDistance = Math.min(10, this.raycastDistance + 1);
+            }
+            if (e.key === '-' || e.key === '_') {
+                this.raycastDistance = Math.max(3, this.raycastDistance - 1);
+            }
         });
     }
 
@@ -287,13 +293,16 @@ class MinecraftGame {
     updateVisibleChunks() {
         const playerChunkX = Math.floor(this.player.position.x / 16);
         const playerChunkZ = Math.floor(this.player.position.z / 16);
+        const RENDER_DISTANCE = 8;
 
         this.world.updateChunksAround(this.player.position.x, this.player.position.z);
 
+        const visibleChunks = new Set();
         for (const [key, chunk] of this.world.chunks) {
             const [cx, cz] = key.split(',').map(Number);
+            const dist = Math.abs(cx - playerChunkX) + Math.abs(cz - playerChunkZ);
 
-            if (Math.abs(cx - playerChunkX) > 8 || Math.abs(cz - playerChunkZ) > 8) {
+            if (dist > RENDER_DISTANCE) {
                 if (this.chunkMeshes.has(key)) {
                     this.scene.remove(this.chunkMeshes.get(key));
                     this.chunkMeshes.delete(key);
@@ -301,6 +310,7 @@ class MinecraftGame {
                 continue;
             }
 
+            visibleChunks.add(key);
             if (!this.chunkMeshes.has(key)) {
                 const mesh = this.buildChunkMesh(chunk);
                 if (mesh) {
