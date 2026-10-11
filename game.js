@@ -79,16 +79,28 @@ class MinecraftGame {
 
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5 + sunIntensity * 0.1);
         this.scene.add(ambientLight);
+        this.ambientLight = ambientLight;
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6 + sunIntensity * 0.2);
         directionalLight.position.set(150, sunY, 150);
         directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
+
+        const shadowSize = this.isMobileDevice() ? 1024 : 2048;
+        directionalLight.shadow.mapSize.width = shadowSize;
+        directionalLight.shadow.mapSize.height = shadowSize;
         directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -256;
+        directionalLight.shadow.camera.right = 256;
+        directionalLight.shadow.camera.top = 256;
+        directionalLight.shadow.camera.bottom = -256;
         this.scene.add(directionalLight);
 
         this.directionalLight = directionalLight;
+    }
+
+    isMobileDevice() {
+        const ua = navigator.userAgent;
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) || window.innerWidth < 768;
     }
 
     setupEventListeners() {
@@ -114,6 +126,16 @@ class MinecraftGame {
             }
             if (e.key === 'h' || e.key === 'H') {
                 this.ui.toggleHelp();
+            }
+            if (e.key === 'Escape') {
+                if (document.pointerLockElement) {
+                    document.exitPointerLock();
+                }
+            }
+            if (e.key === 'r' || e.key === 'R') {
+                if (e.ctrlKey) {
+                    location.reload();
+                }
             }
         });
     }

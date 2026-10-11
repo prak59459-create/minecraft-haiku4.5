@@ -13,7 +13,10 @@ const GROUND_FRICTION = 0.85;
 export class Player {
     constructor(world) {
         this.world = world;
-        this.position = { x: 0, y: 100, z: 0 };
+        const spawnX = Math.random() * 256 - 128;
+        const spawnZ = Math.random() * 256 - 128;
+        const spawnY = this.findSpawnHeight(spawnX, spawnZ);
+        this.position = { x: spawnX, y: spawnY + 2, z: spawnZ };
         this.velocity = { x: 0, y: 0, z: 0 };
         this.rotation = { x: 0, y: 0 };
 
@@ -24,6 +27,16 @@ export class Player {
 
         this.keys = {};
         this.setupKeyboardControls();
+    }
+
+    findSpawnHeight(x, z) {
+        for (let y = 256; y > 0; y--) {
+            const block = this.world.getBlock(Math.floor(x), y - 1, Math.floor(z));
+            if (isBlockSolid(block)) {
+                return y;
+            }
+        }
+        return 100;
     }
 
     setupKeyboardControls() {

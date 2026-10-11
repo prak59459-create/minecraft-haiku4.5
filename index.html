@@ -9,6 +9,11 @@
 <body>
     <canvas id="gameCanvas"></canvas>
 
+    <div id="loading-indicator" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-family: Arial; font-size: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 100;">
+        <div>Loading world...</div>
+        <div style="font-size: 14px; margin-top: 10px; opacity: 0.8;" id="loading-text"></div>
+    </div>
+
     <div id="ui">
         <div id="crosshair"></div>
         <div id="hud">
@@ -55,8 +60,10 @@
             </div>
         </div>
         <div id="help">
-            <p><strong>Controls:</strong> WASD Move | Space Jump | Shift Sprint/Crouch | Mouse Look</p>
-            <p>Left-Click Destroy | Right-Click Place | 1-9/Scroll Select Block</p>
+            <p><strong>Movement:</strong> WASD | Space Jump | Shift Sprint</p>
+            <p><strong>Blocks:</strong> Left-Click Destroy | Right-Click Place | 1-9/Scroll Select</p>
+            <p><strong>Tools:</strong> C Pick Block | F3 Debug | H Help | Esc Exit</p>
+            <p><strong>Display:</strong> Coords & FPS in top-left | Selected Block shown</p>
         </div>
     </div>
 

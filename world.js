@@ -189,9 +189,11 @@ function generateTree(chunk, x, z, height, terrainType = 'grass') {
 }
 
 export class World {
-    constructor(renderDistance = 8) {
+    constructor(renderDistance = 10) {
         this.chunks = new Map();
         this.renderDistance = renderDistance;
+        this.chunkGenerationQueue = [];
+        this.isGenerating = false;
         initPerlinNoise();
     }
 
