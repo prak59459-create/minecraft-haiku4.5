@@ -34,7 +34,9 @@ class MinecraftGame {
         this.selectedBlockType = BLOCKS.STONE;
         this.raycastDistance = 6;
         this.lastBreakSound = 0;
+        this.lastStepSound = 0;
         this.showDebug = false;
+        this.lastPlayerPos = { x: 0, y: 0, z: 0 };
 
         this.player.onJump = () => this.audioManager.playJumpSound();
 
@@ -242,6 +244,7 @@ class MinecraftGame {
             if (indices.length > 0) {
                 geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
             }
+            geometry.computeBoundingBox();
 
             const material = new THREE.MeshPhongMaterial({
                 vertexColors: true,
@@ -263,7 +266,7 @@ class MinecraftGame {
     }
 
     addBlockFaces(vertices, colors, indices, x, y, z, blockId, color, chunk) {
-        const faces = [
+        const FACES = [
             { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
             { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
             { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]] },
@@ -277,13 +280,16 @@ class MinecraftGame {
         const b = Math.floor(color.b * 255);
 
         let faceCount = 0;
-        for (const face of faces) {
+        for (let i = 0; i < FACES.length; i++) {
+            const face = FACES[i];
             const [dx, dy, dz] = face.dir;
             const neighbor = this.world.getBlock(x + dx, y + dy, z + dz);
             if (isBlockSolid(neighbor) && neighbor !== BLOCKS.WATER) continue;
 
             const startIndex = vertices.length / 3;
-            for (const [vx, vy, vz] of face.verts) {
+            const verts = face.verts;
+            for (let j = 0; j < verts.length; j++) {
+                const [vx, vy, vz] = verts[j];
                 vertices.push(x + vx, y + vy, z + vz);
                 colors.push(r, g, b);
             }
@@ -340,6 +346,25 @@ class MinecraftGame {
         return Math.sqrt(dx * dx + dz * dz);
     }
 
+    updateStepSound() {
+        const pos = this.player.position;
+        const dx = pos.x - this.lastPlayerPos.x;
+        const dz = pos.z - this.lastPlayerPos.z;
+        const distance = Math.sqrt(dx * dx + dz * dz);
+
+        if (distance > 0.2 && this.player.isOnGround) {
+            const now = Date.now();
+            if (now - this.lastStepSound > 300) {
+                this.audioManager.playStepSound();
+                this.lastStepSound = now;
+            }
+        }
+
+        this.lastPlayerPos.x = pos.x;
+        this.lastPlayerPos.y = pos.y;
+        this.lastPlayerPos.z = pos.z;
+    }
+
     animate() {
         requestAnimationFrame(() => this.animate());
 
@@ -364,6 +389,7 @@ class MinecraftGame {
         this.updateDayNightCycle();
         this.particleSystem.update();
         this.waterRenderer.update();
+        this.updateStepSound();
 
         const hit = this.raycastBlock();
         this.blockOutline.update(hit);

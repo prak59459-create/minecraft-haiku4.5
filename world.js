@@ -107,6 +107,9 @@ function getOreBlock(x, y, z) {
     const clayChance = perlinNoise.noise2D(x * 0.08, z * 0.08);
     if (y > 50 && y < 65 && clayChance > 0.65) return BLOCKS.CLAY;
 
+    const obsidianChance = perlinNoise.noise2D(x * 0.06 + y * 0.01, z * 0.06 + y * 0.01);
+    if (y < 30 && obsidianChance > 0.7) return BLOCKS.OBSIDIAN;
+
     let ore = BLOCKS.STONE;
     const coalChance = perlinNoise.noise2D(x * 0.1 + y * 0.05, z * 0.1 + y * 0.05);
     const ironChance = perlinNoise.noise2D(x * 0.08 + y * 0.03, z * 0.08 + y * 0.03);

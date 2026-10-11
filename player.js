@@ -7,6 +7,8 @@ const PLAYER_SPRINT_SPEED = 0.15;
 const PLAYER_CROUCH_SPEED = 0.05;
 const GRAVITY = 0.02;
 const JUMP_POWER = 0.5;
+const AIR_RESISTANCE = 0.98;
+const FRICTION = 0.9;
 
 export class Player {
     constructor(world) {
@@ -47,6 +49,7 @@ export class Player {
         this.handleMovement();
         this.applyPhysics();
         this.checkCollisions();
+        this.checkWater();
     }
 
     handleMovement() {
@@ -159,6 +162,19 @@ export class Player {
             y: this.position.y + PLAYER_HEIGHT * 0.85,
             z: this.position.z
         };
+    }
+
+    checkWater() {
+        const cx = Math.floor(this.position.x);
+        const cy = Math.floor(this.position.y + PLAYER_HEIGHT * 0.5);
+        const cz = Math.floor(this.position.z);
+
+        const block = this.world.getBlock(cx, cy, cz);
+        if (block === 8) {
+            this.velocity.y *= 0.98;
+            this.velocity.x *= 0.95;
+            this.velocity.z *= 0.95;
+        }
     }
 }
 
