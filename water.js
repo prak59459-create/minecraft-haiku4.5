@@ -6,6 +6,7 @@ export class WaterRenderer {
         this.world = world;
         this.waterMeshes = new Map();
         this.time = 0;
+        this.waterColor = new THREE.Color(0x4A90E2);
     }
 
     buildWaterMesh(chunk) {
@@ -16,7 +17,6 @@ export class WaterRenderer {
 
         const CHUNK_SIZE = 16;
         const WORLD_HEIGHT = 256;
-        const waterColor = new THREE.Color(0x4A90E2);
 
         for (let x = 0; x < CHUNK_SIZE; x++) {
             for (let y = 1; y < WORLD_HEIGHT; y++) {
@@ -28,36 +28,7 @@ export class WaterRenderer {
                     const wy = y;
                     const wz = chunk.z * CHUNK_SIZE + z;
 
-                    const neighbor = (dx, dy, dz) => {
-                        return this.world.getBlock(wx + dx, wy + dy, wz + dz);
-                    };
-
-                    const faces = [
-                        { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
-                        { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
-                        { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]] },
-                        { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]] },
-                        { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
-                        { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
-                    ];
-
-                    for (const face of faces) {
-                        const [dx, dy, dz] = face.dir;
-                        const neighborBlock = neighbor(dx, dy, dz);
-
-                        if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
-
-                        const startIndex = vertices.length / 3;
-                        const color = waterColor.clone().multiplyScalar(0.8 + Math.random() * 0.2);
-
-                        for (const [vx, vy, vz] of face.verts) {
-                            vertices.push(wx + vx, wy + vy, wz + vz);
-                            colors.push(color.r, color.g, color.b);
-                        }
-
-                        indices.push(startIndex, startIndex + 1, startIndex + 2);
-                        indices.push(startIndex, startIndex + 2, startIndex + 3);
-                    }
+                    this.addWaterFaces(vertices, colors, indices, wx, wy, wz);
                 }
             }
         }
@@ -65,7 +36,9 @@ export class WaterRenderer {
         if (vertices.length > 0) {
             geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(colors), 3, true));
-            geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
+            if (indices.length > 0) {
+                geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
+            }
             geometry.computeVertexNormals();
 
             const material = new THREE.MeshPhongMaterial({
@@ -81,6 +54,38 @@ export class WaterRenderer {
         }
 
         return null;
+    }
+
+    addWaterFaces(vertices, colors, indices, wx, wy, wz) {
+        const faces = [
+            { dir: [1, 0, 0], verts: [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]] },
+            { dir: [-1, 0, 0], verts: [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]] },
+            { dir: [0, 1, 0], verts: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]] },
+            { dir: [0, -1, 0], verts: [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]] },
+            { dir: [0, 0, 1], verts: [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]] },
+            { dir: [0, 0, -1], verts: [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]] }
+        ];
+
+        const baseColor = 0.8 + Math.random() * 0.2;
+        const r = Math.floor(this.waterColor.r * baseColor * 255);
+        const g = Math.floor(this.waterColor.g * baseColor * 255);
+        const b = Math.floor(this.waterColor.b * baseColor * 255);
+
+        for (const face of faces) {
+            const [dx, dy, dz] = face.dir;
+            const neighborBlock = this.world.getBlock(wx + dx, wy + dy, wz + dz);
+
+            if (neighborBlock !== BLOCKS.AIR && neighborBlock !== BLOCKS.WATER) continue;
+
+            const startIndex = vertices.length / 3;
+            for (const [vx, vy, vz] of face.verts) {
+                vertices.push(wx + vx, wy + vy, wz + vz);
+                colors.push(r, g, b);
+            }
+
+            indices.push(startIndex, startIndex + 1, startIndex + 2);
+            indices.push(startIndex, startIndex + 2, startIndex + 3);
+        }
     }
 
     update() {
