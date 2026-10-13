@@ -4,8 +4,14 @@ export class UI {
     constructor() {
         this.selectedBlock = 1;
         this.blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        this.blockCounts = {};
+        for (const block of this.blocks) {
+            this.blockCounts[block] = 64;
+        }
         this.fpsCounter = 0;
         this.lastTime = performance.now();
+        this.fpsHistory = [];
+        this.maxFpsHistory = 60;
         this.setupInventoryUI();
     }
 
@@ -26,12 +32,14 @@ export class UI {
         });
 
         document.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const direction = e.deltaY > 0 ? 1 : -1;
-            let newIndex = this.selectedBlock + direction;
-            if (newIndex < 0) newIndex = 8;
-            if (newIndex > 8) newIndex = 0;
-            this.selectBlock(newIndex);
+            if (document.pointerLockElement === document.body) {
+                e.preventDefault();
+                const direction = e.deltaY > 0 ? 1 : -1;
+                let newIndex = this.selectedBlock + direction;
+                if (newIndex < 0) newIndex = 8;
+                if (newIndex > 8) newIndex = 0;
+                this.selectBlock(newIndex);
+            }
         }, { passive: false });
     }
 
@@ -51,6 +59,14 @@ export class UI {
         const blockEl = document.getElementById('blockInfo');
 
         coordsEl.textContent = `X: ${playerPos.x.toFixed(1)} Y: ${playerPos.y.toFixed(1)} Z: ${playerPos.z.toFixed(1)}`;
+
+        let fpsColor = 'white';
+        if (fps >= 55) fpsColor = '#00FF00';
+        else if (fps >= 40) fpsColor = '#FFFF00';
+        else if (fps >= 25) fpsColor = '#FFA500';
+        else fpsColor = '#FF0000';
+
+        fpsEl.style.color = fpsColor;
         fpsEl.textContent = `FPS: ${fps}`;
         blockEl.textContent = BLOCK_NAMES[selectedBlock] || 'Air';
     }
@@ -62,6 +78,10 @@ export class UI {
 
         if (delta > 0) {
             this.fpsCounter = Math.round(1000 / delta);
+            this.fpsHistory.push(this.fpsCounter);
+            if (this.fpsHistory.length > this.maxFpsHistory) {
+                this.fpsHistory.shift();
+            }
         }
 
         return this.fpsCounter;

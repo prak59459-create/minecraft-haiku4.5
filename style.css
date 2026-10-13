@@ -136,6 +136,12 @@ body {
     margin: 3px 0;
 }
 
+#debug-display {
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
 @media (max-width: 768px) {
     #hud {
         font-size: 10px;
@@ -149,5 +155,10 @@ body {
 
     #help {
         font-size: 9px;
+    }
+
+    #debug-display {
+        font-size: 9px;
+        padding: 8px;
     }
 }

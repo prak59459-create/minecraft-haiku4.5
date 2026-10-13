@@ -52,13 +52,15 @@ export class Player {
     handleMovement() {
         let moveX = 0;
         let moveZ = 0;
+        let isMoving = false;
 
-        const speed = this.keys['shift'] ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
+        const shiftPressed = this.keys['shift'];
+        const speed = shiftPressed ? (this.isCrouching ? PLAYER_CROUCH_SPEED : PLAYER_SPRINT_SPEED) : PLAYER_SPEED;
 
-        if (this.keys['w']) moveZ -= speed;
-        if (this.keys['s']) moveZ += speed;
-        if (this.keys['a']) moveX -= speed;
-        if (this.keys['d']) moveX += speed;
+        if (this.keys['w']) { moveZ -= speed; isMoving = true; }
+        if (this.keys['s']) { moveZ += speed; isMoving = true; }
+        if (this.keys['a']) { moveX -= speed; isMoving = true; }
+        if (this.keys['d']) { moveX += speed; isMoving = true; }
 
         const cosY = Math.cos(this.rotation.y);
         const sinY = Math.sin(this.rotation.y);
@@ -66,14 +68,18 @@ export class Player {
         this.velocity.x = moveX * cosY - moveZ * sinY;
         this.velocity.z = moveX * sinY + moveZ * cosY;
 
-        this.isSprinting = this.keys['shift'] && !this.isCrouching && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
-        this.isCrouching = this.keys['shift'] && (this.keys['w'] || this.keys['s'] || this.keys['a'] || this.keys['d']);
+        this.isSprinting = shiftPressed && !this.isCrouching && isMoving && this.isOnGround;
+        this.isCrouching = shiftPressed && isMoving;
     }
 
     applyPhysics() {
         if (!this.isOnGround) {
             this.velocity.y -= GRAVITY;
         }
+
+        const airResistance = 0.98;
+        this.velocity.x *= airResistance;
+        this.velocity.z *= airResistance;
 
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
