@@ -16,21 +16,27 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 ### World & Terrain
 - **Procedural Generation** - Infinite world generation using Perlin noise
-- **Multiple Biomes** - Grass, sand, and varied terrain types
-- **Chunk System** - Dynamic chunk loading and unloading for performance
-- **Multiple Block Types**:
-  - Stone, Grass, Dirt, Cobblestone
-  - Oak Log, Oak Leaves
-  - Sand, Water, Gravel, Bedrock
-  - Coal Ore, Iron Ore, Gold Ore, Diamond Ore
-- **Ore Generation** - Procedural ore generation at various depths
-- **Tree Generation** - Natural tree placement in suitable terrain
+- **Multiple Biomes** - Grass, sand, and varied terrain types with moisture-based variation
+- **Cave Generation** - Procedural caves using 3D Perlin noise for exploration
+- **Chunk System** - Dynamic chunk loading/unloading with LOD support
+- **Multiple Block Types** (25 blocks):
+  - Stone, Grass, Dirt, Cobblestone, Bedrock, Brick
+  - Oak/Birch/Spruce Log and Leaves (3 tree types)
+  - Sand, Water, Lava, Gravel, Clay
+  - Stone Variants: Granite, Diorite, Andesite
+  - Coal, Iron, Gold, Diamond Ore
+  - Obsidian
+- **Ore Generation** - Depth-aware ore placement with realistic distribution
+- **Tree Generation** - Multiple tree species with natural placement
+- **Level of Detail (LOD)** - Different render qualities for distant terrain
 
 ### Physics & Collision
-- **Gravity System** - Realistic falling and landing
-- **Collision Detection** - Precise player-block collision detection
-- **Raycasting** - Accurate block selection and targeting
-- **Block Highlight** - Visual feedback for the block you're looking at
+- **Gravity System** - Realistic falling and landing physics
+- **Collision Detection** - Multi-point player-block collision with early exit optimization
+- **Step Climbing** - Automatic climbing over single-block obstacles
+- **Ground Detection** - Intelligent surface detection for smooth movement
+- **Raycasting** - Accurate block selection with proper face normal calculation
+- **Block Highlight** - Visual feedback with white wireframe outline
 
 ### Visual Features
 - **3D Voxel Rendering** - Full 3D block-based world
@@ -41,11 +47,13 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 ### Audio
 - **Procedural Sound Effects**:
-  - Block break sounds
-  - Block place sounds
-  - Jump sounds (prepared)
-  - Step sounds (prepared)
-- **Web Audio API** - Dynamic audio generation
+  - Block break sounds with frequency modulation
+  - Block place sounds with pitch variation
+  - Jump sounds with multi-harmonic support
+  - Step sounds with dynamic pitch
+- **Web Audio API** - Dynamic audio generation with filtering
+- **Frequency-based Audio** - Realistic sound variation per block type
+- **Gain Control** - Smart volume management and decay
 
 ### User Interface
 - **HUD Display** - Real-time coordinates, FPS, and block info
@@ -55,9 +63,12 @@ A fully-featured 3D Minecraft-inspired voxel game built with Three.js and JavaSc
 
 ### Performance Optimization
 - **Chunk-based Rendering** - Only visible chunks are rendered
+- **Level of Detail (LOD) System** - Progressive quality reduction with distance
 - **Indexed Geometry** - Efficient mesh generation with indices
-- **Vertex Colors** - Per-vertex coloring for variations
-- **Memory Management** - Automatic chunk cleanup for distant areas
+- **Vertex Colors** - Per-vertex coloring with height-based variation
+- **Memory Management** - Automatic chunk cleanup every 30 frames
+- **Extended Render Distance** - 12 chunks with intelligent LOD fallback
+- **Optimized Collisions** - Multi-point collision detection with early exit
 
 ## Controls
 
@@ -135,11 +146,13 @@ audio.js         - Sound effects generation
 
 ### Performance
 
-- Renders 8-chunk radius around player
-- Optimized mesh generation with indexed geometry
-- Dynamic lighting updates for day/night cycle
-- Particle system for visual effects
-- ~60 FPS on modern hardware
+- Renders 12-chunk radius with LOD fallback for distant chunks
+- Optimized mesh generation with indexed geometry and color caching
+- Dynamic lighting with depth-based darkening for caves
+- Particle system with configurable limit (2000 max)
+- Memory cleanup every 30 frames for long play sessions
+- Level of Detail system reduces geometry at distance
+- ~60 FPS on modern hardware (can vary with render distance)
 
 ## Game Design
 
@@ -152,8 +165,15 @@ The world uses multi-octave Perlin noise for natural-looking terrain:
 
 ### Biomes
 
-- **Grass Biome** - Natural terrain with trees and water
-- **Sand Biome** - Desert-like areas with sand blocks
+- **Grass Biome** - Natural terrain with trees, water, and diverse blocks
+- **Sand Biome** - Desert-like areas with sand, clay, and minimal vegetation
+- **Temperature/Moisture** - Dynamic biome transitions based on noise values
+
+### Cave Systems
+
+- **Procedural Caves** - 3D Perlin noise-based underground exploration
+- **Height Range** - Caves generate between y=10 and y=120
+- **Natural Connection** - Caves connect and form larger systems
 
 ### Ore Distribution
 

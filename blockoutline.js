@@ -2,6 +2,8 @@ export class BlockOutline {
     constructor(scene) {
         this.scene = scene;
         this.outline = null;
+        this.material = null;
+        this.time = 0;
         this.createOutlineMaterial();
     }
 
@@ -10,21 +12,30 @@ export class BlockOutline {
             color: 0xFFFFFF,
             linewidth: 2,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9,
+            fog: false
         });
     }
 
-    setSelectedBlock(x, y, z) {
+    setSelectedBlock(x, y, z, blockId = 0) {
         if (this.outline) {
             this.scene.remove(this.outline);
+            if (this.outline.geometry) this.outline.geometry.dispose();
         }
 
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
+        const offset = 0.01;
 
         const positions = [
-            [x, y, z], [x + 1, y, z], [x + 1, y + 1, z], [x, y + 1, z],
-            [x, y, z + 1], [x + 1, y, z + 1], [x + 1, y + 1, z + 1], [x, y + 1, z + 1]
+            [x - offset, y - offset, z - offset],
+            [x + 1 + offset, y - offset, z - offset],
+            [x + 1 + offset, y + 1 + offset, z - offset],
+            [x - offset, y + 1 + offset, z - offset],
+            [x - offset, y - offset, z + 1 + offset],
+            [x + 1 + offset, y - offset, z + 1 + offset],
+            [x + 1 + offset, y + 1 + offset, z + 1 + offset],
+            [x - offset, y + 1 + offset, z + 1 + offset]
         ];
 
         const edges = [
@@ -41,20 +52,30 @@ export class BlockOutline {
 
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
 
-        this.outline = new THREE.LineSegments(geometry, this.material);
+        this.outline = new THREE.LineSegments(geometry, this.material.clone());
+        this.outline.blockId = blockId;
         this.scene.add(this.outline);
     }
 
     clear() {
         if (this.outline) {
             this.scene.remove(this.outline);
+            if (this.outline.geometry) this.outline.geometry.dispose();
             this.outline = null;
         }
     }
 
     update(raycastHit) {
+        this.time += 0.016;
+
         if (raycastHit && raycastHit.block !== 0) {
-            this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z);
+            this.setSelectedBlock(raycastHit.x, raycastHit.y, raycastHit.z, raycastHit.block);
+
+            if (this.outline && this.outline.material) {
+                const pulse = Math.sin(this.time * 3) * 0.1 + 0.8;
+                this.outline.material.opacity = pulse;
+                this.outline.material.linewidth = 1 + Math.sin(this.time * 2) * 0.5;
+            }
         } else {
             this.clear();
         }

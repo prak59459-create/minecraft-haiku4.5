@@ -8,7 +8,11 @@ export class DebugDisplay {
             triangles: 0,
             drawCalls: 0,
             particles: 0,
-            memory: 0
+            memory: 0,
+            blocksDestroyed: 0,
+            blocksPlaced: 0,
+            jumps: 0,
+            distance: 0
         };
         this.createDisplay();
     }
@@ -59,9 +63,20 @@ export class DebugDisplay {
         this.stats.fps = game.ui.fpsCounter;
         this.stats.chunks = game.world.chunks.size;
         this.stats.particles = game.particleSystem.particles.length;
+        this.stats.blocksDestroyed = game.stats.blocksDestroyed;
+        this.stats.blocksPlaced = game.stats.blocksPlaced;
+        this.stats.jumps = game.stats.jumpsPerformed;
+        this.stats.distance = game.stats.distanceTraveled.toFixed(1);
 
         let vertices = 0;
         let triangles = 0;
+        let lodLevels = { 0: 0, 1: 0, 2: 0 };
+
+        for (const [key, chunk] of game.world.chunks) {
+            const lod = chunk.lodLevel || 0;
+            lodLevels[lod] = (lodLevels[lod] || 0) + 1;
+        }
+
         for (const mesh of game.chunkMeshes.values()) {
             if (mesh && mesh.geometry) {
                 const positions = mesh.geometry.getAttribute('position');
@@ -78,6 +93,7 @@ export class DebugDisplay {
         this.stats.vertices = vertices;
         this.stats.triangles = triangles;
         this.stats.drawCalls = game.chunkMeshes.size;
+        this.stats.lodLevels = lodLevels;
 
         if (performance.memory) {
             this.stats.memory = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
@@ -90,15 +106,18 @@ export class DebugDisplay {
         const lines = [
             '=== DEBUG INFO ===',
             `FPS: ${this.stats.fps}`,
-            `Chunks: ${this.stats.chunks}`,
+            `Chunks: ${this.stats.chunks} (LOD0: ${this.stats.lodLevels[0]}, LOD1: ${this.stats.lodLevels[1]}, LOD2: ${this.stats.lodLevels[2]})`,
             `Vertices: ${this.stats.vertices.toLocaleString()}`,
             `Triangles: ${this.stats.triangles.toLocaleString()}`,
             `Draw Calls: ${this.stats.drawCalls}`,
             `Particles: ${this.stats.particles}`,
             `Memory: ${this.stats.memory} MB`,
+            '--- STATS ---',
+            `Blocks: ✗${this.stats.blocksDestroyed} ✓${this.stats.blocksPlaced}`,
+            `Jumps: ${this.stats.jumps}`,
+            `Distance: ${this.stats.distance}m`,
             '==================',
-            'Press F3 to toggle',
-            'Press H for help'
+            'F3: Toggle | H: Help'
         ];
 
         this.container.innerHTML = lines.map(line => {
